@@ -25,6 +25,8 @@ namespace T8CANFlasher
             InitializeComponent();
             m_DelegateUpdateStatus = updateStatusInBox;
             m_DelegateProgressStatus = updateProgress;
+
+            EnableUserInput(true);
         }
 
         private void AddLogItem(string item)
@@ -808,6 +810,11 @@ namespace T8CANFlasher
             {
                 Console.WriteLine(E.Message);
             }
+        }
+
+        private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            EnableUserInput(true);
         }
     }
 }
