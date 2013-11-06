@@ -1,0 +1,27 @@
+00:33:01.721 - Opening connection
+00:33:01.751 - Open called in T7CAN
+00:33:05.805 - Canbus channel opened
+00:33:05.816 - Session started
+00:33:06.820 - Aquiring ECU info
+00:33:06.866 - VIN: YS3EH55GX63510826
+00:33:06.893 - Immo: 237IDG105426003
+00:33:06.935 - Engine type: :9-5 B235E BIOPOWER EU         
+00:33:06.966 - Software version: EU0AF01C.55P
+00:33:06.982 - E85 : 0%
+00:33:07.989 - Connection closed
+00:33:43.759 - Opening connection
+00:33:43.789 - Open called in T7CAN
+00:33:47.755 - Canbus channel opened
+00:33:47.771 - Session started
+00:35:22.494 - Opening connection
+00:35:22.514 - Open called in T7CAN
+00:35:22.921 - Unable to open canbus channel
+00:35:23.940 - Unable to start session
+00:35:23.950 - Open failed in T7CAN
+00:35:23.956 - Connection closed
+00:35:36.764 - Opening connection
+00:35:36.784 - Open called in T7CAN
+00:35:40.815 - Canbus channel opened
+00:35:40.827 - Session started
+00:35:40.862 - SetE85:True
+00:35:41.869 - Connection closed

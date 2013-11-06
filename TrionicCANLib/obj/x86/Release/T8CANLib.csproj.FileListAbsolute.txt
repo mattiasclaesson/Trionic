@@ -1,0 +1,17 @@
+C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\x86\Release\T8CANLib.dll
+C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\x86\Release\T8CANLib.pdb
+C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\x86\Release\combilib-net.dll
+C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\x86\Release\ftd2xx_net.dll
+C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\x86\Release\LibUsbDotNet.dll
+C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\obj\x86\Release\T8CANLib.dll
+C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\obj\x86\Release\T8CANLib.pdb
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\obj\x86\Release\T8CANLib.dll
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\obj\x86\Release\T8CANLib.pdb
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\bin\x86\Release\T8CANLib.dll
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\bin\x86\Release\T8CANLib.pdb
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\bin\x86\Release\canusbdrv_net.dll
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\bin\x86\Release\combilib-net.dll
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\bin\x86\Release\ftd2xx_net.dll
+C:\Program Files (x86)\Dilemma\T8CANFlash\Source\T8CANLib\bin\x86\Release\LibUsbDotNet.dll
