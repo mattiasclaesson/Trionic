@@ -152,6 +152,7 @@ namespace T8CANFlasher
             if (comboBox1.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 comboBox1.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
+                comboBox2.Enabled = true;
             }
             else
             {
@@ -589,15 +590,7 @@ namespace T8CANFlasher
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBox1.SelectedIndex == (int)CANBusAdapter.ELM327 ||
-                comboBox1.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
-            {
-                comboBox2.Enabled = true;
-            }
-            else
-            {
-                comboBox2.Enabled = false;
-            }
+            EnableUserInput(true);
         }
 
         private void button9_Click(object sender, EventArgs e)
