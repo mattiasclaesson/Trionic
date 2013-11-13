@@ -398,14 +398,14 @@ namespace TrionicCANLib.KWP
         /// </summary>
         /// <param name="r_level">The requested E85 level.</param>
         /// <returns>KWPResult</returns>
-        public KWPResult getE85Level(out int r_level)
+        public KWPResult getE85Level(out float r_level)
         {
             KWPReply reply = new KWPReply();
             KWPResult result;
-            int level;
+            float level;
             
             result = sendRequest(new KWPRequest(0x21, 0xA7), out reply);
-            if (result == KWPResult.OK)
+            if (result == KWPResult.OK && reply.getLength() == 4)
             {
                 level = (reply.getData()[0] << 8) | reply.getData()[1];
                 r_level = level / 10;

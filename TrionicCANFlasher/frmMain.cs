@@ -175,6 +175,14 @@ namespace T8CANFlasher
                     button5.Enabled = false;
                     button13.Enabled = false;
                 }
+
+                if (comboBox1.SelectedIndex == (int)CANBusAdapter.ELM327)
+                {
+                    button1.Enabled = false;
+                    button4.Enabled = false;
+                    button5.Enabled = false;
+                    button13.Enabled = false;
+                }
             }
         }
 

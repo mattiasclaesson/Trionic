@@ -15,62 +15,8 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_2BC9E822E34E9C2015661A6CF092C654"
-        "OwnerKey" = "8:_5AD256A68DB4982FA9FB7226C1EDE257"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_2BC9E822E34E9C2015661A6CF092C654"
-        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_5AD256A68DB4982FA9FB7226C1EDE257"
-        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_5AD256A68DB4982FA9FB7226C1EDE257"
-        "OwnerKey" = "8:_AE36D32B52A2678D163218F852A0623A"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_793B093590D23817D276BBEF4E34DDA5"
-        "OwnerKey" = "8:_5AD256A68DB4982FA9FB7226C1EDE257"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_793B093590D23817D276BBEF4E34DDA5"
-        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_AE36D32B52A2678D163218F852A0623A"
-        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_AF00345CB98D363348BFACC43591AD6C"
-        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_AF00345CB98D363348BFACC43591AD6C"
-        "OwnerKey" = "8:_AE36D32B52A2678D163218F852A0623A"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -82,37 +28,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_AF00345CB98D363348BFACC43591AD6C"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_AE36D32B52A2678D163218F852A0623A"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5AD256A68DB4982FA9FB7226C1EDE257"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_793B093590D23817D276BBEF4E34DDA5"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_2BC9E822E34E9C2015661A6CF092C654"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -220,161 +136,6 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_2BC9E822E34E9C2015661A6CF092C654"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:FTD2XX_NET, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_2BC9E822E34E9C2015661A6CF092C654"
-                    {
-                    "Name" = "8:FTD2XX_NET.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:FTD2XX_NET.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5AD256A68DB4982FA9FB7226C1EDE257"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:combilib-net, Version=1.0.4093.28460, Culture=neutral, processorArchitecture=x86"
-                "ScatterAssemblies"
-                {
-                    "_5AD256A68DB4982FA9FB7226C1EDE257"
-                    {
-                    "Name" = "8:combilib-net.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:combilib-net.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_793B093590D23817D276BBEF4E34DDA5"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_793B093590D23817D276BBEF4E34DDA5"
-                    {
-                    "Name" = "8:LibUsbDotNet.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:LibUsbDotNet.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AE36D32B52A2678D163218F852A0623A"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86"
-                "ScatterAssemblies"
-                {
-                    "_AE36D32B52A2678D163218F852A0623A"
-                    {
-                    "Name" = "8:TrionicCANLib.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:TrionicCANLib.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AF00345CB98D363348BFACC43591AD6C"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:canusbdrv_net, Version=2.0.0.1, Culture=neutral, processorArchitecture=x86"
-                "ScatterAssemblies"
-                {
-                    "_AF00345CB98D363348BFACC43591AD6C"
-                    {
-                    "Name" = "8:canusbdrv_net.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:canusbdrv_net.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B69D594B59284F939B1F4A00C77E172B"
             {
             "SourcePath" = "8:..\\TrionicCANFlasher\\TrionicCanFlasher.ico"
@@ -535,20 +296,20 @@
                             "Transitive" = "11:FALSE"
                                 "Keys"
                                 {
-                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_578D2C72E4A94F57AF862031E53C5850"
-                                    {
-                                    "Name" = "8:TrionicCANFlasher"
-                                    "Condition" = "8:"
-                                    "AlwaysCreate" = "11:FALSE"
-                                    "DeleteAtUninstall" = "11:TRUE"
-                                    "Transitive" = "11:FALSE"
-                                        "Keys"
-                                        {
-                                        }
-                                        "Values"
-                                        {
-                                        }
-                                    }
+                                }
+                                "Values"
+                                {
+                                }
+                            }
+                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_BC0DBF63F48D4D5F8347B0EE84F881C2"
+                            {
+                            "Name" = "8:TrionicCANFlasher"
+                            "Condition" = "8:"
+                            "AlwaysCreate" = "11:FALSE"
+                            "DeleteAtUninstall" = "11:TRUE"
+                            "Transitive" = "11:FALSE"
+                                "Keys"
+                                {
                                 }
                                 "Values"
                                 {
@@ -1014,7 +775,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_3C87B40D8D4F4B188624286CF0A35439"
             {
-            "SourcePath" = "8:..\\TrionicCANFlasher\\obj\\x86\\Release\\TrionicCANFlasher.exe"
+            "SourcePath" = "8:..\\TrionicCANFlasher\\obj\\x86\\Debug\\TrionicCANFlasher.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"

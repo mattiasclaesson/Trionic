@@ -5133,7 +5133,7 @@ namespace TrionicCANLib
             string immo;
             string engineType;
             string swVersion;
-            int e85level;
+            float e85level;
             
             if (canUsbDevice is CANUSBDevice)
             {
@@ -5305,9 +5305,9 @@ namespace TrionicCANLib
             return KWPHandler.getInstance().setE85Level(level) == KWPResult.OK;  
         }
 
-        public int GetE85LevelT7()
+        public float GetE85LevelT7()
         {
-            int level;
+            float level;
             KWPHandler.getInstance().getE85Level(out level);
             return level;
         }
