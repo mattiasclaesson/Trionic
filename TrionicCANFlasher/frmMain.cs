@@ -184,6 +184,15 @@ namespace T8CANFlasher
                     button13.Enabled = false;
                 }
             }
+            else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
+            {
+                if (comboBox1.SelectedIndex == (int)CANBusAdapter.ELM327)
+                {
+                    button7.Enabled = false;
+                    button9.Enabled = false;
+                    button11.Enabled = false;
+                }
+            }
         }
 
         private void button4_Click(object sender, EventArgs e)

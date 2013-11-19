@@ -2949,10 +2949,10 @@ namespace TrionicCANLib
                                 }
                                 sw.Stop();
                                 _needRecovery = false;
-                                CastInfoEvent("Recovery completed", ActivityType.FinishedFlashing);
+                                CastInfoEvent("Recovery completed", ActivityType.ConvertingFile);
                                 // what else to do?
                                 Send0120();
-                                CastInfoEvent("Session ended", ActivityType.ConvertingFile);
+                                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
                                 return true;
                             }
                             else
@@ -2960,9 +2960,9 @@ namespace TrionicCANLib
                                 sw.Stop();
                                 _needRecovery = false;
                                 _stallKeepAlive = false;
-                                CastInfoEvent("Failed to erase flash", ActivityType.FinishedFlashing);
+                                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
                                 Send0120();
-                                CastInfoEvent("Session ended", ActivityType.ConvertingFile);
+                                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
                                 return false;
 
                             }
@@ -5135,7 +5135,7 @@ namespace TrionicCANLib
             string swVersion;
             float e85level;
             
-            if (canUsbDevice is CANUSBDevice)
+            if (canUsbDevice is CANUSBDevice || canUsbDevice is CANELM327Device)
             {
                 if (m_EnableCanLog)
                 {
@@ -5148,7 +5148,6 @@ namespace TrionicCANLib
                     CastInfoEvent("VIN: not connected", ActivityType.ConvertingFile);
                 else
                     CastInfoEvent("VIN: timeout", ActivityType.ConvertingFile);
-
                 res = kwpHandler.getImmo(out immo);
                 if (res == KWPResult.OK)
                     CastInfoEvent("Immo: " + immo, ActivityType.ConvertingFile);
@@ -5158,9 +5157,8 @@ namespace TrionicCANLib
                 res = kwpHandler.getSwVersion(out swVersion);
                 if (res == KWPResult.OK)
                     CastInfoEvent("Software version: " + swVersion, ActivityType.ConvertingFile);
-
-               res = kwpHandler.getE85Level(out e85level);
-               if (res == KWPResult.OK)
+                res = kwpHandler.getE85Level(out e85level);
+                if (res == KWPResult.OK)
                     CastInfoEvent("E85 : " + e85level + "%", ActivityType.ConvertingFile);
             }
             
