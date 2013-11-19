@@ -1,9 +1,0 @@
-C:\github\Trionic\TrionicCANLib\bin\x86\Debug\TrionicCANLib.dll
-C:\github\Trionic\TrionicCANLib\bin\x86\Debug\TrionicCANLib.pdb
-C:\github\Trionic\TrionicCANLib\bin\x86\Debug\canusbdrv_net.dll
-C:\github\Trionic\TrionicCANLib\bin\x86\Debug\combilib-net.dll
-C:\github\Trionic\TrionicCANLib\bin\x86\Debug\ftd2xx_net.dll
-C:\github\Trionic\TrionicCANLib\bin\x86\Debug\LibUsbDotNet.dll
-C:\github\Trionic\TrionicCANLib\obj\x86\Debug\ResolveAssemblyReference.cache
-C:\github\Trionic\TrionicCANLib\obj\x86\Debug\TrionicCANLib.dll
-C:\github\Trionic\TrionicCANLib\obj\x86\Debug\TrionicCANLib.pdb
