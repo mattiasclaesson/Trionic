@@ -1,0 +1,12 @@
+19-11-2013 20:21:39.564 - Received invalid sequenced frame 23: 0000000000000000
+19-11-2013 20:25:01.305 - Incorrect response to 0x23, sendReadDataByLocalIdentifier.  Byte 2 was 30
+19-11-2013 20:26:36.670 - Incorrect response to 0x23, sendReadDataByLocalIdentifier.  Byte 2 was FF
+19-11-2013 20:27:33.564 - Received invalid sequenced frame 23: 0000000000000000
+19-11-2013 20:27:57.696 - Received invalid sequenced frame 23: 0000000000000000
+19-11-2013 20:29:45.677 - Received invalid sequenced frame 23: 0000000000000000
+19-11-2013 20:30:08.680 - Incorrect response to 0x23, sendReadDataByLocalIdentifier.  Byte 2 was 48
+19-11-2013 20:30:47.694 - Received invalid sequenced frame 23: 0000000000000000
+19-11-2013 20:31:17.681 - Received invalid sequenced frame 23: 0000000000000000
+19-11-2013 20:33:25.563 - Received invalid sequenced frame 23: 0000000000000000
+19-11-2013 20:33:49.677 - Received invalid sequenced frame 23: 0000000000000000
+19-11-2013 20:40:08.680 - Incorrect response to 0x23, sendReadDataByLocalIdentifier.  Byte 2 was FF

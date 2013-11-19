@@ -80,7 +80,7 @@ namespace TrionicCANLib.CAN
                             string rxString = m_serialPort.ReadExisting();
                             if (rxString.Length > 0) AddToSerialTrace("SERRX: " + rxString);
                             receiveString += rxString;
-                            Console.WriteLine("BUF1: " + receiveString);
+                            //Console.WriteLine("BUF1: " + receiveString);
                             receiveString = receiveString.Replace(">", ""); // remove prompt characters... we don't need that stuff
                             receiveString = receiveString.Replace("NO DATA", ""); // remove prompt characters... we don't need that stuff
                             while (receiveString.StartsWith("\n") || receiveString.StartsWith("\r"))
@@ -98,7 +98,7 @@ namespace TrionicCANLib.CAN
                                 {
                                     receiveString = receiveString.Substring(1, receiveString.Length - 1);
                                 }
-                                Console.WriteLine("BUF2: " + receiveString);
+                                //Console.WriteLine("BUF2: " + receiveString);
 
                                 if (rxMessage.Equals("STOPPED") || rxMessage.Equals("OK"))
                                 {
@@ -153,7 +153,7 @@ namespace TrionicCANLib.CAN
                                     }
                                     catch (Exception)
                                     {
-                                        Console.WriteLine("MSG: " + rxMessage);
+                                        //Console.WriteLine("MSG: " + rxMessage);
                                     }
                                 }
                             }
@@ -183,7 +183,7 @@ namespace TrionicCANLib.CAN
                 sendString = " ";
                 sendString += a_message.getLength().ToString("X2");
             }*/
-            Console.WriteLine("send: " + a_message.getID().ToString("X3") + " " + a_message.getData().ToString("X16"));
+            //Console.WriteLine("send: " + a_message.getID().ToString("X3") + " " + a_message.getData().ToString("X16"));
 
             if (a_message.getID() != _ECUAddress)
             {
@@ -313,8 +313,8 @@ namespace TrionicCANLib.CAN
         {
             m_serialPort.BaudRate = m_forcedBaudrate;
             m_serialPort.Handshake = Handshake.None;
-            m_serialPort.ReadTimeout = 2000;
-            m_serialPort.WriteTimeout = 2000;
+            m_serialPort.ReadTimeout = 10000;
+            m_serialPort.WriteTimeout = 10000;
             m_serialPort.ReadBufferSize = 1024;
             m_serialPort.WriteBufferSize = 1024;
             bool readException = false;
@@ -392,7 +392,7 @@ namespace TrionicCANLib.CAN
                 m_serialPort.Write("ATE0\r");   //Echo off
                 AddToSerialTrace("SERTX: ATE0");
 
-                if (m_serialPort.BaudRate != 115700)
+                if (m_serialPort.BaudRate != 115200)
                 {
                     m_serialPort.ReadTo(">");
                     m_serialPort.Write("ATBRT00\r");   //Set baudrate timeout
@@ -484,13 +484,6 @@ namespace TrionicCANLib.CAN
                         Console.WriteLine("ATCAF0:" + m_serialPort.ReadTo(">"));
                         //m_serialPort.Write("ATR0\r");     //Don't wait for response from the ECU
                         //m_serialPort.ReadTo(">");
-
-                        m_serialPort.Write("ATCF000\r"); // Set filter
-                        AddToSerialTrace("SERTX: ATCF000");
-                        Console.WriteLine("ATCF000:" + m_serialPort.ReadTo(">"));
-                        m_serialPort.Write("ATCM000\r"); // Set mask
-                        AddToSerialTrace("SERTX: ATCM000");
-                        Console.WriteLine("ATCM000:" + m_serialPort.ReadTo(">"));
 
                         if (m_readThread != null)
                         {
