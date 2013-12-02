@@ -88,7 +88,7 @@ namespace TrionicCANLib
         private bool _stallKeepAlive;
         private float _oilQualityRead = 0;
 
-        private const int maxRetries = 20;
+        private const int maxRetries = 100;
 
         private KWPCANDevice kwpCanDevice;
         private KWPHandler kwpHandler;
