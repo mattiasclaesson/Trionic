@@ -193,7 +193,7 @@ namespace TrionicCANLib.KWP
         /// <returns>True if the session was started, otherwise false.</returns>
         public bool startSession()
         {
-            CANMessage msg = new CANMessage(0x220, 0, 8);
+            CANMessage msg = new CANMessage(0x220, 0, 7);
             msg.setData(0x000040021100813F);
             AddToCanTrace("Sending 0x000040021100813F message");
 
@@ -225,7 +225,7 @@ namespace TrionicCANLib.KWP
         /// <returns>The status of the request.</returns>
         public RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
         {
-            CANMessage msg = new CANMessage(0x240, 0, 8);
+            CANMessage msg = new CANMessage(0x240, 0, 5);
             uint row = nrOfRowsToSend(a_request.getData());
 
             m_kwpCanListener.setupWaitMessage(0x258);
@@ -398,7 +398,7 @@ namespace TrionicCANLib.KWP
         /// <param name="a_rowNr">The row number that should be acknowledged.</param>
         private void sendAck(uint a_rowNr)
         {
-            CANMessage msg = new CANMessage(0x266,0,8);
+            CANMessage msg = new CANMessage(0x266,0,4);
             uint i = 0;
             ulong data = 0;
             data = setCanData(data, (byte)0x40, i++);
