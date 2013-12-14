@@ -64,10 +64,11 @@ namespace T8CANFlasher
                 {
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
-                        SetT7AdapterType();
                         trionicCan.EnableCanLog = checkBox1.Checked;
                         trionicCan.OnlyPBus = checkBox2.Checked;
                         trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                        SetT7AdapterType();
+
                         AddLogItem("Opening connection");
                         EnableUserInput(false);
                         if (trionicCan.openT7Device())
@@ -91,13 +92,14 @@ namespace T8CANFlasher
                 {
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
-                        SetT8AdapterType();
                         trionicCan.EnableCanLog = checkBox1.Checked;
                         trionicCan.OnlyPBus = checkBox2.Checked;
                         trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
                         trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                        AddLogItem("Opening connection");
+                        SetT8AdapterType();
+
                         EnableUserInput(false);
+                        AddLogItem("Opening connection");
                         if (trionicCan.openDevice(false))
                         {
                             Thread.Sleep(1000);
@@ -199,10 +201,11 @@ namespace T8CANFlasher
         {
             if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetT7AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
                 trionicCan.OnlyPBus = checkBox2.Checked;
                 trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                SetT7AdapterType();
+
                 AddLogItem("Opening connection");
                 EnableUserInput(false);
 
@@ -238,13 +241,14 @@ namespace T8CANFlasher
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        SetT8AdapterType();
                         trionicCan.EnableCanLog = checkBox1.Checked;
                         trionicCan.OnlyPBus = checkBox2.Checked;
                         trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
                         trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                        AddLogItem("Opening connection");
+                        SetT8AdapterType();
+
                         EnableUserInput(false);
+                        AddLogItem("Opening connection");
                         if (trionicCan.openDevice(false))
                         {
                             Thread.Sleep(1000);
@@ -281,10 +285,11 @@ namespace T8CANFlasher
         {
             if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetT7AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
                 trionicCan.OnlyPBus = checkBox2.Checked;
                 trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                SetT7AdapterType();
+
                 AddLogItem("Opening connection");
                 EnableUserInput(false);
 
@@ -305,14 +310,14 @@ namespace T8CANFlasher
             }
             else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetT8AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
                 trionicCan.OnlyPBus = checkBox2.Checked;
                 trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
+                SetT8AdapterType();
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 if (trionicCan.openDevice(false))
                 {
                     AddLogItem("VINNumber       : " + trionicCan.GetVehicleVIN());           //0x90
@@ -358,13 +363,14 @@ namespace T8CANFlasher
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        SetT8AdapterType();
                         trionicCan.EnableCanLog = checkBox1.Checked;
                         trionicCan.OnlyPBus = checkBox2.Checked;
                         trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
                         trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                        AddLogItem("Opening connection");
+                        SetT8AdapterType();
+
                         EnableUserInput(false);
+                        AddLogItem("Opening connection");
                         if (trionicCan.openDevice(false))
                         {
                             Thread.Sleep(1000);
@@ -405,13 +411,14 @@ namespace T8CANFlasher
                 {
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
-                        SetT8AdapterType();
                         trionicCan.EnableCanLog = checkBox1.Checked;
                         trionicCan.OnlyPBus = checkBox2.Checked;
                         trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
                         trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                        AddLogItem("Opening connection");
+                        SetT8AdapterType();
+
                         EnableUserInput(false);
+                        AddLogItem("Opening connection");
                         if (trionicCan.openDevice(false))
                         {
                             Thread.Sleep(1000);
@@ -614,12 +621,14 @@ namespace T8CANFlasher
         {
             if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetT8AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
+                trionicCan.OnlyPBus = checkBox2.Checked;
+                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
+                SetT8AdapterType();
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 if (trionicCan.openDevice(false))
                 {
                     string[] codes = trionicCan.readDTCCodes();
@@ -644,12 +653,14 @@ namespace T8CANFlasher
         {
             if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetT8AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
+                trionicCan.OnlyPBus = checkBox2.Checked;
+                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
+                SetT8AdapterType();
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 if (trionicCan.openDevice(true))
                 {
                     string vin = textBox2.Text;
@@ -674,12 +685,14 @@ namespace T8CANFlasher
         {
             if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetT8AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
+                trionicCan.OnlyPBus = checkBox2.Checked;
+                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
+                SetT8AdapterType();
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 trionicCan.openDevice(true);
                 EnableUserInput(true);
             }
@@ -689,10 +702,10 @@ namespace T8CANFlasher
         {
             if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetT7AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
                 trionicCan.OnlyPBus = checkBox2.Checked;
                 trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                SetT7AdapterType();
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
@@ -711,12 +724,14 @@ namespace T8CANFlasher
             }
             else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetT8AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
+                trionicCan.OnlyPBus = checkBox2.Checked;
+                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
+                SetT8AdapterType();
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 if (trionicCan.openDevice(true))
                 {
                     float e85;
@@ -736,12 +751,14 @@ namespace T8CANFlasher
         {
             if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetT8AdapterType();
                 trionicCan.EnableCanLog = checkBox1.Checked;
+                trionicCan.OnlyPBus = checkBox2.Checked;
+                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
+                SetT8AdapterType();
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 if (trionicCan.openDevice(true))
                 {
                     int speed;
