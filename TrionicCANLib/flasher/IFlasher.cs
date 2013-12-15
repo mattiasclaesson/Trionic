@@ -132,6 +132,7 @@ namespace TrionicCANLib.Flasher
             lock (this.m_synchObject)
             {
                 this.m_command = FlashCommand.StopCommand;
+                this.m_flashStatus = FlashStatus.DoinNuthin;
             }
         }
 

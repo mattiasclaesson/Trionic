@@ -8,7 +8,7 @@ using System.IO.Ports;
 using Microsoft.Win32;
 using TrionicCANLib;
 
-namespace T8CANFlasher
+namespace TrionicCANFlasher
 {
     public delegate void DelegateUpdateStatus(TrionicCANLib.TrionicCan.CanInfoEventArgs e);
     public delegate void DelegateProgressStatus(float percentage);
@@ -58,15 +58,15 @@ namespace T8CANFlasher
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
+            using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Bin files|*.bin", Multiselect = false })
             {
-                using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Bin files|*.bin", Title = "Select binary file to flash...", Multiselect = false })
+                if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    if (ofd.ShowDialog() == DialogResult.OK)
+                    trionicCan.EnableCanLog = checkBox1.Checked;
+                    trionicCan.OnlyPBus = checkBox2.Checked;
+                    trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                    if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
                     {
-                        trionicCan.EnableCanLog = checkBox1.Checked;
-                        trionicCan.OnlyPBus = checkBox2.Checked;
-                        trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
                         SetT7AdapterType();
 
                         AddLogItem("Opening connection");
@@ -84,17 +84,8 @@ namespace T8CANFlasher
                             AddLogItem("Unable to connect to Trionic 7 ECU");
                         }
                     }
-                }
-            }
-            else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Binary files|*.bin", Multiselect = false })
-                {
-                    if (ofd.ShowDialog() == DialogResult.OK)
+                    else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
                     {
-                        trionicCan.EnableCanLog = checkBox1.Checked;
-                        trionicCan.OnlyPBus = checkBox2.Checked;
-                        trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
                         trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                         SetT8AdapterType();
 
@@ -199,83 +190,75 @@ namespace T8CANFlasher
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
+            using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Bin files|*.bin" })
             {
-                trionicCan.EnableCanLog = checkBox1.Checked;
-                trionicCan.OnlyPBus = checkBox2.Checked;
-                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
-                SetT7AdapterType();
-
-                AddLogItem("Opening connection");
-                EnableUserInput(false);
-
-                if (trionicCan.openT7Device())
+                if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Bin files|*.bin" })
+                    if (sfd.FileName != string.Empty)
                     {
-                        if (sfd.ShowDialog() == DialogResult.OK)
+                        if (Path.GetFileName(sfd.FileName) != string.Empty)
                         {
-                            // check reading status periodically
-                            if (sfd.FileName != string.Empty)
+                            trionicCan.EnableCanLog = checkBox1.Checked;
+                            trionicCan.OnlyPBus = checkBox2.Checked;
+                            trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                            if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
                             {
-                                if (Path.GetFileName(sfd.FileName) != string.Empty)
+                                SetT7AdapterType();
+
+                                AddLogItem("Opening connection");
+                                EnableUserInput(false);
+
+                                if (trionicCan.openT7Device())
                                 {
+                                    // check reading status periodically
+
                                     Thread.Sleep(1000);
                                     AddLogItem("Aquiring flash content");
                                     Application.DoEvents();
                                     dtstart = DateTime.Now;
                                     trionicCan.getFlashWithT7Flasher(sfd.FileName);
                                 }
+                                else
+                                {
+                                    AddLogItem("Unable to connect to Trionic 7 ECU");
+                                }
                             }
-                        }
-                    }
-                }
-                else
-                {
-                    AddLogItem("Unable to connect to Trionic 7 ECU");
-                }
-            }
-            else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Binary files|*.bin" })
-                {
-                    if (sfd.ShowDialog() == DialogResult.OK)
-                    {
-                        trionicCan.EnableCanLog = checkBox1.Checked;
-                        trionicCan.OnlyPBus = checkBox2.Checked;
-                        trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
-                        trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                        SetT8AdapterType();
+                            else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
+                            {
+                                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
+                                SetT8AdapterType();
 
-                        EnableUserInput(false);
-                        AddLogItem("Opening connection");
-                        if (trionicCan.openDevice(false))
-                        {
-                            Thread.Sleep(1000);
-                            dtstart = DateTime.Now;
-                            AddLogItem("Aquiring flash content");
-                            Application.DoEvents();
-                            //byte[] snapshot = trionicCan.getFlashContent();
-                            byte[] snapshot = trionicCan.getFlashWithBootloader();
-                            try
-                            {
-                                File.WriteAllBytes(sfd.FileName, snapshot);
-                                AddLogItem("Download done");
+                                EnableUserInput(false);
+                                AddLogItem("Opening connection");
+                                if (trionicCan.openDevice(false))
+                                {
+                                    Thread.Sleep(1000);
+                                    dtstart = DateTime.Now;
+                                    AddLogItem("Aquiring flash content");
+                                    Application.DoEvents();
+                                    //byte[] snapshot = trionicCan.getFlashContent();
+                                    byte[] snapshot = trionicCan.getFlashWithBootloader();
+                                    try
+                                    {
+                                        File.WriteAllBytes(sfd.FileName, snapshot);
+                                        AddLogItem("Download done");
+                                    }
+                                    catch (Exception E)
+                                    {
+                                        AddLogItem("Could not write file... " + E.Message);
+                                    }
+                                    TimeSpan ts = DateTime.Now - dtstart;
+                                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                                }
+                                else
+                                {
+                                    AddLogItem("Unable to connect to Trionic 8 ECU");
+                                }
+                                trionicCan.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
                             }
-                            catch (Exception E)
-                            {
-                                AddLogItem("Could not write file... " + E.Message);
-                            }
-                            TimeSpan ts = DateTime.Now - dtstart;
-                            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
                         }
-                        else
-                        {
-                            AddLogItem("Unable to connect to Trionic 8 ECU");
-                        }
-                        trionicCan.Cleanup();
-                        EnableUserInput(true);
-                        AddLogItem("Connection terminated");
                     }
                 }
             }
@@ -283,11 +266,11 @@ namespace T8CANFlasher
 
         private void button5_Click(object sender, EventArgs e)
         {
+            trionicCan.EnableCanLog = checkBox1.Checked;
+            trionicCan.OnlyPBus = checkBox2.Checked;
+            trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
             if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                trionicCan.EnableCanLog = checkBox1.Checked;
-                trionicCan.OnlyPBus = checkBox2.Checked;
-                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
                 SetT7AdapterType();
 
                 AddLogItem("Opening connection");
@@ -310,9 +293,6 @@ namespace T8CANFlasher
             }
             else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                trionicCan.EnableCanLog = checkBox1.Checked;
-                trionicCan.OnlyPBus = checkBox2.Checked;
-                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -819,7 +799,7 @@ namespace T8CANFlasher
             {
                 progressBar1.Value = (int)percentage;
             }
-            string text = percentage.ToString("F2") + " % done";
+            string text = percentage.ToString("F0") + "%";
             if (label1.Text != text)
             {
                 label1.Text = text;

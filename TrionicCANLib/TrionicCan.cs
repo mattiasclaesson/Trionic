@@ -72,8 +72,6 @@ namespace TrionicCANLib
         public delegate void ReadProgress(object sender, ReadProgressEventArgs e);
         public event TrionicCan.ReadProgress onReadProgress;
 
-        public delegate void BytesTransmitted(object sender, WriteProgressEventArgs e);
-        public event TrionicCan.BytesTransmitted onBytesTransmitted;
 
         public delegate void CanInfo(object sender, CanInfoEventArgs e);
         public event TrionicCan.CanInfo onCanInfo;
@@ -785,6 +783,7 @@ namespace TrionicCANLib
                 }
                 if (flash != null)
                 {
+                    flash.onStatusChanged -= flash_onStatusChanged;
                     flash = null;
                 }
                 KWPHandler.stopLogging();
@@ -4106,15 +4105,6 @@ namespace TrionicCANLib
             if (onReadProgress != null)
             {
                 onReadProgress(this, new ReadProgressEventArgs(percentage));
-            }
-        }
-
-        private void CastBytesTransmitted(int bytestransmitted)
-        {
-
-            if (onBytesTransmitted != null)
-            {
-                onBytesTransmitted(this, new WriteProgressEventArgs(bytestransmitted));
             }
         }
 
