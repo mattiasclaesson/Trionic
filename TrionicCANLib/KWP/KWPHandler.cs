@@ -35,15 +35,7 @@ namespace TrionicCANLib.KWP
         public static void setKWPDevice(IKWPDevice a_kwpDevice)
         {
             Console.WriteLine("******* KWPHandler: KWP device set");
-            if (m_kwpDevice == null)
-            {
-                m_kwpDevice = a_kwpDevice;
-            }
-            else
-            {
-                Console.WriteLine("KWPHandler KWPDevice was already set");
-            }
-
+            m_kwpDevice = a_kwpDevice;
         }
 
         public static KWPHandler getInstance()

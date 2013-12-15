@@ -27,9 +27,6 @@ namespace TrionicCANLib.Flasher
 
         public static void setKWPHandler(KWPHandler a_kwpHandler)
         {
-            if (m_kwpHandler != null)
-                throw new Exception("KWPHandler already set");
-
             m_kwpHandler = a_kwpHandler;
         }
 

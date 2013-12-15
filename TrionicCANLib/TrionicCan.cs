@@ -282,6 +282,7 @@ namespace TrionicCANLib
                     KWPHandler.startLogging();
                 }
                 kwpHandler = KWPHandler.getInstance();
+                kwpHandler.ResumeAlivePolling();
                 try
                 {
                     T7Flasher.setKWPHandler(kwpHandler);
@@ -782,8 +783,14 @@ namespace TrionicCANLib
                 {
                     m_canListener.FlushQueue();
                 }
+                if (flash != null)
+                {
+                    flash = null;
+                }
+                KWPHandler.stopLogging();
                 if (kwpHandler != null)
                 {
+                    kwpHandler.SuspendAlivePolling();
                     kwpHandler.closeDevice();
                 }
                 if (canUsbDevice != null)
@@ -5200,89 +5207,95 @@ namespace TrionicCANLib
 
         private void tmrReadProcessChecker_Tick(object sender, EventArgs e)
         {
-            float numberkb = (float)flash.getNrOfBytesRead() / 1024F;
-            int percentage = ((int)numberkb * 100) / 512;
-            CastProgressReadEvent(percentage);
-
-            if (flash.getStatus() == T7Flasher.FlashStatus.Completed)
+            if (flash != null)
             {
-                flash.stopFlasher();
-                tmrReadProcessChecker.Enabled = false;
-                CastInfoEvent("Finished download of flash", ActivityType.FinishedDownloadingFlash);
+                float numberkb = (float)flash.getNrOfBytesRead() / 1024F;
+                int percentage = ((int)numberkb * 100) / 512;
+                CastProgressReadEvent(percentage);
+
+                if (flash.getStatus() == T7Flasher.FlashStatus.Completed)
+                {
+                    flash.stopFlasher();
+                    tmrReadProcessChecker.Enabled = false;
+                    CastInfoEvent("Finished download of flash", ActivityType.FinishedDownloadingFlash);
+                }
             }
         }
 
         private void tmrWriteProcessChecker_Tick(object sender, EventArgs e)
         {
-            float numberkb = (float)flash.getNrOfBytesRead() / 1024F;
-            int percentage = ((int)numberkb * 100) / 512;
-            CastProgressWriteEvent(percentage);
+            if (flash != null)
+            {
+                float numberkb = (float)flash.getNrOfBytesRead() / 1024F;
+                int percentage = ((int)numberkb * 100) / 512;
+                CastProgressWriteEvent(percentage);
 
-            T7Flasher.FlashStatus stat = flash.getStatus();
-            switch (stat)
-            {
-                case T7Flasher.FlashStatus.Completed:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: Completed flashing procedure");
-                    break;
-                case T7Flasher.FlashStatus.DoinNuthin:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: DoinNuthin");
-                    break;
-                case T7Flasher.FlashStatus.EraseError:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: EraseError");
-                    break;
-                case T7Flasher.FlashStatus.Eraseing:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: Eraseing");
-                    break;
-                case T7Flasher.FlashStatus.NoSequrityAccess:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: NoSequrityAccess");
-                    break;
-                case T7Flasher.FlashStatus.NoSuchFile:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: NoSuchFile");
-                    break;
-                case T7Flasher.FlashStatus.ReadError:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: ReadError");
-                    break;
-                case T7Flasher.FlashStatus.Reading:
-                    break;
-                case T7Flasher.FlashStatus.WriteError:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: WriteError");
-                    break;
-                case T7Flasher.FlashStatus.Writing:
-                    break;
-                default:
-                    AddToCanTrace("tmrWriteProcessChecker_Tick: " + stat);
-                    break;
-            }
+                T7Flasher.FlashStatus stat = flash.getStatus();
+                switch (stat)
+                {
+                    case T7Flasher.FlashStatus.Completed:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: Completed flashing procedure");
+                        break;
+                    case T7Flasher.FlashStatus.DoinNuthin:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: DoinNuthin");
+                        break;
+                    case T7Flasher.FlashStatus.EraseError:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: EraseError");
+                        break;
+                    case T7Flasher.FlashStatus.Eraseing:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: Eraseing");
+                        break;
+                    case T7Flasher.FlashStatus.NoSequrityAccess:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: NoSequrityAccess");
+                        break;
+                    case T7Flasher.FlashStatus.NoSuchFile:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: NoSuchFile");
+                        break;
+                    case T7Flasher.FlashStatus.ReadError:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: ReadError");
+                        break;
+                    case T7Flasher.FlashStatus.Reading:
+                        break;
+                    case T7Flasher.FlashStatus.WriteError:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: WriteError");
+                        break;
+                    case T7Flasher.FlashStatus.Writing:
+                        break;
+                    default:
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: " + stat);
+                        break;
+                }
 
-            if (stat == T7Flasher.FlashStatus.Completed)
-            {
-                flash.stopFlasher();
-                tmrWriteProcessChecker.Enabled = false;
-                CastInfoEvent("Finished flash session", ActivityType.FinishedFlashing);
-            }
-            else if (stat == T7Flasher.FlashStatus.NoSequrityAccess)
-            {
-                flash.stopFlasher();
-                tmrWriteProcessChecker.Enabled = false;
-                CastInfoEvent("No security access granted", ActivityType.FinishedFlashing);
-            }
-            else if (stat == T7Flasher.FlashStatus.EraseError)
-            {
-                flash.stopFlasher();
-                tmrWriteProcessChecker.Enabled = false;
-                CastInfoEvent("An erase error occured", ActivityType.FinishedFlashing);
-            }
-            else if (stat == T7Flasher.FlashStatus.NoSuchFile)
-            {
-                flash.stopFlasher();
-                tmrWriteProcessChecker.Enabled = false;
-                CastInfoEvent("File not found", ActivityType.FinishedFlashing);
-            }
-            else if (stat == T7Flasher.FlashStatus.WriteError)
-            {
-                flash.stopFlasher();
-                tmrWriteProcessChecker.Enabled = false;
-                CastInfoEvent("A write error occured, please retry to flash without cutting power to the ECU", ActivityType.FinishedFlashing);
+                if (stat == T7Flasher.FlashStatus.Completed)
+                {
+                    flash.stopFlasher();
+                    tmrWriteProcessChecker.Enabled = false;
+                    CastInfoEvent("Finished flash session", ActivityType.FinishedFlashing);
+                }
+                else if (stat == T7Flasher.FlashStatus.NoSequrityAccess)
+                {
+                    flash.stopFlasher();
+                    tmrWriteProcessChecker.Enabled = false;
+                    CastInfoEvent("No security access granted", ActivityType.FinishedFlashing);
+                }
+                else if (stat == T7Flasher.FlashStatus.EraseError)
+                {
+                    flash.stopFlasher();
+                    tmrWriteProcessChecker.Enabled = false;
+                    CastInfoEvent("An erase error occured", ActivityType.FinishedFlashing);
+                }
+                else if (stat == T7Flasher.FlashStatus.NoSuchFile)
+                {
+                    flash.stopFlasher();
+                    tmrWriteProcessChecker.Enabled = false;
+                    CastInfoEvent("File not found", ActivityType.FinishedFlashing);
+                }
+                else if (stat == T7Flasher.FlashStatus.WriteError)
+                {
+                    flash.stopFlasher();
+                    tmrWriteProcessChecker.Enabled = false;
+                    CastInfoEvent("A write error occured, please retry to flash without cutting power to the ECU", ActivityType.FinishedFlashing);
+                }
             }
         }
 
