@@ -290,7 +290,7 @@
             this.button15.Name = "button15";
             this.button15.Size = new System.Drawing.Size(107, 50);
             this.button15.TabIndex = 54;
-            this.button15.Text = "Key";
+            this.button15.Text = "Reset ECU";
             this.button15.UseVisualStyleBackColor = true;
             this.button15.Click += new System.EventHandler(this.button15_Click);
             // 

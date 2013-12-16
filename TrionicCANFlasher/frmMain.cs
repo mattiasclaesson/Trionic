@@ -161,7 +161,6 @@ namespace TrionicCANFlasher
                 button9.Enabled = false;
                 button11.Enabled = false;
                 button14.Enabled = false;
-                button15.Enabled = false;
 
                 if (comboBox1.SelectedIndex == (int)CANBusAdapter.COMBI)
                 {
@@ -179,6 +178,8 @@ namespace TrionicCANFlasher
             }
             else if (comboBox3.SelectedIndex == (int)ECU.TRIONIC8)
             {
+                button15.Enabled = false;
+
                 if (comboBox1.SelectedIndex == (int)CANBusAdapter.ELM327)
                 {
                     button7.Enabled = false;
@@ -756,16 +757,30 @@ namespace TrionicCANFlasher
 
         private void button15_Click(object sender, EventArgs e)
         {
-            int input;
-            if (int.TryParse(textBox2.Text, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out input))
+            if (comboBox3.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                byte[] seed = new byte[2];
-                seed[0] = Convert.ToByte(input / 256);
-                seed[1] = Convert.ToByte(input - (int)seed[0] * 256);
+                trionicCan.EnableCanLog = checkBox1.Checked;
+                trionicCan.OnlyPBus = checkBox2.Checked;
+                trionicCan.DisableCanConnectionCheck = checkBox3.Checked;
+                SetT7AdapterType();
 
-                SeedToKey s2k = new SeedToKey();
-                byte[] key = s2k.calculateKey(seed, AccessLevel.AccessLevel01);
-                AddLogItem("Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")");
+                AddLogItem("Opening connection");
+                EnableUserInput(false);
+
+                if (trionicCan.openT7Device())
+                {
+                    Thread.Sleep(1000);
+                    AddLogItem("Reset T7");
+                    Application.DoEvents();
+                    trionicCan.ResetT7();
+                }
+                else
+                {
+                    AddLogItem("Unable to connect to Trionic 7 ECU");
+                }
+                trionicCan.Cleanup();
+                AddLogItem("Connection closed");
+                EnableUserInput(true);
             }
         }
 

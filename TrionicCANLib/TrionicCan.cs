@@ -5312,5 +5312,10 @@ namespace TrionicCANLib
             KWPHandler.getInstance().getE85Level(out level);
             return level;
         }
+
+        public bool ResetT7()
+        {
+            return KWPHandler.getInstance().ResetECU();
+        }
     }
 }
