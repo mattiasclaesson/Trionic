@@ -34,3 +34,21 @@ C:\Program Files (x86)\Dilemma\T8CANFlash\Source\TrionicCANFlasher\obj\x86\Relea
 C:\Program Files (x86)\Dilemma\T8CANFlash\Source\TrionicCANFlasher\obj\x86\Release\TrionicCANFlasher.application
 C:\Program Files (x86)\Dilemma\T8CANFlash\Source\TrionicCANFlasher\bin\x86\Release\TrionicCANLib.dll
 C:\Program Files (x86)\Dilemma\T8CANFlash\Source\TrionicCANFlasher\bin\x86\Release\TrionicCANLib.pdb
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\TrionicCANFlasher.exe.manifest
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\TrionicCANFlasher.application
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\TrionicCANFlasher.exe
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\TrionicCANFlasher.pdb
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\TrionicCANLib.dll
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\canusbdrv_net.dll
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\combilib-net.dll
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\FTD2XX_NET.dll
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\LibUsbDotNet.dll
+C:\GitHub\Trionic\TrionicCANFlasher\bin\x86\Release\TrionicCANLib.pdb
+C:\GitHub\Trionic\TrionicCANFlasher\obj\x86\Release\ResolveAssemblyReference.cache
+C:\GitHub\Trionic\TrionicCANFlasher\obj\x86\Release\TrionicCANFlasher.frmMain.resources
+C:\GitHub\Trionic\TrionicCANFlasher\obj\x86\Release\TrionicCANFlasher.Properties.Resources.resources
+C:\GitHub\Trionic\TrionicCANFlasher\obj\x86\Release\TrionicCANFlasher.csproj.GenerateResource.Cache
+C:\GitHub\Trionic\TrionicCANFlasher\obj\x86\Release\TrionicCANFlasher.exe.manifest
+C:\GitHub\Trionic\TrionicCANFlasher\obj\x86\Release\TrionicCANFlasher.application
+C:\GitHub\Trionic\TrionicCANFlasher\obj\x86\Release\TrionicCANFlasher.exe
+C:\GitHub\Trionic\TrionicCANFlasher\obj\x86\Release\TrionicCANFlasher.pdb
