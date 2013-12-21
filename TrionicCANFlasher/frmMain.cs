@@ -516,9 +516,9 @@ namespace TrionicCANFlasher
 
         private void LoadRegistrySettings()
         {
-            RegistryKey TempKey = Registry.CurrentUser.CreateSubKey("Software");
-
-            using (RegistryKey Settings = TempKey.CreateSubKey("TrionicCANFlasher"))
+            RegistryKey SoftwareKey = Registry.CurrentUser.CreateSubKey("Software");
+            RegistryKey ManufacturerKey = SoftwareKey.CreateSubKey("MattiasC");
+            using (RegistryKey Settings = ManufacturerKey.CreateSubKey("TrionicCANFlasher"))
             {
                 if (Settings != null)
                 {
@@ -562,17 +562,19 @@ namespace TrionicCANFlasher
 
         private static void SaveRegistrySetting(string key, string value)
         {
-            RegistryKey TempKey = Registry.CurrentUser.CreateSubKey("Software");
-            using (RegistryKey saveSettings = TempKey.CreateSubKey("TrionicCANFlasher"))
+            RegistryKey SoftwareKey = Registry.CurrentUser.CreateSubKey("Software");
+            RegistryKey ManufacturerKey = SoftwareKey.CreateSubKey("MattiasC");
+            using (RegistryKey saveSettings = ManufacturerKey.CreateSubKey("TrionicCANFlasher"))
             {
                 saveSettings.SetValue(key, value);
             }
         }
 
-        private void SaveRegistrySetting(string key, bool value)
+        private static void SaveRegistrySetting(string key, bool value)
         {
-            RegistryKey TempKey = Registry.CurrentUser.CreateSubKey("Software");
-            using (RegistryKey saveSettings = TempKey.CreateSubKey("TrionicCANFlasher"))
+            RegistryKey SoftwareKey = Registry.CurrentUser.CreateSubKey("Software");
+            RegistryKey ManufacturerKey = SoftwareKey.CreateSubKey("MattiasC");
+            using (RegistryKey saveSettings = ManufacturerKey.CreateSubKey("TrionicCANFlasher"))
             {
                 saveSettings.SetValue(key, value);
             }
