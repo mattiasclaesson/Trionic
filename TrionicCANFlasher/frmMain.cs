@@ -358,11 +358,14 @@ namespace TrionicCANFlasher
                             dtstart = DateTime.Now;
                             AddLogItem("Aquiring snapshot");
                             Application.DoEvents();
-                            byte[] snapshot = trionicCan.getSRAMSnapshotWithBootloader();
-                            //byte[] snapshot = trionicCan.getSRAMSnapshot();
+                            byte[] snapshot = trionicCan.getSRAMSnapshot();
+                            byte[] snapshot7000 = trionicCan.getSRAMSnapshotWithBootloader();
+                            byte[] total = new byte[0x008000];
+                            snapshot.CopyTo(total, 0);
+                            snapshot7000.CopyTo(total, 0x7000);
                             try
                             {
-                                File.WriteAllBytes(sfd.FileName, snapshot);
+                                File. WriteAllBytes(sfd.FileName, total);
                                 AddLogItem("Snapshot done");
                             }
                             catch (Exception E)
