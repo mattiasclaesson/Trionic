@@ -16,8 +16,12 @@ namespace TrionicCANLib.CAN
     /// 
     /// All incomming messages are published to registered ICANListeners.
     /// </summary>
+    /// 
     public class CANUSBDevice : ICANDevice
     {
+        public const string CAN_BAUD_BTR_33K = "0x8B:0x2F"; // 33 kbit/s SAAB GMLAN
+        public const string CAN_BAUD_BTR_47K = "0xcb:0x9a"; // 47,6 kbit/s SAAB T7 I-bus
+
         static uint m_deviceHandle = 0;
         Thread m_readThread;
         Object m_synchObject = new Object();
@@ -157,11 +161,23 @@ namespace TrionicCANLib.CAN
             if (!UseOnlyPBus)
             {
                 Console.WriteLine("Getting handle");
-                m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
-                    "0xcb:0x9a",                        // Slow
-                    Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
-                    Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
-                    Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
+                if (TrionicECU == ECU.TRIONIC7)
+                {
+                    m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
+                        CAN_BAUD_BTR_47K, // T7 i-bus
+                        Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
+                        Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
+                        Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
+                }
+                else if (TrionicECU == ECU.TRIONIC8)
+                {
+                    m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
+                        CAN_BAUD_BTR_33K, // GMLAN
+                        Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
+                        Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
+                        Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
+                }
+
                 if (m_deviceHandle != 0)
                 {
                     if (waitAnyMessage(1000, out msg) != 0)
