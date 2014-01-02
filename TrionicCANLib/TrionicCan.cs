@@ -2096,10 +2096,10 @@ namespace TrionicCANLib
             _stallKeepAlive = true;
             bool success = false;
             int retryCount = 0;
-            int startAddress = 0x100000;
+            int startAddress = 0x107000;
             int blockSize = 0x80; // defined in bootloader... keep it that way!
             int bufpnt = 0;
-            byte[] buf = new byte[0x008000];
+            byte[] buf = new byte[0x001000];
             int blockCount = 0;
             SendKeepAlive();
             sw.Reset();
@@ -3490,7 +3490,7 @@ namespace TrionicCANLib
             int startAddress = 0x100000;
             int blockSize = 0x40;
             int bufpnt = 0;
-            byte[] buf = new byte[0x8000];
+            byte[] buf = new byte[0x7000];
             success = false;
             //for (int i = 0; i < buf.Length/blockSize; i++)
             while(bufpnt < buf.Length -1)
@@ -3512,7 +3512,7 @@ namespace TrionicCANLib
                             buf[bufpnt++] = readbuf[j];
                         }
                     }
-                    CastProgressReadEvent((float)(bufpnt * 100) / (float)buf.Length);
+                    CastProgressReadEvent((float)(bufpnt * 85) / (float)buf.Length);
                     retryCount = 0;
                     startAddress += blockSize;
                 }
