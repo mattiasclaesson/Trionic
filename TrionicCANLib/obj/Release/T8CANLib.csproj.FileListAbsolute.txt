@@ -1,9 +1,0 @@
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\Release\T8CANLib.dll
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\Release\T8CANLib.pdb
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\Release\combilib-net.dll
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\Release\ftd2xx_net.dll
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\Release\LibUsbDotNet.dll
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\obj\Release\ResolveAssemblyReference.cache
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\obj\Release\T8CANLib.dll
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\obj\Release\T8CANLib.pdb
-C:\Program Files (x86)\Dilemma\T8Suite\Source\T8CANLib\bin\Release\canusbdrv_net.dll
