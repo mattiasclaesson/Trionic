@@ -7,12 +7,3 @@ C:\Program Files (x86)\Dilemma\T8CANFlash\Source\TrionicCANLib\bin\x86\Release\T
 C:\Program Files (x86)\Dilemma\T8CANFlash\Source\TrionicCANLib\bin\x86\Release\TrionicCANLib.pdb
 C:\Program Files (x86)\Dilemma\T8CANFlash\Source\TrionicCANLib\obj\x86\Release\TrionicCANLib.dll
 C:\Program Files (x86)\Dilemma\T8CANFlash\Source\TrionicCANLib\obj\x86\Release\TrionicCANLib.pdb
-C:\GitHub\Trionic\TrionicCANLib\bin\x86\Release\TrionicCANLib.dll
-C:\GitHub\Trionic\TrionicCANLib\bin\x86\Release\TrionicCANLib.pdb
-C:\GitHub\Trionic\TrionicCANLib\bin\x86\Release\canusbdrv_net.dll
-C:\GitHub\Trionic\TrionicCANLib\bin\x86\Release\combilib-net.dll
-C:\GitHub\Trionic\TrionicCANLib\bin\x86\Release\ftd2xx_net.dll
-C:\GitHub\Trionic\TrionicCANLib\bin\x86\Release\LibUsbDotNet.dll
-C:\GitHub\Trionic\TrionicCANLib\obj\x86\Release\ResolveAssemblyReference.cache
-C:\GitHub\Trionic\TrionicCANLib\obj\x86\Release\TrionicCANLib.dll
-C:\GitHub\Trionic\TrionicCANLib\obj\x86\Release\TrionicCANLib.pdb
