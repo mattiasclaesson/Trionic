@@ -1898,7 +1898,6 @@ namespace TrionicCANLib
             Thread.Sleep(500);
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
             RequestSecurityAccess(2000);
             Thread.Sleep(500);
             CastInfoEvent("Uploading data", ActivityType.UploadingBootloader);
@@ -2006,7 +2005,6 @@ namespace TrionicCANLib
             Thread.Sleep(500);
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
             RequestSecurityAccess(2000);
             Thread.Sleep(500);
             CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
@@ -2133,7 +2131,6 @@ namespace TrionicCANLib
             Thread.Sleep(500);
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
             RequestSecurityAccess(500);
             Thread.Sleep(500);
             CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
@@ -2464,7 +2461,7 @@ namespace TrionicCANLib
             CANMessage msg = new CANMessage(0x11, 0, 3); //<GS-18052011> ELM327 support requires the length byte
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
-            CastInfoEvent("Requesting security access", ActivityType.ConvertingFile);
+            CastInfoEvent("Requesting security access 011", ActivityType.ConvertingFile);
             if (!canUsbDevice.sendMessage(msg))
             {
                 Console.WriteLine("Couldn't send message");
@@ -2886,7 +2883,7 @@ namespace TrionicCANLib
                         Thread.Sleep(100);
                         BroadcastKeepAlive();
                         Thread.Sleep(100);
-                        CastInfoEvent("Requesting security access...", ActivityType.UploadingBootloader);
+                        CastInfoEvent("Recovery requesting security access...", ActivityType.UploadingBootloader);
                         if (RequestSecurityAccess011(0))
                         {
                             CastInfoEvent("Security access granted, uploading bootloader", ActivityType.UploadingBootloader);
@@ -3136,7 +3133,6 @@ namespace TrionicCANLib
             // verified upto here
 
             _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
             if (!RequestSecurityAccess(2000))
             {
                 CastInfoEvent("Failed to get security access", ActivityType.UploadingFlash);
@@ -3512,7 +3508,7 @@ namespace TrionicCANLib
                             buf[bufpnt++] = readbuf[j];
                         }
                     }
-                    CastProgressReadEvent((float)(bufpnt * 85) / (float)buf.Length);
+                    CastProgressReadEvent((float)(bufpnt * 100) / (float)buf.Length);
                     retryCount = 0;
                     startAddress += blockSize;
                 }
