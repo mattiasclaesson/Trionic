@@ -1,2 +1,0 @@
-29-09-2013 00:33:43.739 - Failed to set flasher object to KWPHandler
-29-09-2013 00:35:36.734 - Failed to set flasher object to KWPHandler
