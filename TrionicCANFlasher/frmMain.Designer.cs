@@ -29,44 +29,46 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
-            this.button4 = new System.Windows.Forms.Button();
+            this.btnReadECU = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.cbEnableLogging = new System.Windows.Forms.CheckBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnExit = new System.Windows.Forms.Button();
+            this.btnFlashECU = new System.Windows.Forms.Button();
             this.listBox1 = new System.Windows.Forms.ListBox();
-            this.button5 = new System.Windows.Forms.Button();
-            this.button6 = new System.Windows.Forms.Button();
-            this.button7 = new System.Windows.Forms.Button();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.btnGetECUInfo = new System.Windows.Forms.Button();
+            this.btnReadSRAM = new System.Windows.Forms.Button();
+            this.btnRecoverECU = new System.Windows.Forms.Button();
+            this.cbxAdapterType = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
-            this.button9 = new System.Windows.Forms.Button();
-            this.button11 = new System.Windows.Forms.Button();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.cbxComPort = new System.Windows.Forms.ComboBox();
+            this.btnReadDTC = new System.Windows.Forms.Button();
+            this.btnSetECUVIN = new System.Windows.Forms.Button();
+            this.tbParameter = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.button8 = new System.Windows.Forms.Button();
-            this.button13 = new System.Windows.Forms.Button();
-            this.button14 = new System.Windows.Forms.Button();
-            this.button15 = new System.Windows.Forms.Button();
+            this.btnSecurityAccess = new System.Windows.Forms.Button();
+            this.btnSetE85 = new System.Windows.Forms.Button();
+            this.btnSetSpeed = new System.Windows.Forms.Button();
+            this.btnResetECU = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
-            this.comboBox3 = new System.Windows.Forms.ComboBox();
-            this.checkBox2 = new System.Windows.Forms.CheckBox();
-            this.checkBox3 = new System.Windows.Forms.CheckBox();
+            this.cbxEcuType = new System.Windows.Forms.ComboBox();
+            this.cbOnlyPBus = new System.Windows.Forms.CheckBox();
+            this.cbDisableConnectionCheck = new System.Windows.Forms.CheckBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.cbxComSpeed = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
-            // button4
+            // btnReadECU
             // 
-            this.button4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button4.Location = new System.Drawing.Point(909, 11);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(107, 50);
-            this.button4.TabIndex = 29;
-            this.button4.Text = "Read ECU";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.button4_Click);
+            this.btnReadECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnReadECU.Location = new System.Drawing.Point(909, 11);
+            this.btnReadECU.Name = "btnReadECU";
+            this.btnReadECU.Size = new System.Drawing.Size(107, 50);
+            this.btnReadECU.TabIndex = 29;
+            this.btnReadECU.Text = "Read ECU";
+            this.btnReadECU.UseVisualStyleBackColor = true;
+            this.btnReadECU.Click += new System.EventHandler(this.btnReadECU_Click);
             // 
             // label1
             // 
@@ -78,16 +80,16 @@
             this.label1.TabIndex = 25;
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // checkBox1
+            // cbEnableLogging
             // 
-            this.checkBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(866, 274);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(96, 17);
-            this.checkBox1.TabIndex = 24;
-            this.checkBox1.Text = "Enable logging";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.cbEnableLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbEnableLogging.AutoSize = true;
+            this.cbEnableLogging.Location = new System.Drawing.Point(866, 297);
+            this.cbEnableLogging.Name = "cbEnableLogging";
+            this.cbEnableLogging.Size = new System.Drawing.Size(96, 17);
+            this.cbEnableLogging.TabIndex = 24;
+            this.cbEnableLogging.Text = "Enable logging";
+            this.cbEnableLogging.UseVisualStyleBackColor = true;
             // 
             // progressBar1
             // 
@@ -98,27 +100,27 @@
             this.progressBar1.Size = new System.Drawing.Size(544, 23);
             this.progressBar1.TabIndex = 23;
             // 
-            // button2
+            // btnExit
             // 
-            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button2.Location = new System.Drawing.Point(909, 123);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(107, 50);
-            this.button2.TabIndex = 22;
-            this.button2.Text = "Exit";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExit.Location = new System.Drawing.Point(909, 123);
+            this.btnExit.Name = "btnExit";
+            this.btnExit.Size = new System.Drawing.Size(107, 50);
+            this.btnExit.TabIndex = 22;
+            this.btnExit.Text = "Exit";
+            this.btnExit.UseVisualStyleBackColor = true;
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
-            // button1
+            // btnFlashECU
             // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(791, 11);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(112, 50);
-            this.button1.TabIndex = 21;
-            this.button1.Text = "Flash ECU";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.btnFlashECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnFlashECU.Location = new System.Drawing.Point(791, 11);
+            this.btnFlashECU.Name = "btnFlashECU";
+            this.btnFlashECU.Size = new System.Drawing.Size(112, 50);
+            this.btnFlashECU.TabIndex = 21;
+            this.btnFlashECU.Text = "Flash ECU";
+            this.btnFlashECU.UseVisualStyleBackColor = true;
+            this.btnFlashECU.Click += new System.EventHandler(this.btnFlashEcu_Click);
             // 
             // listBox1
             // 
@@ -133,53 +135,54 @@
             this.listBox1.Size = new System.Drawing.Size(544, 312);
             this.listBox1.TabIndex = 20;
             // 
-            // button5
+            // btnGetECUInfo
             // 
-            this.button5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button5.Location = new System.Drawing.Point(791, 67);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(112, 50);
-            this.button5.TabIndex = 30;
-            this.button5.Text = "Get ECU info";
-            this.button5.UseVisualStyleBackColor = true;
-            this.button5.Click += new System.EventHandler(this.button5_Click);
+            this.btnGetECUInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnGetECUInfo.Location = new System.Drawing.Point(791, 67);
+            this.btnGetECUInfo.Name = "btnGetECUInfo";
+            this.btnGetECUInfo.Size = new System.Drawing.Size(112, 50);
+            this.btnGetECUInfo.TabIndex = 30;
+            this.btnGetECUInfo.Text = "Get ECU info";
+            this.btnGetECUInfo.UseVisualStyleBackColor = true;
+            this.btnGetECUInfo.Click += new System.EventHandler(this.btnGetEcuInfo_Click);
             // 
-            // button6
+            // btnReadSRAM
             // 
-            this.button6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button6.Location = new System.Drawing.Point(909, 67);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(107, 50);
-            this.button6.TabIndex = 31;
-            this.button6.Text = "Read SRAM";
-            this.button6.UseVisualStyleBackColor = true;
-            this.button6.Click += new System.EventHandler(this.button6_Click);
+            this.btnReadSRAM.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnReadSRAM.Location = new System.Drawing.Point(909, 67);
+            this.btnReadSRAM.Name = "btnReadSRAM";
+            this.btnReadSRAM.Size = new System.Drawing.Size(107, 50);
+            this.btnReadSRAM.TabIndex = 31;
+            this.btnReadSRAM.Text = "Read SRAM";
+            this.btnReadSRAM.UseVisualStyleBackColor = true;
+            this.btnReadSRAM.Click += new System.EventHandler(this.btnReadSRAM_Click);
             // 
-            // button7
+            // btnRecoverECU
             // 
-            this.button7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button7.Location = new System.Drawing.Point(791, 123);
-            this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(112, 50);
-            this.button7.TabIndex = 32;
-            this.button7.Text = "Recover ECU";
-            this.button7.UseVisualStyleBackColor = true;
-            this.button7.Click += new System.EventHandler(this.button7_Click);
+            this.btnRecoverECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRecoverECU.Location = new System.Drawing.Point(791, 123);
+            this.btnRecoverECU.Name = "btnRecoverECU";
+            this.btnRecoverECU.Size = new System.Drawing.Size(112, 50);
+            this.btnRecoverECU.TabIndex = 32;
+            this.btnRecoverECU.Text = "Recover ECU";
+            this.btnRecoverECU.UseVisualStyleBackColor = true;
+            this.btnRecoverECU.Click += new System.EventHandler(this.btnRecoverECU_Click);
             // 
-            // comboBox1
+            // cbxAdapterType
             // 
-            this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
+            this.cbxAdapterType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbxAdapterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxAdapterType.FormattingEnabled = true;
+            this.cbxAdapterType.Items.AddRange(new object[] {
             "Lawicel CANUSB",
             "CombiAdapter",
             "ELM327 v1.3 or higher",
             "Just4Trionic"});
-            this.comboBox1.Location = new System.Drawing.Point(866, 220);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(150, 21);
-            this.comboBox1.TabIndex = 33;
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.cbxAdapterType.Location = new System.Drawing.Point(866, 220);
+            this.cbxAdapterType.Name = "cbxAdapterType";
+            this.cbxAdapterType.Size = new System.Drawing.Size(150, 21);
+            this.cbxAdapterType.TabIndex = 33;
+            this.cbxAdapterType.SelectedIndexChanged += new System.EventHandler(this.cbxAdapterType_SelectedIndexChanged);
             // 
             // label4
             // 
@@ -197,48 +200,49 @@
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(793, 250);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(46, 13);
+            this.label5.Size = new System.Drawing.Size(49, 13);
             this.label5.TabIndex = 36;
-            this.label5.Text = "Comport";
+            this.label5.Text = "Com port";
             // 
-            // comboBox2
+            // cbxComPort
             // 
-            this.comboBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Location = new System.Drawing.Point(866, 247);
-            this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(150, 21);
-            this.comboBox2.TabIndex = 35;
+            this.cbxComPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbxComPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxComPort.FormattingEnabled = true;
+            this.cbxComPort.Location = new System.Drawing.Point(866, 247);
+            this.cbxComPort.Name = "cbxComPort";
+            this.cbxComPort.Size = new System.Drawing.Size(150, 21);
+            this.cbxComPort.TabIndex = 35;
             // 
-            // button9
+            // btnReadDTC
             // 
-            this.button9.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button9.Location = new System.Drawing.Point(678, 12);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(107, 50);
-            this.button9.TabIndex = 39;
-            this.button9.Text = "Read DTC";
-            this.button9.UseVisualStyleBackColor = true;
-            this.button9.Click += new System.EventHandler(this.button9_Click);
+            this.btnReadDTC.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnReadDTC.Location = new System.Drawing.Point(678, 12);
+            this.btnReadDTC.Name = "btnReadDTC";
+            this.btnReadDTC.Size = new System.Drawing.Size(107, 50);
+            this.btnReadDTC.TabIndex = 39;
+            this.btnReadDTC.Text = "Read DTC";
+            this.btnReadDTC.UseVisualStyleBackColor = true;
+            this.btnReadDTC.Click += new System.EventHandler(this.btnReadDTC_Click);
             // 
-            // button11
+            // btnSetECUVIN
             // 
-            this.button11.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button11.Location = new System.Drawing.Point(565, 68);
-            this.button11.Name = "button11";
-            this.button11.Size = new System.Drawing.Size(107, 50);
-            this.button11.TabIndex = 46;
-            this.button11.Text = "Set ECU VIN";
-            this.button11.UseVisualStyleBackColor = true;
-            this.button11.Click += new System.EventHandler(this.button11_Click);
+            this.btnSetECUVIN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSetECUVIN.Location = new System.Drawing.Point(565, 68);
+            this.btnSetECUVIN.Name = "btnSetECUVIN";
+            this.btnSetECUVIN.Size = new System.Drawing.Size(107, 50);
+            this.btnSetECUVIN.TabIndex = 46;
+            this.btnSetECUVIN.Text = "Set ECU VIN";
+            this.btnSetECUVIN.UseVisualStyleBackColor = true;
+            this.btnSetECUVIN.Click += new System.EventHandler(this.btnSetECUVIN_Click);
             // 
-            // textBox2
+            // tbParameter
             // 
-            this.textBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox2.Location = new System.Drawing.Point(642, 194);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(143, 20);
-            this.textBox2.TabIndex = 47;
+            this.tbParameter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbParameter.Location = new System.Drawing.Point(642, 194);
+            this.tbParameter.Name = "tbParameter";
+            this.tbParameter.Size = new System.Drawing.Size(143, 20);
+            this.tbParameter.TabIndex = 47;
             // 
             // label3
             // 
@@ -250,49 +254,49 @@
             this.label3.TabIndex = 48;
             this.label3.Text = "Set Parameter";
             // 
-            // button8
+            // btnSecurityAccess
             // 
-            this.button8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button8.Location = new System.Drawing.Point(678, 67);
-            this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(107, 50);
-            this.button8.TabIndex = 50;
-            this.button8.Text = "Security Access";
-            this.button8.UseVisualStyleBackColor = true;
-            this.button8.Click += new System.EventHandler(this.button8_Click);
+            this.btnSecurityAccess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSecurityAccess.Location = new System.Drawing.Point(678, 67);
+            this.btnSecurityAccess.Name = "btnSecurityAccess";
+            this.btnSecurityAccess.Size = new System.Drawing.Size(107, 50);
+            this.btnSecurityAccess.TabIndex = 50;
+            this.btnSecurityAccess.Text = "Security Access";
+            this.btnSecurityAccess.UseVisualStyleBackColor = true;
+            this.btnSecurityAccess.Click += new System.EventHandler(this.btnSecurityAccess_Click);
             // 
-            // button13
+            // btnSetE85
             // 
-            this.button13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button13.Location = new System.Drawing.Point(565, 12);
-            this.button13.Name = "button13";
-            this.button13.Size = new System.Drawing.Size(107, 50);
-            this.button13.TabIndex = 52;
-            this.button13.Text = "SetE85";
-            this.button13.UseVisualStyleBackColor = true;
-            this.button13.Click += new System.EventHandler(this.button13_Click);
+            this.btnSetE85.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSetE85.Location = new System.Drawing.Point(565, 12);
+            this.btnSetE85.Name = "btnSetE85";
+            this.btnSetE85.Size = new System.Drawing.Size(107, 50);
+            this.btnSetE85.TabIndex = 52;
+            this.btnSetE85.Text = "SetE85";
+            this.btnSetE85.UseVisualStyleBackColor = true;
+            this.btnSetE85.Click += new System.EventHandler(this.btnSetE85_Click);
             // 
-            // button14
+            // btnSetSpeed
             // 
-            this.button14.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button14.Location = new System.Drawing.Point(565, 124);
-            this.button14.Name = "button14";
-            this.button14.Size = new System.Drawing.Size(107, 50);
-            this.button14.TabIndex = 53;
-            this.button14.Text = "Set speed";
-            this.button14.UseVisualStyleBackColor = true;
-            this.button14.Click += new System.EventHandler(this.button14_Click);
+            this.btnSetSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSetSpeed.Location = new System.Drawing.Point(565, 124);
+            this.btnSetSpeed.Name = "btnSetSpeed";
+            this.btnSetSpeed.Size = new System.Drawing.Size(107, 50);
+            this.btnSetSpeed.TabIndex = 53;
+            this.btnSetSpeed.Text = "Set speed";
+            this.btnSetSpeed.UseVisualStyleBackColor = true;
+            this.btnSetSpeed.Click += new System.EventHandler(this.btnSetSpeed_Click);
             // 
-            // button15
+            // btnResetECU
             // 
-            this.button15.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button15.Location = new System.Drawing.Point(678, 124);
-            this.button15.Name = "button15";
-            this.button15.Size = new System.Drawing.Size(107, 50);
-            this.button15.TabIndex = 54;
-            this.button15.Text = "Reset ECU";
-            this.button15.UseVisualStyleBackColor = true;
-            this.button15.Click += new System.EventHandler(this.button15_Click);
+            this.btnResetECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnResetECU.Location = new System.Drawing.Point(678, 124);
+            this.btnResetECU.Name = "btnResetECU";
+            this.btnResetECU.Size = new System.Drawing.Size(107, 50);
+            this.btnResetECU.TabIndex = 54;
+            this.btnResetECU.Text = "Reset ECU";
+            this.btnResetECU.UseVisualStyleBackColor = true;
+            this.btnResetECU.Click += new System.EventHandler(this.btnResetECU_Click);
             // 
             // label2
             // 
@@ -304,70 +308,99 @@
             this.label2.TabIndex = 55;
             this.label2.Text = "ECU Type";
             // 
-            // comboBox3
+            // cbxEcuType
             // 
-            this.comboBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBox3.FormattingEnabled = true;
-            this.comboBox3.Items.AddRange(new object[] {
+            this.cbxEcuType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbxEcuType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxEcuType.FormattingEnabled = true;
+            this.cbxEcuType.Items.AddRange(new object[] {
             "Trionic 7",
             "Trionic 8"});
-            this.comboBox3.Location = new System.Drawing.Point(866, 193);
-            this.comboBox3.Name = "comboBox3";
-            this.comboBox3.Size = new System.Drawing.Size(150, 21);
-            this.comboBox3.TabIndex = 56;
-            this.comboBox3.SelectedIndexChanged += new System.EventHandler(this.comboBox3_SelectedIndexChanged);
+            this.cbxEcuType.Location = new System.Drawing.Point(866, 193);
+            this.cbxEcuType.Name = "cbxEcuType";
+            this.cbxEcuType.Size = new System.Drawing.Size(150, 21);
+            this.cbxEcuType.TabIndex = 56;
+            this.cbxEcuType.SelectedIndexChanged += new System.EventHandler(this.cbxEcuType_SelectedIndexChanged);
             // 
-            // checkBox2
+            // cbOnlyPBus
             // 
-            this.checkBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.checkBox2.AutoSize = true;
-            this.checkBox2.Location = new System.Drawing.Point(866, 297);
-            this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(134, 17);
-            this.checkBox2.TabIndex = 57;
-            this.checkBox2.Text = "Only P-Bus connection";
-            this.checkBox2.UseVisualStyleBackColor = true;
+            this.cbOnlyPBus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbOnlyPBus.AutoSize = true;
+            this.cbOnlyPBus.Location = new System.Drawing.Point(866, 320);
+            this.cbOnlyPBus.Name = "cbOnlyPBus";
+            this.cbOnlyPBus.Size = new System.Drawing.Size(134, 17);
+            this.cbOnlyPBus.TabIndex = 57;
+            this.cbOnlyPBus.Text = "Only P-Bus connection";
+            this.cbOnlyPBus.UseVisualStyleBackColor = true;
             // 
-            // checkBox3
+            // cbDisableConnectionCheck
             // 
-            this.checkBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.checkBox3.AutoSize = true;
-            this.checkBox3.Location = new System.Drawing.Point(866, 320);
-            this.checkBox3.Name = "checkBox3";
-            this.checkBox3.Size = new System.Drawing.Size(150, 17);
-            this.checkBox3.TabIndex = 58;
-            this.checkBox3.Text = "Disable connection check";
-            this.checkBox3.UseVisualStyleBackColor = true;
+            this.cbDisableConnectionCheck.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbDisableConnectionCheck.AutoSize = true;
+            this.cbDisableConnectionCheck.Location = new System.Drawing.Point(866, 343);
+            this.cbDisableConnectionCheck.Name = "cbDisableConnectionCheck";
+            this.cbDisableConnectionCheck.Size = new System.Drawing.Size(150, 17);
+            this.cbDisableConnectionCheck.TabIndex = 58;
+            this.cbDisableConnectionCheck.Text = "Disable connection check";
+            this.cbDisableConnectionCheck.UseVisualStyleBackColor = true;
+            // 
+            // label6
+            // 
+            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(793, 277);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(60, 13);
+            this.label6.TabIndex = 60;
+            this.label6.Text = "Com speed";
+            // 
+            // cbxComSpeed
+            // 
+            this.cbxComSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbxComSpeed.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxComSpeed.FormattingEnabled = true;
+            this.cbxComSpeed.Items.AddRange(new object[] {
+            "Adapter default",
+            "38400",
+            "57600",
+            "115200",
+            "230400"});
+            this.cbxComSpeed.Location = new System.Drawing.Point(866, 274);
+            this.cbxComSpeed.Name = "cbxComSpeed";
+            this.cbxComSpeed.Size = new System.Drawing.Size(150, 21);
+            this.cbxComSpeed.TabIndex = 59;
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.cbxComSpeed);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.checkBox3);
-            this.Controls.Add(this.checkBox2);
-            this.Controls.Add(this.comboBox3);
+            this.Controls.Add(this.cbDisableConnectionCheck);
+            this.Controls.Add(this.cbOnlyPBus);
+            this.Controls.Add(this.cbxEcuType);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.button15);
-            this.Controls.Add(this.button14);
-            this.Controls.Add(this.button13);
-            this.Controls.Add(this.button8);
+            this.Controls.Add(this.btnResetECU);
+            this.Controls.Add(this.btnSetSpeed);
+            this.Controls.Add(this.btnSetE85);
+            this.Controls.Add(this.btnSecurityAccess);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.textBox2);
-            this.Controls.Add(this.button11);
-            this.Controls.Add(this.button9);
+            this.Controls.Add(this.tbParameter);
+            this.Controls.Add(this.btnSetECUVIN);
+            this.Controls.Add(this.btnReadDTC);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.comboBox2);
+            this.Controls.Add(this.cbxComPort);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.comboBox1);
-            this.Controls.Add(this.button7);
-            this.Controls.Add(this.button6);
-            this.Controls.Add(this.button5);
-            this.Controls.Add(this.button4);
-            this.Controls.Add(this.checkBox1);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.cbxAdapterType);
+            this.Controls.Add(this.btnRecoverECU);
+            this.Controls.Add(this.btnReadSRAM);
+            this.Controls.Add(this.btnGetECUInfo);
+            this.Controls.Add(this.btnReadECU);
+            this.Controls.Add(this.cbEnableLogging);
+            this.Controls.Add(this.btnExit);
+            this.Controls.Add(this.btnFlashECU);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.progressBar1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -384,32 +417,34 @@
 
         #endregion
 
-        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button btnReadECU;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox cbEnableLogging;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnExit;
+        private System.Windows.Forms.Button btnFlashECU;
         private System.Windows.Forms.ListBox listBox1;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Button button6;
-        private System.Windows.Forms.Button button7;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.Button btnGetECUInfo;
+        private System.Windows.Forms.Button btnReadSRAM;
+        private System.Windows.Forms.Button btnRecoverECU;
+        private System.Windows.Forms.ComboBox cbxAdapterType;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.ComboBox comboBox2;
-        private System.Windows.Forms.Button button9;
-        private System.Windows.Forms.Button button11;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.ComboBox cbxComPort;
+        private System.Windows.Forms.Button btnReadDTC;
+        private System.Windows.Forms.Button btnSetECUVIN;
+        private System.Windows.Forms.TextBox tbParameter;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button button8;
-        private System.Windows.Forms.Button button13;
-        private System.Windows.Forms.Button button14;
-        private System.Windows.Forms.Button button15;
+        private System.Windows.Forms.Button btnSecurityAccess;
+        private System.Windows.Forms.Button btnSetE85;
+        private System.Windows.Forms.Button btnSetSpeed;
+        private System.Windows.Forms.Button btnResetECU;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ComboBox comboBox3;
-        private System.Windows.Forms.CheckBox checkBox2;
-        private System.Windows.Forms.CheckBox checkBox3;
+        private System.Windows.Forms.ComboBox cbxEcuType;
+        private System.Windows.Forms.CheckBox cbOnlyPBus;
+        private System.Windows.Forms.CheckBox cbDisableConnectionCheck;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox cbxComSpeed;
     }
 }
 

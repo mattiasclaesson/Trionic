@@ -4,6 +4,7 @@ using System.Linq;
 using System.IO.Ports;
 using System.Threading;
 using Microsoft.Win32;
+using System.Text;
 
 namespace TrionicCANLib.CAN
 {
@@ -16,6 +17,15 @@ namespace TrionicCANLib.CAN
         bool m_endThread = false;
         private uint _ECUAddress;
         private int m_forcedBaudrate = 38400;
+        private int m_transmissionRepeats = 5;
+        private int m_canRetries = 10; //bluetooth device or faulty devices sometimes have transmission errors. This indicates how many can message retries are allowed
+        private int m_canRetryCounter = 0;
+        private bool m_isVirtualCom = true;
+        CANMessage lastSentCanMessage = null;
+        private string m_cr_sequence = "&CR";
+        private long lastSentTimestamp = 0;
+        private int timeoutWithoutReadyChar = 3000;
+        private bool interfaceBusy = false;
 
         public override int ForcedBaudrate
         {
@@ -30,8 +40,6 @@ namespace TrionicCANLib.CAN
         }
 
         private string m_forcedComport = string.Empty;
-
-
 
         public override string ForcedComport
         {
@@ -57,8 +65,7 @@ namespace TrionicCANLib.CAN
         public void readMessages()
         {
             CANMessage canMessage = new CANMessage();
-            string receiveString = string.Empty;
-            
+            StringBuilder receiveText = new StringBuilder();
 
             Console.WriteLine("readMessages started");
             while (true)
@@ -78,84 +85,67 @@ namespace TrionicCANLib.CAN
                         if (m_serialPort.BytesToRead > 0)
                         {
                             string rxString = m_serialPort.ReadExisting();
-                            if (rxString.Length > 0) AddToSerialTrace("SERRX: " + rxString);
-                            receiveString += rxString;
-                            //Console.WriteLine("BUF1: " + receiveString);
-                            receiveString = receiveString.Replace(">", ""); // remove prompt characters... we don't need that stuff
-                            receiveString = receiveString.Replace("NO DATA", ""); // remove prompt characters... we don't need that stuff
-                            while (receiveString.StartsWith("\n") || receiveString.StartsWith("\r"))
-                            {
-                                receiveString = receiveString.Substring(1, receiveString.Length - 1);
-                            }
+                            if(rxString.Contains(">"))
+                                    interfaceBusy=false;
+                            rxString= rxString.Replace("\n", "").Replace("NO DATA", "").Replace(">", "");// remove prompt characters... we don't need that stuff
 
-                            while (receiveString.Contains('\r'))
+                            if (rxString.Length > 0)
                             {
-                                // process the line
-                                int idx = receiveString.IndexOf('\r');
-                                string rxMessage = receiveString.Substring(0, idx);
-                                receiveString = receiveString.Substring(idx + 1, receiveString.Length - idx - 1);
-                                while (receiveString.StartsWith("\n") || receiveString.StartsWith("\r"))
+                                AddToSerialTrace("SERRX: " + rxString);
+                                rxString = rxString.Replace("\r", m_cr_sequence); //replace , because stringbuilder cannot handle \r
+                                
+                                receiveText.Append(rxString);
+                                System.Diagnostics.Debug.WriteLine("SERMSG: " + receiveText);
+                                var lines = ExtractLines(ref receiveText);
+                                foreach (var rxMessage in lines)
                                 {
-                                    receiveString = receiveString.Substring(1, receiveString.Length - 1);
-                                }
-                                //Console.WriteLine("BUF2: " + receiveString);
-
-                                if (rxMessage.Equals("STOPPED") || rxMessage.Equals("OK"))
-                                {
-                                }
-                                else if (rxMessage.Length >= 6) // is it a valid line
-                                {
-                                    try
+                                    if (rxMessage.StartsWith("STOPPED")) { } //skip it
+                                    else if (rxMessage.StartsWith("?"))//need to repeat command
                                     {
-                                        uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
-                                        if (acceptMessageId(id))
+                                        if (receiveText.ToString().Contains(">"))
                                         {
-                                            canMessage.setID(id);
-                                            canMessage.setLength(8); // TODO: alter to match data
-                                            canMessage.setData(0x0000000000000000); // reset message content
-                                            byte b1 = Convert.ToByte(rxMessage.Substring(4, 2), 16);
-                                            if (b1 < 7)
+                                            if (m_canRetryCounter > 0)
                                             {
-                                                canMessage.setCanData(b1, 0);
-                                                //Console.WriteLine("Byte 1: " + Convert.ToByte(rxMessage.Substring(4, 2), 16).ToString("X2"));
-                                                if (b1 >= 1) canMessage.setCanData(Convert.ToByte(rxMessage.Substring(7, 2), 16), 1);
-                                                if (b1 >= 2) canMessage.setCanData(Convert.ToByte(rxMessage.Substring(10, 2), 16), 2);
-                                                if (b1 >= 3) canMessage.setCanData(Convert.ToByte(rxMessage.Substring(13, 2), 16), 3);
-                                                if (b1 >= 4) canMessage.setCanData(Convert.ToByte(rxMessage.Substring(16, 2), 16), 4);
-                                                if (b1 >= 5) canMessage.setCanData(Convert.ToByte(rxMessage.Substring(19, 2), 16), 5);
-                                                if (b1 >= 6) canMessage.setCanData(Convert.ToByte(rxMessage.Substring(22, 2), 16), 6);
-                                                if (b1 >= 7) canMessage.setCanData(Convert.ToByte(rxMessage.Substring(25, 2), 16), 7);
+                                                m_canRetryCounter--;
+                                                Thread.Sleep(100);
+                                                sendMessage(lastSentCanMessage);
                                             }
-                                            else
+                                        }
+                                        else
+                                        {
+                                            //receiveText = new StringBuilder(rxMessage + "\r");
+                                        }
+                                    }
+                                    else if (rxMessage.Length >= 6) // is it a valid line
+                                    {
+                                        try
+                                        {
+                                            rxMessage.Replace(" ", "");//remove all whitespaces
+                                            uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
+                                            if (acceptMessageId(id))
                                             {
-                                                canMessage.setCanData(b1, 0);
-                                                //Console.WriteLine("Byte 1: " + Convert.ToByte(rxMessage.Substring(4, 2), 16).ToString("X2"));
-                                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(7, 2), 16), 1);
-                                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(10, 2), 16), 2);
-                                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(13, 2), 16), 3);
-                                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(16, 2), 16), 4);
-                                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(19, 2), 16), 5);
-                                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(22, 2), 16), 6);
-                                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(25, 2), 16), 7);
-                                            }
+                                                canMessage.setID(id);
+                                                canMessage.setLength(8); // TODO: alter to match data
+                                                //canMessage.setData(0x0000000000000000); // reset message content
+                                                canMessage.setData(ExtractDataFromString(rxMessage));
 
-                                            lock (m_listeners)
-                                            {
-                                                AddToCanTrace("RX: " + canMessage.getData().ToString("X16"));
-                                                //Console.WriteLine("MSG: " + rxMessage);
-                                                foreach (ICANListener listener in m_listeners)
+                                                lock (m_listeners)
                                                 {
-                                                    listener.handleMessage(canMessage);
+                                                    AddToCanTrace("RX: " + canMessage.getData().ToString("X16"));
+                                                    foreach (ICANListener listener in m_listeners)
+                                                    {
+                                                        listener.handleMessage(canMessage);
+                                                    }
                                                 }
                                             }
                                         }
-
-                                    }
-                                    catch (Exception)
-                                    {
-                                        //Console.WriteLine("MSG: " + rxMessage);
+                                        catch (Exception)
+                                        {
+                                            //Console.WriteLine("MSG: " + rxMessage);
+                                        }
                                     }
                                 }
+                                
                             }
                         }
                         else
@@ -164,7 +154,6 @@ namespace TrionicCANLib.CAN
                         }
                     }
                 }
-
             }
         }
 
@@ -176,6 +165,16 @@ namespace TrionicCANLib.CAN
 
         public override bool sendMessage(CANMessage a_message)
         {
+            while (interfaceBusy)
+            {
+                if (lastSentTimestamp < Environment.TickCount - timeoutWithoutReadyChar)
+                    break;
+            }
+            lastSentTimestamp = Environment.TickCount;
+            interfaceBusy = true;
+
+            lastSentCanMessage = a_message.Clone();
+            m_canRetryCounter = m_canRetries;
             string sendString = "  ";
             /*if (a_message.getID() == 0x11)
             {
@@ -195,12 +194,13 @@ namespace TrionicCANLib.CAN
                 {
                     command = "ATSH0000" + a_message.getID().ToString("X3");
                 }*/
-                m_serialPort.Write(command + "\r");    //Set header
-                AddToSerialTrace("SERTX: " + command);
+                WriteToSerialAndWait(command + "\r"); //this should handle the response
+                //WriteToSerialWithTrace();    //Set header
+                //AddToSerialTrace("SERTX: " + command);
                 CastInformationEvent("Switching to ID: " + a_message.getID().ToString("X3"));
                 // Need to pause a bit here because we need to wait for "OK" back.
                 // But the readThread is allready active, so we cannot wait for it here
-                Thread.Sleep(2);
+                //Thread.Sleep(2);
             }
 
 
@@ -208,7 +208,7 @@ namespace TrionicCANLib.CAN
             {
                 //if (i <= 7)
                 {
-                        sendString += a_message.getCanData(i).ToString("X2");
+                    sendString += a_message.getCanData(i).ToString("X2");
                 }
                 /*else
                 {
@@ -217,13 +217,13 @@ namespace TrionicCANLib.CAN
             }
             //sendString = sendString.Trim();
             sendString += "\r";
-            
-            
+
+
             if (m_serialPort.IsOpen)
             {
 
-                m_serialPort.Write(sendString);
-                AddToSerialTrace("SERTX: " + sendString);
+                WriteToSerialWithTrace(sendString);
+                //AddToSerialTrace("SERTX: " + sendString);
 
                 //Console.WriteLine("TX: " + sendString);
                 AddToCanTrace("TX: " + a_message.getID().ToString("X3") + " " + sendString);
@@ -235,16 +235,16 @@ namespace TrionicCANLib.CAN
             // sending each byte will take 0,07 ms approx
             Thread.Sleep(2); // sleep length ms
 
-             //07E0 0000000000003E01
+            //07E0 0000000000003E01
             if (a_message.getID() == 0x7E0 && a_message.getCanData(0) == 0x01 && a_message.getCanData(1) == 0x3E)
             {
-                //m_serialPort.Write("ATMA\r");
+                //WriteToSerialWithTrace("ATMA\r");
                 //AddToSerialTrace("SERTX: ATMA");
             }
 
             //            Thread.Sleep(10);
-            //receiveString = "49 01 01 00 00 00 31 \n\r49 02 02 44 34 47 50 \n\r49 02 03 30 30 52 35 \n\r49 02 04 25 42";// m_serialPort.ReadTo(">");
-            /*receiveString = m_serialPort.ReadTo(">");
+            //receiveString = "49 01 01 00 00 00 31 \n\r49 02 02 44 34 47 50 \n\r49 02 03 30 30 52 35 \n\r49 02 04 25 42";// ReadFromSerialToWithLog(">");
+            /*receiveString = ReadFromSerialToWithLog(">");
             char[] chrArray = receiveString.ToCharArray();
             byte[] reply = new byte[0xFF];
             int insertPos = 1;
@@ -311,10 +311,9 @@ namespace TrionicCANLib.CAN
 
         public override OpenResult open()
         {
-            m_serialPort.BaudRate = m_forcedBaudrate;
             m_serialPort.Handshake = Handshake.None;
-            m_serialPort.ReadTimeout = 10000;
-            m_serialPort.WriteTimeout = 10000;
+            m_serialPort.ReadTimeout = 3000;
+            m_serialPort.WriteTimeout = 3000;
             m_serialPort.ReadBufferSize = 1024;
             m_serialPort.WriteBufferSize = 1024;
             bool readException = false;
@@ -343,28 +342,25 @@ namespace TrionicCANLib.CAN
                     return OpenResult.OpenError;
                 }
 
-                m_serialPort.Write("ATZ\r");    //Reset all
-                AddToSerialTrace("SERTX: ATZ");
-
-                Thread.Sleep(1000);
-
-                //Try to set up ELM327
                 try
                 {
-                    m_serialPort.ReadTo(">");
+                    //Try to set up ELM327
+                    WriteToSerialAndWait("ATZ\r", 1);    //Reset all               
+
                 }
                 catch (Exception)
                 {
                     readException = true;
                 }
+                #region ReadException
                 if (readException)
                 {
                     // baudrate might be set to 115200 baud
                     m_serialPort.Close();
                     m_serialPort.BaudRate = 115200;
                     m_serialPort.Open();
-                    m_serialPort.Write("ATZ\r");    //Reset all
-                    AddToSerialTrace("SERTX: ATZ");
+                    WriteToSerialAndWait("ATZ\r", 1);    //Reset all
+                    //AddToSerialTrace("SERTX: ATZ");
 
                     Thread.Sleep(1000);
 
@@ -372,7 +368,7 @@ namespace TrionicCANLib.CAN
                     //Try to set up ELM327
                     try
                     {
-                        m_serialPort.ReadTo(">");
+                        ReadFromSerialToWithTrace(">");
                     }
                     catch (Exception)
                     {
@@ -384,34 +380,42 @@ namespace TrionicCANLib.CAN
                         return OpenResult.OpenError;
                     }
                 }
+                #endregion
 
-                m_serialPort.Write("ATL1\r");   //Linefeeds On //<GS-18052011> turned off for now
-                AddToSerialTrace("SERTX: ATL1");
+                WriteToSerialAndWait("ATL1\r");   //Linefeeds On //<GS-18052011> turned off for now
+                WriteToSerialAndWait("ATE0\r");   //Echo off
+                WriteToSerialAndWait("ATS0\r");     //disable whitespace, should speed up the transmission by eliminating 8 whitespaces for every 19 chars received
 
-                m_serialPort.ReadTo(">");
-                m_serialPort.Write("ATE0\r");   //Echo off
-                AddToSerialTrace("SERTX: ATE0");
-
-                if (m_serialPort.BaudRate != 115200)
+                #region setBaudRate
+                if (m_forcedBaudrate != 0)
                 {
-                    m_serialPort.ReadTo(">");
-                    m_serialPort.Write("ATBRT00\r");   //Set baudrate timeout
-                    AddToSerialTrace("SERTX: ATBRT00");
 
-                    m_serialPort.ReadTo(">");
-                    m_serialPort.Write("ATBRD23\r"); // Attempt to change baudrate to 23=115.2kbps
-                    AddToSerialTrace("SERTX: ATBRD23");
-                    Thread.Sleep(10);
+                    WriteToSerialAndWait("ATBRT00\r");   //Set baudrate timeout
+                    //AddToSerialTrace("SERTX: ATBRT00");
 
-                    string ok = m_serialPort.ReadExisting();
-                    Console.WriteLine("change baudrateresponse: " + ok);
-                    AddToSerialTrace("SERRX: change baudrateresponse" + ok);
+                    int divider = (int)(Math.Round(4000000.0 / m_forcedBaudrate));
+
+                    string baudRateAnswer = "";
+                    for (int i = 0; i < 5; i++)
+                    {
+                        baudRateAnswer = WriteToSerialAndWait(String.Format("ATBRD{0}\r", divider.ToString("X2"))); // Attempt to change baudrate.  23=115.2kbps,68=38.4
+                        if (baudRateAnswer.StartsWith("OK"))
+                        {
+                            WriteToSerialAndWait("\r");
+                            break;
+                        }
+                    }
+
+                    //AddToSerialTrace("SERTX: ATBRD23");
+                    Console.WriteLine("change baudrateresponse: " + baudRateAnswer);
+                    AddToSerialTrace("SERRX: change baudrateresponse" + baudRateAnswer);
                     AddToSerialTrace("bytestoread:" + m_serialPort.BytesToRead.ToString());
-
+                    /*
                     try
                     {
+                        Flush();
                         m_serialPort.Close();
-                        m_serialPort.BaudRate = 115200;
+                        m_serialPort.BaudRate = m_forcedBaudrate;
                         m_serialPort.Open();
                     }
                     catch (UnauthorizedAccessException e)
@@ -419,71 +423,66 @@ namespace TrionicCANLib.CAN
                         AddToSerialTrace("exception" + e.ToString());
                         return OpenResult.OpenError;
                     }
+                     */ 
                     Thread.Sleep(300);
-
                     bool gotVersion = false;
                     while (!gotVersion)
                     {
-                        string test2 = m_serialPort.ReadExisting();
+                        string test2 = WriteToSerialAndWait("ATI\r");
                         AddToSerialTrace("SERRX: ReadExisting2() len:" + test2.Length + " " + test2);
                         Console.WriteLine("Version ELM: " + test2);
                         if (test2.Length > 5)
                             gotVersion = true;
 
-                        m_serialPort.Write("\r");
-                        AddToSerialTrace("SERTX: newline");
+                        //AddToSerialTrace("SERTX: newline");
                         Thread.Sleep(100);
                     }
-                    // OK received here?
-
-                    m_serialPort.ReadTo(">");
-
                 }
-                m_serialPort.Write("ATI\r");    //Print version
-                AddToSerialTrace("SERTX: ATI");
+                #endregion
 
-                string answer = m_serialPort.ReadTo(">");
-                AddToSerialTrace("SERRX: " + answer);
+                ////do some benchmark
+                //long start = Environment.TickCount;
+                //int tries = 100;
+                //while (tries-- > 0)
+                //    WriteToSerialAndWait("ATI\r");
+
+                //AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 100, Environment.TickCount - start));
+
+
+                string answer = WriteToSerialAndWait("ATI\r");    //Print version
                 Console.WriteLine("Version ELM: " + answer);
-                if(ELMVersionCorrect(answer))
-                //if (answer.StartsWith("ELM327 v1.2") || answer.StartsWith("ELM327 v1.3"))
+
+                if (ELMVersionCorrect(answer))
                 {
                     CastInformationEvent("Connected on " + m_forcedComport);
 
-                    m_serialPort.Write("ATSP6\r");    //Set protocol type ISO 15765-4 CAR (11 bit ID, 500kb/s)
-                    AddToSerialTrace("SERTX: ATSP6");
+                    answer = WriteToSerialAndWait("ATSP6\r");    //Set protocol type ISO 15765-4 CAR (11 bit ID, 500kb/s)
 
-                    answer = m_serialPort.ReadTo(">");
                     Console.WriteLine("Protocol select response: " + answer);
                     if (answer.StartsWith("OK"))
                     {
                         m_deviceIsOpen = true;
 
-                        m_serialPort.Write("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
-                        AddToSerialTrace("SERTX: ATH1");
+                        answer = WriteToSerialAndWait("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
 
-                        answer = m_serialPort.ReadTo(">");
                         Console.WriteLine("ATH1 response: " + answer);
 
                         string command = "ATSH" + _ECUAddress.ToString("X3"); // Set header
-                        m_serialPort.Write(command + "\r");
-                        AddToSerialTrace("SERTX: " + command);
-                        answer = m_serialPort.ReadTo(">");
+                        answer = WriteToSerialAndWait(command + "\r");
+                        //AddToSerialTrace("SERTX: " + command);
                         Console.WriteLine(command + "response: " + answer);
 
-                        //m_serialPort.Write("ATR0\r");    //Auto response = OFF 31082011
+                        //WriteToSerialWithTrace("ATR0\r");    //Auto response = OFF 31082011
                         //AddToSerialTrace("SERTX: ATR0");
 
-                        //m_serialPort.Write("ATAL\r");    //Allow messages with length > 7
+                        //WriteToSerialWithTrace("ATAL\r");    //Allow messages with length > 7
                         //Console.WriteLine("ATAL response: " + answer);
-                        //answer = m_serialPort.ReadTo(">");
+                        //answer = ReadFromSerialToWithLog(">");
 
-                        m_serialPort.Write("ATCAF0\r");   //Can formatting OFF (don't automatically send response codes, we will do this!)
-                        AddToSerialTrace("SERTX: ATCAF0");
-
-                        Console.WriteLine("ATCAF0:" + m_serialPort.ReadTo(">"));
-                        //m_serialPort.Write("ATR0\r");     //Don't wait for response from the ECU
-                        //m_serialPort.ReadTo(">");
+                        answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (don't automatically send response codes, we will do this!)
+                        Console.WriteLine("ATCAF0:" + answer);
+                        //WriteToSerialWithTrace("ATR0\r");     //Don't wait for response from the ECU
+                        //ReadFromSerialToWithLog(">");
 
                         if (m_readThread != null)
                         {
@@ -499,7 +498,7 @@ namespace TrionicCANLib.CAN
                     m_serialPort.Close();
                 }
             }
-            
+
             return OpenResult.OpenError;
         }
 
@@ -507,12 +506,11 @@ namespace TrionicCANLib.CAN
         {
             bool retval = true; // assume user knows what he's doing
             //ELM327 v1.2
-            if (answer.ToUpper().StartsWith("ELM327 V"))
+            if (answer.ToUpper().StartsWith("ELM327"))
             {
-                if (answer.Length >= 11)
+                if (answer.Length >= 10)
                 {
-                    string version = answer.Substring(8, 3);
-                    version = version.Replace(".", "");
+                    string version = answer.Substring(answer.Length - 3, 3).Replace(".", "");
                     try
                     {
                         int versionNumber = Convert.ToInt32(version);
@@ -545,13 +543,96 @@ namespace TrionicCANLib.CAN
             if (m_serialPort.IsOpen)
             {
                 Thread.Sleep(1000);
-                m_serialPort.Write("ATZ\r");    //Reset all
-                AddToSerialTrace("SERTX: ATZ");
+                WriteToSerialWithTrace("ATZ\r");    //Reset all
+                //AddToSerialTrace("SERTX: ATZ");
                 Thread.Sleep(2000);
                 m_serialPort.Close();
             }
             m_deviceIsOpen = false;
             return CloseResult.OK;
+        }
+
+        protected void WriteToSerialWithTrace(string line)
+        {
+            m_serialPort.Write(line);
+            AddToSerialTrace("SERTX: " + line);
+        }
+
+        protected string ReadFromSerialToWithTrace(string readTo)
+        {
+            string answer = m_serialPort.ReadTo(readTo);
+            AddToSerialTrace("SERRX: " + answer + readTo);
+            return answer;
+        }
+
+        protected string WriteToSerialAndWait(string line)
+        {
+            return WriteToSerialAndWait(line, m_transmissionRepeats);
+        }
+
+        protected string WriteToSerialAndWait(string line, int repeats)
+        {
+            while (repeats > 0)
+            {
+                WriteToSerialWithTrace(line);
+                try
+                {
+                    string result = ReadFromSerialToWithTrace(">");
+                    if (result.Contains("?"))
+                        repeats--;
+                    else
+                        return result;
+                }
+                catch (TimeoutException x)
+                {
+                    repeats--;
+                    AddToSerialTrace("SERTIMOUT: left tries " + repeats);
+                }
+                catch (Exception x)
+                {
+
+                }
+            }
+
+            if (repeats == 0)
+                throw new Exception("Failed to read from interface");
+            return "";
+        }
+
+        private string[] ExtractLines(ref StringBuilder input)
+        {
+            List<string> output = new List<string>();
+            string inputStr = input.ToString();
+            while (inputStr.Contains(m_cr_sequence))
+            {
+                int index = inputStr.IndexOf(m_cr_sequence);
+                string line = inputStr.Substring(0, index);
+                inputStr = inputStr.Substring(index + m_cr_sequence.Length, inputStr.Length - index - m_cr_sequence.Length);
+                output.Add(line);
+            }
+
+            input = new StringBuilder(inputStr);
+            return output.ToArray();
+        }
+
+        /// <summary>
+        /// Extracts data from string. String can conatin whitespaces,it will be trimmed internally
+        /// </summary>
+        /// <param name="rxMessage">String message, i.e. 7E8 10 15 41 00 BE 3F B8 13  (to be verified)</param>
+        /// <returns></returns>
+        private static ulong ExtractDataFromString(string rxMessage)
+        {
+            rxMessage.Replace(" ", "");
+            byte bytesToRead = Convert.ToByte(rxMessage.Substring(3, 2), 16);
+            ulong data = bytesToRead;
+            bytesToRead = Math.Min(bytesToRead, (byte)7);
+            for (int i = 0; i < bytesToRead; i++)
+            {
+                ulong tmp = Convert.ToByte(rxMessage.Substring(5 + i * 2, 2), 16);
+                tmp <<= ((i + 1) * 8);
+                data |= tmp;
+            }
+            return data;
         }
     }
 }
