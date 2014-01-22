@@ -311,6 +311,7 @@ namespace TrionicCANLib.CAN
 
         public override OpenResult open()
         {
+            m_serialPort.BaudRate = 38400;
             m_serialPort.Handshake = Handshake.None;
             m_serialPort.ReadTimeout = 3000;
             m_serialPort.WriteTimeout = 3000;
@@ -352,35 +353,6 @@ namespace TrionicCANLib.CAN
                 {
                     readException = true;
                 }
-                #region ReadException
-                if (readException)
-                {
-                    // baudrate might be set to 115200 baud
-                    m_serialPort.Close();
-                    m_serialPort.BaudRate = 115200;
-                    m_serialPort.Open();
-                    WriteToSerialAndWait("ATZ\r", 1);    //Reset all
-                    //AddToSerialTrace("SERTX: ATZ");
-
-                    Thread.Sleep(1000);
-
-                    readException = false;
-                    //Try to set up ELM327
-                    try
-                    {
-                        ReadFromSerialToWithTrace(">");
-                    }
-                    catch (Exception)
-                    {
-                        readException = true;
-                    }
-                    if (readException)
-                    {
-                        m_serialPort.Close();
-                        return OpenResult.OpenError;
-                    }
-                }
-                #endregion
 
                 WriteToSerialAndWait("ATL1\r");   //Linefeeds On //<GS-18052011> turned off for now
                 WriteToSerialAndWait("ATE0\r");   //Echo off
@@ -395,25 +367,16 @@ namespace TrionicCANLib.CAN
 
                     int divider = (int)(Math.Round(4000000.0 / m_forcedBaudrate));
 
-                    string baudRateAnswer = "";
-                    for (int i = 0; i < 5; i++)
-                    {
-                        baudRateAnswer = WriteToSerialAndWait(String.Format("ATBRD{0}\r", divider.ToString("X2"))); // Attempt to change baudrate.  23=115.2kbps,68=38.4
-                        if (baudRateAnswer.StartsWith("OK"))
-                        {
-                            WriteToSerialAndWait("\r");
-                            break;
-                        }
-                    }
+                    m_serialPort.Write(String.Format("ATBRD{0}\r", divider.ToString("X2")));
+                    Thread.Sleep(10);
 
-                    //AddToSerialTrace("SERTX: ATBRD23");
-                    Console.WriteLine("change baudrateresponse: " + baudRateAnswer);
-                    AddToSerialTrace("SERRX: change baudrateresponse" + baudRateAnswer);
+                    string ok = m_serialPort.ReadExisting();
+                    Console.WriteLine("change baudrateresponse: " + ok);
+                    AddToSerialTrace("SERRX: change baudrateresponse" + ok);
                     AddToSerialTrace("bytestoread:" + m_serialPort.BytesToRead.ToString());
-                    /*
+                    
                     try
                     {
-                        Flush();
                         m_serialPort.Close();
                         m_serialPort.BaudRate = m_forcedBaudrate;
                         m_serialPort.Open();
@@ -423,21 +386,24 @@ namespace TrionicCANLib.CAN
                         AddToSerialTrace("exception" + e.ToString());
                         return OpenResult.OpenError;
                     }
-                     */ 
+
                     Thread.Sleep(300);
                     bool gotVersion = false;
                     while (!gotVersion)
                     {
-                        string test2 = WriteToSerialAndWait("ATI\r");
+                        string test2 = m_serialPort.ReadExisting();
                         AddToSerialTrace("SERRX: ReadExisting2() len:" + test2.Length + " " + test2);
-                        Console.WriteLine("Version ELM: " + test2);
+                        Console.WriteLine("wait: " + test2);
                         if (test2.Length > 5)
                             gotVersion = true;
 
+                        m_serialPort.Write("\r");
                         //AddToSerialTrace("SERTX: newline");
                         Thread.Sleep(100);
                     }
                 }
+                m_serialPort.ReadTo(">");
+                Console.WriteLine("Baud: " + m_serialPort.BaudRate);
                 #endregion
 
                 ////do some benchmark
@@ -590,7 +556,7 @@ namespace TrionicCANLib.CAN
                 }
                 catch (Exception x)
                 {
-
+                    AddToSerialTrace("Exception" + x);
                 }
             }
 

@@ -451,6 +451,7 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("EnableLogging", cbEnableLogging.Checked);
             SaveRegistrySetting("OnlyPBus", cbOnlyPBus.Checked);
             SaveRegistrySetting("DisableCanCheck", cbDisableConnectionCheck.Checked);
+            SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem.ToString());
             trionicCan.Cleanup();
             Environment.Exit(0);
         }
@@ -460,9 +461,23 @@ namespace TrionicCANFlasher
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
-                trionicCan.ForcedComport= trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
+                trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
                 //set selected com speed
-
+                switch(cbxComSpeed.SelectedIndex)
+                {
+                    case (int)ComSpeed.S230400:
+                        trionicCan.ForcedBaudrate = 230400;
+                        break;
+                    case (int)ComSpeed.S115200:
+                        trionicCan.ForcedBaudrate = 115200;
+                        break;
+                    case (int)ComSpeed.S57600:
+                        trionicCan.ForcedBaudrate = 57600;
+                        break;
+                    case (int)ComSpeed.S38400:
+                    default:
+                        break;
+                }
             }
             trionicCan.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
         }
@@ -564,6 +579,10 @@ namespace TrionicCANFlasher
                             else if (a == "DisableCanCheck")
                             {
                                 cbDisableConnectionCheck.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                            }
+                            else if (a == "ComSpeed")
+                            {
+                                cbxComSpeed.SelectedItem = Settings.GetValue(a).ToString();
                             }
                         }
                         catch (Exception)

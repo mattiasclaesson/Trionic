@@ -52,7 +52,16 @@ namespace TrionicCANLib
     {
         Default = 1,
         ELM327 = 2
-    }
+    };
+
+    public enum ComSpeed : int
+    {
+        DEFAULT,
+        S38400,
+        S57600,
+        S115200,
+        S230400
+    };
 
     public class TrionicCan
     {
@@ -118,12 +127,25 @@ namespace TrionicCANLib
             }
         }
 
-        int m_sleepTime = (int)SleepTime.Default;
+        private int m_sleepTime = (int)SleepTime.Default;
 
         public SleepTime Sleeptime
         {
             get { return (SleepTime)m_sleepTime; }
             set { m_sleepTime = (int)value; }
+        }
+
+        private int m_forcedBaudrate = 38400;
+        public int ForcedBaudrate
+        {
+            get
+            {
+                return m_forcedBaudrate;
+            }
+            set
+            {
+                m_forcedBaudrate = value;
+            }
         }
 
         public TrionicCan()
@@ -191,11 +213,11 @@ namespace TrionicCANLib
             else if(adapterType == CANBusAdapter.ELM327)
             {
                 Sleeptime = SleepTime.ELM327;
-                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport };
+                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
             }
             else if (adapterType == CANBusAdapter.JUST4TRIONIC)
             {
-                canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport };
+                canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
             }
             else
             {
@@ -245,7 +267,7 @@ namespace TrionicCANLib
             else if (adapterType == CANBusAdapter.ELM327)
             {
                 Sleeptime = SleepTime.ELM327;
-                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport };
+                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
                 kwpCanDevice = new KWPCANDevice();
                 kwpCanDevice.setCANDevice(canUsbDevice);
                 kwpCanDevice.EnableCanLog = m_EnableCanLog;
@@ -270,7 +292,7 @@ namespace TrionicCANLib
             }
             else if (adapterType == CANBusAdapter.JUST4TRIONIC)
             {
-                canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport };
+                canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
                 kwpCanDevice = new KWPCANDevice();
                 kwpCanDevice.setCANDevice(canUsbDevice);
                 kwpCanDevice.EnableCanLog = m_EnableCanLog;
