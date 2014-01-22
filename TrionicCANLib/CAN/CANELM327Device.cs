@@ -53,6 +53,19 @@ namespace TrionicCANLib.CAN
             }
         }
 
+        private int m_baseBaudrate = 38400;
+        public int BaseBaudrate
+        {
+            get
+            {
+                return m_baseBaudrate;
+            }
+            set
+            {
+                m_baseBaudrate = value;
+            }
+        }
+
         ~CANELM327Device()
         {
             lock (m_synchObject)
@@ -311,7 +324,7 @@ namespace TrionicCANLib.CAN
 
         public override OpenResult open()
         {
-            m_serialPort.BaudRate = 38400;
+            m_serialPort.BaudRate = BaseBaudrate;
             m_serialPort.Handshake = Handshake.None;
             m_serialPort.ReadTimeout = 3000;
             m_serialPort.WriteTimeout = 3000;
@@ -330,6 +343,7 @@ namespace TrionicCANLib.CAN
                 Console.WriteLine("Opening com: " + m_forcedComport);
 
                 readException = false;
+
                 if (m_serialPort.IsOpen)
                     m_serialPort.Close();
                 m_serialPort.PortName = m_forcedComport;
@@ -354,9 +368,10 @@ namespace TrionicCANLib.CAN
                     readException = true;
                 }
 
-                WriteToSerialAndWait("ATL1\r");   //Linefeeds On //<GS-18052011> turned off for now
+                //WriteToSerialAndWait("ATL1\r");   //Linefeeds On //<GS-18052011> turned off for now
                 WriteToSerialAndWait("ATE0\r");   //Echo off
                 WriteToSerialAndWait("ATS0\r");     //disable whitespace, should speed up the transmission by eliminating 8 whitespaces for every 19 chars received
+                //WriteToSerialAndWait("ATST40\r"); //set timeout to 256ms
 
                 #region setBaudRate
                 if (m_forcedBaudrate != 0)
@@ -367,10 +382,11 @@ namespace TrionicCANLib.CAN
 
                     int divider = (int)(Math.Round(4000000.0 / m_forcedBaudrate));
 
-                    m_serialPort.Write(String.Format("ATBRD{0}\r", divider.ToString("X2")));
-                    Thread.Sleep(10);
-
+                    WriteToSerialWithTrace(String.Format("ATBRD{0}\r", divider.ToString("X2")));
+                   
+                    Thread.Sleep(50);
                     string ok = m_serialPort.ReadExisting();
+
                     Console.WriteLine("change baudrateresponse: " + ok);
                     AddToSerialTrace("SERRX: change baudrateresponse" + ok);
                     AddToSerialTrace("bytestoread:" + m_serialPort.BytesToRead.ToString());
@@ -387,30 +403,30 @@ namespace TrionicCANLib.CAN
                         return OpenResult.OpenError;
                     }
 
-                    Thread.Sleep(300);
+                    //Thread.Sleep(300);
                     bool gotVersion = false;
                     while (!gotVersion)
                     {
-                        string test2 = m_serialPort.ReadExisting();
-                        AddToSerialTrace("SERRX: ReadExisting2() len:" + test2.Length + " " + test2);
-                        Console.WriteLine("wait: " + test2);
-                        if (test2.Length > 5)
+                        ok = WriteToSerialAndWait("\r");
+                       
+                        AddToSerialTrace("SERRX: ReadExisting2() len:" + ok.Length + " " + ok);
+                        Console.WriteLine("wait: " + ok);
+                        if (ok.Length > 5)
                             gotVersion = true;
 
-                        m_serialPort.Write("\r");
+                        
                         //AddToSerialTrace("SERTX: newline");
                         Thread.Sleep(100);
                     }
                 }
-                m_serialPort.ReadTo(">");
                 Console.WriteLine("Baud: " + m_serialPort.BaudRate);
                 #endregion
 
-                ////do some benchmark
+                //do some benchmark
                 //long start = Environment.TickCount;
                 //int tries = 100;
                 //while (tries-- > 0)
-                //    WriteToSerialAndWait("ATI\r");
+                //    WriteToSerialAndWait("ATI\r"); 
 
                 //AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 100, Environment.TickCount - start));
 

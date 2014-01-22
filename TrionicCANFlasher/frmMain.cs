@@ -22,11 +22,19 @@ namespace TrionicCANFlasher
 
         public frmMain()
         {
+
+            Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             InitializeComponent();
             m_DelegateUpdateStatus = updateStatusInBox;
             m_DelegateProgressStatus = updateProgress;
 
             EnableUserInput(true);
+        }
+
+        void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine(e.ToString());
+            //throw new NotImplementedException();
         }
 
         private void AddLogItem(string item)
@@ -142,7 +150,7 @@ namespace TrionicCANFlasher
             cbOnlyPBus.Enabled = enable;
             cbDisableConnectionCheck.Enabled = enable;
 
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
+            if (IsElmAdapterSelected ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
                 cbxComPort.Enabled = true;
@@ -168,7 +176,7 @@ namespace TrionicCANFlasher
                     btnSetE85.Enabled = false;
                 }
 
-                if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
+                if (IsElmAdapterSelected)
                 {
                     btnFlashECU.Enabled = false;
                     btnReadECU.Enabled = false;
@@ -180,12 +188,21 @@ namespace TrionicCANFlasher
             {
                 btnResetECU.Enabled = false;
 
-                if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
+                if (IsElmAdapterSelected)
                 {
                     btnRecoverECU.Enabled = false;
                     btnReadDTC.Enabled = false;
                     btnSetECUVIN.Enabled = false;
                 }
+            }
+        }
+
+        private bool IsElmAdapterSelected
+        {
+            get
+            {
+                return cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
+                    cbxAdapterType.SelectedIndex == (int)CANBusAdapter.OBDLinkSX;
             }
         }
 
@@ -458,8 +475,8 @@ namespace TrionicCANFlasher
 
         private void SetT8AdapterType()
         {
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
+            if (IsElmAdapterSelected ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC )
             {
                 trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
                 //set selected com speed
@@ -475,11 +492,22 @@ namespace TrionicCANFlasher
                         trionicCan.ForcedBaudrate = 57600;
                         break;
                     case (int)ComSpeed.S38400:
+                        trionicCan.ForcedBaudrate = 38400;
+                        break;
                     default:
+                        trionicCan.ForcedBaudrate = 0; //default , no speed will be changed
                         break;
                 }
+                if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.OBDLinkSX)
+                    trionicCan.BaseBaudrate = 115200;
+                else
+                    trionicCan.BaseBaudrate = 38400;
+
             }
-            trionicCan.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
+            if (IsElmAdapterSelected)
+                trionicCan.setCANDevice(CANBusAdapter.ELM327);
+            else
+                trionicCan.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
         }
 
         private void SetT7AdapterType()

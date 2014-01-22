@@ -180,7 +180,7 @@ namespace TrionicCANLib.CAN
         /// <returns>true on success, otherwise false.</returns>
         public bool addListener(ICANListener a_listener)
         {
-            lock(m_listeners)
+            lock (m_listeners)
             {
                 m_listeners.Add(a_listener);
             }
@@ -194,7 +194,7 @@ namespace TrionicCANLib.CAN
         /// <returns>true on success, otherwise false</returns>
         public bool removeListener(ICANListener a_listener)
         {
-            lock(m_listeners)
+            lock (m_listeners)
             {
                 m_listeners.Remove(a_listener);
             }
@@ -215,25 +215,27 @@ namespace TrionicCANLib.CAN
             //    {
             //        sw.WriteLine(dtnow.ToString("dd/MM/yyyy HH:mm:ss") + " - " + line);
             //    }
-           // }
+            // }
         }
 
         protected void AddToSerialTrace(string line)
         {
+            line = line.Replace("\n", "$n");
+            line = line.Replace("\r", "$r");
+            line = line.Replace("\t", "$t");
+
+            DateTime dtnow = DateTime.Now;
+            string logLine = dtnow.ToString("dd/MM/yyyy HH:mm:ss.fff") + " - " + line;
+
             if (this.EnableCanLog)
             {
-                line = line.Replace("\n", "");
-                line = line.Replace("\r", "");
-                line = line.Replace("\t", "");
-
-                DateTime dtnow = DateTime.Now;
                 lock (this)
                 {
                     try
                     {
                         using (StreamWriter sw = new StreamWriter(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\ELM327SerialTrace.txt", true))
                         {
-                            sw.WriteLine(dtnow.ToString("dd/MM/yyyy HH:mm:ss.fff") + " - " + line);
+                            sw.WriteLine(logLine);
                         }
                     }
                     catch (Exception)
@@ -241,6 +243,10 @@ namespace TrionicCANLib.CAN
 
                     }
                 }
+            }
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                System.Diagnostics.Debug.WriteLine(logLine);
             }
         }
 

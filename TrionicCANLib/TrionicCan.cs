@@ -39,7 +39,8 @@ namespace TrionicCANLib
         LAWICEL,
         COMBI,
         ELM327,
-        JUST4TRIONIC
+        JUST4TRIONIC,
+        OBDLinkSX
     };
 
     public enum ECU : int
@@ -135,7 +136,7 @@ namespace TrionicCANLib
             set { m_sleepTime = (int)value; }
         }
 
-        private int m_forcedBaudrate = 38400;
+        private int m_forcedBaudrate = 0;
         public int ForcedBaudrate
         {
             get
@@ -147,6 +148,8 @@ namespace TrionicCANLib
                 m_forcedBaudrate = value;
             }
         }
+
+        public int BaseBaudrate{get;set;}
 
         public TrionicCan()
         { 
@@ -213,7 +216,7 @@ namespace TrionicCANLib
             else if(adapterType == CANBusAdapter.ELM327)
             {
                 Sleeptime = SleepTime.ELM327;
-                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
+                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate ,BaseBaudrate=BaseBaudrate};
             }
             else if (adapterType == CANBusAdapter.JUST4TRIONIC)
             {
