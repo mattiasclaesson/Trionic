@@ -316,25 +316,13 @@ namespace TrionicCANLib.CAN
             return m_deviceIsOpen;
         }
 
-        private string FilterString(string port)
-        {
-            string retval = string.Empty;
-            foreach (char c in port)
-            {
-                if (c >= 0x30 && c <= 'Z') retval += c;
-            }
-            return retval.Trim();
-        }
-
         public override OpenResult open()
         {
-            m_serialPort.BaudRate = BaseBaudrate;
             m_serialPort.Handshake = Handshake.None;
             m_serialPort.ReadTimeout = 3000;
             m_serialPort.WriteTimeout = 3000;
             m_serialPort.ReadBufferSize = 1024;
             m_serialPort.WriteBufferSize = 1024;
-            bool readException = false;
 
             if (TrionicECU == ECU.TRIONIC7)
                 _ECUAddress = 0x220;
@@ -346,30 +334,21 @@ namespace TrionicCANLib.CAN
                 // only check this comport
                 Console.WriteLine("Opening com: " + m_forcedComport);
 
-                readException = false;
-
                 if (m_serialPort.IsOpen)
                     m_serialPort.Close();
                 m_serialPort.PortName = m_forcedComport;
 
                 try
                 {
+                    m_serialPort.BaudRate = BaseBaudrate;
                     m_serialPort.Open();
+                    //Reset all
+                    WriteToSerialAndWait("ATZ\r", 1);
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException e)
                 {
+                    AddToSerialTrace("exception" + e.ToString());
                     return OpenResult.OpenError;
-                }
-
-                try
-                {
-                    //Try to set up ELM327
-                    WriteToSerialAndWait("ATZ\r", 1);    //Reset all               
-
-                }
-                catch (Exception)
-                {
-                    readException = true;
                 }
 
                 //WriteToSerialAndWait("ATL1\r");   //Linefeeds On //<GS-18052011> turned off for now
@@ -378,11 +357,9 @@ namespace TrionicCANLib.CAN
                 //WriteToSerialAndWait("ATST40\r"); //set timeout to 256ms
 
                 #region setBaudRate
-                if (m_forcedBaudrate != 0)
+                if (m_forcedBaudrate != BaseBaudrate)
                 {
-
-                    WriteToSerialAndWait("ATBRT00\r");   //Set baudrate timeout
-                    //AddToSerialTrace("SERTX: ATBRT00");
+                    WriteToSerialAndWait("ATBRT00\r"); //Set baudrate timeout
 
                     int divider = (int)(Math.Round(4000000.0 / m_forcedBaudrate));
 
@@ -407,109 +384,90 @@ namespace TrionicCANLib.CAN
                         return OpenResult.OpenError;
                     }
 
-                    //Thread.Sleep(300);
                     bool gotVersion = false;
                     while (!gotVersion)
                     {
-                        ok = WriteToSerialAndWait("\r");
-
-                        AddToSerialTrace("SERRX: ReadExisting2() len:" + ok.Length + " " + ok);
+                        //ok = WriteToSerialAndWait("\r");
+                        m_serialPort.Write("\r");
+                        ok = m_serialPort.ReadExisting();
+                        AddToSerialTrace("wait:" + ok);
                         Console.WriteLine("wait: " + ok);
                         if (ok.Length > 5)
+                        {
                             gotVersion = true;
-
-
-                        //AddToSerialTrace("SERTX: newline");
+                        }
                         Thread.Sleep(100);
                     }
                 }
-                Console.WriteLine("Baud: " + m_serialPort.BaudRate);
+
                 #endregion
 
-                //do some benchmark
-                long start = Environment.TickCount;
-                int tries = 100;
-                while (tries-- > 0)
-                    WriteToSerialAndWait("ATI\r");
-
-                start = Environment.TickCount - start;
-                AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 100, start));
-
+                CastInformationEvent("Connected on com: " + m_forcedComport + " with baudrate: " + m_serialPort.BaudRate);
+                
+                RunBenchmark();
 
                 string answer = WriteToSerialAndWait("ATI\r");    //Print version
                 Console.WriteLine("Version ELM: " + answer);
 
-                if (ELMVersionCorrect(answer))
+                answer = WriteToSerialAndWait("ATSP6\r");    //Set protocol type ISO 15765-4 CAR (11 bit ID, 500kb/s)
+
+                Console.WriteLine("Protocol select response: " + answer);
+                if (answer.StartsWith("OK"))
                 {
-                    CastInformationEvent("Connected on " + m_forcedComport);
+                    m_deviceIsOpen = true;
 
-                    answer = WriteToSerialAndWait("ATSP6\r");    //Set protocol type ISO 15765-4 CAR (11 bit ID, 500kb/s)
+                    answer = WriteToSerialAndWait("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
 
-                    Console.WriteLine("Protocol select response: " + answer);
-                    if (answer.StartsWith("OK"))
+                    Console.WriteLine("ATH1 response: " + answer);
+
+                    string command = "ATSH" + _ECUAddress.ToString("X3"); // Set header
+                    answer = WriteToSerialAndWait(command + "\r");
+                    //AddToSerialTrace("SERTX: " + command);
+                    Console.WriteLine(command + "response: " + answer);
+
+                    //WriteToSerialWithTrace("ATR0\r");    //Auto response = OFF 31082011
+                    //AddToSerialTrace("SERTX: ATR0");
+
+                    //WriteToSerialWithTrace("ATAL\r");    //Allow messages with length > 7
+                    //Console.WriteLine("ATAL response: " + answer);
+                    //answer = ReadFromSerialToWithLog(">");
+
+                    answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (don't automatically send response codes, we will do this!)
+                    Console.WriteLine("ATCAF0:" + answer);
+                    //WriteToSerialWithTrace("ATR0\r");     //Don't wait for response from the ECU
+                    //ReadFromSerialToWithLog(">");
+
+                    if (m_readThread != null)
                     {
-                        m_deviceIsOpen = true;
-
-                        answer = WriteToSerialAndWait("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
-
-                        Console.WriteLine("ATH1 response: " + answer);
-
-                        string command = "ATSH" + _ECUAddress.ToString("X3"); // Set header
-                        answer = WriteToSerialAndWait(command + "\r");
-                        //AddToSerialTrace("SERTX: " + command);
-                        Console.WriteLine(command + "response: " + answer);
-
-                        //WriteToSerialWithTrace("ATR0\r");    //Auto response = OFF 31082011
-                        //AddToSerialTrace("SERTX: ATR0");
-
-                        //WriteToSerialWithTrace("ATAL\r");    //Allow messages with length > 7
-                        //Console.WriteLine("ATAL response: " + answer);
-                        //answer = ReadFromSerialToWithLog(">");
-
-                        answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (don't automatically send response codes, we will do this!)
-                        Console.WriteLine("ATCAF0:" + answer);
-                        //WriteToSerialWithTrace("ATR0\r");     //Don't wait for response from the ECU
-                        //ReadFromSerialToWithLog(">");
-
-                        if (m_readThread != null)
-                        {
-                            Console.WriteLine(m_readThread.ThreadState.ToString());
-                        }
-                        m_readThread = new Thread(readMessages);
-                        m_readThread.Name = "CANELM327Device.m_readThread";
-                        m_endThread = false; // reset for next tries :)
-                        if (m_readThread.ThreadState == ThreadState.Unstarted)
-                            m_readThread.Start();
-                        return OpenResult.OK;
+                        Console.WriteLine(m_readThread.ThreadState.ToString());
                     }
-                    m_serialPort.Close();
+                    m_readThread = new Thread(readMessages);
+                    m_readThread.Name = "CANELM327Device.m_readThread";
+                    m_endThread = false; // reset for next tries :)
+                    if (m_readThread.ThreadState == ThreadState.Unstarted)
+                        m_readThread.Start();
+                    return OpenResult.OK;
                 }
+                m_serialPort.Close();
+               
             }
 
             return OpenResult.OpenError;
         }
 
-        private bool ELMVersionCorrect(string answer)
+        private void RunBenchmark()
         {
-            bool retval = true; // assume user knows what he's doing
-            //ELM327 v1.2
-            if (answer.ToUpper().StartsWith("ELM327"))
+            //do some benchmark
+            long start = Environment.TickCount;
+            int tries = 1000;
+            while (tries-- > 0)
             {
-                if (answer.Length >= 10)
-                {
-                    string version = answer.Substring(answer.Length - 3, 3).Replace(".", "");
-                    try
-                    {
-                        int versionNumber = Convert.ToInt32(version);
-                        if (versionNumber < 12) retval = false;
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
+                WriteToSerialAndWait("ATI\r");
+                Console.Write(".");
             }
-            return retval;
+            start = Environment.TickCount - start;
+            AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 1000, start));
+            Console.WriteLine(string.Format("Got {0} responses in {1} ms", 1000, start));
         }
 
         public override void Flush()
@@ -530,7 +488,6 @@ namespace TrionicCANLib.CAN
             }
             if (m_serialPort.IsOpen)
             {
-                //Thread.Sleep(1000);
                 WriteToSerialWithTrace("ATZ\r");    //Reset all
                 Thread.Sleep(100);
                 m_serialPort.Close();
