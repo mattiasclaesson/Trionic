@@ -24,11 +24,17 @@ namespace TrionicCANFlasher
         {
 
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
             InitializeComponent();
             m_DelegateUpdateStatus = updateStatusInBox;
             m_DelegateProgressStatus = updateProgress;
 
             EnableUserInput(true);
+        }
+
+        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine(e.ToString());
         }
 
         void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
@@ -39,27 +45,14 @@ namespace TrionicCANFlasher
 
         private void AddLogItem(string item)
         {
-            item = DateTime.Now.ToString("HH:mm:ss.fff") + " - " + item;
-            listBox1.Items.Add(item);
+            var uiItem = DateTime.Now.ToString("HH:mm:ss.fff") + " - " + item;
+            listBox1.Items.Add(uiItem);
             while (listBox1.Items.Count > 100) listBox1.Items.RemoveAt(0);
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
             if (cbEnableLogging.Checked)
             {
 
-                lock (this)
-                {
-                    try
-                    {
-                        using (StreamWriter sw = new StreamWriter(Application.StartupPath + "\\log.txt", true))
-                        {
-                            sw.WriteLine(item);
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
+                LogHelper.GetUILog().Info(item);
             }
             Application.DoEvents();
         }
@@ -482,6 +475,9 @@ namespace TrionicCANFlasher
                 //set selected com speed
                 switch(cbxComSpeed.SelectedIndex)
                 {
+                    case (int)ComSpeed.S1Mbit:
+                        trionicCan.ForcedBaudrate = 1000000;
+                        break;
                     case (int)ComSpeed.S230400:
                         trionicCan.ForcedBaudrate = 230400;
                         break;

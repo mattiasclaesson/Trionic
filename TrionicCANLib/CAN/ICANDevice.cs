@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using TrionicCANLib.Log;
 
 namespace TrionicCANLib.CAN
 {
@@ -208,45 +209,20 @@ namespace TrionicCANLib.CAN
 
         protected void AddToCanTrace(string line)
         {
-            //if (this.EnableCanLog)
-            //{
-            //    DateTime dtnow = DateTime.Now;
-            //    using (StreamWriter sw = new StreamWriter(System.Windows.Forms.Application.StartupPath + "\\CanTraceCANUSBDevice.txt", true))
-            //    {
-            //        sw.WriteLine(dtnow.ToString("dd/MM/yyyy HH:mm:ss") + " - " + line);
-            //    }
-            // }
+            if (this.EnableCanLog)
+            {
+                LogHelper.GetCanLog().Info(line);
+            }
         }
 
         protected void AddToSerialTrace(string line)
         {
-            line = line.Replace("\n", "$n");
-            line = line.Replace("\r", "$r");
-            line = line.Replace("\t", "$t");
-
-            DateTime dtnow = DateTime.Now;
-            string logLine = dtnow.ToString("dd/MM/yyyy HH:mm:ss.fff") + " - " + line;
-
             if (this.EnableCanLog)
             {
-                lock (this)
-                {
-                    try
-                    {
-                        using (StreamWriter sw = new StreamWriter(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\ELM327SerialTrace.txt", true))
-                        {
-                            sw.WriteLine(logLine);
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
-            }
-            if (System.Diagnostics.Debugger.IsAttached)
-            {
-                System.Diagnostics.Debug.WriteLine(logLine);
+                line = line.Replace("\n", "");
+                line = line.Replace("\r", "");
+                line = line.Replace("\t", "");
+                LogHelper.GetSerialLog().Info(line);
             }
         }
 

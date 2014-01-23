@@ -98,21 +98,25 @@ namespace TrionicCANLib.CAN
                         if (m_serialPort.BytesToRead > 0)
                         {
                             string rxString = m_serialPort.ReadExisting();
-                            if(rxString.Contains(">"))
-                                    interfaceBusy=false;
-                            rxString= rxString.Replace("\n", "").Replace("NO DATA", "").Replace(">", "");// remove prompt characters... we don't need that stuff
+                            if (rxString.Contains(">"))
+                                interfaceBusy = false;
+                            rxString = rxString.Replace("\n", "").Replace("NO DATA", "").Replace(">", "");// remove prompt characters... we don't need that stuff
 
                             if (rxString.Length > 0)
                             {
                                 AddToSerialTrace("SERRX: " + rxString);
                                 rxString = rxString.Replace("\r", m_cr_sequence); //replace , because stringbuilder cannot handle \r
-                                
+
                                 receiveText.Append(rxString);
                                 System.Diagnostics.Debug.WriteLine("SERMSG: " + receiveText);
                                 var lines = ExtractLines(ref receiveText);
                                 foreach (var rxMessage in lines)
                                 {
                                     if (rxMessage.StartsWith("STOPPED")) { } //skip it
+                                    else if (rxMessage.StartsWith("CAN ERROR"))
+                                    {
+
+                                    }
                                     else if (rxMessage.StartsWith("?"))//need to repeat command
                                     {
                                         if (receiveText.ToString().Contains(">"))
@@ -158,7 +162,7 @@ namespace TrionicCANLib.CAN
                                         }
                                     }
                                 }
-                                
+
                             }
                         }
                         else
@@ -383,14 +387,14 @@ namespace TrionicCANLib.CAN
                     int divider = (int)(Math.Round(4000000.0 / m_forcedBaudrate));
 
                     WriteToSerialWithTrace(String.Format("ATBRD{0}\r", divider.ToString("X2")));
-                   
+
                     Thread.Sleep(50);
                     string ok = m_serialPort.ReadExisting();
 
                     Console.WriteLine("change baudrateresponse: " + ok);
                     AddToSerialTrace("SERRX: change baudrateresponse" + ok);
                     AddToSerialTrace("bytestoread:" + m_serialPort.BytesToRead.ToString());
-                    
+
                     try
                     {
                         m_serialPort.Close();
@@ -408,13 +412,13 @@ namespace TrionicCANLib.CAN
                     while (!gotVersion)
                     {
                         ok = WriteToSerialAndWait("\r");
-                       
+
                         AddToSerialTrace("SERRX: ReadExisting2() len:" + ok.Length + " " + ok);
                         Console.WriteLine("wait: " + ok);
                         if (ok.Length > 5)
                             gotVersion = true;
 
-                        
+
                         //AddToSerialTrace("SERTX: newline");
                         Thread.Sleep(100);
                     }
@@ -423,12 +427,13 @@ namespace TrionicCANLib.CAN
                 #endregion
 
                 //do some benchmark
-                //long start = Environment.TickCount;
-                //int tries = 100;
-                //while (tries-- > 0)
-                //    WriteToSerialAndWait("ATI\r"); 
+                long start = Environment.TickCount;
+                int tries = 100;
+                while (tries-- > 0)
+                    WriteToSerialAndWait("ATI\r");
 
-                //AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 100, Environment.TickCount - start));
+                start = Environment.TickCount - start;
+                AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 100, start));
 
 
                 string answer = WriteToSerialAndWait("ATI\r");    //Print version
@@ -518,18 +523,19 @@ namespace TrionicCANLib.CAN
 
         public override CloseResult close()
         {
+
             lock (m_synchObject)
             {
                 m_endThread = true;
             }
             if (m_serialPort.IsOpen)
             {
-                Thread.Sleep(1000);
+                //Thread.Sleep(1000);
                 WriteToSerialWithTrace("ATZ\r");    //Reset all
-                //AddToSerialTrace("SERTX: ATZ");
-                Thread.Sleep(2000);
+                Thread.Sleep(100);
                 m_serialPort.Close();
             }
+
             m_deviceIsOpen = false;
             return CloseResult.OK;
         }
