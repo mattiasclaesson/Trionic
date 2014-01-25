@@ -239,5 +239,13 @@ namespace TrionicCANLib.CAN
         }
 
         protected List<ICANListener> m_listeners = new List<ICANListener>();
+
+        /// <summary>
+        /// Used for ELM327 only to stop waiting for messages. This is because when getting lots of responses (i.e. 19 for getting flash)
+        /// ELM will wait for next message for some time (30-50ms), and this slows down the flash download
+        /// </summary>
+        public virtual void RequestDeviceReady()
+        {
+        }
     }
 }

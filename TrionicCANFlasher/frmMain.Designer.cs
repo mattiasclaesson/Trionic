@@ -366,7 +366,8 @@
             "57600",
             "115200",
             "230400",
-            "1Mbit"});
+            "1Mbit",
+            "2Mbit"});
             this.cbxComSpeed.Location = new System.Drawing.Point(866, 274);
             this.cbxComSpeed.Name = "cbxComSpeed";
             this.cbxComSpeed.Size = new System.Drawing.Size(150, 21);

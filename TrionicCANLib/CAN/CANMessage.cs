@@ -35,6 +35,12 @@ namespace TrionicCANLib.CAN
         /// </summary>
         private ulong m_data;		// Data Bytes 0..7
 
+
+        /// <summary>
+        /// Used by ELM to indicate number of expected responses
+        /// </summary>
+        public int elmExpectedResponses=-1;
+
         /// <summary>
         /// Constructor for CANMessage
         /// </summary>
@@ -58,13 +64,14 @@ namespace TrionicCANLib.CAN
         /// <param name="a_id">CAN id</param>
         /// <param name="a_flags">Flags</param>
         /// <param name="a_length">Length of data</param>
+        /// <param name="responseCount">Used by ELM to indicate number of expected responses</param>
         public CANMessage(uint a_id, byte a_flags, byte a_length)
         {
             m_id = a_id;
             m_timestamp = 0;
             m_flags = a_flags;
             m_length = a_length;
-            m_data = 0;
+            m_data = 0;            
         }
 
         /// <summary>

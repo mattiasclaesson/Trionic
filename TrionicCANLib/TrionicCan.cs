@@ -62,7 +62,8 @@ namespace TrionicCANLib
         S57600,
         S115200,
         S230400,
-        S1Mbit
+        S1Mbit,
+        S4Mbit
     };
 
     public class TrionicCan
@@ -355,7 +356,7 @@ namespace TrionicCANLib
             }
             catch (Exception x)
             {
-                CastInfoEvent("Exception opening device " + x.ToString() , ActivityType.ConvertingFile);
+                CastInfoEvent("Exception opening device " + x.ToString(), ActivityType.ConvertingFile);
             }
 
             if (openResult != OpenResult.OK)
@@ -864,6 +865,11 @@ namespace TrionicCANLib
 
         public string RequestECUInfo(uint _pid, string description)
         {
+            return RequestECUInfo(_pid, description, -1);
+        }
+
+        public string RequestECUInfo(uint _pid, string description, int expectedResponses)
+        {
             string retval = string.Empty;
             byte[] rx_buffer = new byte[128];
             int rx_pnt = 0;
@@ -878,6 +884,7 @@ namespace TrionicCANLib
                 //SendMessage(data);  // software version
                 CANMessage msg = new CANMessage(0x7E0, 0, 3); // test GS was 8
                 msg.setData(cmd);
+                msg.elmExpectedResponses = expectedResponses;
                 m_canListener.setupWaitMessage(0x7E8);
                 if (!canUsbDevice.sendMessage(msg))
                 {
@@ -905,11 +912,11 @@ namespace TrionicCANLib
                     // only one frame in this repsonse
 
                     for (uint fi = 3; fi < 8; fi++) rx_buffer[rx_pnt++] = response.getCanData(fi);
-                    retval = Encoding.ASCII.GetString(rx_buffer, 0, rx_pnt);
+                    retval = Encoding.ASCII.GetString(rx_buffer, 0, rx_pnt - 1);
                 }
                 else if (response.getCanData(2) == 0x5A)
                 {
-                    SendMessage(0x7E0, 0x0000000000000030);
+                    SendAckMessageT8();
                     byte len = response.getCanData(1);
                     int m_nrFrameToReceive = ((len - 4) / 8);
                     if ((len - 4) % 8 > 0) m_nrFrameToReceive++;
@@ -937,7 +944,7 @@ namespace TrionicCANLib
                             }
                         }
                     }
-                    retval = Encoding.ASCII.GetString(rx_buffer, 0, rx_pnt);
+                    retval = Encoding.ASCII.GetString(rx_buffer, 0, rx_pnt - 1);
                 }
                 else if (response.getCanData(1) == 0x7F && response.getCanData(1) == 0x27)
                 {
@@ -1004,7 +1011,7 @@ namespace TrionicCANLib
                 }
                 else if (response.getCanData(2) == 0x5A)
                 {
-                    SendMessage(0x245, 0x0000000000000030);
+                    SendAckMessageT7();
                     byte len = response.getCanData(1);
                     int m_nrFrameToReceive = ((len - 4) / 8);
                     if ((len - 4) % 8 > 0) m_nrFrameToReceive++;
@@ -1093,7 +1100,7 @@ namespace TrionicCANLib
                 }
                 else if (response.getCanData(2) == 0x5A)
                 {
-                    SendMessage(0x7E0, 0x0000000000000030);
+                    SendAckMessageT8();
                     byte len = response.getCanData(1);
                     int m_nrFrameToReceive = ((len - 4) / 8);
                     if ((len - 4) % 8 > 0) m_nrFrameToReceive++;
@@ -1136,9 +1143,20 @@ namespace TrionicCANLib
             return retval;
         }
 
-        private void SendMessage(uint id, ulong data)
+        private void SendAckMessageT7()
         {
             if (canUsbDevice is CANELM327Device) return;
+            SendMessage(0x245, 0x0000000000000030);
+        }
+
+        private void SendAckMessageT8()
+        {
+            if (canUsbDevice is CANELM327Device) return;
+            SendMessage(0x7E0, 0x0000000000000030);
+        }
+
+        private void SendMessage(uint id, ulong data)
+        {
             CANMessage msg = new CANMessage();
             msg.setID(id);
             msg.setLength(8);
@@ -1221,7 +1239,7 @@ namespace TrionicCANLib
         public string GetVehicleVIN()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x90, "VINNumber");
+            return RequestECUInfo(0x90, "VINNumber",3);
         }
 
         /*
@@ -1475,11 +1493,12 @@ namespace TrionicCANLib
                             msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 7);
                             iFrameNumber++;
                             if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
                             if (!canUsbDevice.sendMessage(msg))
                             {
                                 AddToCanTrace("Couldn't send message");
                             }
-                            Thread.Sleep(m_sleepTime);
+                            Thread.Sleep(m_sleepTime); //at least 5 ms between sent messages
                         }
                         // send the remaining data
                         m_canListener.setupWaitMessage(0x7E8);
@@ -1684,6 +1703,7 @@ namespace TrionicCANLib
             //Console.WriteLine("send: " + cmd.ToString("X16"));
 
             msg.setData(cmd);
+            msg.elmExpectedResponses = 1;
             m_canListener.setupWaitMessage(waitforResponseID);
             if (!canUsbDevice.sendMessage(msg))
             {
@@ -1727,7 +1747,7 @@ namespace TrionicCANLib
         private bool Send0120()
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 2); //<GS-18052011> ELM327 support requires the length byte
-            ulong cmd = 0x0000000000002001; 
+            ulong cmd = 0x0000000000002001;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
@@ -2839,7 +2859,7 @@ namespace TrionicCANLib
                 }
                 else if (response.getCanData(2) == 0x5A)
                 {
-                    SendMessage(0x7E0, 0x0000000000000030);
+                    SendAckMessageT8();
                     byte len = response.getCanData(1);
                     int m_nrFrameToReceive = ((len - 4) / 8);
                     if ((len - 4) % 8 > 0) m_nrFrameToReceive++;
@@ -3413,6 +3433,7 @@ namespace TrionicCANLib
             CANMessage msg = new CANMessage(0x7E0, 0, 2);//<GS-18052011> ELM327 support requires the length byte
             ulong cmd = 0x0000000000003E01; // always 2 bytes
             msg.setData(cmd);
+            msg.elmExpectedResponses = 1;
             //Console.WriteLine("KA sent");
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
@@ -3619,6 +3640,7 @@ namespace TrionicCANLib
             cmd |= (ulong)(byte)((address & 0xFF000000) >> 3 * 8) << 8;*/
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
+            msg.elmExpectedResponses=19; //in 19 messages there are 0x82 = 130 bytes of data, bootloader requests 0x80 =128 each time
             if (!canUsbDevice.sendMessage(msg))
             {
                 AddToCanTrace("Couldn't send message");
@@ -3672,7 +3694,7 @@ namespace TrionicCANLib
                 retData[rx_cnt++] = getCanData(data, 7);
                 // in that case, we need more records from the ECU
                 // Thread.Sleep(1);
-                SendMessage(0x7E0, 0x0000000000000030); // send ack to request more bytes
+                SendAckMessageT8(); // send ack to request more bytes
                 //Thread.Sleep(1);
                 // now we wait for the correct number of records to be received
                 int m_nrFrameToReceive = ((length - 4) / 7);
@@ -3720,6 +3742,8 @@ namespace TrionicCANLib
                     //Thread.Sleep(1);
 
                 }
+
+                canUsbDevice.RequestDeviceReady();
 
             }
             else
@@ -3834,7 +3858,7 @@ namespace TrionicCANLib
                 retData[rx_cnt++] = getCanData(data, 7);
                 // in that case, we need more records from the ECU
                 // Thread.Sleep(1);
-                SendMessage(0x7E0, 0x0000000000000030); // send ack to request more bytes
+                SendAckMessageT8(); // send ack to request more bytes
                 //Thread.Sleep(1);
                 // now we wait for the correct number of records to be received
                 int m_nrFrameToReceive = ((length - 2) / 7);

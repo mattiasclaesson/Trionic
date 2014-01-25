@@ -97,10 +97,8 @@ namespace TrionicCANLib.CAN
                     {
                         if (m_serialPort.BytesToRead > 0)
                         {
-                            string rxString = m_serialPort.ReadExisting();
-                            if (rxString.Contains(">"))
-                                interfaceBusy = false;
-                            rxString = rxString.Replace("\n", "").Replace("NO DATA", "").Replace(">", "");// remove prompt characters... we don't need that stuff
+                            string rawString = m_serialPort.ReadExisting();
+                            string rxString = rawString.Replace("\n", "").Replace(">", "");// remove prompt characters... we don't need that stuff
 
                             if (rxString.Length > 0)
                             {
@@ -108,7 +106,7 @@ namespace TrionicCANLib.CAN
                                 rxString = rxString.Replace("\r", m_cr_sequence); //replace , because stringbuilder cannot handle \r
 
                                 receiveText.Append(rxString);
-                                System.Diagnostics.Debug.WriteLine("SERMSG: " + receiveText);
+                                //System.Diagnostics.Debug.WriteLine("SERMSG: " + receiveText);
                                 var lines = ExtractLines(ref receiveText);
                                 foreach (var rxMessage in lines)
                                 {
@@ -117,6 +115,7 @@ namespace TrionicCANLib.CAN
                                     {
 
                                     }
+                                    else if (rxMessage.StartsWith("ELM")) { } //skip it, this is a trick to stop ELM from listening to more messages and send ready char
                                     else if (rxMessage.StartsWith("?"))//need to repeat command
                                     {
                                         if (receiveText.ToString().Contains(">"))
@@ -162,7 +161,11 @@ namespace TrionicCANLib.CAN
                                         }
                                     }
                                 }
-
+                            }
+                            if (rawString.Contains(">"))
+                            {
+                                interfaceBusy = false;
+                                AddToSerialTrace("SERIAL READY");
                             }
                         }
                         else
@@ -206,18 +209,8 @@ namespace TrionicCANLib.CAN
                 _ECUAddress = a_message.getID();
 
                 string command = "ATSH" + a_message.getID().ToString("X3");
-                /*
-                if (_ECUAddress == 0x11)
-                {
-                    command = "ATSH0000" + a_message.getID().ToString("X3");
-                }*/
                 WriteToSerialAndWait(command + "\r"); //this should handle the response
-                //WriteToSerialWithTrace();    //Set header
-                //AddToSerialTrace("SERTX: " + command);
                 CastInformationEvent("Switching to ID: " + a_message.getID().ToString("X3"));
-                // Need to pause a bit here because we need to wait for "OK" back.
-                // But the readThread is allready active, so we cannot wait for it here
-                //Thread.Sleep(2);
             }
 
 
@@ -232,6 +225,11 @@ namespace TrionicCANLib.CAN
                     sendString += "00"; // fill with zeros
                 }*/
             }
+
+            //add expected responses, but this has to be one char only :(
+            if(a_message.elmExpectedResponses!=-1 && a_message.elmExpectedResponses<16)
+                sendString+=a_message.elmExpectedResponses.ToString("X1");
+           
             //sendString = sendString.Trim();
             sendString += "\r";
 
@@ -318,6 +316,11 @@ namespace TrionicCANLib.CAN
 
         public override OpenResult open()
         {
+            var detectedRate = DetectInitialPortSpeedAndReset();
+            if (detectedRate != 0)
+                BaseBaudrate = detectedRate;
+
+            m_serialPort.BaudRate = BaseBaudrate;
             m_serialPort.Handshake = Handshake.None;
             m_serialPort.ReadTimeout = 3000;
             m_serialPort.WriteTimeout = 3000;
@@ -342,8 +345,8 @@ namespace TrionicCANLib.CAN
                 {
                     m_serialPort.BaudRate = BaseBaudrate;
                     m_serialPort.Open();
-                    //Reset all
-                    WriteToSerialAndWait("ATZ\r", 1);
+                    //Reset all //do not reset, might get other baudrate 
+                    //WriteToSerialAndWait("ATZ\r", 1);
                 }
                 catch (UnauthorizedAccessException e)
                 {
@@ -351,13 +354,12 @@ namespace TrionicCANLib.CAN
                     return OpenResult.OpenError;
                 }
 
-                //WriteToSerialAndWait("ATL1\r");   //Linefeeds On //<GS-18052011> turned off for now
+                
                 WriteToSerialAndWait("ATE0\r");   //Echo off
-                WriteToSerialAndWait("ATS0\r");     //disable whitespace, should speed up the transmission by eliminating 8 whitespaces for every 19 chars received
-                //WriteToSerialAndWait("ATST40\r"); //set timeout to 256ms
+                WriteToSerialAndWait("ATS0\r");     //disable whitespace, should speed up the transmission by eliminating 8 whitespaces for every 19 chars received                
 
                 #region setBaudRate
-                if (m_forcedBaudrate != BaseBaudrate)
+                if (m_forcedBaudrate != BaseBaudrate && m_forcedBaudrate!=0)
                 {
                     WriteToSerialAndWait("ATBRT00\r"); //Set baudrate timeout
 
@@ -403,8 +405,8 @@ namespace TrionicCANLib.CAN
                 #endregion
 
                 CastInformationEvent("Connected on com: " + m_forcedComport + " with baudrate: " + m_serialPort.BaudRate);
-                
-                RunBenchmark();
+
+                //RunBenchmark();
 
                 string answer = WriteToSerialAndWait("ATI\r");    //Print version
                 Console.WriteLine("Version ELM: " + answer);
@@ -422,6 +424,11 @@ namespace TrionicCANLib.CAN
 
                     string command = "ATSH" + _ECUAddress.ToString("X3"); // Set header
                     answer = WriteToSerialAndWait(command + "\r");
+
+                    //WriteToSerialAndWait("AT FC SH " + _ECUAddress.ToString("X3") + "\r"); //set the flow control message recipient
+                    //WriteToSerialAndWait("AT FC SD 30 00 03\r"); //set the flow control content
+                    //WriteToSerialAndWait("AT FC SM 1\r"); //enable custom flow control
+                    
                     //AddToSerialTrace("SERTX: " + command);
                     Console.WriteLine(command + "response: " + answer);
 
@@ -449,10 +456,65 @@ namespace TrionicCANLib.CAN
                     return OpenResult.OK;
                 }
                 m_serialPort.Close();
-               
+
             }
 
             return OpenResult.OpenError;
+        }
+
+        /// <summary>
+        /// Detects the port speed, resets the interface, then detects the speed again
+        /// </summary>
+        /// <returns></returns>
+        private int DetectInitialPortSpeedAndReset()
+        {
+            int[] speeds = new int[] { 38400, 115200, 230400, 500000, 1000000, 2000000 }; ///*2000000, 1000000, 500000, 230400,*/ 115200, 57600, 38400, 19200, 9600 };
+
+            for (int i = 0; i < 2; i++)
+            {
+                foreach (var speed in speeds)
+                {
+                    if (m_serialPort.IsOpen)
+                        m_serialPort.Close();
+                    m_serialPort.BaudRate = speed;
+                    m_serialPort.PortName = m_forcedComport;
+                    m_serialPort.ReadTimeout = 1000;
+                    m_serialPort.Open();
+                    try
+                    {
+                        m_serialPort.DiscardInBuffer();
+                        WriteToSerialWithTrace("ATI\r");
+                        WriteToSerialWithTrace("ATI\r"); //need to send 2 times for some reason...
+                        Thread.Sleep(50);
+                        string reply = m_serialPort.ReadExisting();
+                        bool success = !string.IsNullOrEmpty(reply) && reply.Contains("ELM327");
+                        if (success)
+                        {
+                            if (i == 0)
+                            {
+                                WriteToSerialWithTrace("ATZ\r");//do reset
+                                Thread.Sleep(2000);//wait for it to transfer data 
+                                m_serialPort.Close();
+                                break;
+                            }
+                            else
+                            {
+                                m_serialPort.Close();
+                                return speed;
+                            }
+                        }
+                        else
+                        {
+                            m_serialPort.Close();
+                        }
+                    }
+                    catch (Exception x)
+                    {
+                        m_serialPort.Close();
+                    }
+                }
+            }
+            return 0;
         }
 
         private void RunBenchmark()
@@ -578,6 +640,11 @@ namespace TrionicCANLib.CAN
                 data |= tmp;
             }
             return data;
+        }
+
+        public override void RequestDeviceReady()
+        {
+            m_serialPort.Write("ATI\r");
         }
     }
 }

@@ -313,6 +313,7 @@ namespace TrionicCANFlasher
                 {
                     //int retries = 100;
                     //while (retries-- > 0)
+                    var start = Environment.TickCount;
                     AddLogItem("VINNumber       : " + trionicCan.GetVehicleVIN());           //0x90
                     AddLogItem("Calibration set : " + trionicCan.GetCalibrationSet());       //0x74
                     AddLogItem("Codefile version: " + trionicCan.GetCodefileVersion());      //0x73
@@ -340,6 +341,8 @@ namespace TrionicCANFlasher
                     AddLogItem("Diagnostic ID   : " + trionicCan.GetDiagnosticDataIdentifier());
                     AddLogItem("End model partnr: " + trionicCan.GetInt64FromID(0xCB));
                     AddLogItem("Basemodel partnr: " + trionicCan.GetInt64FromID(0xCC));
+                    var stop = Environment.TickCount;
+                    AddLogItem("Reading took: " + (stop - start) + " ms");
                 }
 
                 trionicCan.Cleanup();
@@ -475,6 +478,9 @@ namespace TrionicCANFlasher
                 //set selected com speed
                 switch(cbxComSpeed.SelectedIndex)
                 {
+                    case (int)ComSpeed.S4Mbit:
+                        trionicCan.ForcedBaudrate = 2000000;
+                        break;
                     case (int)ComSpeed.S1Mbit:
                         trionicCan.ForcedBaudrate = 1000000;
                         break;
