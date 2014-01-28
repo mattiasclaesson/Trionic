@@ -51,21 +51,18 @@ namespace TrionicCANFlasher
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
             if (cbEnableLogging.Checked)
             {
-
-                LogHelper.GetUILog().Info(item);
+                LogHelper.Log(item);
             }
             Application.DoEvents();
         }
 
         private void btnFlashEcu_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Bin files|*.bin", Multiselect = false })
             {
                 if (ofd.ShowDialog() == DialogResult.OK)
-                {
-                    trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                    trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                    trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+                {                    
                     if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                     {
                         SetT7AdapterType();
@@ -183,9 +180,9 @@ namespace TrionicCANFlasher
 
                 if (IsElmAdapterSelected)
                 {
-                    btnRecoverECU.Enabled = false;
+                    //btnRecoverECU.Enabled = false;
                     btnReadDTC.Enabled = false;
-                    btnSetECUVIN.Enabled = false;
+                    //btnSetECUVIN.Enabled = false;
                 }
             }
         }
@@ -201,6 +198,7 @@ namespace TrionicCANFlasher
 
         private void btnReadECU_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Bin files|*.bin" })
             {
                 if (sfd.ShowDialog() == DialogResult.OK)
@@ -209,9 +207,7 @@ namespace TrionicCANFlasher
                     {
                         if (Path.GetFileName(sfd.FileName) != string.Empty)
                         {
-                            trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                            trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                            trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+                           
                             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetT7AdapterType();
@@ -277,9 +273,7 @@ namespace TrionicCANFlasher
 
         private void btnGetEcuInfo_Click(object sender, EventArgs e)
         {
-            trionicCan.EnableCanLog = cbEnableLogging.Checked;
-            trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-            trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetT7AdapterType();
@@ -311,9 +305,6 @@ namespace TrionicCANFlasher
                 AddLogItem("Opening connection");
                 if (trionicCan.openDevice(false))
                 {
-                    //int retries = 100;
-                    //while (retries-- > 0)
-                    var start = Environment.TickCount;
                     AddLogItem("VINNumber       : " + trionicCan.GetVehicleVIN());           //0x90
                     AddLogItem("Calibration set : " + trionicCan.GetCalibrationSet());       //0x74
                     AddLogItem("Codefile version: " + trionicCan.GetCodefileVersion());      //0x73
@@ -341,8 +332,6 @@ namespace TrionicCANFlasher
                     AddLogItem("Diagnostic ID   : " + trionicCan.GetDiagnosticDataIdentifier());
                     AddLogItem("End model partnr: " + trionicCan.GetInt64FromID(0xCB));
                     AddLogItem("Basemodel partnr: " + trionicCan.GetInt64FromID(0xCC));
-                    var stop = Environment.TickCount;
-                    AddLogItem("Reading took: " + (stop - start) + " ms");
                 }
 
                 trionicCan.Cleanup();
@@ -353,15 +342,13 @@ namespace TrionicCANFlasher
 
         private void btnReadSRAM_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
                 using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                        trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                        trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
                         trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                         SetT8AdapterType();
 
@@ -404,15 +391,13 @@ namespace TrionicCANFlasher
 
         private void btnRecoverECU_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
                 using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Binary files|*.bin", Multiselect = false })
                 {
                     if (ofd.ShowDialog() == DialogResult.OK)
-                    {
-                        trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                        trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                        trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+                    {                        
                         trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                         SetT8AdapterType();
 
@@ -472,11 +457,11 @@ namespace TrionicCANFlasher
         private void SetT8AdapterType()
         {
             if (IsElmAdapterSelected ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC )
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
                 trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
                 //set selected com speed
-                switch(cbxComSpeed.SelectedIndex)
+                switch (cbxComSpeed.SelectedIndex)
                 {
                     case (int)ComSpeed.S4Mbit:
                         trionicCan.ForcedBaudrate = 2000000;
@@ -665,11 +650,9 @@ namespace TrionicCANFlasher
 
         private void btnReadDTC_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+            {               
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -697,11 +680,9 @@ namespace TrionicCANFlasher
 
         private void btnSetECUVIN_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+            {               
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -729,11 +710,9 @@ namespace TrionicCANFlasher
 
         private void btnSecurityAccess_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+            {                
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -746,11 +725,9 @@ namespace TrionicCANFlasher
 
         private void btnSetE85_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
                 SetT7AdapterType();
 
                 EnableUserInput(false);
@@ -770,9 +747,6 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -793,13 +767,18 @@ namespace TrionicCANFlasher
             }
         }
 
+        private void GetUIOptions()
+        {
+            trionicCan.EnableCanLog = cbEnableLogging.Checked;
+            trionicCan.OnlyPBus = cbOnlyPBus.Checked;
+            trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+        }
+
         private void btnSetSpeed_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+            {               
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -822,11 +801,10 @@ namespace TrionicCANFlasher
 
         private void btnResetECU_Click(object sender, EventArgs e)
         {
+            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                trionicCan.EnableCanLog = cbEnableLogging.Checked;
-                trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-                trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+                
                 SetT7AdapterType();
 
                 AddLogItem("Opening connection");
@@ -903,5 +881,6 @@ namespace TrionicCANFlasher
         {
             EnableUserInput(true);
         }
+
     }
 }

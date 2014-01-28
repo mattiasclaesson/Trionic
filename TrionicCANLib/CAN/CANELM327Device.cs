@@ -5,6 +5,7 @@ using System.IO.Ports;
 using System.Threading;
 using Microsoft.Win32;
 using System.Text;
+using System.Collections;
 
 namespace TrionicCANLib.CAN
 {
@@ -26,6 +27,9 @@ namespace TrionicCANLib.CAN
         private long lastSentTimestamp = 0;
         private int timeoutWithoutReadyChar = 3000;
         private bool interfaceBusy = false;
+        private TimeSpan delayTimespan = new TimeSpan(5000);//500us should be enough
+
+        object lockObj = new object();
 
         public override int ForcedBaudrate
         {
@@ -66,6 +70,12 @@ namespace TrionicCANLib.CAN
             }
         }
 
+        public CANELM327Device()
+            : base()
+        {
+
+        }
+
         ~CANELM327Device()
         {
             lock (m_synchObject)
@@ -102,35 +112,22 @@ namespace TrionicCANLib.CAN
 
                             if (rxString.Length > 0)
                             {
-                                AddToSerialTrace("SERRX: " + rxString);
                                 rxString = rxString.Replace("\r", m_cr_sequence); //replace , because stringbuilder cannot handle \r
 
                                 receiveText.Append(rxString);
                                 //System.Diagnostics.Debug.WriteLine("SERMSG: " + receiveText);
                                 var lines = ExtractLines(ref receiveText);
                                 foreach (var rxMessage in lines)
-                                {
-                                    if (rxMessage.StartsWith("STOPPED")) { } //skip it
+                                {                                    
+                                    if (rxMessage.StartsWith("STOPPED") || rxMessage.StartsWith("NO DATA")) { } //skip it
                                     else if (rxMessage.StartsWith("CAN ERROR"))
                                     {
-
+                                        //handle error?
                                     }
                                     else if (rxMessage.StartsWith("ELM")) { } //skip it, this is a trick to stop ELM from listening to more messages and send ready char
-                                    else if (rxMessage.StartsWith("?"))//need to repeat command
+                                    else if (rxMessage.StartsWith("?"))
                                     {
-                                        if (receiveText.ToString().Contains(">"))
-                                        {
-                                            if (m_canRetryCounter > 0)
-                                            {
-                                                m_canRetryCounter--;
-                                                Thread.Sleep(100);
-                                                sendMessage(lastSentCanMessage);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            //receiveText = new StringBuilder(rxMessage + "\r");
-                                        }
+                                        //need to repeat command??
                                     }
                                     else if (rxMessage.Length >= 6) // is it a valid line
                                     {
@@ -147,7 +144,7 @@ namespace TrionicCANLib.CAN
 
                                                 lock (m_listeners)
                                                 {
-                                                    AddToCanTrace("RX: " + canMessage.getData().ToString("X16"));
+                                                    AddToCanTrace(string.Format("RX: {0} {1}",canMessage.getID().ToString("X3"),canMessage.getData().ToString("X16")));
                                                     foreach (ICANListener listener in m_listeners)
                                                     {
                                                         listener.handleMessage(canMessage);
@@ -160,6 +157,9 @@ namespace TrionicCANLib.CAN
                                             //Console.WriteLine("MSG: " + rxMessage);
                                         }
                                     }
+                                    if (rxMessage.Length > 0) //disable whitespace logging
+                                        AddToSerialTrace("SERRX: " + rxMessage);
+
                                 }
                             }
                             if (rawString.Contains(">"))
@@ -170,7 +170,7 @@ namespace TrionicCANLib.CAN
                         }
                         else
                         {
-                            Thread.Sleep(1); // give others some air
+                            Thread.Sleep(delayTimespan); // give others some air
                         }
                     }
                 }
@@ -185,118 +185,63 @@ namespace TrionicCANLib.CAN
 
         public override bool sendMessage(CANMessage a_message)
         {
-            while (interfaceBusy)
+            lock (lockObj)
             {
-                if (lastSentTimestamp < Environment.TickCount - timeoutWithoutReadyChar)
-                    break;
-            }
-            lastSentTimestamp = Environment.TickCount;
-            interfaceBusy = true;
-
-            lastSentCanMessage = a_message.Clone();
-            m_canRetryCounter = m_canRetries;
-            string sendString = "  ";
-            /*if (a_message.getID() == 0x11)
-            {
-                // try to insert length ourselves
-                sendString = " ";
-                sendString += a_message.getLength().ToString("X2");
-            }*/
-            //Console.WriteLine("send: " + a_message.getID().ToString("X3") + " " + a_message.getData().ToString("X16"));
-
-            if (a_message.getID() != _ECUAddress)
-            {
-                _ECUAddress = a_message.getID();
-
-                string command = "ATSH" + a_message.getID().ToString("X3");
-                WriteToSerialAndWait(command + "\r"); //this should handle the response
-                CastInformationEvent("Switching to ID: " + a_message.getID().ToString("X3"));
-            }
-
-
-            for (uint i = 0; i < a_message.getLength(); i++) // leave out the length field, the ELM chip assigns that for us
-            {
-                //if (i <= 7)
+                while (interfaceBusy)
                 {
-                    sendString += a_message.getCanData(i).ToString("X2");
-                }
-                /*else
-                {
-                    sendString += "00"; // fill with zeros
-                }*/
-            }
-
-            //add expected responses, but this has to be one char only :(
-            if(a_message.elmExpectedResponses!=-1 && a_message.elmExpectedResponses<16)
-                sendString+=a_message.elmExpectedResponses.ToString("X1");
-           
-            //sendString = sendString.Trim();
-            sendString += "\r";
-
-
-            if (m_serialPort.IsOpen)
-            {
-
-                WriteToSerialWithTrace(sendString);
-                //AddToSerialTrace("SERTX: " + sendString);
-
-                //Console.WriteLine("TX: " + sendString);
-                AddToCanTrace("TX: " + a_message.getID().ToString("X3") + " " + sendString);
-            }
-
-            // bitrate = 38400bps -> 4800 bytes per second
-            // sending each byte will take 0.2 ms approx
-            // bitrate = 115200bps -> 14400 bytes per second
-            // sending each byte will take 0,07 ms approx
-            Thread.Sleep(2); // sleep length ms
-
-            //07E0 0000000000003E01
-            if (a_message.getID() == 0x7E0 && a_message.getCanData(0) == 0x01 && a_message.getCanData(1) == 0x3E)
-            {
-                //WriteToSerialWithTrace("ATMA\r");
-                //AddToSerialTrace("SERTX: ATMA");
-            }
-
-            //            Thread.Sleep(10);
-            //receiveString = "49 01 01 00 00 00 31 \n\r49 02 02 44 34 47 50 \n\r49 02 03 30 30 52 35 \n\r49 02 04 25 42";// ReadFromSerialToWithLog(">");
-            /*receiveString = ReadFromSerialToWithLog(">");
-            char[] chrArray = receiveString.ToCharArray();
-            byte[] reply = new byte[0xFF];
-            int insertPos = 1;
-            int index = 0;
-            string subString = "";
-            while (receiveString.Length > 4)
-            {
-
-                //Remove first three bytes
-
-                //TODO. Remove Mode and PIDs
-                for (int i = 0; i < 3; i++)
-                {
-                    index = receiveString.IndexOf(" ");
-                    receiveString = receiveString.Remove(0, index + 1);
-                }
-                //Read data for the rest of the row.
-                for (int i = 0; i < 4; i++)
-                {
-                    index = receiveString.IndexOf(" ");
-                    if (index == 0) //Last row not 4 bytes of data.
-                    {
-                        continue;
-                    }
-                    subString = receiveString.Substring(0, index);
-                    reply[insertPos] = (byte)Convert.ToInt16("0x" + subString, 16);
-                    insertPos++;
-                    receiveString = receiveString.Remove(0, index + 1);
+                    if (lastSentTimestamp < Environment.TickCount - timeoutWithoutReadyChar)
+                        break;
                 }
 
+                lastSentTimestamp = Environment.TickCount;
+                interfaceBusy = true;
+
+                lastSentCanMessage = a_message.Clone();
+                m_canRetryCounter = m_canRetries;
+
+                if (a_message.getID() != _ECUAddress)
+                {
+                    _ECUAddress = a_message.getID();
+
+                    string command = "ATSH" + a_message.getID().ToString("X3");
+
+                    if (m_readThread != null && m_readThread.IsAlive)
+                        m_readThread.Suspend();
+
+                    WriteToSerialAndWait(command + "\r"); //this should handle the response
+                    //CastInformationEvent("Switching to ID: " + a_message.getID().ToString("X3")); commented out, too much information when recovering ecu
+
+                    if (m_readThread != null && m_readThread.IsAlive)
+                        m_readThread.Resume();
+                }
+
+                string sendString = GetELMRequest(a_message);
+
+                //add expected responses, but this has to be one char only :(
+                if (a_message.elmExpectedResponses != -1 && a_message.elmExpectedResponses < 16)
+                    sendString += " " + a_message.elmExpectedResponses.ToString("X1");
+
+                sendString += "\r";
+
+                if (m_serialPort.IsOpen)
+                {
+                    WriteToSerialWithTrace(sendString);
+                    AddToCanTrace(string.Format("TX: {0} {1}",a_message.getID().ToString("X3"),sendString));
+                }
+                return true; // remove after implementation
             }
+        }
 
-            reply[0] = (byte)insertPos; //Length
-
-            r_reply = new KWPReply(reply, a_request.getNrOfPID());
-            return RequestResult.NoError;*/
-            return true; // remove after implementation
+        /// <summary>
+        /// Creates valid request string for ELM device. Calculates data size and formats it automatically
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        private string GetELMRequest(CANMessage msg)
+        {
+            ulong reversed = BitTools.ReverseOrder(msg.getData());
+            //var length = BitTools.GetDataSize(reversed);
+            return reversed.ToString("X16").Substring(0, msg.getLength()*2);
         }
 
         public override float GetThermoValue()
@@ -354,12 +299,12 @@ namespace TrionicCANLib.CAN
                     return OpenResult.OpenError;
                 }
 
-                
+
                 WriteToSerialAndWait("ATE0\r");   //Echo off
                 WriteToSerialAndWait("ATS0\r");     //disable whitespace, should speed up the transmission by eliminating 8 whitespaces for every 19 chars received                
 
                 #region setBaudRate
-                if (m_forcedBaudrate != BaseBaudrate && m_forcedBaudrate!=0)
+                if (m_forcedBaudrate != BaseBaudrate && m_forcedBaudrate != 0)
                 {
                     WriteToSerialAndWait("ATBRT00\r"); //Set baudrate timeout
 
@@ -370,9 +315,9 @@ namespace TrionicCANLib.CAN
                     Thread.Sleep(50);
                     string ok = m_serialPort.ReadExisting();
 
-                    Console.WriteLine("change baudrateresponse: " + ok);
-                    AddToSerialTrace("SERRX: change baudrateresponse" + ok);
-                    AddToSerialTrace("bytestoread:" + m_serialPort.BytesToRead.ToString());
+                    // Console.WriteLine("change baudrateresponse: " + ok);
+                    // AddToSerialTrace("SERRX: change baudrateresponse" + ok);
+                    //  AddToSerialTrace("bytestoread:" + m_serialPort.BytesToRead.ToString());
 
                     try
                     {
@@ -389,11 +334,11 @@ namespace TrionicCANLib.CAN
                     bool gotVersion = false;
                     while (!gotVersion)
                     {
-                        //ok = WriteToSerialAndWait("\r");
-                        m_serialPort.Write("\r");
-                        ok = m_serialPort.ReadExisting();
-                        AddToSerialTrace("wait:" + ok);
-                        Console.WriteLine("wait: " + ok);
+                        ok = WriteToSerialAndWait("\r");
+                        //m_serialPort.Write("\r");
+                        //ok = m_serialPort.ReadExisting();
+                        //AddToSerialTrace("wait:" + ok);
+                        //Console.WriteLine("wait: " + ok);
                         if (ok.Length > 5)
                         {
                             gotVersion = true;
@@ -407,11 +352,12 @@ namespace TrionicCANLib.CAN
                 CastInformationEvent("Connected on com: " + m_forcedComport + " with baudrate: " + m_serialPort.BaudRate);
 
                 //RunBenchmark();
+                //TestCommunication();
 
                 string answer = WriteToSerialAndWait("ATI\r");    //Print version
                 Console.WriteLine("Version ELM: " + answer);
 
-                answer = WriteToSerialAndWait("ATSP6\r");    //Set protocol type ISO 15765-4 CAR (11 bit ID, 500kb/s)
+                answer = WriteToSerialAndWait("ATSP6\r");    //Set protocol type ISO 15765-4 CAN (11 bit ID, 500kb/s)
 
                 Console.WriteLine("Protocol select response: " + answer);
                 if (answer.StartsWith("OK"))
@@ -425,24 +371,16 @@ namespace TrionicCANLib.CAN
                     string command = "ATSH" + _ECUAddress.ToString("X3"); // Set header
                     answer = WriteToSerialAndWait(command + "\r");
 
-                    //WriteToSerialAndWait("AT FC SH " + _ECUAddress.ToString("X3") + "\r"); //set the flow control message recipient
-                    //WriteToSerialAndWait("AT FC SD 30 00 03\r"); //set the flow control content
-                    //WriteToSerialAndWait("AT FC SM 1\r"); //enable custom flow control
-                    
-                    //AddToSerialTrace("SERTX: " + command);
-                    Console.WriteLine(command + "response: " + answer);
+                    /* flow control
+                    WriteToSerialAndWait("AT FC SH " + _ECUAddress.ToString("X3") + "\r"); //set the flow control message recipient
+                    WriteToSerialAndWait("AT FC SD 30 00 01\r"); //set the flow control content
+                    WriteToSerialAndWait("AT FC SM 1\r"); //enable custom flow control
+                    */
 
-                    //WriteToSerialWithTrace("ATR0\r");    //Auto response = OFF 31082011
-                    //AddToSerialTrace("SERTX: ATR0");
+                    //WriteToSerialAndWait("AT PPS\r"); //display all programmed parameters                    
 
-                    //WriteToSerialWithTrace("ATAL\r");    //Allow messages with length > 7
-                    //Console.WriteLine("ATAL response: " + answer);
-                    //answer = ReadFromSerialToWithLog(">");
-
-                    answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (don't automatically send response codes, we will do this!)
+                    answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (custom generated PCI byte - SingleFrame, FirstFrame, ConsecutiveFrame, FlowControl)
                     Console.WriteLine("ATCAF0:" + answer);
-                    //WriteToSerialWithTrace("ATR0\r");     //Don't wait for response from the ECU
-                    //ReadFromSerialToWithLog(">");
 
                     if (m_readThread != null)
                     {
@@ -451,6 +389,9 @@ namespace TrionicCANLib.CAN
                     m_readThread = new Thread(readMessages);
                     m_readThread.Name = "CANELM327Device.m_readThread";
                     m_endThread = false; // reset for next tries :)
+
+                    //WriteToSerialAndWait("AT MA\r"); //monitor all traffic
+
                     if (m_readThread.ThreadState == ThreadState.Unstarted)
                         m_readThread.Start();
                     return OpenResult.OK;
@@ -468,14 +409,14 @@ namespace TrionicCANLib.CAN
         /// <returns></returns>
         private int DetectInitialPortSpeedAndReset()
         {
-            int[] speeds = new int[] { 38400, 115200, 230400, 500000, 1000000, 2000000 }; ///*2000000, 1000000, 500000, 230400,*/ 115200, 57600, 38400, 19200, 9600 };
+            int[] speeds = new int[] { 9600, 38400, 115200, 230400, 500000, 1000000, 2000000 }; ///*2000000, 1000000, 500000, 230400,*/ 115200, 57600, 38400, 19200, 9600 };
 
             for (int i = 0; i < 2; i++)
             {
                 foreach (var speed in speeds)
                 {
-                    if (m_serialPort.IsOpen)
-                        m_serialPort.Close();
+                    //if (m_serialPort.IsOpen)
+                    m_serialPort.Close();
                     m_serialPort.BaudRate = speed;
                     m_serialPort.PortName = m_forcedComport;
                     m_serialPort.ReadTimeout = 1000;
@@ -517,19 +458,17 @@ namespace TrionicCANLib.CAN
             return 0;
         }
 
-        private void RunBenchmark()
+        /// <summary>
+        /// Calculates message filters and sets it to ELM device. Due to ELM limitations, the filters sometimes might match more than supposed.
+        /// </summary>
+        private void InitializeMessageFilters()
         {
-            //do some benchmark
-            long start = Environment.TickCount;
-            int tries = 1000;
-            while (tries-- > 0)
+            uint filter = 0xFFF;
+            foreach (var id in AcceptOnlyMessageIds)
             {
-                WriteToSerialAndWait("ATI\r");
-                Console.Write(".");
+                filter &= id;
             }
-            start = Environment.TickCount - start;
-            AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 1000, start));
-            Console.WriteLine(string.Format("Got {0} responses in {1} ms", 1000, start));
+            SetupCANFilter(AcceptOnlyMessageIds[0].ToString("X3"), filter.ToString("X3"));
         }
 
         public override void Flush()
@@ -543,7 +482,6 @@ namespace TrionicCANLib.CAN
 
         public override CloseResult close()
         {
-
             lock (m_synchObject)
             {
                 m_endThread = true;
@@ -645,6 +583,67 @@ namespace TrionicCANLib.CAN
         public override void RequestDeviceReady()
         {
             m_serialPort.Write("ATI\r");
+        }
+
+        public override bool IsBusy
+        {
+            get
+            {
+                return interfaceBusy;
+            }
+        }
+
+        public override void SetupCANFilter(string canAddress, string canMask)
+        {
+            while (IsBusy)
+                Thread.Sleep(1);
+
+            if (m_readThread != null && m_readThread.IsAlive)
+                m_readThread.Suspend();
+
+            WriteToSerialAndWait(string.Format("AT CF {0} \r", canAddress));
+            WriteToSerialAndWait(string.Format("AT CM {0} \r", canMask));
+
+            if (m_readThread != null && m_readThread.IsAlive)
+                m_readThread.Resume();
+        }
+
+        public override List<uint> AcceptOnlyMessageIds
+        {
+            get { return m_AcceptedMessageIds; }
+            set
+            {
+                m_AcceptedMessageIds = value;
+                //InitializeMessageFilters(); //this should setup the ELM to monitor all possible these addresses
+            }
+        }
+
+        private void RunBenchmark()
+        {
+            //do some benchmark
+            long start = Environment.TickCount;
+            int tries = 1000;
+            while (tries-- > 0)
+            {
+                WriteToSerialAndWait("ATI\r");
+                Console.Write(".");
+            }
+            start = Environment.TickCount - start;
+            AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 1000, start));
+            Console.WriteLine(string.Format("Got {0} responses in {1} ms", 1000, start));
+        }
+
+        private void RunLoggingBenchmark()
+        {
+            var start = Environment.TickCount;
+            for (int i = 0; i < 10000; i++)
+            {
+                AddToSerialTrace("Checking performance " + i);
+            }
+            var end = Environment.TickCount;
+
+            AddToSerialTrace(string.Format("Could write {0}/sec", 10 / (end - start)));
+
         }
     }
 }

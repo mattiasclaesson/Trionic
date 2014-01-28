@@ -52,7 +52,7 @@ namespace TrionicCANLib
     public enum SleepTime : int
     {
         Default = 1,
-        ELM327 = 2
+        ELM327 = 1
     };
 
     public enum ComSpeed : int
@@ -239,7 +239,7 @@ namespace TrionicCANLib
                 m_canListener = new CANListener();
             }
             canUsbDevice.addListener(m_canListener);
-            canUsbDevice.acceptOnlyMessageIds = new List<uint> { 0x645, 0x7E0, 0x7E8, 0x311, 0x5E8 };
+            canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x645, 0x7E0, 0x7E8, 0x311, 0x5E8 };
         }
 
         public void setT7CANDevice(CANBusAdapter adapterType)
@@ -851,6 +851,8 @@ namespace TrionicCANLib
             {
                 Console.WriteLine(E.Message);
             }
+
+            TrionicCANLib.Log.LogHelper.Flush();
         }
 
         public float GetADCValue(uint channel)
@@ -876,11 +878,7 @@ namespace TrionicCANLib
 
             if (canUsbDevice.isOpen())
             {
-                ulong cmd = 0x0000000000001A02;
-                ulong lpid = _pid;
-                lpid *= 256;
-                lpid *= 256;
-                cmd ^= lpid;
+                ulong cmd = 0x0000000000001A02 | _pid << 16;
                 //SendMessage(data);  // software version
                 CANMessage msg = new CANMessage(0x7E0, 0, 3); // test GS was 8
                 msg.setData(cmd);
@@ -972,11 +970,7 @@ namespace TrionicCANLib
                 // 17-12-2012 17:16:41.190 - TX: 0245 0000000000031A02
                 // 17-12-2012 17:16:41.238 - RX: 0645 00000000311A7F03
 
-                ulong cmd = 0x0000000000001A02;
-                ulong lpid = _pid;
-                lpid *= 256;
-                lpid *= 256;
-                cmd ^= lpid;
+                ulong cmd = 0x0000000000001A02 | _pid << 16;
                 //SendMessage(data);  // software version
                 CANMessage msg = new CANMessage(0x245, 0, 8);
                 msg.setData(cmd);
@@ -1060,11 +1054,11 @@ namespace TrionicCANLib
 
             if (canUsbDevice.isOpen())
             {
-                ulong cmd = 0x0000000000001A02;
-                ulong lpid = _pid;
-                lpid *= 256;
-                lpid *= 256;
-                cmd ^= lpid;
+                ulong cmd = 0x0000000000001A02 | _pid<<16;
+                //ulong lpid = _pid;
+                //lpid *= 256;
+                //lpid *= 256;
+                //cmd ^= lpid;
                 //SendMessage(data);  // software version
                 CANMessage msg = new CANMessage(0x7E0, 0, 3); //<GS-18052011> support for ELM requires length byte
                 msg.setData(cmd);
@@ -1239,7 +1233,7 @@ namespace TrionicCANLib
         public string GetVehicleVIN()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x90, "VINNumber",3);
+            return RequestECUInfo(0x90, "VINNumber", 3);
         }
 
         /*
@@ -1461,6 +1455,7 @@ namespace TrionicCANLib
         {
             int startAddress = 0x102400;
             Bootloader btloaderdata = new Bootloader();
+
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             if (requestDownload())
@@ -1473,8 +1468,7 @@ namespace TrionicCANLib
                     // cast event
                     float percentage = ((float)i * 100) / 70F;
                     CastProgressWriteEvent(percentage);
-
-
+                    
                     if (SendTransferData(0xF0, startAddress, 0x7E8))
                     {
                         // send 0x22 (34) frames with data from bootloader
@@ -1498,7 +1492,7 @@ namespace TrionicCANLib
                             {
                                 AddToCanTrace("Couldn't send message");
                             }
-                            Thread.Sleep(m_sleepTime); //at least 5 ms between sent messages
+                            Thread.Sleep(m_sleepTime); 
                         }
                         // send the remaining data
                         m_canListener.setupWaitMessage(0x7E8);
@@ -1605,6 +1599,7 @@ namespace TrionicCANLib
                             msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
                             iFrameNumber++;
                             if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
                             if (!canUsbDevice.sendMessage(msg))
                             {
                                 AddToCanTrace("Couldn't send message");
@@ -1649,7 +1644,7 @@ namespace TrionicCANLib
                     msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
                     msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
                     iFrameNumber++;
-                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;                    
                     if (!canUsbDevice.sendMessage(msg))
                     {
                         AddToCanTrace("Couldn't send message");
@@ -1685,6 +1680,117 @@ namespace TrionicCANLib
             return true;
         }
 
+        private bool UploadBootloaderProg011()
+        {
+            int startAddress = 0x102400;
+            Bootloader btloaderdata = new Bootloader();
+            int txpnt = 0;
+            byte iFrameNumber = 0x21;
+            if (requestDownload011())
+            {
+                for (int i = 0; i < 0x46; i++)
+                {
+                    iFrameNumber = 0x21;
+                    //10 F0 36 00 00 10 24 00
+                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
+                    // cast event
+                    float percentage = ((float)i * 100) / 70F;
+                    CastProgressWriteEvent(percentage);
+
+                    if (SendTransferData011(0xF0, startAddress, 0x311))
+                    {
+                        // send 0x22 (34) frames with data from bootloader
+                        CANMessage msg = new CANMessage(0x11, 0, 8);
+                        for (int j = 0; j < 0x22; j++)
+                        {
+                            ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
+                            msg.setData(cmd);
+                            msg.setCanData(iFrameNumber, 0);
+                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 1);
+                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 2);
+                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 3);
+                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 4);
+                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 5);
+                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
+                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
+                            iFrameNumber++;
+                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
+                            if (!canUsbDevice.sendMessage(msg))
+                            {
+                                AddToCanTrace("Couldn't send message");
+                            }
+                            Thread.Sleep(m_sleepTime);
+                        }
+                        // send the remaining data
+                        m_canListener.setupWaitMessage(0x311);
+                        // now wait for 01 76 00 00 00 00 00 00 
+                        CANMessage response = new CANMessage();
+                        response = new CANMessage();
+                        response = m_canListener.waitMessage(1000);
+                        ulong data = response.getData();
+                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                        {
+                            return false;
+                        }
+                        BroadcastKeepAlive();
+                        startAddress += 0xEA;
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Did not receive correct response from SendTransferData");
+                    }
+                }
+
+                iFrameNumber = 0x21;
+                if (SendTransferData011(0x0A, startAddress, 0x311))
+                {
+                    // send 0x22 (34) frames with data from bootloader
+                    CANMessage msg = new CANMessage(0x11, 0, 8);
+
+                    ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
+                    msg.setData(cmd);
+                    msg.setCanData(iFrameNumber, 0);
+                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 1);
+                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 2);
+                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 3);
+                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 4);
+                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 5);
+                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
+                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
+                    iFrameNumber++;
+                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                    if (!canUsbDevice.sendMessage(msg))
+                    {
+                        AddToCanTrace("Couldn't send message");
+                    }
+                    Thread.Sleep(m_sleepTime);
+
+                    // send the remaining data
+                    m_canListener.setupWaitMessage(0x311);
+                    // now wait for 01 76 00 00 00 00 00 00 
+                    CANMessage response = new CANMessage();
+                    response = new CANMessage();
+                    response = m_canListener.waitMessage(1000);
+                    ulong data = response.getData();
+                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    {
+                        return false;
+                    }
+                    BroadcastKeepAlive();
+                    startAddress += 0x06;
+                }
+                else
+                {
+                    Console.WriteLine("Did not receive correct response from SendTransferData");
+                }
+
+                CastProgressWriteEvent(100);
+            }
+            return true;
+        }
+        
         private bool SendTransferData(int length, int address, uint waitforResponseID)
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
@@ -1780,7 +1886,6 @@ namespace TrionicCANLib
                 Console.WriteLine("Couldn't send message");
             }
             CANMessage response = new CANMessage();
-            response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x50)
@@ -2312,7 +2417,7 @@ namespace TrionicCANLib
             int eraseCount = 0;
             int waitCount = 0;
             while (!eraseDone)
-            {
+            {   
                 m_canListener.setupWaitMessage(0x7E8); // TEST ELM327 31082011
                 CANMessage response = new CANMessage();
                 response = m_canListener.waitMessage(500); // 1 seconds!
@@ -2349,7 +2454,10 @@ namespace TrionicCANLib
                 else
                 {
                     Console.WriteLine("Rx: " + data.ToString("X16"));
-                    if (!recoveryMode && canUsbDevice is CANELM327Device) SendKeepAlive();
+                    if(canUsbDevice is CANELM327Device){
+                        if (recoveryMode) BroadcastKeepAlive();
+                        else SendKeepAlive();
+                    }                    
                 }
                 waitCount++;
                 if (waitCount > 30)
@@ -2641,116 +2749,7 @@ namespace TrionicCANLib
             return true;
         }
 
-        private bool UploadBootloaderProg011()
-        {
-            int startAddress = 0x102400;
-            Bootloader btloaderdata = new Bootloader();
-            int txpnt = 0;
-            byte iFrameNumber = 0x21;
-            if (requestDownload011())
-            {
-                for (int i = 0; i < 0x46; i++)
-                {
-                    iFrameNumber = 0x21;
-                    //10 F0 36 00 00 10 24 00
-                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
-                    // cast event
-                    float percentage = ((float)i * 100) / 70F;
-                    CastProgressWriteEvent(percentage);
-
-
-                    if (SendTransferData011(0xF0, startAddress, 0x311))
-                    {
-                        // send 0x22 (34) frames with data from bootloader
-                        CANMessage msg = new CANMessage(0x11, 0, 8);
-                        for (int j = 0; j < 0x22; j++)
-                        {
-                            ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                            msg.setData(cmd);
-                            msg.setCanData(iFrameNumber, 0);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 1);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 2);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 3);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 4);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 5);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
-                            iFrameNumber++;
-                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                            if (!canUsbDevice.sendMessage(msg))
-                            {
-                                AddToCanTrace("Couldn't send message");
-                            }
-                            Thread.Sleep(m_sleepTime);
-                        }
-                        // send the remaining data
-                        m_canListener.setupWaitMessage(0x311);
-                        // now wait for 01 76 00 00 00 00 00 00 
-                        CANMessage response = new CANMessage();
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
-                        ulong data = response.getData();
-                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                        {
-                            return false;
-                        }
-                        BroadcastKeepAlive();
-                        startAddress += 0xEA;
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Did not receive correct response from SendTransferData");
-                    }
-                }
-
-                iFrameNumber = 0x21;
-                if (SendTransferData011(0x0A, startAddress, 0x311))
-                {
-                    // send 0x22 (34) frames with data from bootloader
-                    CANMessage msg = new CANMessage(0x11, 0, 8);
-
-                    ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                    msg.setData(cmd);
-                    msg.setCanData(iFrameNumber, 0);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 1);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 2);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 3);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 4);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 5);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
-                    iFrameNumber++;
-                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                    if (!canUsbDevice.sendMessage(msg))
-                    {
-                        AddToCanTrace("Couldn't send message");
-                    }
-                    Thread.Sleep(m_sleepTime);
-
-                    // send the remaining data
-                    m_canListener.setupWaitMessage(0x311);
-                    // now wait for 01 76 00 00 00 00 00 00 
-                    CANMessage response = new CANMessage();
-                    response = new CANMessage();
-                    response = m_canListener.waitMessage(1000);
-                    ulong data = response.getData();
-                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                    {
-                        return false;
-                    }
-                    BroadcastKeepAlive();
-                    startAddress += 0x06;
-                }
-                else
-                {
-                    Console.WriteLine("Did not receive correct response from SendTransferData");
-                }
-
-                CastProgressWriteEvent(100);
-            }
-            return true;
-        }
+     
 
         private bool SendTransferData011(int length, int address, uint waitforResponseID)
         {
@@ -2817,13 +2816,8 @@ namespace TrionicCANLib
 
             if (canUsbDevice.isOpen())
             {
-                ulong cmd = 0x0000000000001A02;
-                ulong lpid = _pid;
-                //lpid *= 256;
-                //lpid *= 256;
-                lpid *= 256;
-                lpid *= 256;
-                cmd ^= lpid;
+                ulong cmd = 0x0000000000001A02 | _pid<<16;                
+                
                 //SendMessage(data);  // software version
                 CANMessage msg = new CANMessage(0x11, 0, 3); //<GS-18052011> support for ELM requires length byte
                 msg.setData(cmd);
@@ -2915,13 +2909,14 @@ namespace TrionicCANLib
             return retval;
         }
 
-
         public bool RecoverECU(string filename)
         {
             string diagDataID = GetDiagnosticDataIdentifier0101();
             Console.WriteLine("DataID: " + diagDataID);
             if (diagDataID == string.Empty)
             {
+                canUsbDevice.SetupCANFilter("7E8", "000");
+                //canUsbDevice.SetAutomaticFlowControl(false);
                 BlockManager bm = new BlockManager();
                 bm.SetFilename(filename);
                 int startAddress = 0x020000;
@@ -3000,6 +2995,7 @@ namespace TrionicCANLib
                                             msg.setCanData(data2Send[txpnt++], 7);
                                             iFrameNumber++;
                                             if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                                            msg.elmExpectedResponses = frame == numberOfFrames - 1 ? 1 : 0;
                                             if (!canUsbDevice.sendMessage(msg))
                                             {
                                                 AddToCanTrace("Couldn't send message");
@@ -3163,8 +3159,7 @@ namespace TrionicCANLib
             get { return _needRecovery; }
             set { _needRecovery = value; }
         }
-
-
+        
         public bool UpdateFlash(string filename)
         {
             if (!canUsbDevice.isOpen()) return false;
@@ -3270,6 +3265,7 @@ namespace TrionicCANLib
                             msg.setCanData(data2Send[txpnt++], 7);
                             iFrameNumber++;
                             if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
                             if (!canUsbDevice.sendMessage(msg))
                             {
                                 AddToCanTrace("Couldn't send message");
@@ -3313,7 +3309,6 @@ namespace TrionicCANLib
             _stallKeepAlive = false;
             return true;
         }
-
 
         /// <summary>
         /// Write a byte array to an address.
@@ -3445,8 +3440,6 @@ namespace TrionicCANLib
             response = m_canListener.waitMessage(1000);
             //Console.WriteLine("received KA: " + response.getCanData(1).ToString("X2"));
         }
-
-
 
         private void AddToCanTrace(string line)
         {
@@ -3607,8 +3600,7 @@ namespace TrionicCANLib
         {
             return (byte)(m_data >> (int)(a_index * 8));
         }
-
-
+        
         private byte[] sendReadDataByLocalIdentifier(int address, int length, out bool success)
         {
             // we send: 0040000000002106
@@ -3640,7 +3632,7 @@ namespace TrionicCANLib
             cmd |= (ulong)(byte)((address & 0xFF000000) >> 3 * 8) << 8;*/
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
-            msg.elmExpectedResponses=19; //in 19 messages there are 0x82 = 130 bytes of data, bootloader requests 0x80 =128 each time
+            msg.elmExpectedResponses = 19; //in 19 messages there are 0x82 = 130 bytes of data, bootloader requests 0x80 =128 each time
             if (!canUsbDevice.sendMessage(msg))
             {
                 AddToCanTrace("Couldn't send message");
@@ -4164,7 +4156,6 @@ namespace TrionicCANLib
             return list.ToArray();
         }
 
-
         private void CastProgressWriteEvent(float percentage)
         {
             if (onWriteProgress != null)
@@ -4222,7 +4213,6 @@ namespace TrionicCANLib
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
         }
-
 
         private bool readDataByPacketID(byte command, uint responseID)
         {
@@ -4712,7 +4702,7 @@ namespace TrionicCANLib
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 8);
             ulong cmd = 0x00000000903B1310;
-            if (VINNumber.Length > 17) VINNumber = VINNumber.Substring(0, 17);// loose more than 17 digits
+            if (VINNumber.Length > 17) VINNumber = VINNumber.Substring(0, 17);// lose more than 17 digits
             if (VINNumber.Length < 17) VINNumber = VINNumber.PadRight(17, '0');
             if (VINNumber.Length != 17) return false;
 
@@ -4728,9 +4718,8 @@ namespace TrionicCANLib
             {
                 Console.WriteLine("Couldn't send message");
             }
-            CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
-            ulong rxdata = ECMresponse.getData();
+            
+            ulong rxdata = m_canListener.waitMessage(1000).getData();
             if (rxdata == 0x0000000000000030)
             {
                 //2020202020202021
@@ -4760,9 +4749,8 @@ namespace TrionicCANLib
                 canUsbDevice.sendMessage(msg);
                 // wait for ack
                 //0000000000907B02
-                ECMresponse = new CANMessage();
-                ECMresponse = m_canListener.waitMessage(1000);
-                rxdata = ECMresponse.getData();
+                
+                rxdata = m_canListener.waitMessage(1000).getData();
                 if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x90)
                 {
                     return true;
@@ -4793,7 +4781,6 @@ namespace TrionicCANLib
             return false;
 
         }
-
 
         private bool SendSecretCodetoCIM()
         {
@@ -4904,8 +4891,6 @@ namespace TrionicCANLib
             //07E8 00000084019A5A04
             //0645 00000008039A5A04
         }
-
-
 
         /// <summary>
         /// Sets the speed limit in a T8 ECU
@@ -5018,7 +5003,7 @@ namespace TrionicCANLib
         public void setECUparameterVIN(string vin)
         {
             // 62 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
-            CANMessage msg62 = new CANMessage(0x7E0, 0, 3); //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg62 = new CANMessage(0x7E0, 0, 4); //<GS-18052011> ELM327 support requires the length byte
             msg62.setData(0x000000006201AA03);
             m_canListener.setupWaitMessage(0x5E8);
             CastInfoEvent("Wait for response 5E8 62 00 00", ActivityType.ConvertingFile);
@@ -5046,7 +5031,7 @@ namespace TrionicCANLib
 
             CastInfoEvent("ECM EOL Parameter Settings-part1", ActivityType.ConvertingFile);
             // 02 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
-            CANMessage msg = new CANMessage(0x7E0, 0, 3); //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 4); //<GS-18052011> ELM327 support requires the length byte
             msg.setData(0x000000000201AA03);
             m_canListener.setupWaitMessage(0x5E8);
             CastInfoEvent("Wait for response 5E8 02 02", ActivityType.ConvertingFile);
@@ -5389,6 +5374,15 @@ namespace TrionicCANLib
         public bool ResetT7()
         {
             return KWPHandler.getInstance().ResetECU();
+        }
+
+        /// <summary>
+        /// Sets the ELM filters to show all messages
+        /// </summary>
+        /// <returns></returns>
+        public void SetELMFilters()
+        {
+            canUsbDevice.SetupCANFilter("7E8", "000");
         }
     }
 }

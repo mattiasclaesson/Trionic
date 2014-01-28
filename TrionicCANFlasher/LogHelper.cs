@@ -7,19 +7,56 @@ using log4net;
 using System.IO;
 using log4net.Config;
 using TrionicCANLib.Properties;
+using System.Threading;
 
 namespace TrionicCANFlasher
 {
     internal class LogHelper
     {
+        static Thread logThread;
+        static ILog uiLog = LogManager.GetLogger("UILog");
+        static TrionicCANLib.Log.LogQueue<LogEntry> logQueue;
+
         static LogHelper()
         {
             XmlConfigurator.Configure(new MemoryStream(TrionicCANFlasher.Properties.Resources.log4net_config));
+            logQueue = new TrionicCANLib.Log.LogQueue<LogEntry>();
+            logThread = new Thread(LogMain);
+            logThread.Priority = ThreadPriority.BelowNormal;
+            logThread.Start();
         }
 
-        internal static ILog GetUILog()
+        static void LogMain()
         {
-            return LogManager.GetLogger("UILog");
+            while (true)
+            {
+                var logItem = logQueue.Dequeue();
+                if (logItem != null)
+                {
+                    uiLog.Info(logItem);
+                }
+            }
+        }
+
+        internal static void Log(string item)
+        {
+            logQueue.Enqueue(new LogEntry { msg = item });
+        }
+
+        private class LogEntry
+        {
+            public string msg;
+            DateTime time;
+
+            public LogEntry()
+            {
+                time = DateTime.Now;
+            }
+
+            public override string ToString()
+            {
+                return string.Format("{0:yyyy-MM-dd HH:mm:ss.ffff} - {1}", time, msg);
+            }
         }
     }
 }

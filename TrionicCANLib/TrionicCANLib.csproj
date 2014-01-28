@@ -84,6 +84,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BitTools.cs" />
     <Compile Include="BlockManager.cs" />
     <Compile Include="Bootloader.cs" />
     <Compile Include="ByteCoder.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="flasher\T7CombiFlasher.cs" />
     <Compile Include="flasher\T7Flasher.cs" />
     <Compile Include="Log\LogHelper.cs" />
+    <Compile Include="Log\LogQueue.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
