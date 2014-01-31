@@ -129,6 +129,11 @@ namespace TrionicCANLib.CAN
                                     {
                                         //need to repeat command??
                                     }
+                                    else if (rxMessage.StartsWith("NO DATA"))
+                                    {
+                                        AddToSerialTrace("NO DATA");
+                                        Console.WriteLine("NO DATA");
+                                    }
                                     else if (rxMessage.Length >= 6) // is it a valid line
                                     {
                                         try
@@ -306,7 +311,7 @@ namespace TrionicCANLib.CAN
                 #region setBaudRate
                 if (m_forcedBaudrate != BaseBaudrate && m_forcedBaudrate != 0)
                 {
-                    WriteToSerialAndWait("ATBRT00\r"); //Set baudrate timeout
+                    WriteToSerialAndWait("ATBRT28\r"); //Set baudrate timeout 200 ms
 
                     int divider = (int)(Math.Round(4000000.0 / m_forcedBaudrate));
 
@@ -314,10 +319,6 @@ namespace TrionicCANLib.CAN
 
                     Thread.Sleep(50);
                     string ok = m_serialPort.ReadExisting();
-
-                    // Console.WriteLine("change baudrateresponse: " + ok);
-                    // AddToSerialTrace("SERRX: change baudrateresponse" + ok);
-                    //  AddToSerialTrace("bytestoread:" + m_serialPort.BytesToRead.ToString());
 
                     try
                     {
@@ -334,17 +335,20 @@ namespace TrionicCANLib.CAN
                     bool gotVersion = false;
                     while (!gotVersion)
                     {
-                        ok = WriteToSerialAndWait("\r");
-                        //m_serialPort.Write("\r");
-                        //ok = m_serialPort.ReadExisting();
-                        //AddToSerialTrace("wait:" + ok);
-                        //Console.WriteLine("wait: " + ok);
-                        if (ok.Length > 5)
+                        string elmVersion = m_serialPort.ReadExisting();
+                        AddToSerialTrace("elmVersion:" + elmVersion);
+                        Console.WriteLine("elmVersion: " + elmVersion);
+                        if (elmVersion.Length > 5)
                         {
                             gotVersion = true;
                         }
                         Thread.Sleep(100);
+                        m_serialPort.Write("\r");
                     }
+
+                    ok = WriteToSerialAndWait("\r");
+                    AddToSerialTrace("ok:" + ok);
+                    Console.WriteLine("ok: " + ok);
                 }
 
                 #endregion
@@ -415,6 +419,7 @@ namespace TrionicCANLib.CAN
             {
                 foreach (var speed in speeds)
                 {
+                    Console.Out.WriteLine("Try speed:" + speed);
                     //if (m_serialPort.IsOpen)
                     m_serialPort.Close();
                     m_serialPort.BaudRate = speed;
@@ -425,9 +430,11 @@ namespace TrionicCANLib.CAN
                     {
                         m_serialPort.DiscardInBuffer();
                         WriteToSerialWithTrace("ATI\r");
+                        Thread.Sleep(50);
                         WriteToSerialWithTrace("ATI\r"); //need to send 2 times for some reason...
                         Thread.Sleep(50);
                         string reply = m_serialPort.ReadExisting();
+                        Console.Out.WriteLine("Result:" + reply);
                         bool success = !string.IsNullOrEmpty(reply) && reply.Contains("ELM327");
                         if (success)
                         {
@@ -446,6 +453,7 @@ namespace TrionicCANLib.CAN
                         }
                         else
                         {
+                            Console.Out.WriteLine("Failed");
                             m_serialPort.Close();
                         }
                     }
