@@ -132,7 +132,6 @@ namespace TrionicCANFlasher
             btnSetSpeed.Enabled = enable;
             btnResetECU.Enabled = enable;
             cbxAdapterType.Enabled = enable;
-            cbxComPort.Enabled = enable;
             cbxEcuType.Enabled = enable;
             label1.Enabled = enable;
             tbParameter.Enabled = enable;
@@ -143,11 +142,13 @@ namespace TrionicCANFlasher
             if (IsElmAdapterSelected ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
-                cbxComPort.Enabled = true;
+                cbxComPort.Enabled = enable;
+                cbxComSpeed.Enabled = enable;
             }
             else
             {
                 cbxComPort.Enabled = false;
+                cbxComSpeed.Enabled = false;
             }
 
             // Always disable
@@ -180,9 +181,7 @@ namespace TrionicCANFlasher
 
                 if (IsElmAdapterSelected)
                 {
-                    //btnRecoverECU.Enabled = false;
                     btnReadDTC.Enabled = false;
-                    //btnSetECUVIN.Enabled = false;
                 }
             }
         }
