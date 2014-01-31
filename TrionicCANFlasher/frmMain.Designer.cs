@@ -57,6 +57,7 @@
             this.cbDisableConnectionCheck = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
+            this.bwTrionic = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -448,6 +449,7 @@
         private System.Windows.Forms.CheckBox cbDisableConnectionCheck;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cbxComSpeed;
+        private System.ComponentModel.BackgroundWorker bwTrionic;
     }
 }
 

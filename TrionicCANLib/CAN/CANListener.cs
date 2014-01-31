@@ -33,9 +33,6 @@ namespace TrionicCANLib.CAN
             {
                 this.m_waitMsgID = can_id;
             }*/
-
-
-            
         }
 
         //---------------------------------------------------------------------
@@ -43,6 +40,12 @@ namespace TrionicCANLib.CAN
         */
 
         private Stopwatch sw = new Stopwatch();
+
+        public CANMessage waitMessage(int a_timeout, uint can_id)
+        {
+            setupWaitMessage(can_id);
+            return waitMessage(a_timeout);
+        }
 
         public CANMessage waitMessage(int a_timeout)
         {
@@ -144,7 +147,7 @@ namespace TrionicCANLib.CAN
 
         public override void FlushQueue()
         {
-            _queue = new CANMessage[16];
+            _queue = new CANMessage[128]; //16 might be a bit too little when some thread stops (i.e. the one that writes the log). 
             _receiveMessageIndex = 0;
             _readMessageIndex = 0;
         }

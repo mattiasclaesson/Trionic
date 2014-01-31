@@ -2,26 +2,36 @@
 <log4net>
   <appender name="RollingLogFileAppenderCan" type="log4net.Appender.RollingFileAppender,log4net">
     <file value="canLog.txt" />
-    <lockingModel type="log4net.Appender.FileAppender+MinimalLock"/>
+    <lockingModel type="log4net.Appender.FileAppender"/>
     <param name="StaticLogFileName" value="true"/>
     <appendToFile value="true" />
     <param name="RollingStyle" value="Date"/>
     <param name="DatePattern" value="yyyy-MM-dd"/>
     <layout type="log4net.Layout.PatternLayout">
-      <conversionPattern value="%date - %message%newline"/>
+      <conversionPattern value="%message%newline"/>
     </layout>
   </appender>
 
   <appender name="RollingLogFileAppenderSerial" type="log4net.Appender.RollingFileAppender,log4net">
     <file value="serialLog.txt" />
-    <lockingModel type="log4net.Appender.FileAppender+MinimalLock"/>
+    <lockingModel type="log4net.Appender.FileAppender"/>    
     <param name="StaticLogFileName" value="true"/>
     <appendToFile value="true" />
     <param name="RollingStyle" value="Date"/>
     <param name="DatePattern" value="yyyy-MM-dd"/>
     <layout type="log4net.Layout.PatternLayout">
-      <conversionPattern value="%date - %message%newline"/>
+      <conversionPattern value="%message%newline"/>
     </layout>
+  </appender>
+
+  <appender name="BufferedSerialAppender" type="log4net.Appender.BufferingForwardingAppender">
+    <bufferSize value="20" />        
+    <appender-ref ref="RollingLogFileAppenderSerial" />
+  </appender>
+
+  <appender name="BufferedCanAppender" type="log4net.Appender.BufferingForwardingAppender">
+    <bufferSize value="20" />
+    <appender-ref ref="RollingLogFileAppenderCan" />
   </appender>
 
   <logger name="CanLog">

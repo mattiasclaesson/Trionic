@@ -122,9 +122,9 @@ namespace TrionicCANLib.CAN
             set { _DisableCanConnectionCheck = value; }
         }
 
-        private List<uint> m_AcceptedMessageIds;
+        protected List<uint> m_AcceptedMessageIds;
 
-        public List<uint> acceptOnlyMessageIds
+        public virtual List<uint> AcceptOnlyMessageIds
         {
             get { return m_AcceptedMessageIds; }
             set { m_AcceptedMessageIds = value; }
@@ -211,7 +211,7 @@ namespace TrionicCANLib.CAN
         {
             if (this.EnableCanLog)
             {
-                LogHelper.GetCanLog().Info(line);
+                LogHelper.LogCan(line);
             }
         }
 
@@ -222,7 +222,8 @@ namespace TrionicCANLib.CAN
                 line = line.Replace("\n", "");
                 line = line.Replace("\r", "");
                 line = line.Replace("\t", "");
-                LogHelper.GetSerialLog().Info(line);
+                LogHelper.LogSerial(line);
+                //LogHelper.LogDebug(line);
             }
         }
 
@@ -240,6 +241,8 @@ namespace TrionicCANLib.CAN
 
         protected List<ICANListener> m_listeners = new List<ICANListener>();
 
+        #region ELM327 specific
+
         /// <summary>
         /// Used for ELM327 only to stop waiting for messages. This is because when getting lots of responses (i.e. 19 for getting flash)
         /// ELM will wait for next message for some time (30-50ms), and this slows down the flash download
@@ -247,5 +250,26 @@ namespace TrionicCANLib.CAN
         public virtual void RequestDeviceReady()
         {
         }
+
+        /// <summary>
+        /// This indicates that interface is busy. Used only by ELM327 for now
+        /// </summary>
+        public virtual bool IsBusy
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Setups can filter. Used by ELM327 implementation only
+        /// </summary>
+        /// <param name="canAddress">Can address(i.e. 7E8)</param>
+        /// <param name="canMask">Can mask (i.e. DFF with 7E8 should allow to get both 7E8 and 5E8 responses). 
+        /// If set to 000, then all the can traffic will be visible to ELM</param>
+        public virtual void SetupCANFilter(string canAddress, string canMask) { }
+
+        #endregion ELM327 specific
     }
 }
