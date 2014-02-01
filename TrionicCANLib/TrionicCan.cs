@@ -4014,7 +4014,21 @@ namespace TrionicCANLib
 
             int fifthDtcNum = (0x0F & Convert.ToInt32(responseDTC.getCanData(2)));
 
-            return "DTC: " + firstDtcChar + secondDtcNum.ToString("d") + thirdDtcNum.ToString("X") + forthDtcNum.ToString("X") + fifthDtcNum.ToString("X");
+            // It seems Trionic8 return 00
+            //byte failureTypeByte = responseDTC.getCanData(3);
+
+            byte statusByte = responseDTC.getCanData(4);
+            String statusDescription = string.Empty;
+            if (0x80 == (0x80 & statusByte)) statusDescription += "warningIndicatorRequestedState ";
+            if (0x40 == (0x40 & statusByte)) statusDescription += "currentDTCSincePowerUp ";
+            if (0x20 == (0x20 & statusByte)) statusDescription += "testNotPassedSinceCurrentPowerUp ";
+            if (0x10 == (0x10 & statusByte)) statusDescription += "historyDTC ";
+            if (0x08 == (0x08 & statusByte)) statusDescription += "testFailedSinceDTCCleared ";
+            if (0x04 == (0x04 & statusByte)) statusDescription += "testNotPassedSinceDTCCleared ";
+            if (0x02 == (0x02 & statusByte)) statusDescription += "currentDTC ";
+            if (0x01 == (0x01 & statusByte)) statusDescription += "DTCSupportedByCalibration ";
+
+            return "DTC: " + firstDtcChar + secondDtcNum.ToString("d") + thirdDtcNum.ToString("X") + forthDtcNum.ToString("X") + fifthDtcNum.ToString("X") + " StatusByte: " + statusByte.ToString("X2") + " StatusDescription: " + statusDescription;
         }
 
         public string[] readDTCCodes()
@@ -4031,11 +4045,24 @@ namespace TrionicCANLib
 
             List<string> list = new List<string>();
 
+            // ReadDiagnosticInformation $A9 Service
+            //  readStatusOfDTCByStatusMask $81 Request
+            //      DTCStatusMask $12= 0001 0010
+            //        0 Bit 7 warningIndicatorRequestedState
+            //        0 Bit 6 currentDTCSincePowerUp
+            //        0 Bit 5 testNotPassedSinceCurrentPowerUp
+            //        1 Bit 4 historyDTC
+            //        0 Bit 3 testFailedSinceDTCCleared
+            //        0 Bit 2 testNotPassedSinceDTCCleared
+            //        1 Bit 1 currentDTC
+            //        0 Bit 0 DTCSupportedByCalibration
             ulong cmd = 0x000000001281A903; // 7E0 03 A9 81 12 00 00 00 00
 
-            CANMessage msg = new CANMessage(0x7E0, 0, 8);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 4);//<GS-18052011> ELM327 support requires the length byte
             msg.setData(cmd);
+            msg.elmExpectedResponses = 15;
             m_canListener.setupWaitMessage(0x7E8);
+            canUsbDevice.SetupCANFilter("7E8", "DFF"); // Mask will allow 7E8 and 5E8
             if (!canUsbDevice.sendMessage(msg))
             {
                 Console.WriteLine("Couldn't send message");
@@ -4048,7 +4075,7 @@ namespace TrionicCANLib
             response = m_canListener.waitMessage(1000);
             data = response.getData();
 
-            if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78)
+            if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78) // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
             {
                 // Now wait for all DTCs
                 m_canListener.setupWaitMessage(0x5E8);
@@ -4058,18 +4085,9 @@ namespace TrionicCANLib
                 {
                     CANMessage responseDTC = new CANMessage();
                     responseDTC = m_canListener.waitMessage(1000);
-                    ulong dataDTC = responseDTC.getData();
 
-                    if (dataDTC == 0x0)
-                    {
-                        more_errors = false;
-                        list.Add("Timeout!");
-                        return list.ToArray();
-                    }
-
-                    // Read until response:   No more errors, status == 0xFF
-                    int dtcStatus = Convert.ToInt32(responseDTC.getCanData(4));
-                    if (dtcStatus == 0xFF)
+                    // Read until response: EndOfDTCReport
+                    if (responseDTC.getCanData(1)==0 && responseDTC.getCanData(2)==0 && responseDTC.getCanData(3)==0)
                     {
                         more_errors = false;
                         list.Add("No more errors!");
@@ -4083,12 +4101,19 @@ namespace TrionicCANLib
 
                 }
             }
+            else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9)
+            {
+                string info = TranslateErrorCode(response.getCanData(3));
+                CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+            }
 
             Send0120();
 
             return list.ToArray();
         }
 
+        // MattiasC, this one is probably not working, need a car to test
+        // look at readDTCCodes() how it was improved.
         public string[] readDTCCodesCIM()
         {
             // test code

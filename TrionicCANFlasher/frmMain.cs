@@ -178,11 +178,6 @@ namespace TrionicCANFlasher
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
                 btnResetECU.Enabled = false;
-
-                if (IsElmAdapterSelected)
-                {
-                    btnReadDTC.Enabled = false;
-                }
             }
         }
 
