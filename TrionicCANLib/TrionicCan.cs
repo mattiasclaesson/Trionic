@@ -2138,7 +2138,7 @@ namespace TrionicCANLib
             return true;
         }
 
-        public byte[] getFlashWithBootloader()
+        public byte[] GetFlashWithBootloader()
         {
             _stallKeepAlive = true;
             bool success = false;
@@ -2263,7 +2263,6 @@ namespace TrionicCANLib
             _stallKeepAlive = false;
             return buf;
         }
-
 
         public byte[] getSRAMSnapshotWithBootloader()
         {
@@ -2391,8 +2390,6 @@ namespace TrionicCANLib
             return buf;
         }
 
-
-
         public bool WriteToSRAM(int address, byte[] memdata)
         {
             if (!canUsbDevice.isOpen()) return false;
@@ -2400,7 +2397,6 @@ namespace TrionicCANLib
             return false;
 
         }
-
 
         private bool SendrequestDownload(bool recoveryMode)
         {
@@ -2568,7 +2564,6 @@ namespace TrionicCANLib
             return Convert.ToInt32(getCanData(data, 2));
         }
 
-
         private int GetProgrammingState011()
         {
             CANMessage msg = new CANMessage(0x11, 0, 2);//<GS-18052011> ELM327 support requires the length byte
@@ -2590,7 +2585,6 @@ namespace TrionicCANLib
             }
             return Convert.ToInt32(getCanData(data, 2));
         }
-
 
         private bool SendA5011()
         {
@@ -2748,7 +2742,6 @@ namespace TrionicCANLib
             }
             return true;
         }
-
      
 
         private bool SendTransferData011(int length, int address, uint waitforResponseID)
@@ -3160,7 +3153,7 @@ namespace TrionicCANLib
             set { _needRecovery = value; }
         }
         
-        public bool UpdateFlash(string filename)
+        public bool UpdateFlashT8(string filename)
         {
             if (!canUsbDevice.isOpen()) return false;
             _needRecovery = false;
@@ -3168,7 +3161,7 @@ namespace TrionicCANLib
             bm.SetFilename(filename);
 
             _stallKeepAlive = true;
-            int startAddress = 0x020000;
+            
             SendKeepAlive();
             sw.Reset();
             sw.Start();
@@ -3234,14 +3227,53 @@ namespace TrionicCANLib
             {
                 _needRecovery = true;
                 CastInfoEvent("Programming flash", ActivityType.UploadingFlash);
-                for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
+                bool success = ProgramFlashT8(bm);
+                
+                if (success)
+                    CastInfoEvent("Flash upload completed", ActivityType.ConvertingFile);
+                else
+                    CastInfoEvent("Flash upload failed", ActivityType.ConvertingFile);
+
+                sw.Stop();
+                _needRecovery = false;
+                
+                // what else to do?
+                Send0120();
+                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+            }
+            else
+            {
+                sw.Stop();
+                _needRecovery = false;
+                _stallKeepAlive = false;
+                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
+                Send0120();
+                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+                return false;
+
+            }
+            _stallKeepAlive = false;
+            return true;
+        }
+
+        private bool ProgramFlashT8(BlockManager bm)
+        {
+            int startAddress = 0x020000;
+
+            for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
+            {
+                float percentage = ((float)blockNumber * 100) / 3920F;
+                CastProgressWriteEvent(percentage);
+                bool canSkip = false;// bm.CanSkipCurrentBlock();
+                byte[] data2Send = bm.GetNextBlock();                
+                int length = 0xF0;
+                if (blockNumber == 0xF50) length = 0xE6;
+
+                int currentAddress = startAddress + (blockNumber * 0xEA);
+                if (!canSkip)
                 {
-                    float percentage = ((float)blockNumber * 100) / 3920F;
-                    CastProgressWriteEvent(percentage);
-                    byte[] data2Send = bm.GetNextBlock();
-                    int length = 0xF0;
-                    if (blockNumber == 0xF50) length = 0xE6;
-                    if (SendTransferData(length, startAddress + (blockNumber * 0xEA), 0x7E8))
+                    
+                    if (SendTransferData(length, currentAddress, 0x7E8))
                     {
                         // send the data from the block
 
@@ -3288,25 +3320,11 @@ namespace TrionicCANLib
                         SendKeepAlive();
                     }
                 }
-                sw.Stop();
-                _needRecovery = false;
-                CastInfoEvent("Flash upload completed", ActivityType.ConvertingFile);
-                // what else to do?
-                Send0120();
-                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+                else
+                {
+                    Console.WriteLine("Skipping block at " + currentAddress);
+                }
             }
-            else
-            {
-                sw.Stop();
-                _needRecovery = false;
-                _stallKeepAlive = false;
-                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
-                Send0120();
-                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                return false;
-
-            }
-            _stallKeepAlive = false;
             return true;
         }
 
@@ -5380,9 +5398,11 @@ namespace TrionicCANLib
         /// Sets the ELM filters to show all messages
         /// </summary>
         /// <returns></returns>
-        public void SetELMFilters()
+        private void SetELMFilters()
         {
             canUsbDevice.SetupCANFilter("7E8", "000");
         }
+
+
     }
 }

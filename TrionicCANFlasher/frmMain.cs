@@ -95,7 +95,7 @@ namespace TrionicCANFlasher
                             dtstart = DateTime.Now;
                             AddLogItem("Update flash content");
                             Application.DoEvents();
-                            if (trionicCan.UpdateFlash(ofd.FileName))
+                            if (trionicCan.UpdateFlashT8(ofd.FileName))
                             {
                                 AddLogItem("Flash sequence done");
                             }
@@ -244,7 +244,7 @@ namespace TrionicCANFlasher
                                     AddLogItem("Aquiring flash content");
                                     Application.DoEvents();
                                     //byte[] snapshot = trionicCan.getFlashContent();
-                                    byte[] snapshot = trionicCan.getFlashWithBootloader();
+                                    byte[] snapshot = trionicCan.GetFlashWithBootloader();
                                     try
                                     {
                                         File.WriteAllBytes(sfd.FileName, snapshot);
