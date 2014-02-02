@@ -272,7 +272,7 @@ namespace TrionicCANLib
             else if (adapterType == CANBusAdapter.ELM327)
             {
                 Sleeptime = SleepTime.ELM327;
-                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
+                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
                 kwpCanDevice = new KWPCANDevice();
                 kwpCanDevice.setCANDevice(canUsbDevice);
                 kwpCanDevice.EnableCanLog = m_EnableCanLog;

@@ -225,7 +225,7 @@ namespace TrionicCANLib.KWP
         /// <returns>The status of the request.</returns>
         public RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
         {
-            CANMessage msg = new CANMessage(0x240, 0, 5);
+            CANMessage msg = new CANMessage(0x240, 0, 8);
             uint row = nrOfRowsToSend(a_request.getData());
 
             m_kwpCanListener.setupWaitMessage(0x258);
@@ -398,7 +398,7 @@ namespace TrionicCANLib.KWP
         /// <param name="a_rowNr">The row number that should be acknowledged.</param>
         private void sendAck(uint a_rowNr)
         {
-            CANMessage msg = new CANMessage(0x266,0,4);
+            CANMessage msg = new CANMessage(0x266,0,5);
             uint i = 0;
             ulong data = 0;
             data = setCanData(data, (byte)0x40, i++);
