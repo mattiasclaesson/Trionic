@@ -85,7 +85,7 @@
             // 
             this.cbEnableLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbEnableLogging.AutoSize = true;
-            this.cbEnableLogging.Location = new System.Drawing.Point(866, 297);
+            this.cbEnableLogging.Location = new System.Drawing.Point(866, 301);
             this.cbEnableLogging.Name = "cbEnableLogging";
             this.cbEnableLogging.Size = new System.Drawing.Size(96, 17);
             this.cbEnableLogging.TabIndex = 24;
@@ -223,7 +223,7 @@
             this.btnReadDTC.Name = "btnReadDTC";
             this.btnReadDTC.Size = new System.Drawing.Size(107, 50);
             this.btnReadDTC.TabIndex = 39;
-            this.btnReadDTC.Text = "Read DTC";
+            this.btnReadDTC.Text = "Read ECU DTC";
             this.btnReadDTC.UseVisualStyleBackColor = true;
             this.btnReadDTC.Click += new System.EventHandler(this.btnReadDTC_Click);
             // 
@@ -274,7 +274,7 @@
             this.btnSetE85.Name = "btnSetE85";
             this.btnSetE85.Size = new System.Drawing.Size(107, 50);
             this.btnSetE85.TabIndex = 52;
-            this.btnSetE85.Text = "SetE85";
+            this.btnSetE85.Text = "Set E85 percent";
             this.btnSetE85.UseVisualStyleBackColor = true;
             this.btnSetE85.Click += new System.EventHandler(this.btnSetE85_Click);
             // 
@@ -285,7 +285,7 @@
             this.btnSetSpeed.Name = "btnSetSpeed";
             this.btnSetSpeed.Size = new System.Drawing.Size(107, 50);
             this.btnSetSpeed.TabIndex = 53;
-            this.btnSetSpeed.Text = "Set speed";
+            this.btnSetSpeed.Text = "Set speed limiter";
             this.btnSetSpeed.UseVisualStyleBackColor = true;
             this.btnSetSpeed.Click += new System.EventHandler(this.btnSetSpeed_Click);
             // 
@@ -328,7 +328,7 @@
             // 
             this.cbOnlyPBus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbOnlyPBus.AutoSize = true;
-            this.cbOnlyPBus.Location = new System.Drawing.Point(866, 320);
+            this.cbOnlyPBus.Location = new System.Drawing.Point(866, 324);
             this.cbOnlyPBus.Name = "cbOnlyPBus";
             this.cbOnlyPBus.Size = new System.Drawing.Size(134, 17);
             this.cbOnlyPBus.TabIndex = 57;
@@ -339,7 +339,7 @@
             // 
             this.cbDisableConnectionCheck.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbDisableConnectionCheck.AutoSize = true;
-            this.cbDisableConnectionCheck.Location = new System.Drawing.Point(866, 343);
+            this.cbDisableConnectionCheck.Location = new System.Drawing.Point(866, 347);
             this.cbDisableConnectionCheck.Name = "cbDisableConnectionCheck";
             this.cbDisableConnectionCheck.Size = new System.Drawing.Size(150, 17);
             this.cbDisableConnectionCheck.TabIndex = 58;
