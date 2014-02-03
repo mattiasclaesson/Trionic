@@ -40,7 +40,8 @@ namespace TrionicCANLib
         COMBI,
         ELM327,
         JUST4TRIONIC,
-        OBDLinkSX
+        OBDLinkSX,
+        LAWICEL_VCP
     };
 
     public enum ECU : int
@@ -224,9 +225,13 @@ namespace TrionicCANLib
             {
                 canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
             }
-            else
+            else if (adapterType == CANBusAdapter.COMBI)
             {
                 canUsbDevice = new LPCCANDevice();
+            }
+            else if (adapterType == CANBusAdapter.LAWICEL_VCP)
+            {
+                canUsbDevice = new CANUSBDirectDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
             }
             canUsbDevice.EnableCanLog = m_EnableCanLog;
             canUsbDevice.UseOnlyPBus = m_OnlyPBus;
@@ -324,6 +329,31 @@ namespace TrionicCANLib
             else if (adapterType == CANBusAdapter.COMBI)
             {
                 canUsbDevice = new LPCCANDevice();
+            }
+            else if (adapterType == CANBusAdapter.LAWICEL_VCP)
+            {
+                canUsbDevice = new CANUSBDirectDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
+                kwpCanDevice = new KWPCANDevice();
+                kwpCanDevice.setCANDevice(canUsbDevice);
+                kwpCanDevice.EnableCanLog = m_EnableCanLog;
+                KWPHandler.setKWPDevice(kwpCanDevice);
+                if (m_EnableCanLog)
+                {
+                    KWPHandler.startLogging();
+                }
+                kwpHandler = KWPHandler.getInstance();
+                try
+                {
+                    T7Flasher.setKWPHandler(kwpHandler);
+                }
+                catch (Exception E)
+                {
+                    Console.WriteLine(E.Message);
+                    AddToCanTrace("Failed to set flasher object to KWPHandler");
+                }
+                flash = T7Flasher.getInstance();
+                flash.onStatusChanged += flash_onStatusChanged;
+                flash.EnableCanLog = m_EnableCanLog;
             }
 
             canUsbDevice.EnableCanLog = m_EnableCanLog;
@@ -434,7 +464,7 @@ namespace TrionicCANLib
                 }
 
             }
-            else if (canUsbDevice is CANUSBDevice || canUsbDevice is Just4TrionicDevice || canUsbDevice is CANELM327Device)
+            else if (canUsbDevice is CANUSBDevice || canUsbDevice is Just4TrionicDevice || canUsbDevice is CANELM327Device || canUsbDevice is CANUSBDirectDevice)
             {
                 if (kwpHandler.openDevice())
                 {
@@ -5233,33 +5263,29 @@ namespace TrionicCANLib
             string swVersion;
             float e85level;
 
-            if (canUsbDevice is CANUSBDevice || canUsbDevice is CANELM327Device)
+            if (m_EnableCanLog)
             {
-                if (m_EnableCanLog)
-                {
-                    KWPHandler.startLogging();
-                }
-                KWPResult res = kwpHandler.getVIN(out vin);
-                if (res == KWPResult.OK)
-                    CastInfoEvent("VIN: " + vin, ActivityType.ConvertingFile);
-                else if (res == KWPResult.DeviceNotConnected)
-                    CastInfoEvent("VIN: not connected", ActivityType.ConvertingFile);
-                else
-                    CastInfoEvent("VIN: timeout", ActivityType.ConvertingFile);
-                res = kwpHandler.getImmo(out immo);
-                if (res == KWPResult.OK)
-                    CastInfoEvent("Immo: " + immo, ActivityType.ConvertingFile);
-                res = kwpHandler.getEngineType(out engineType);
-                if (res == KWPResult.OK)
-                    CastInfoEvent("Engine type: :" + engineType, ActivityType.ConvertingFile);
-                res = kwpHandler.getSwVersion(out swVersion);
-                if (res == KWPResult.OK)
-                    CastInfoEvent("Software version: " + swVersion, ActivityType.ConvertingFile);
-                res = kwpHandler.getE85Level(out e85level);
-                if (res == KWPResult.OK)
-                    CastInfoEvent("E85 : " + e85level + "%", ActivityType.ConvertingFile);
+                KWPHandler.startLogging();
             }
-
+            KWPResult res = kwpHandler.getVIN(out vin);
+            if (res == KWPResult.OK)
+                CastInfoEvent("VIN: " + vin, ActivityType.ConvertingFile);
+            else if (res == KWPResult.DeviceNotConnected)
+                CastInfoEvent("VIN: not connected", ActivityType.ConvertingFile);
+            else
+                CastInfoEvent("VIN: timeout", ActivityType.ConvertingFile);
+            res = kwpHandler.getImmo(out immo);
+            if (res == KWPResult.OK)
+                CastInfoEvent("Immo: " + immo, ActivityType.ConvertingFile);
+            res = kwpHandler.getEngineType(out engineType);
+            if (res == KWPResult.OK)
+                CastInfoEvent("Engine type: :" + engineType, ActivityType.ConvertingFile);
+            res = kwpHandler.getSwVersion(out swVersion);
+            if (res == KWPResult.OK)
+                CastInfoEvent("Software version: " + swVersion, ActivityType.ConvertingFile);
+            res = kwpHandler.getE85Level(out e85level);
+            if (res == KWPResult.OK)
+                CastInfoEvent("E85 : " + e85level + "%", ActivityType.ConvertingFile);
         }
 
         public void getFlashWithT7Flasher(string a_fileName)

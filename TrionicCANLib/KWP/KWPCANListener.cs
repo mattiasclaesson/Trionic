@@ -12,6 +12,7 @@ namespace TrionicCANLib.KWP
     class KWPCANListener : ICANListener
     {
         private CANMessage m_canMessage = new CANMessage();
+        private CANMessage m_EmptyMessage = new CANMessage();
         private uint m_waitMsgID = 0;
         private AutoResetEvent m_resetEvent = new AutoResetEvent(false);
         private bool messageReceived = false;
@@ -50,32 +51,21 @@ namespace TrionicCANLib.KWP
         {          
             CANMessage retMsg;
 
-            m_resetEvent.WaitOne(a_timeout, true);
-            lock (m_canMessage)
+            if(m_resetEvent.WaitOne(a_timeout, true))
             {
-                retMsg = m_canMessage;
+                lock (m_canMessage)
+                {
+                    retMsg = m_canMessage;
+                }
+            }
+            else
+            {
+                retMsg = m_EmptyMessage;
             }
             messageReceived = false;
             return retMsg;
         }
 
-/*        public CANMessage waitForMessage(uint a_canID, int a_timeout)
-        {
-            CANMessage retMsg;
-            m_canMessage.setID(0);  // init so we cannot receive the same frame twice <GS-10022010>
-            lock (m_canMessage)
-            {
-                m_waitMsgID = a_canID;
-            }
-            m_resetEvent.WaitOne(a_timeout, true);
-            lock (m_canMessage)
-            {
-                retMsg = m_canMessage;
-            }
-
-            return retMsg;
-        }
-*/
         override public void handleMessage(CANMessage a_message)
         {
             lock (m_canMessage)

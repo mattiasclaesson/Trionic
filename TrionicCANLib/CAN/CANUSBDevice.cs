@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using TrionicCANLib.CAN;
 
 namespace TrionicCANLib.CAN
 {
@@ -123,7 +122,7 @@ namespace TrionicCANLib.CAN
                         canMessage.setData(r_canMsg.data);
                         lock (m_listeners)
                         {
-                            AddToCanTrace("RX: " + r_canMsg.id.ToString("X4") + " " + r_canMsg.data.ToString("X16"));
+                            AddToCanTrace(string.Format("RX: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
                             foreach (ICANListener listener in m_listeners)
                             {
                                 listener.handleMessage(canMessage);

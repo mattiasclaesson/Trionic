@@ -140,7 +140,8 @@ namespace TrionicCANFlasher
             cbDisableConnectionCheck.Enabled = enable;
 
             if (IsElmAdapterSelected ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_VCP)
             {
                 cbxComPort.Enabled = enable;
                 cbxComSpeed.Enabled = enable;
@@ -449,7 +450,8 @@ namespace TrionicCANFlasher
         private void SetT8AdapterType()
         {
             if (IsElmAdapterSelected ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_VCP)
             {
                 trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
                 //set selected com speed
@@ -492,7 +494,8 @@ namespace TrionicCANFlasher
         private void SetT7AdapterType()
         {
             if (IsElmAdapterSelected ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_VCP)
             {
                 trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
                 //set selected com speed
