@@ -141,7 +141,8 @@ namespace TrionicCANFlasher
 
             if (IsElmAdapterSelected ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_VCP)
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_VCP ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_FTDI)
             {
                 cbxComPort.Enabled = enable;
                 cbxComSpeed.Enabled = enable;

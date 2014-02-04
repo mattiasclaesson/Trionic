@@ -171,7 +171,6 @@ namespace TrionicCANLib.CAN
                             else if(line.Contains("z"))
                             {
                                 interfaceBusy = false;
-                                Console.WriteLine("Got message sent ACK" + line);
                             }
                             else
                             {
@@ -407,8 +406,8 @@ namespace TrionicCANLib.CAN
                         txstring += b.ToString("X2");
                     }
                     txstring += "\r";
+                    AddToCanTrace(string.Format("TX: {0} {1} {2}", a_message.getID().ToString("X3"), a_message.getData().ToString("X16"), txstring));
                     m_serialPort.Write(txstring);
-                    Console.WriteLine("Send: " + txstring);
                     return true;
                 }
             }
