@@ -2,7 +2,6 @@
 <log4net>
   <appender name="RollingLogFileAppenderCan" type="log4net.Appender.RollingFileAppender,log4net">
     <file value="canLog.txt" />
-    <lockingModel type="log4net.Appender.FileAppender"/>
     <param name="StaticLogFileName" value="true"/>
     <appendToFile value="true" />
     <param name="RollingStyle" value="Date"/>
@@ -13,8 +12,7 @@
   </appender>
 
   <appender name="RollingLogFileAppenderSerial" type="log4net.Appender.RollingFileAppender,log4net">
-    <file value="serialLog.txt" />
-    <lockingModel type="log4net.Appender.FileAppender"/>    
+    <file value="serialLog.txt" /> 
     <param name="StaticLogFileName" value="true"/>
     <appendToFile value="true" />
     <param name="RollingStyle" value="Date"/>
