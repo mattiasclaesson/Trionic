@@ -266,6 +266,7 @@ namespace CanUsbInterface
                         _ftdi.SetLatency(4);
                         // Force a flush every \r. Not guaranteed. 
                         _ftdi.SetCharacters((byte)'\r', true, 0x00, false);
+                        _ftdi.SetBaudRate(2000000);
                         // We have successfully opened the port. Save the port name.
                         _ftdiSerial = serialnumber;
                         retval = true;
