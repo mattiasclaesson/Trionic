@@ -65,7 +65,7 @@ namespace TrionicCANLib
         S115200,
         S230400,
         S1Mbit,
-        S4Mbit
+        S2Mbit
     };
 
     public class TrionicCan

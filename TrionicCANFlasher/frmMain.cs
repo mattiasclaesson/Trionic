@@ -458,7 +458,7 @@ namespace TrionicCANFlasher
                 //set selected com speed
                 switch (cbxComSpeed.SelectedIndex)
                 {
-                    case (int)ComSpeed.S4Mbit:
+                    case (int)ComSpeed.S2Mbit:
                         trionicCan.ForcedBaudrate = 2000000;
                         break;
                     case (int)ComSpeed.S1Mbit:
@@ -502,7 +502,7 @@ namespace TrionicCANFlasher
                 //set selected com speed
                 switch (cbxComSpeed.SelectedIndex)
                 {
-                    case (int)ComSpeed.S4Mbit:
+                    case (int)ComSpeed.S2Mbit:
                         trionicCan.ForcedBaudrate = 2000000;
                         break;
                     case (int)ComSpeed.S1Mbit:
