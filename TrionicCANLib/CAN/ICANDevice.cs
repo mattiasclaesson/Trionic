@@ -208,14 +208,14 @@ namespace TrionicCANLib.CAN
 
         protected void AddToCanTrace(string line)
         {
-            //if (this.EnableCanLog)
-            //{
-            //    DateTime dtnow = DateTime.Now;
-            //    using (StreamWriter sw = new StreamWriter(System.Windows.Forms.Application.StartupPath + "\\CanTraceCANUSBDevice.txt", true))
-            //    {
-            //        sw.WriteLine(dtnow.ToString("dd/MM/yyyy HH:mm:ss") + " - " + line);
-            //    }
-           // }
+            if (this.EnableCanLog)
+            {
+                DateTime dtnow = DateTime.Now;
+                using (StreamWriter sw = new StreamWriter(System.Windows.Forms.Application.StartupPath + "\\CanTraceCANUSBDevice.txt", true))
+                {
+                    sw.WriteLine(dtnow.ToString("dd/MM/yyyy HH:mm:ss") + " - " + line);
+                }
+            }
         }
 
         protected void AddToSerialTrace(string line)
