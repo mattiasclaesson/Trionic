@@ -234,10 +234,6 @@ namespace TrionicCANLib
             {
                 canUsbDevice = new CANUSBDirectDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
             }
-            else if (adapterType == CANBusAdapter.LAWICEL_FTDI)
-            {
-                canUsbDevice = new CANUSBFTDIDevice();
-            }
             canUsbDevice.EnableCanLog = m_EnableCanLog;
             canUsbDevice.UseOnlyPBus = m_OnlyPBus;
             canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
@@ -338,31 +334,6 @@ namespace TrionicCANLib
             else if (adapterType == CANBusAdapter.LAWICEL_VCP)
             {
                 canUsbDevice = new CANUSBDirectDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
-                kwpCanDevice = new KWPCANDevice();
-                kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableCanLog = m_EnableCanLog;
-                KWPHandler.setKWPDevice(kwpCanDevice);
-                if (m_EnableCanLog)
-                {
-                    KWPHandler.startLogging();
-                }
-                kwpHandler = KWPHandler.getInstance();
-                try
-                {
-                    T7Flasher.setKWPHandler(kwpHandler);
-                }
-                catch (Exception E)
-                {
-                    Console.WriteLine(E.Message);
-                    AddToCanTrace("Failed to set flasher object to KWPHandler");
-                }
-                flash = T7Flasher.getInstance();
-                flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableCanLog = m_EnableCanLog;
-            }
-            else if (adapterType == CANBusAdapter.LAWICEL_FTDI)
-            {
-                canUsbDevice = new CANUSBFTDIDevice();
                 kwpCanDevice = new KWPCANDevice();
                 kwpCanDevice.setCANDevice(canUsbDevice);
                 kwpCanDevice.EnableCanLog = m_EnableCanLog;
@@ -494,7 +465,7 @@ namespace TrionicCANLib
                 }
 
             }
-            else if (canUsbDevice is CANUSBDevice || canUsbDevice is Just4TrionicDevice || canUsbDevice is CANELM327Device || canUsbDevice is CANUSBDirectDevice || canUsbDevice is CANUSBFTDIDevice)
+            else if (canUsbDevice is CANUSBDevice || canUsbDevice is Just4TrionicDevice || canUsbDevice is CANELM327Device || canUsbDevice is CANUSBDirectDevice)
             {
                 if (kwpHandler.openDevice())
                 {
