@@ -361,7 +361,7 @@ namespace TrionicCANLib.CAN
                 string answer = WriteToSerialAndWait("ATI\r");    //Print version
                 Console.WriteLine("Version ELM: " + answer);
 
-                answer = WriteToSerialAndWait("ATSP6\r");    //Set protocol type ISO 15765-4 CAN (11 bit ID, 500kb/s)
+                answer = WriteToSerialAndWait("ATSP6\r");   //Set protocol type ISO 15765-4 CAN (11 bit ID, 500kb/s)
 
                 Console.WriteLine("Protocol select response: " + answer);
                 if (answer.StartsWith("OK"))
@@ -496,6 +496,7 @@ namespace TrionicCANLib.CAN
             }
             if (m_serialPort.IsOpen)
             {
+                WriteToSerialAndWait("ATSP00\r");    // Reset to automatic protocol
                 WriteToSerialWithTrace("ATZ\r");    //Reset all
                 Thread.Sleep(100);
                 m_serialPort.Close();
