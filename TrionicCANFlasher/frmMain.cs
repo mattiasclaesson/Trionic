@@ -141,8 +141,7 @@ namespace TrionicCANFlasher
 
             if (IsElmAdapterSelected ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_VCP ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_FTDI)
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL_VCP)
             {
                 cbxComPort.Enabled = enable;
                 cbxComSpeed.Enabled = enable;
@@ -159,7 +158,6 @@ namespace TrionicCANFlasher
                 btnReadSRAM.Enabled = false;
                 btnRecoverECU.Enabled = false;
                 btnSecurityAccess.Enabled = false;
-                btnReadDTC.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
 
@@ -680,7 +678,26 @@ namespace TrionicCANFlasher
         private void btnReadDTC_Click(object sender, EventArgs e)
         {
             GetUIOptions();
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                SetT7AdapterType();
+
+                EnableUserInput(false);
+                AddLogItem("Opening connection");
+                if (trionicCan.openT7Device())
+                {
+                    string[] codes = trionicCan.ReadDTCCodesT7();
+                    foreach (string a in codes)
+                    {
+                        AddLogItem(a);
+                    }
+                }
+
+                trionicCan.Cleanup();
+                AddLogItem("Connection closed");
+                EnableUserInput(true);
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {               
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();

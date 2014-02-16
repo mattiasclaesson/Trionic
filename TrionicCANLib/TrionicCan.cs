@@ -41,8 +41,7 @@ namespace TrionicCANLib
         ELM327,
         JUST4TRIONIC,
         OBDLinkSX,
-        LAWICEL_VCP,
-        LAWICEL_FTDI
+        LAWICEL_VCP
     };
 
     public enum ECU : int
@@ -5455,6 +5454,11 @@ namespace TrionicCANLib
             canUsbDevice.SetupCANFilter("7E8", "000");
         }
 
-
+        public string[] ReadDTCCodesT7()
+        {
+            List<string> list;
+            KWPHandler.getInstance().ReadDTCCodes(out list);
+            return list.ToArray();
+        }
     }
 }

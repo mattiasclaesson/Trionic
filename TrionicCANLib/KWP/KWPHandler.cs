@@ -187,8 +187,16 @@ namespace TrionicCANLib.KWP
             KWPRequest req = new KWPRequest(0x11, 0x01, data);
             Console.WriteLine(req.ToString());
             result = sendRequest(req, out reply);
-            Console.WriteLine(reply.ToString());
-            return true;
+            if (reply.getMode() == 0x51)
+            {
+                Console.WriteLine("Reset Success: " + reply.ToString());
+                return true;
+            }
+            else if (reply.getMode() == 0x7F)
+            {
+                Console.WriteLine("Reset Failed: " + reply.ToString());
+            }
+            return false;
         }
 
         public bool ReadFreezeFrameData(uint frameNumber)
@@ -207,8 +215,9 @@ namespace TrionicCANLib.KWP
             return true;
         }
 
-        public bool ReadDTCCodes()
+        public bool ReadDTCCodes(out List<string> list)
         {
+            list = new List<string>();
             LogDataString("ReadDTCCodes");
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -216,11 +225,71 @@ namespace TrionicCANLib.KWP
             data[0] = (byte)0xFF;
             data[1] = (byte)0xFF;
             //data[2] = (byte)0x00;
-            KWPRequest req = new KWPRequest(0x18, 0x02/*, data*/);
+            // Status byte
+            // 7 Warning lamp illuminated for this code
+            // 6 Warning lamp pending for this code, not illuminate but malfunction was detected
+            // 5 Warning lamp was previously illuminated for this code, malfunction not currently detected, code not yet erased
+            // 4 Stored trouble code
+            // 3 Manufacturer specific status
+            // 2 Manufacturer specific status
+            // 1 Current code - present at time of request
+            // 0 Maturing/intermittent code - insufficient data to consider as a malfunction
+            KWPRequest req = new KWPRequest(0x18 , 0x02); // Request Diagnostic Trouble Codes by Status
             Console.WriteLine(req.ToString());
             result = sendRequest(req, out reply);
             Console.WriteLine(reply.ToString());
-            return true;
+            // J2190
+            // Multiple Mode $58 response messages may be reported to a single request, depending on the number of diagnostic 
+            // trouble codes stored in the module. Each response message will report up to three DTCs for
+            // which at least one of the requested status bits is set. If no codes are stored in the module that meet the
+            // requested status, then the module will respond with the following:
+            // Reply: 58,00
+            if (reply.getMode() == 0x58)
+            {
+                if (reply.getPid() == 0x00)
+                {
+                    Console.WriteLine("No DTC's");
+                    list.Add("No DTC's");
+                    return true;
+                }
+                else
+                {
+                    //P0605
+                    //P1231
+                    //P1230
+                    //P1530
+                    //P1606
+                    //P1460
+                    //+		reply	{Reply:   14,58,
+                    // 06,
+                    // 06,05,E4,
+                    // 12,31,48,
+                    // 12,30,E8,
+                    // 15,30,E1,
+                    // 16,06,E8,
+                    // 14,60,41}	TrionicCANLib.KWP.KWPReply
+                    uint number = reply.getPid();
+                    byte[] dtc = new byte[number*2];
+
+                    byte[] read = reply.getData();
+                    int j = 0;
+                    int i = 0;
+                    while(i < read.Length)
+                    {
+                        dtc[j++] = read[i++];
+                        dtc[j++] = read[i++];
+                        i++;
+                    }
+
+                    for (int n = 0; n < dtc.Length; n = n + 2)
+                    {
+                        list.Add("DTC: P" + dtc[n].ToString("X2") + dtc[n+1].ToString("X2"));
+                    }
+                }
+                
+            }
+
+            return false;
         }
 
         public bool ClearDTCCode(int dtccode)
@@ -395,19 +464,20 @@ namespace TrionicCANLib.KWP
             KWPReply reply = new KWPReply();
             KWPResult result;
             float level;
-            
-            result = sendRequest(new KWPRequest(0x21, 0xA7), out reply);
-            if (result == KWPResult.OK && reply.getLength() == 4)
+
+            result = sendRequest(new KWPRequest(0x21, 0xA7), out reply); // Request Diagnostic Data Mode $21 - Offset (1 byte)
+            if (reply.getMode() == 0x61 && reply.getPid() == 0xA7 && reply.getLength() == 4)
             {
                 level = (reply.getData()[0] << 8) | reply.getData()[1];
                 r_level = level / 10;
                 return KWPResult.OK;
             }
-            else
+            else if (reply.getMode() == 0x7F && reply.getPid() == 0x21 && reply.getLength() == 3)
             {
-                r_level = 0;
-                return KWPResult.Timeout;
+                Console.WriteLine(TranslateErrorCode(reply.getData()[0]));
             }
+            r_level = 0;
+            return KWPResult.NOK;
         }
         
         /// <summary>
@@ -424,14 +494,16 @@ namespace TrionicCANLib.KWP
             level[0] = (byte)(sendlevel >> 8);
             level[1] = (byte)sendlevel;
             result = sendRequest(new KWPRequest(0x3B, 0xA7, level), out reply);
-            if (result == KWPResult.OK)
-            {
+            if(reply.getMode() == 0x7B && reply.getPid() == 0xA7)
+            {                
                 return KWPResult.OK;
             }
-            else
+            else if(reply.getMode() == 0x7F && reply.getPid() == 0x3B && reply.getLength() == 3)
             {
-                return KWPResult.Timeout;
+                Console.WriteLine(TranslateErrorCode(reply.getData()[0]));
             }
+
+            return KWPResult.NOK;
         }  
         
         /// <summary>
@@ -1239,6 +1311,124 @@ namespace TrionicCANLib.KWP
             return returnKey;
         }
 
+        private string TranslateErrorCode(byte p)
+        {
+            string retval = "code " + p.ToString("X2");
+            switch (p)
+            {
+                case 0x00:
+                    retval = "Affirmative response";
+                    break;
+                case 0x10:
+                    retval = "General reject";
+                    break;
+                case 0x11:
+                    retval = "Mode not supported";
+                    break;
+                case 0x12:
+                    retval = "Sub-function not supported - invalid format";
+                    break;
+                case 0x21:
+                    retval = "Busy, repeat request";
+                    break;
+                case 0x22:
+                    retval = "conditions not correct or request sequence error";
+                    break;
+                case 0x23:
+                    retval = "Routine not completed or service in progress";
+                    break;
+                case 0x31:
+                    retval = "Request out of range or session dropped";
+                    break;
+                case 0x33:
+                    retval = "Security access denied";
+                    break;
+                case 0x34:
+                    retval = "Security access allowed";
+                    break;
+                case 0x35:
+                    retval = "Invalid key supplied";
+                    break;
+                case 0x36:
+                    retval = "Exceeded number of attempts to get security access";
+                    break;
+                case 0x37:
+                    retval = "Required time delay not expired, you cannot gain security access at this moment";
+                    break;
+                case 0x40:
+                    retval = "Download (PC -> ECU) not accepted";
+                    break;
+                case 0x41:
+                    retval = "Improper download (PC -> ECU) type";
+                    break;
+                case 0x42:
+                    retval = "Unable to download (PC -> ECU) to specified address";
+                    break;
+                case 0x43:
+                    retval = "Unable to download (PC -> ECU) number of bytes requested";
+                    break;
+                case 0x44:
+                    retval = "Ready for download";
+                    break;
+                case 0x50:
+                    retval = "Upload (ECU -> PC) not accepted";
+                    break;
+                case 0x51:
+                    retval = "Improper upload (ECU -> PC) type";
+                    break;
+                case 0x52:
+                    retval = "Unable to upload (ECU -> PC) for specified address";
+                    break;
+                case 0x53:
+                    retval = "Unable to upload (ECU -> PC) number of bytes requested";
+                    break;
+                case 0x54:
+                    retval = "Ready for upload";
+                    break;
+                case 0x61:
+                    retval = "Normal exit with results available";
+                    break;
+                case 0x62:
+                    retval = "Normal exit without results available";
+                    break;
+                case 0x63:
+                    retval = "Abnormal exit with results";
+                    break;
+                case 0x64:
+                    retval = "Abnormal exit without results";
+                    break;
+                case 0x71:
+                    retval = "Transfer suspended";
+                    break;
+                case 0x72:
+                    retval = "Transfer aborted";
+                    break;
+                case 0x74:
+                    retval = "Illegal address in block transfer";
+                    break;
+                case 0x75:
+                    retval = "Illegal byte count in block transfer";
+                    break;
+                case 0x76:
+                    retval = "Illegal block transfer type";
+                    break;
+                case 0x77:
+                    retval = "Block transfer data checksum error";
+                    break;
+                case 0x78:
+                    retval = "Response pending";
+                    break;
+                case 0x79:
+                    retval = "Incorrect byte count during block transfer";
+                    break;
+                case 0x80:
+                default:
+                    retval = "Service not supported in current diagnostics session";
+                    break;
+            }
+            return retval;
+        }
+
         private static bool m_logginEnabled = false;
         //private static StreamWriter m_logFileStream;
         private static KWPHandler m_instance;
@@ -1247,4 +1437,6 @@ namespace TrionicCANLib.KWP
         private System.Threading.Timer stateTimer;
 
     }
+
+
 }
