@@ -101,7 +101,7 @@ namespace TrionicCANLib.KWP
             
             //Detect all serial ports.
             string[] serialPortNames = SerialPort.GetPortNames();
-            m_serialPort.BaudRate = 9600;
+            m_serialPort.BaudRate = 38400;
             m_serialPort.Handshake = Handshake.None;
             m_serialPort.ReadTimeout = 3000;
             bool readException = false;
@@ -143,7 +143,7 @@ namespace TrionicCANLib.KWP
                 m_serialPort.ReadTo(">");
                 m_serialPort.Write("ATI\r");    //Print version
                 string answer = m_serialPort.ReadTo(">");
-                if (answer.StartsWith("ELM327 v1.2"))
+                if (answer.StartsWith("ELM327"))
                 {
                     m_deviceIsOpen = true;
                     return true;

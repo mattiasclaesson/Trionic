@@ -23,7 +23,7 @@ namespace TrionicCANLib.CAN
         private int m_forcedBaudrate = 38400;
         object lockObj = new object();
         private long lastSentTimestamp = 0;
-        private int timeoutWithoutReadyChar = 3000;
+        private int timeoutWithoutReadyChar = 5000;
         private bool interfaceBusy = false;
         private TimeSpan delayTimespan = new TimeSpan(5000);//500us should be enough
 
@@ -129,6 +129,8 @@ namespace TrionicCANLib.CAN
                 if (m_serialPort.IsOpen)
                 {
                     // read the status?
+
+
                     string line = string.Empty;
 
                     try
@@ -161,7 +163,7 @@ namespace TrionicCANLib.CAN
 
                                 lock (m_listeners)
                                 {
-                                    AddToCanTrace(string.Format("RX: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
+                                    AddToCanTrace(string.Format("RX: {0} {1} {2}", canMessage.getID().ToString("X3"), line.Substring(5, 16), line));
                                     foreach (ICANListener listener in m_listeners)
                                     {
                                         listener.handleMessage(canMessage);
@@ -171,10 +173,15 @@ namespace TrionicCANLib.CAN
                             else if(line.Contains("z"))
                             {
                                 interfaceBusy = false;
+                                //Console.WriteLine("clear");
+                            }
+                            else if (line.Length == 2 && Convert.ToInt32(line.Substring(1, 2), 16) != 0x07)
+                            {
+                                //Console.WriteLine("Send error");
                             }
                             else
                             {
-                                Console.WriteLine("Unknown message: " + line);
+                                //Console.WriteLine("Unknown message: " + line);
                             }
                         }
                     }
@@ -183,7 +190,8 @@ namespace TrionicCANLib.CAN
                         Console.WriteLine("Failed to read frames from CANbus: " + E.Message);
                     }
                 }
-                Thread.Sleep(0);
+                //Thread.Sleep(2);
+                Thread.Sleep(delayTimespan); // give others some air
             }
         }
 
@@ -255,8 +263,8 @@ namespace TrionicCANLib.CAN
                     m_serialPort.BaudRate = BaseBaudrate;
                 }
                 m_serialPort.Handshake = Handshake.None;
-                m_serialPort.WriteTimeout = 100;
-                m_serialPort.ReadTimeout = 100;
+                m_serialPort.WriteTimeout = 200;
+                m_serialPort.ReadTimeout = 200;
                 m_serialPort.NewLine = "\r";
 
                 CastInformationEvent("Connected on com: " + m_forcedComport + " with baudrate: " + m_serialPort.BaudRate);
@@ -293,6 +301,13 @@ namespace TrionicCANLib.CAN
                                 Console.WriteLine("Failed to open CAN channel");
                                 return OpenResult.OpenError;
                             }
+                            //m_serialPort.Write("Z0\r");
+                            //Thread.Sleep(100);
+                            //if ((byte)m_serialPort.ReadByte() == 0x07) // error
+                            //{
+                            //    Console.WriteLine("Failed to set timestamp off");
+                            //    return OpenResult.OpenError;
+                            //}
                             //need to check is channel opened!!! 
                             Console.WriteLine("Creating new reader thread");
                             m_readThread = new Thread(readMessages);
@@ -382,11 +397,15 @@ namespace TrionicCANLib.CAN
                 while (interfaceBusy)
                 {
                     if (lastSentTimestamp < Environment.TickCount - timeoutWithoutReadyChar)
+                    {
+                        //Console.WriteLine("released");
                         break;
+                    }
                 }
 
                 lastSentTimestamp = Environment.TickCount;
                 interfaceBusy = true;
+                //Console.WriteLine("set");
 
                 Lawicel.CANUSB.CANMsg msg = new Lawicel.CANUSB.CANMsg();
                 msg.id = a_message.getID();

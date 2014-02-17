@@ -93,7 +93,6 @@
     <Compile Include="CAN\CANMessage.cs" />
     <Compile Include="CAN\CANUSBDevice.cs" />
     <Compile Include="CAN\CANUSBDirectDevice.cs" />
-    <Compile Include="CAN\CANUSBFTDIDevice.cs" />
     <Compile Include="CAN\EasySyncUSBDevice.cs" />
     <Compile Include="CAN\EasySync_canusb.cs" />
     <Compile Include="CAN\ICANDevice.cs" />
@@ -131,12 +130,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Log\log4net.config.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FTDICANUSB\FTDICANUSB.csproj">
-      <Project>{C2807317-4964-4A80-AE41-276229D16F8A}</Project>
-      <Name>FTDICANUSB</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
