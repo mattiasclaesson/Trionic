@@ -35,7 +35,7 @@
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.btnExit = new System.Windows.Forms.Button();
             this.btnFlashECU = new System.Windows.Forms.Button();
-            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.listBoxLog = new System.Windows.Forms.ListBox();
             this.btnGetECUInfo = new System.Windows.Forms.Button();
             this.btnReadSRAM = new System.Windows.Forms.Button();
             this.btnRecoverECU = new System.Windows.Forms.Button();
@@ -123,18 +123,18 @@
             this.btnFlashECU.UseVisualStyleBackColor = true;
             this.btnFlashECU.Click += new System.EventHandler(this.btnFlashEcu_Click);
             // 
-            // listBox1
+            // listBoxLog
             // 
-            this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.listBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.listBox1.Font = new System.Drawing.Font("Courier New", 8.25F);
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.ItemHeight = 14;
-            this.listBox1.Location = new System.Drawing.Point(12, 11);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(544, 312);
-            this.listBox1.TabIndex = 20;
+            this.listBoxLog.Font = new System.Drawing.Font("Courier New", 8.25F);
+            this.listBoxLog.FormattingEnabled = true;
+            this.listBoxLog.ItemHeight = 14;
+            this.listBoxLog.Location = new System.Drawing.Point(12, 11);
+            this.listBoxLog.Name = "listBoxLog";
+            this.listBoxLog.Size = new System.Drawing.Size(544, 312);
+            this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
             // 
@@ -407,7 +407,7 @@
             this.Controls.Add(this.cbEnableLogging);
             this.Controls.Add(this.btnExit);
             this.Controls.Add(this.btnFlashECU);
-            this.Controls.Add(this.listBox1);
+            this.Controls.Add(this.listBoxLog);
             this.Controls.Add(this.progressBar1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "frmMain";
@@ -429,7 +429,7 @@
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button btnExit;
         private System.Windows.Forms.Button btnFlashECU;
-        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ListBox listBoxLog;
         private System.Windows.Forms.Button btnGetECUInfo;
         private System.Windows.Forms.Button btnReadSRAM;
         private System.Windows.Forms.Button btnRecoverECU;

@@ -59,5 +59,24 @@ namespace TrionicCANLib
             }
             return input;
         }
+
+        internal static ulong GetUlong(byte[] arr, int startIndex, int count)
+        {
+            ulong result = 0x00;
+            for (int i = startIndex+count-1; i >= startIndex; i--)
+            {
+                result <<= 8;
+                result += arr[i];
+            }
+            return result;
+        }
+
+        internal static ulong GetFrameBytes(int frameNo, byte[] array, int startIndex)
+        {
+            var res = GetUlong(array, startIndex, 7);
+            res = res << 8 | (ulong)(frameNo & 0xFF);
+            return res;
+        }
+
     }
 }

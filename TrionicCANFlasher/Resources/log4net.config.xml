@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <log4net>
   <appender name="RollingLogFileAppenderUI" type="log4net.Appender.RollingFileAppender,log4net">
+    <lockingModel type="log4net.Appender.FileAppender+ExclusiveLock"/>
     <file value="uiLog.txt" />
     <param name="StaticLogFileName" value="true"/>
     <appendToFile value="true" />

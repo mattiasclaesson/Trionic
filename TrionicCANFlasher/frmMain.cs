@@ -7,6 +7,7 @@ using System.Threading;
 using System.IO.Ports;
 using Microsoft.Win32;
 using TrionicCANLib;
+using System.Drawing;
 
 namespace TrionicCANFlasher
 {
@@ -28,7 +29,7 @@ namespace TrionicCANFlasher
             InitializeComponent();
             m_DelegateUpdateStatus = updateStatusInBox;
             m_DelegateProgressStatus = updateProgress;
-
+            SetupListboxWrap();
             EnableUserInput(true);
         }
 
@@ -43,12 +44,33 @@ namespace TrionicCANFlasher
             //throw new NotImplementedException();
         }
 
+        private void SetupListboxWrap()
+        {
+            listBoxLog.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            listBoxLog.MeasureItem += lst_MeasureItem;
+            listBoxLog.DrawItem += lst_DrawItem;
+
+        }
+        private void lst_MeasureItem(object sender, MeasureItemEventArgs e)
+        {
+            if (e.Index >= 0)
+                e.ItemHeight = (int)e.Graphics.MeasureString(listBoxLog.Items[e.Index].ToString(), listBoxLog.Font, listBoxLog.Width).Height;
+        }
+
+        private void lst_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            e.DrawBackground();
+            e.DrawFocusRectangle();
+            if (e.Index >= 0)
+                e.Graphics.DrawString(listBoxLog.Items[e.Index].ToString(), e.Font, new SolidBrush(e.ForeColor), e.Bounds);
+        }
+
         private void AddLogItem(string item)
         {
             var uiItem = DateTime.Now.ToString("HH:mm:ss.fff") + " - " + item;
-            listBox1.Items.Add(uiItem);
-            while (listBox1.Items.Count > 100) listBox1.Items.RemoveAt(0);
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            listBoxLog.Items.Add(uiItem);
+            while (listBoxLog.Items.Count > 100) listBoxLog.Items.RemoveAt(0);
+            listBoxLog.SelectedIndex = listBoxLog.Items.Count - 1;
             if (cbEnableLogging.Checked)
             {
                 LogHelper.Log(item);
@@ -62,7 +84,7 @@ namespace TrionicCANFlasher
             using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Bin files|*.bin", Multiselect = false })
             {
                 if (ofd.ShowDialog() == DialogResult.OK)
-                {                    
+                {
                     if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                     {
                         SetT7AdapterType();
@@ -95,7 +117,7 @@ namespace TrionicCANFlasher
                             dtstart = DateTime.Now;
                             AddLogItem("Update flash content");
                             Application.DoEvents();
-                            if (trionicCan.UpdateFlashT8(ofd.FileName))
+                            if (trionicCan.WriteFlashT8(ofd.FileName))
                             {
                                 AddLogItem("Flash sequence done");
                             }
@@ -201,7 +223,7 @@ namespace TrionicCANFlasher
                     {
                         if (Path.GetFileName(sfd.FileName) != string.Empty)
                         {
-                           
+
                             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetT7AdapterType();
@@ -238,7 +260,11 @@ namespace TrionicCANFlasher
                                     AddLogItem("Aquiring flash content");
                                     Application.DoEvents();
                                     //byte[] snapshot = trionicCan.getFlashContent();
-                                    byte[] snapshot = trionicCan.GetFlashWithBootloader();
+                                    byte[] snapshot = null;
+                                    for (int i = 0; i < 100; i++)
+                                    {
+                                        snapshot = trionicCan.ReadFlashT8();
+                                    }
                                     try
                                     {
                                         File.WriteAllBytes(sfd.FileName, snapshot);
@@ -355,7 +381,7 @@ namespace TrionicCANFlasher
                             AddLogItem("Aquiring snapshot");
                             Application.DoEvents();
                             byte[] snapshot = trionicCan.getSRAMSnapshot();
-                            byte[] snapshot7000 = trionicCan.getSRAMSnapshotWithBootloader();
+                            byte[] snapshot7000 = trionicCan.ReadT8SRAMSnapshot();
                             byte[] total = new byte[0x008000];
                             snapshot.CopyTo(total, 0);
                             snapshot7000.CopyTo(total, 0x7000);
@@ -391,7 +417,7 @@ namespace TrionicCANFlasher
                 using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Binary files|*.bin", Multiselect = false })
                 {
                     if (ofd.ShowDialog() == DialogResult.OK)
-                    {                        
+                    {
                         trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                         SetT8AdapterType();
 
@@ -403,7 +429,7 @@ namespace TrionicCANFlasher
                             dtstart = DateTime.Now;
                             AddLogItem("Recovering ECU");
                             Application.DoEvents();
-                            if (trionicCan.RecoverECU(ofd.FileName))
+                            if (trionicCan.RecoverECUT8(ofd.FileName))
                             {
                                 AddLogItem("Recovery done");
                             }
@@ -465,7 +491,7 @@ namespace TrionicCANFlasher
                         trionicCan.ForcedBaudrate = 1000000;
                         break;
                     case (int)ComSpeed.S230400:
-                        trionicCan.ForcedBaudrate = 230400;
+                        trionicCan.ForcedBaudrate = 230400; 
                         break;
                     case (int)ComSpeed.S115200:
                         trionicCan.ForcedBaudrate = 115200;
@@ -681,7 +707,7 @@ namespace TrionicCANFlasher
         {
             GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {               
+            {
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -711,7 +737,7 @@ namespace TrionicCANFlasher
         {
             GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {               
+            {
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -741,7 +767,7 @@ namespace TrionicCANFlasher
         {
             GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {                
+            {
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -807,7 +833,7 @@ namespace TrionicCANFlasher
         {
             GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {               
+            {
                 trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
                 SetT8AdapterType();
 
@@ -833,7 +859,7 @@ namespace TrionicCANFlasher
             GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                
+
                 SetT7AdapterType();
 
                 AddLogItem("Opening connection");

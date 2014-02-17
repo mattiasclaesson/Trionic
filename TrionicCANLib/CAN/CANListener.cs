@@ -211,5 +211,13 @@ namespace TrionicCANLib.CAN
                 dumpQueue();
             }
         }
+
+        /// <summary>
+        /// Clears the queue (advances internal indexes) sp that all old messages will be ignored
+        /// </summary>
+        public void ClearQueue()
+        {
+            _readMessageIndex = _receiveMessageIndex;
+        }
     }
 }

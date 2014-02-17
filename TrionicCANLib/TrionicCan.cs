@@ -9,6 +9,7 @@ using System.Diagnostics;
 using TrionicCANLib.CAN;
 using TrionicCANLib.KWP;
 using TrionicCANLib.Flasher;
+using System.Windows.Forms;
 
 namespace TrionicCANLib
 {
@@ -54,7 +55,7 @@ namespace TrionicCANLib
     public enum SleepTime : int
     {
         Default = 1,
-        ELM327 = 1
+        ELM327 = 0
     };
 
     public enum ComSpeed : int
@@ -706,7 +707,6 @@ namespace TrionicCANLib
                         Thread.Sleep(1000);
                         SendKeepAlive();
                         secondsToWait--;
-
                     }
 
                     byte[] seed = new byte[2];
@@ -1114,7 +1114,7 @@ namespace TrionicCANLib
 
             if (canUsbDevice.isOpen())
             {
-                ulong cmd = 0x0000000000001A02 | _pid<<16;
+                ulong cmd = 0x0000000000001A02 | _pid << 16;
                 //ulong lpid = _pid;
                 //lpid *= 256;
                 //lpid *= 256;
@@ -1289,7 +1289,6 @@ namespace TrionicCANLib
             return retval.ToString();
         }
 
-
         public string GetVehicleVIN()
         {
             // read and wait for sequence of acks
@@ -1335,13 +1334,11 @@ namespace TrionicCANLib
             return RequestECUInfo(0x95, "ECUSWNumber");
         }
 
-
         public string GetProgrammingDate()
         {
             // read and wait for sequence of acks
             return RequestECUInfo(0x99, "Programming date");
         }
-
 
         public string GetSerialNumber()
         {
@@ -1354,7 +1351,6 @@ namespace TrionicCANLib
             // read and wait for sequence of acks
             return RequestECUInfo(0x74, "Calibration set");
         }
-
 
         public string GetCodefileVersion()
         {
@@ -1511,382 +1507,8 @@ namespace TrionicCANLib
             Console.WriteLine("Received4: " + data.ToString("X8"));*/
         }
 
-        private bool UploadBootloader()
-        {
-            int startAddress = 0x102400;
-            Bootloader btloaderdata = new Bootloader();
-
-            int txpnt = 0;
-            byte iFrameNumber = 0x21;
-            if (requestDownload())
-            {
-                for (int i = 0; i < 0x46; i++)
-                {
-                    iFrameNumber = 0x21;
-                    //10 F0 36 00 00 10 24 00
-                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
-                    // cast event
-                    float percentage = ((float)i * 100) / 70F;
-                    CastProgressWriteEvent(percentage);
-                    
-                    if (SendTransferData(0xF0, startAddress, 0x7E8))
-                    {
-                        // send 0x22 (34) frames with data from bootloader
-                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
-                        for (int j = 0; j < 0x22; j++)
-                        {
-                            ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                            msg.setData(cmd);
-                            msg.setCanData(iFrameNumber, 0);
-                            msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 1);
-                            msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 2);
-                            msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 3);
-                            msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 4);
-                            msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 5);
-                            msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 6);
-                            msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 7);
-                            iFrameNumber++;
-                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
-                            if (!canUsbDevice.sendMessage(msg))
-                            {
-                                AddToCanTrace("Couldn't send message");
-                            }
-                            Thread.Sleep(m_sleepTime); 
-                        }
-                        // send the remaining data
-                        m_canListener.setupWaitMessage(0x7E8);
-                        // now wait for 01 76 00 00 00 00 00 00 
-                        CANMessage response = new CANMessage();
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
-                        ulong data = response.getData();
-                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                        {
-                            return false;
-                        }
-                        SendKeepAlive();
-                        startAddress += 0xEA;
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Did not receive correct response from SendTransferData");
-                    }
-                }
-
-                iFrameNumber = 0x21;
-                if (SendTransferData(0x0A, startAddress, 0x7E8))
-                {
-                    // send 0x22 (34) frames with data from bootloader
-                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
-
-                    ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                    msg.setData(cmd);
-                    msg.setCanData(iFrameNumber, 0);
-                    msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 1);
-                    msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 2);
-                    msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 3);
-                    msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 4);
-                    msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 5);
-                    msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 6);
-                    msg.setCanData(btloaderdata.BootloaderBytes[txpnt++], 7);
-                    iFrameNumber++;
-                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                    if (!canUsbDevice.sendMessage(msg))
-                    {
-                        AddToCanTrace("Couldn't send message");
-                    }
-                    Thread.Sleep(m_sleepTime);
-
-                    // send the remaining data
-                    m_canListener.setupWaitMessage(0x7E8);
-                    // now wait for 01 76 00 00 00 00 00 00 
-                    CANMessage response = new CANMessage();
-                    response = new CANMessage();
-                    response = m_canListener.waitMessage(1000);
-                    ulong data = response.getData();
-                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                    {
-                        return false;
-                    }
-                    SendKeepAlive();
-                    startAddress += 0x06;
-                }
-                else
-                {
-                    Console.WriteLine("Did not receive correct response from SendTransferData");
-                }
-
-                CastProgressWriteEvent(100);
-            }
-            return true;
-        }
-
-        private bool UploadBootloaderProg()
-        {
-            int startAddress = 0x102400;
-            Bootloader btloaderdata = new Bootloader();
-            int txpnt = 0;
-            byte iFrameNumber = 0x21;
-            if (requestDownload())
-            {
-                for (int i = 0; i < 0x46; i++)
-                {
-                    iFrameNumber = 0x21;
-                    //10 F0 36 00 00 10 24 00
-                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
-                    // cast event
-                    float percentage = ((float)i * 100) / 70F;
-                    CastProgressWriteEvent(percentage);
 
 
-                    if (SendTransferData(0xF0, startAddress, 0x7E8))
-                    {
-                        // send 0x22 (34) frames with data from bootloader
-                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
-                        for (int j = 0; j < 0x22; j++)
-                        {
-                            ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                            msg.setData(cmd);
-                            msg.setCanData(iFrameNumber, 0);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 1);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 2);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 3);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 4);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 5);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
-                            iFrameNumber++;
-                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
-                            if (!canUsbDevice.sendMessage(msg))
-                            {
-                                AddToCanTrace("Couldn't send message");
-                            }
-                            Thread.Sleep(m_sleepTime);
-                        }
-                        // send the remaining data
-                        m_canListener.setupWaitMessage(0x7E8);
-                        // now wait for 01 76 00 00 00 00 00 00 
-                        CANMessage response = new CANMessage();
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
-                        ulong data = response.getData();
-                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                        {
-                            return false;
-                        }
-                        SendKeepAlive();
-                        startAddress += 0xEA;
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Did not receive correct response from SendTransferData");
-                    }
-                }
-
-                iFrameNumber = 0x21;
-                if (SendTransferData(0x0A, startAddress, 0x7E8))
-                {
-                    // send 0x22 (34) frames with data from bootloader
-                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
-
-                    ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                    msg.setData(cmd);
-                    msg.setCanData(iFrameNumber, 0);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 1);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 2);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 3);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 4);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 5);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
-                    iFrameNumber++;
-                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;                    
-                    if (!canUsbDevice.sendMessage(msg))
-                    {
-                        AddToCanTrace("Couldn't send message");
-                    }
-                    Thread.Sleep(m_sleepTime);
-
-                    // send the remaining data
-                    m_canListener.setupWaitMessage(0x7E8);
-                    // now wait for 01 76 00 00 00 00 00 00 
-                    CANMessage response = new CANMessage();
-                    response = new CANMessage();
-                    response = m_canListener.waitMessage(1000);
-                    ulong data = response.getData();
-                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                    {
-                        return false;
-                    }
-                    SendKeepAlive();
-                    startAddress += 0x06;
-                }
-                else
-                {
-                    Console.WriteLine("Did not receive correct response from SendTransferData");
-                }
-
-                CastProgressWriteEvent(100);
-            }
-            else
-            {
-                Console.WriteLine("requestDownload() failed");
-                return false;
-            }
-            return true;
-        }
-
-        private bool UploadBootloaderProg011()
-        {
-            int startAddress = 0x102400;
-            Bootloader btloaderdata = new Bootloader();
-            int txpnt = 0;
-            byte iFrameNumber = 0x21;
-            if (requestDownload011())
-            {
-                for (int i = 0; i < 0x46; i++)
-                {
-                    iFrameNumber = 0x21;
-                    //10 F0 36 00 00 10 24 00
-                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
-                    // cast event
-                    float percentage = ((float)i * 100) / 70F;
-                    CastProgressWriteEvent(percentage);
-
-                    if (SendTransferData011(0xF0, startAddress, 0x311))
-                    {
-                        // send 0x22 (34) frames with data from bootloader
-                        CANMessage msg = new CANMessage(0x11, 0, 8);
-                        for (int j = 0; j < 0x22; j++)
-                        {
-                            ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                            msg.setData(cmd);
-                            msg.setCanData(iFrameNumber, 0);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 1);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 2);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 3);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 4);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 5);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
-                            msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
-                            iFrameNumber++;
-                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
-                            if (!canUsbDevice.sendMessage(msg))
-                            {
-                                AddToCanTrace("Couldn't send message");
-                            }
-                            Thread.Sleep(m_sleepTime);
-                        }
-                        // send the remaining data
-                        m_canListener.setupWaitMessage(0x311);
-                        // now wait for 01 76 00 00 00 00 00 00 
-                        CANMessage response = new CANMessage();
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
-                        ulong data = response.getData();
-                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                        {
-                            return false;
-                        }
-                        BroadcastKeepAlive();
-                        startAddress += 0xEA;
-
-                    }
-                    else
-                    {
-                        Console.WriteLine("Did not receive correct response from SendTransferData");
-                    }
-                }
-
-                iFrameNumber = 0x21;
-                if (SendTransferData011(0x0A, startAddress, 0x311))
-                {
-                    // send 0x22 (34) frames with data from bootloader
-                    CANMessage msg = new CANMessage(0x11, 0, 8);
-
-                    ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                    msg.setData(cmd);
-                    msg.setCanData(iFrameNumber, 0);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 1);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 2);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 3);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 4);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 5);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 6);
-                    msg.setCanData(btloaderdata.BootloaderProgBytes[txpnt++], 7);
-                    iFrameNumber++;
-                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                    if (!canUsbDevice.sendMessage(msg))
-                    {
-                        AddToCanTrace("Couldn't send message");
-                    }
-                    Thread.Sleep(m_sleepTime);
-
-                    // send the remaining data
-                    m_canListener.setupWaitMessage(0x311);
-                    // now wait for 01 76 00 00 00 00 00 00 
-                    CANMessage response = new CANMessage();
-                    response = new CANMessage();
-                    response = m_canListener.waitMessage(1000);
-                    ulong data = response.getData();
-                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                    {
-                        return false;
-                    }
-                    BroadcastKeepAlive();
-                    startAddress += 0x06;
-                }
-                else
-                {
-                    Console.WriteLine("Did not receive correct response from SendTransferData");
-                }
-
-                CastProgressWriteEvent(100);
-            }
-            return true;
-        }
-        
-        private bool SendTransferData(int length, int address, uint waitforResponseID)
-        {
-            CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
-            ulong cmd = 0x0000000000360010; // 0x36 = transferData
-            ulong addressHigh = (uint)address & 0x0000000000FF0000;
-            addressHigh /= 0x10000;
-            ulong addressMiddle = (uint)address & 0x000000000000FF00;
-            addressMiddle /= 0x100;
-            ulong addressLow = (uint)address & 0x00000000000000FF;
-            ulong len = (ulong)length;
-
-            cmd |= (addressLow * 0x100000000000000);
-            cmd |= (addressMiddle * 0x1000000000000);
-            cmd |= (addressHigh * 0x10000000000);
-            cmd |= (len * 0x100);
-            //Console.WriteLine("send: " + cmd.ToString("X16"));
-
-            msg.setData(cmd);
-            msg.elmExpectedResponses = 1;
-            m_canListener.setupWaitMessage(waitforResponseID);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                AddToCanTrace("Couldn't send message");
-            }
-
-            CANMessage response = new CANMessage();
-            response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
-            ulong data = response.getData();
-            //Console.WriteLine("Received in SendTransferData: " + data.ToString("X16"));
-            if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
-            {
-                return false;
-            }
-            return true;
-        }
 
         private bool requestDownload()
         {
@@ -1975,7 +1597,6 @@ namespace TrionicCANLib
             }
             return true;
         }
-
 
         private bool StartSession20()
         {
@@ -2198,258 +1819,6 @@ namespace TrionicCANLib
             return true;
         }
 
-        public byte[] GetFlashWithBootloader()
-        {
-            _stallKeepAlive = true;
-            bool success = false;
-            int retryCount = 0;
-            int startAddress = 0x000000;
-            int blockSize = 0x80; // defined in bootloader... keep it that way!
-            int bufpnt = 0;
-            byte[] buf = new byte[0x100000];
-            int blockCount = 0;
-            SendKeepAlive();
-            sw.Reset();
-            sw.Start();
-            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
-
-            StartSession10();
-            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
-
-            RequestECUInfo(0x90);
-            RequestECUInfo(0x97);
-            RequestECUInfo(0x92);
-            RequestECUInfo(0xB4);
-            RequestECUInfo(0xC1);
-            RequestECUInfo(0xC2);
-            RequestECUInfo(0xC3);
-            RequestECUInfo(0xC4);
-            RequestECUInfo(0xC5);
-            RequestECUInfo(0xC6);
-            Send0120();
-            Thread.Sleep(1000);
-
-            StartSession1081();
-
-            StartSession10();
-            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
-            SendShutup();
-            SendA2();
-            SendA5();
-            SendA503();
-            Thread.Sleep(500);
-            SendKeepAlive();
-            _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            RequestSecurityAccess(2000);
-            Thread.Sleep(500);
-            CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
-            UploadBootloader();
-            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
-            // start bootloader in ECU
-            Thread.Sleep(500);
-            StartBootloader();
-            SendKeepAlive();
-            Thread.Sleep(500);
-
-            CastInfoEvent("Downloading flash", ActivityType.DownloadingFlash);
-
-
-
-            // now start sending commands:
-            //06 21 80 00 00 00 00 00 
-            // response: 
-            //10 82 61 80 00 10 0C 00 // 4 bytes data already
-
-            //for (int i = 0; i < buf.Length / blockSize; i++)
-            while (startAddress < buf.Length)
-            {
-                if (!canUsbDevice.isOpen())
-                {
-                    _stallKeepAlive = false;
-                    return buf;
-                }
-                byte[] readbuf = readDataByLocalIdentifier(startAddress, blockSize, out success);
-                if (success)
-                {
-                    if (readbuf.Length == blockSize)
-                    {
-                        for (int j = 0; j < blockSize; j++)
-                        {
-                            buf[bufpnt++] = readbuf[j];
-                        }
-                    }
-                    //string infoStr = "Address: " + startAddress.ToString("X8"); //+ " ";
-                    CastProgressReadEvent((float)(bufpnt * 100) / (float)buf.Length);
-                    startAddress += blockSize;
-                    retryCount = 0;
-                }
-                else
-                {
-                    CastInfoEvent("Frame dropped, retrying " + startAddress.ToString("X8") + " " + retryCount.ToString(), ActivityType.DownloadingFlash);
-                    retryCount++;
-                    // read all available message from the bus now
-
-                    for (int i = 0; i < 10; i++)
-                    {
-                        CANMessage response = new CANMessage();
-                        ulong data = 0;
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(10);
-                        data = response.getData();
-                    }
-
-
-
-                    if (retryCount == maxRetries)
-                    {
-                        CastInfoEvent("Failed to download flash content", ActivityType.ConvertingFile);
-                        _stallKeepAlive = false;
-                        return buf;
-                    }
-                }
-                blockCount++;
-                if (sw.ElapsedMilliseconds > 3000) // once every 3 seconds
-                //if ((blockCount % 10) == 0)
-                {
-                    sw.Stop();
-                    sw.Reset();
-                    SendKeepAlive();
-                    sw.Start();
-                }
-
-            }
-            sw.Stop();
-            _stallKeepAlive = false;
-            return buf;
-        }
-
-        public byte[] getSRAMSnapshotWithBootloader()
-        {
-            _stallKeepAlive = true;
-            bool success = false;
-            int retryCount = 0;
-            int startAddress = 0x107000;
-            int blockSize = 0x80; // defined in bootloader... keep it that way!
-            int bufpnt = 0;
-            byte[] buf = new byte[0x001000];
-            int blockCount = 0;
-            SendKeepAlive();
-            sw.Reset();
-            sw.Start();
-            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
-
-            StartSession10();
-            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
-
-            RequestECUInfo(0x90);
-            RequestECUInfo(0x97);
-            RequestECUInfo(0x92);
-            RequestECUInfo(0xB4);
-            RequestECUInfo(0xC1);
-            RequestECUInfo(0xC2);
-            RequestECUInfo(0xC3);
-            RequestECUInfo(0xC4);
-            RequestECUInfo(0xC5);
-            RequestECUInfo(0xC6);
-            Send0120();
-            Thread.Sleep(1000);
-
-            StartSession1081();
-
-            StartSession10();
-            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
-            SendShutup();
-            SendA2();
-            SendA5();
-            SendA503();
-            Thread.Sleep(500);
-            SendKeepAlive();
-            _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            RequestSecurityAccess(500);
-            Thread.Sleep(500);
-            CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
-            UploadBootloader();
-            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
-            // start bootloader in ECU
-            Thread.Sleep(500);
-            StartBootloader();
-            SendKeepAlive();
-            Thread.Sleep(500);
-
-            CastInfoEvent("Downloading snapshot", ActivityType.DownloadingFlash);
-
-
-
-            // now start sending commands:
-            //06 21 80 00 00 00 00 00 
-            // response: 
-            //10 82 61 80 00 10 0C 00 // 4 bytes data already
-
-            //for (int i = 0; i < buf.Length / blockSize; i++)
-            while (startAddress < 0x108000)
-            {
-                if (!canUsbDevice.isOpen())
-                {
-                    _stallKeepAlive = false;
-                    return buf;
-                }
-                byte[] readbuf = readDataByLocalIdentifier(startAddress, blockSize, out success);
-                if (success)
-                {
-                    if (readbuf.Length == blockSize)
-                    {
-                        for (int j = 0; j < blockSize; j++)
-                        {
-                            buf[bufpnt++] = readbuf[j];
-                        }
-                    }
-                    //string infoStr = "Address: " + startAddress.ToString("X8"); //+ " ";
-                    CastProgressReadEvent((float)(bufpnt * 100) / (float)buf.Length);
-                    startAddress += blockSize;
-                    retryCount = 0;
-                }
-                else
-                {
-                    CastInfoEvent("Frame dropped, retrying " + startAddress.ToString("X8") + " " + retryCount.ToString(), ActivityType.DownloadingFlash);
-                    retryCount++;
-                    // read all available message from the bus now
-
-                    for (int i = 0; i < 10; i++)
-                    {
-                        CANMessage response = new CANMessage();
-                        ulong data = 0;
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(10);
-                        data = response.getData();
-                    }
-
-
-
-                    if (retryCount == maxRetries)
-                    {
-                        CastInfoEvent("Failed to download flash content", ActivityType.ConvertingFile);
-                        _stallKeepAlive = false;
-                        return buf;
-                    }
-                }
-                blockCount++;
-                if (sw.ElapsedMilliseconds > 3000) // once every 3 seconds
-                //if ((blockCount % 10) == 0)
-                {
-                    sw.Stop();
-                    sw.Reset();
-                    SendKeepAlive();
-                    sw.Start();
-                }
-
-            }
-            sw.Stop();
-            _stallKeepAlive = false;
-            return buf;
-        }
-
         public bool WriteToSRAM(int address, byte[] memdata)
         {
             if (!canUsbDevice.isOpen()) return false;
@@ -2458,83 +1827,7 @@ namespace TrionicCANLib
 
         }
 
-        private bool SendrequestDownload(bool recoveryMode)
-        {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
-            //06 34 01 00 00 00 00 00
-            ulong cmd = 0x0000000000013406;
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                Console.WriteLine("Couldn't send message");
-            }
-            bool eraseDone = false;
-            int eraseCount = 0;
-            int waitCount = 0;
-            while (!eraseDone)
-            {   
-                m_canListener.setupWaitMessage(0x7E8); // TEST ELM327 31082011
-                CANMessage response = new CANMessage();
-                response = m_canListener.waitMessage(500); // 1 seconds!
-                ulong data = response.getData();
-                if (data == 0)
-                {
-                    m_canListener.setupWaitMessage(0x311); // TEST ELM327 31082011
-                    response = new CANMessage();
-                    response = m_canListener.waitMessage(500); // 1 seconds!
-                    data = response.getData();
-                }
-                // response will be 03 7F 34 78 00 00 00 00 a couple of times while erasing
-                if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x78)
-                {
-                    if (recoveryMode) BroadcastKeepAlive();
-                    else SendKeepAlive();
-                    eraseCount++;
-                    string info = "Erasing flash";
-                    for (int i = 0; i < eraseCount; i++) info += ".";
-                    CastInfoEvent(info, ActivityType.ErasingFlash);
-                }
-                else if (getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x74)
-                {
-                    if (recoveryMode) BroadcastKeepAlive();
-                    else SendKeepAlive();
-                    eraseDone = true;
-                    return true;
-                }
-                else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x11)
-                {
-                    CastInfoEvent("Erase cannot be performed", ActivityType.ErasingFlash);
-                    return false;
-                }
-                else
-                {
-                    Console.WriteLine("Rx: " + data.ToString("X16"));
-                    if(canUsbDevice is CANELM327Device){
-                        if (recoveryMode) BroadcastKeepAlive();
-                        else SendKeepAlive();
-                    }                    
-                }
-                waitCount++;
-                if (waitCount > 30)
-                {
-                    CastInfoEvent("Erase timed out after 30 seconds", ActivityType.ErasingFlash);
-                    // ELM327 seem to be unable to wait long enough for this response
-                    // Instead we assume its finnished ok after 30 seconds
-                    if (canUsbDevice is CANELM327Device)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                Thread.Sleep(m_sleepTime);
 
-            }
-            return true;
-        }
 
         private bool BroadcastSession10()
         {
@@ -2802,43 +2095,7 @@ namespace TrionicCANLib
             }
             return true;
         }
-     
 
-        private bool SendTransferData011(int length, int address, uint waitforResponseID)
-        {
-            CANMessage msg = new CANMessage(0x11, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
-            ulong cmd = 0x0000000000360010; // 0x36 = transferData
-            ulong addressHigh = (uint)address & 0x0000000000FF0000;
-            addressHigh /= 0x10000;
-            ulong addressMiddle = (uint)address & 0x000000000000FF00;
-            addressMiddle /= 0x100;
-            ulong addressLow = (uint)address & 0x00000000000000FF;
-            ulong len = (ulong)length;
-
-            cmd |= (addressLow * 0x100000000000000);
-            cmd |= (addressMiddle * 0x1000000000000);
-            cmd |= (addressHigh * 0x10000000000);
-            cmd |= (len * 0x100);
-            //Console.WriteLine("send: " + cmd.ToString("X16"));
-
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(waitforResponseID);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                AddToCanTrace("Couldn't send message");
-            }
-
-            CANMessage response = new CANMessage();
-            response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
-            ulong data = response.getData();
-            //Console.WriteLine("Received in SendTransferData: " + data.ToString("X16"));
-            if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
-            {
-                return false;
-            }
-            return true;
-        }
 
         private bool StartBootloader011()
         {
@@ -2869,8 +2126,8 @@ namespace TrionicCANLib
 
             if (canUsbDevice.isOpen())
             {
-                ulong cmd = 0x0000000000001A02 | _pid<<16;                
-                
+                ulong cmd = 0x0000000000001A02 | _pid << 16;
+
                 //SendMessage(data);  // software version
                 CANMessage msg = new CANMessage(0x11, 0, 3); //<GS-18052011> support for ELM requires length byte
                 msg.setData(cmd);
@@ -2962,157 +2219,6 @@ namespace TrionicCANLib
             return retval;
         }
 
-        public bool RecoverECU(string filename)
-        {
-            string diagDataID = GetDiagnosticDataIdentifier0101();
-            Console.WriteLine("DataID: " + diagDataID);
-            if (diagDataID == string.Empty)
-            {
-                canUsbDevice.SetupCANFilter("7E8", "000");
-                //canUsbDevice.SetAutomaticFlowControl(false);
-                BlockManager bm = new BlockManager();
-                bm.SetFilename(filename);
-                int startAddress = 0x020000;
-                sw.Reset();
-                sw.Start();
-
-                _stallKeepAlive = true;
-
-                CastInfoEvent("Recovery needed...", ActivityType.UploadingBootloader);
-                BroadcastKeepAlive();
-                Thread.Sleep(200);  // was 1
-                BroadcastKeepAlive();
-                Thread.Sleep(500);
-                CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
-                BroadcastSession10();
-                Thread.Sleep(200);  // was 1
-                CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
-                BroadcastShutup();
-                Thread.Sleep(200);  // was 1
-                int progState = GetProgrammingState(0x311);
-                if (progState == 0x01)
-                {
-                    CastInfoEvent("Recovery needed phase 1", ActivityType.UploadingBootloader);
-                    BroadcastShutup011();
-                    if (GetProgrammingState011() == 0x01)
-                    {
-                        CastInfoEvent("Recovery needed phase 2", ActivityType.UploadingBootloader);
-                        SendA5011();
-                        Thread.Sleep(100);
-                        SendA503011();
-                        Thread.Sleep(100);
-                        BroadcastKeepAlive();
-                        Thread.Sleep(100);
-                        CastInfoEvent("Requesting security access...", ActivityType.UploadingBootloader);
-                        if (RequestSecurityAccess011(0))
-                        {
-                            CastInfoEvent("Security access granted, uploading bootloader", ActivityType.UploadingBootloader);
-                            UploadBootloaderProg011();
-                            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
-                            Thread.Sleep(500);
-                            StartBootloader011();
-                            Thread.Sleep(500);
-                            CastInfoEvent("Erasing flash", ActivityType.StartErasingFlash);
-                            if (SendrequestDownload(true))
-                            {
-                                _needRecovery = true;
-                                CastInfoEvent("Programming flash", ActivityType.UploadingFlash);
-                                for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
-                                {
-                                    float percentage = ((float)blockNumber * 100) / 3920F;
-                                    CastProgressWriteEvent(percentage);
-                                    byte[] data2Send = bm.GetNextBlock();
-                                    int length = 0xF0;
-                                    if (blockNumber == 0xF50) length = 0xE6;
-                                    if (SendTransferData(length, startAddress + (blockNumber * 0xEA), 0x311))
-                                    {
-                                        // send the data from the block
-
-                                        // calculate number of frames
-                                        int numberOfFrames = (int)data2Send.Length / 7; // remnants?
-                                        if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
-                                        byte iFrameNumber = 0x21;
-                                        int txpnt = 0;
-                                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
-                                        for (int frame = 0; frame < numberOfFrames; frame++)
-                                        {
-                                            ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                                            msg.setData(cmd);
-                                            msg.setCanData(iFrameNumber, 0);
-                                            msg.setCanData(data2Send[txpnt++], 1);
-                                            msg.setCanData(data2Send[txpnt++], 2);
-                                            msg.setCanData(data2Send[txpnt++], 3);
-                                            msg.setCanData(data2Send[txpnt++], 4);
-                                            msg.setCanData(data2Send[txpnt++], 5);
-                                            msg.setCanData(data2Send[txpnt++], 6);
-                                            msg.setCanData(data2Send[txpnt++], 7);
-                                            iFrameNumber++;
-                                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                                            msg.elmExpectedResponses = frame == numberOfFrames - 1 ? 1 : 0;
-                                            if (!canUsbDevice.sendMessage(msg))
-                                            {
-                                                AddToCanTrace("Couldn't send message");
-                                            }
-                                            Thread.Sleep(1);
-                                        }
-
-                                        // send the remaining data
-                                        m_canListener.setupWaitMessage(0x7E8);
-                                        // now wait for 01 76 00 00 00 00 00 00 
-                                        CANMessage response = new CANMessage();
-                                        response = new CANMessage();
-                                        response = m_canListener.waitMessage(1000);
-                                        ulong data = response.getData();
-                                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                                        {
-                                            _stallKeepAlive = false;
-                                            return false;
-                                        }
-                                        BroadcastKeepAlive();
-                                    }
-                                }
-                                sw.Stop();
-                                _needRecovery = false;
-                                CastInfoEvent("Recovery completed", ActivityType.ConvertingFile);
-                                // what else to do?
-                                Send0120();
-                                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                                return true;
-                            }
-                            else
-                            {
-                                sw.Stop();
-                                _needRecovery = false;
-                                _stallKeepAlive = false;
-                                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
-                                Send0120();
-                                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                                return false;
-
-                            }
-                        }
-                    }
-                    else
-                    {
-                        CastInfoEvent("Recovery not needed...", ActivityType.UploadingBootloader);
-                    }
-                }
-                else if (progState == 0x00)
-                {
-                    CastInfoEvent("Recovery not needed...", ActivityType.UploadingBootloader);
-                }
-                else if (progState == -1)
-                {
-                    CastInfoEvent("Unable to communicate with the ECU...", ActivityType.UploadingBootloader);
-                }
-                sw.Stop();
-            }
-            else
-            {
-                CastInfoEvent("Recovery not needed...", ActivityType.UploadingBootloader);
-            }
-            return false;
-        }
 
         /// <summary>
         /// Send ONLY the erase and write commands, ECU is already in running bootloader
@@ -3211,181 +2317,6 @@ namespace TrionicCANLib
         {
             get { return _needRecovery; }
             set { _needRecovery = value; }
-        }
-        
-        public bool UpdateFlashT8(string filename)
-        {
-            if (!canUsbDevice.isOpen()) return false;
-            _needRecovery = false;
-            BlockManager bm = new BlockManager();
-            bm.SetFilename(filename);
-
-            _stallKeepAlive = true;
-            
-            SendKeepAlive();
-            sw.Reset();
-            sw.Start();
-            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
-            StartSession10();
-            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
-            RequestECUInfo(0x90);
-            RequestECUInfo(0x97);
-            RequestECUInfo(0x92);
-            RequestECUInfo(0xB4);
-            RequestECUInfo(0xC1);
-            RequestECUInfo(0xC2);
-            RequestECUInfo(0xC3);
-            RequestECUInfo(0xC4);
-            RequestECUInfo(0xC5);
-            RequestECUInfo(0xC6);
-            Send0120();
-            Thread.Sleep(1000);
-            StartSession1081();
-            StartSession10();
-            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
-            SendShutup();
-            SendA2();
-            SendA5();
-            SendA503();
-            Thread.Sleep(500);
-            SendKeepAlive();
-
-            // verified upto here
-
-            _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            if (!RequestSecurityAccess(2000))
-            {
-                CastInfoEvent("Failed to get security access", ActivityType.UploadingFlash);
-                _stallKeepAlive = false;
-                return false;
-            }
-            Thread.Sleep(500);
-            CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
-            if (!UploadBootloaderProg())
-            {
-                CastInfoEvent("Failed to upload bootloader", ActivityType.UploadingFlash);
-                _stallKeepAlive = false;
-                return false;
-            }
-            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
-            // start bootloader in ECU
-            //SendKeepAlive();
-            Thread.Sleep(500);
-            if (!StartBootloader())
-            {
-                CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
-                _stallKeepAlive = false;
-                return false;
-            }
-            Thread.Sleep(500);
-            SendKeepAlive();
-            Thread.Sleep(200);
-
-            CastInfoEvent("Erasing flash", ActivityType.StartErasingFlash);
-            if (SendrequestDownload(false))
-            {
-                _needRecovery = true;
-                CastInfoEvent("Programming flash", ActivityType.UploadingFlash);
-                bool success = ProgramFlashT8(bm);
-                
-                if (success)
-                    CastInfoEvent("Flash upload completed", ActivityType.ConvertingFile);
-                else
-                    CastInfoEvent("Flash upload failed", ActivityType.ConvertingFile);
-
-                sw.Stop();
-                _needRecovery = false;
-                
-                // what else to do?
-                Send0120();
-                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-            }
-            else
-            {
-                sw.Stop();
-                _needRecovery = false;
-                _stallKeepAlive = false;
-                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
-                Send0120();
-                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                return false;
-
-            }
-            _stallKeepAlive = false;
-            return true;
-        }
-
-        private bool ProgramFlashT8(BlockManager bm)
-        {
-            int startAddress = 0x020000;
-
-            for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
-            {
-                float percentage = ((float)blockNumber * 100) / 3920F;
-                CastProgressWriteEvent(percentage);
-                bool canSkip = false;// bm.CanSkipCurrentBlock();
-                byte[] data2Send = bm.GetNextBlock();                
-                int length = 0xF0;
-                if (blockNumber == 0xF50) length = 0xE6;
-
-                int currentAddress = startAddress + (blockNumber * 0xEA);
-                if (!canSkip)
-                {
-                    
-                    if (SendTransferData(length, currentAddress, 0x7E8))
-                    {
-                        // send the data from the block
-
-                        // calculate number of frames
-                        int numberOfFrames = (int)data2Send.Length / 7; // remnants?
-                        if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
-                        byte iFrameNumber = 0x21;
-                        int txpnt = 0;
-                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
-                        for (int frame = 0; frame < numberOfFrames; frame++)
-                        {
-                            ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                            msg.setData(cmd);
-                            msg.setCanData(iFrameNumber, 0);
-                            msg.setCanData(data2Send[txpnt++], 1);
-                            msg.setCanData(data2Send[txpnt++], 2);
-                            msg.setCanData(data2Send[txpnt++], 3);
-                            msg.setCanData(data2Send[txpnt++], 4);
-                            msg.setCanData(data2Send[txpnt++], 5);
-                            msg.setCanData(data2Send[txpnt++], 6);
-                            msg.setCanData(data2Send[txpnt++], 7);
-                            iFrameNumber++;
-                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                            msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
-                            if (!canUsbDevice.sendMessage(msg))
-                            {
-                                AddToCanTrace("Couldn't send message");
-                            }
-                            Thread.Sleep(m_sleepTime);
-                        }
-
-                        // send the remaining data
-                        m_canListener.setupWaitMessage(0x7E8);
-                        // now wait for 01 76 00 00 00 00 00 00 
-                        CANMessage response = new CANMessage();
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
-                        ulong data = response.getData();
-                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                        {
-                            _stallKeepAlive = false;
-                            return false;
-                        }
-                        SendKeepAlive();
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Skipping block at " + currentAddress);
-                }
-            }
-            return true;
         }
 
         /// <summary>
@@ -3678,7 +2609,7 @@ namespace TrionicCANLib
         {
             return (byte)(m_data >> (int)(a_index * 8));
         }
-        
+
         private byte[] sendReadDataByLocalIdentifier(int address, int length, out bool success)
         {
             // we send: 0040000000002106
@@ -3812,9 +2743,6 @@ namespace TrionicCANLib
                     //Thread.Sleep(1);
 
                 }
-
-                canUsbDevice.RequestDeviceReady();
-
             }
             else
             {
@@ -4165,7 +3093,7 @@ namespace TrionicCANLib
                     responseDTC = m_canListener.waitMessage(1000);
 
                     // Read until response: EndOfDTCReport
-                    if (responseDTC.getCanData(1)==0 && responseDTC.getCanData(2)==0 && responseDTC.getCanData(3)==0)
+                    if (responseDTC.getCanData(1) == 0 && responseDTC.getCanData(2) == 0 && responseDTC.getCanData(3) == 0)
                     {
                         more_errors = false;
                         list.Add("No more errors!");
@@ -4821,7 +3749,7 @@ namespace TrionicCANLib
             {
                 Console.WriteLine("Couldn't send message");
             }
-            
+
             ulong rxdata = m_canListener.waitMessage(1000).getData();
             if (rxdata == 0x0000000000000030)
             {
@@ -4852,7 +3780,7 @@ namespace TrionicCANLib
                 canUsbDevice.sendMessage(msg);
                 // wait for ack
                 //0000000000907B02
-                
+
                 rxdata = m_canListener.waitMessage(1000).getData();
                 if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x90)
                 {
@@ -4984,6 +3912,7 @@ namespace TrionicCANLib
             CANMessage msg = new CANMessage(0x11, 0, 2);
             ulong cmd = 0x0000000000003E01;
             msg.setData(cmd);
+            msg.elmExpectedResponses = 1;
             m_canListener.setupWaitMessage(0x311);
             if (!canUsbDevice.sendMessage(msg))
             {
@@ -5475,15 +4404,1041 @@ namespace TrionicCANLib
             return KWPHandler.getInstance().ResetECU();
         }
 
-        /// <summary>
-        /// Sets the ELM filters to show all messages
-        /// </summary>
-        /// <returns></returns>
-        private void SetELMFilters()
+        #region T8
+
+        private bool UploadBootloaderT8Read()
         {
-            canUsbDevice.SetupCANFilter("7E8", "000");
+            int startAddress = 0x102400;
+            Bootloader btloaderdata = new Bootloader();
+
+            int txpnt = 0;
+            byte iFrameNumber = 0x21;
+            if (requestDownload())
+            {
+                for (int i = 0; i < 0x46; i++)
+                {
+                    iFrameNumber = 0x21;
+                    //10 F0 36 00 00 10 24 00
+                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
+                    // cast event
+                    float percentage = ((float)i * 100) / 70F;
+                    CastProgressWriteEvent(percentage);
+
+                    if (SendTransferData(0xF0, startAddress, 0x7E8))
+                    {
+                        canUsbDevice.RequestDeviceReady();
+                        // send 0x22 (34) frames with data from bootloader
+                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                        for (int j = 0; j < 0x22; j++)
+                        {
+                            var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderBytes, txpnt);
+                            msg.setData(cmd);
+                            txpnt += 7;
+                            iFrameNumber++;
+
+                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
+                            if (j == 0x21)
+                                m_canListener.ClearQueue();
+
+                            if (!canUsbDevice.sendMessage(msg))
+                            {
+                                AddToCanTrace("Couldn't send message");
+                            }
+                            Application.DoEvents();
+                            if (m_sleepTime > 0)
+                                Thread.Sleep(m_sleepTime);
+
+                        }
+                        var data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                        {
+                            return false;
+                        }
+                        canUsbDevice.RequestDeviceReady();
+                        SendKeepAlive();
+                        startAddress += 0xEA;
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Did not receive correct response from SendTransferData");
+                    }
+                }
+
+                iFrameNumber = 0x21;
+                if (SendTransferData(0x0A, startAddress, 0x7E8))
+                {
+                    // send 0x22 (34) frames with data from bootloader
+                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                    var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderBytes, txpnt);
+                    msg.setData(cmd);
+                    txpnt += 7;
+                    iFrameNumber++;
+                    if (!canUsbDevice.sendMessage(msg))
+                    {
+                        AddToCanTrace("Couldn't send message");
+                    }
+                    if (m_sleepTime > 0)
+                        Thread.Sleep(m_sleepTime);
+
+                    // now wait for 01 76 00 00 00 00 00 00 
+                    CANMessage response = m_canListener.waitMessage(1000, 0x7E8);
+                    ulong data = response.getData();
+                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    {
+                        return false;
+                    }
+                    SendKeepAlive();
+                    startAddress += 0x06;
+                }
+                else
+                {
+                    Console.WriteLine("Did not receive correct response from SendTransferData");
+                }
+
+                CastProgressWriteEvent(100);
+            }
+            return true;
         }
 
+        private bool UploadBootloaderT8Write()
+        {
+            int startAddress = 0x102400;
+            Bootloader btloaderdata = new Bootloader();
+            int txpnt = 0;
+            byte iFrameNumber = 0x21;
+            if (requestDownload())
+            {
+                for (int i = 0; i < 0x46; i++)
+                {
+                    iFrameNumber = 0x21;
+                    //10 F0 36 00 00 10 24 00
+                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
+                    // cast event
+                    float percentage = ((float)i * 100) / 70F;
+                    CastProgressWriteEvent(percentage);
+
+                    if (SendTransferData(0xF0, startAddress, 0x7E8))
+                    {
+                        canUsbDevice.RequestDeviceReady();
+                        // send 0x22 (34) frames with data from bootloader
+                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                        for (int j = 0; j < 0x22; j++)
+                        {
+                            var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt);
+                            msg.setData(cmd);
+                            txpnt += 7;
+                            iFrameNumber++;
+
+                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
+                            if (j == 0x21)
+                                m_canListener.ClearQueue();
+
+                            if (!canUsbDevice.sendMessage(msg))
+                            {
+                                AddToCanTrace("Couldn't send message");
+                            }
+                            Thread.Sleep(m_sleepTime);
+                        }
+                        // now wait for 01 76 00 00 00 00 00 00 
+                        ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                        {
+                            return false;
+                        }
+                        canUsbDevice.RequestDeviceReady();
+                        SendKeepAlive();
+                        startAddress += 0xEA;
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Did not receive correct response from SendTransferData");
+                    }
+                }
+
+                iFrameNumber = 0x21;
+                if (SendTransferData(0x0A, startAddress, 0x7E8))
+                {
+                    // send 0x22 (34) frames with data from bootloader
+                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                    var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderBytes, txpnt);
+                    msg.setData(cmd);
+                    txpnt += 7;
+                    iFrameNumber++;
+                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                    if (!canUsbDevice.sendMessage(msg))
+                    {
+                        AddToCanTrace("Couldn't send message");
+                    }
+                    if (m_sleepTime > 0)
+                        Thread.Sleep(m_sleepTime);
+
+                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    {
+                        return false;
+                    }
+                    SendKeepAlive();
+                    startAddress += 0x06;
+                }
+                else
+                {
+                    Console.WriteLine("Did not receive correct response from SendTransferData");
+                }
+
+                CastProgressWriteEvent(100);
+            }
+            else
+            {
+                Console.WriteLine("requestDownload() failed");
+                return false;
+            }
+            return true;
+        }
+
+        private bool UploadBootloaderT8Recover()
+        {
+            int startAddress = 0x102400;
+            Bootloader btloaderdata = new Bootloader();
+            int txpnt = 0;
+            byte iFrameNumber = 0x21;
+            if (requestDownload011())
+            {
+                for (int i = 0; i < 0x46; i++)
+                {
+                    iFrameNumber = 0x21;
+                    //10 F0 36 00 00 10 24 00
+                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
+                    // cast event
+                    float percentage = ((float)i * 100) / 70F;
+                    CastProgressWriteEvent(percentage);
+
+                    if (SendTransferData011(0xF0, startAddress, 0x311))
+                    {
+                        //canUsbDevice.RequestDeviceReady();
+                        // send 0x22 (34) frames with data from bootloader
+                        CANMessage msg = new CANMessage(0x11, 0, 8);
+                        for (int j = 0; j < 0x22; j++)
+                        {
+                            var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt);
+                            msg.setData(cmd);
+                            txpnt += 7;
+                            iFrameNumber++;
+                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
+                            if (!canUsbDevice.sendMessage(msg))
+                            {
+                                AddToCanTrace("Couldn't send message");
+                            }
+                            Application.DoEvents();
+                            if (m_sleepTime > 0)
+                                Thread.Sleep(m_sleepTime);
+                        }
+                        // now wait for 01 76 00 00 00 00 00 00 
+                        ulong data = m_canListener.waitMessage(1000, 0x311).getData();
+                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                        {
+                            return false;
+                        }
+                        //canUsbDevice.RequestDeviceReady();
+                        BroadcastKeepAlive();
+                        startAddress += 0xEA;
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Did not receive correct response from SendTransferData");
+                    }
+                }
+
+                iFrameNumber = 0x21;
+                if (SendTransferData011(0x0A, startAddress, 0x311))
+                {
+                    // send 0x22 (34) frames with data from bootloader
+                    CANMessage msg = new CANMessage(0x11, 0, 8);
+
+                    var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt);
+                    msg.setData(cmd);
+                    txpnt += 7;
+                    iFrameNumber++;
+                    if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                    if (!canUsbDevice.sendMessage(msg))
+                    {
+                        AddToCanTrace("Couldn't send message");
+                    }
+                    if (m_sleepTime > 0)
+                        Thread.Sleep(m_sleepTime);
+
+                    // now wait for 01 76 00 00 00 00 00 00 
+                    ulong data = m_canListener.waitMessage(1000, 0x311).getData();
+                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    {
+                        return false;
+                    }
+                    BroadcastKeepAlive();
+                    startAddress += 0x06;
+                }
+                else
+                {
+                    Console.WriteLine("Did not receive correct response from SendTransferData");
+                }
+
+                CastProgressWriteEvent(100);
+            }
+            return true;
+        }
+
+        public bool RecoverECUT8(string filename)
+        {
+            string diagDataID = GetDiagnosticDataIdentifier0101();
+            Console.WriteLine("DataID: " + diagDataID);
+            if (diagDataID == string.Empty)
+            {
+                canUsbDevice.SetupCANFilter("7E8", "000");
+                //canUsbDevice.SetAutomaticFlowControl(false);
+                BlockManager bm = new BlockManager();
+                bm.SetFilename(filename);
+
+                sw.Reset();
+                sw.Start();
+
+                _stallKeepAlive = true;
+
+                CastInfoEvent("Recovery needed...", ActivityType.UploadingBootloader);
+                BroadcastKeepAlive();
+                Thread.Sleep(200);  // was 1
+                BroadcastKeepAlive();
+                Thread.Sleep(500);
+                CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
+                BroadcastSession10();
+                Thread.Sleep(200);  // was 1
+                CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
+                BroadcastShutup();
+                Thread.Sleep(200);  // was 1
+                int progState = GetProgrammingState(0x311);
+                if (progState == 0x01)
+                {
+                    CastInfoEvent("Recovery needed phase 1", ActivityType.UploadingBootloader);
+                    BroadcastShutup011();
+                    if (GetProgrammingState011() == 0x01)
+                    {
+                        CastInfoEvent("Recovery needed phase 2", ActivityType.UploadingBootloader);
+                        SendA5011();
+                        Thread.Sleep(100);
+                        SendA503011();
+                        Thread.Sleep(100);
+                        BroadcastKeepAlive();
+                        Thread.Sleep(100);
+                        CastInfoEvent("Requesting security access...", ActivityType.UploadingBootloader);
+                        if (RequestSecurityAccess011(0))
+                        {
+                            CastInfoEvent("Security access granted, uploading bootloader", ActivityType.UploadingBootloader);
+                            UploadBootloaderT8Recover();
+                            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
+                            Thread.Sleep(500);
+                            StartBootloader011();
+                            Thread.Sleep(500);
+                            CastInfoEvent("Erasing flash", ActivityType.StartErasingFlash);
+                            if (SendrequestDownload(true))
+                            {
+                                _needRecovery = true;
+                                CastInfoEvent("Programming flash", ActivityType.UploadingFlash);
+                                bool success = WriteFlashT8Recover(bm);
+                                sw.Stop();
+                                _needRecovery = false;
+                                // what else to do?
+                                Send0120();
+                                if (success)
+                                {
+                                    CastInfoEvent("Recovery completed", ActivityType.ConvertingFile);
+                                    CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+                                    return true;
+                                }
+                                else
+                                {
+                                    CastInfoEvent("Recovery failed", ActivityType.ConvertingFile);
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                sw.Stop();
+                                _needRecovery = false;
+                                _stallKeepAlive = false;
+                                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
+                                Send0120();
+                                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+                                return false;
+
+                            }
+                        }
+                    }
+                    else
+                    {
+                        CastInfoEvent("Recovery not needed...", ActivityType.UploadingBootloader);
+                    }
+                }
+                else if (progState == 0x00)
+                {
+                    CastInfoEvent("Recovery not needed...", ActivityType.UploadingBootloader);
+                }
+                else if (progState == -1)
+                {
+                    CastInfoEvent("Unable to communicate with the ECU...", ActivityType.UploadingBootloader);
+                }
+                sw.Stop();
+            }
+            else
+            {
+                CastInfoEvent("Recovery not needed...", ActivityType.UploadingBootloader);
+            }
+            return false;
+        }
+
+        private bool WriteFlashT8Recover(BlockManager bm)
+        {
+            int startAddress = 0x020000;
+
+            for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
+            {
+                float percentage = ((float)blockNumber * 100) / 3920F;
+                CastProgressWriteEvent(percentage);
+                byte[] data2Send = bm.GetNextBlock();
+                int length = 0xF0;
+                if (blockNumber == 0xF50) length = 0xE6;
+                if (SendTransferData(length, startAddress + (blockNumber * 0xEA), 0x311))
+                {
+                    //canUsbDevice.RequestDeviceReady();
+                    // send the data from the block
+                    // calculate number of frames
+                    int numberOfFrames = (int)data2Send.Length / 7; // remnants?
+                    if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
+                    byte iFrameNumber = 0x21;
+                    int txpnt = 0;
+                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                    for (int frame = 0; frame < numberOfFrames; frame++)
+                    {
+                        var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
+                        msg.setData(cmd);
+                        txpnt += 7;
+                        iFrameNumber++;
+                        if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                        msg.elmExpectedResponses = frame == numberOfFrames - 1 ? 1 : 0;
+
+                        if (frame == numberOfFrames - 1)
+                            m_canListener.ClearQueue();
+                        if (!canUsbDevice.sendMessage(msg))
+                        {
+                            AddToCanTrace("Couldn't send message");
+                        }
+                        if (m_sleepTime > 0)
+                            Thread.Sleep(m_sleepTime);
+                    }
+                    // now wait for 01 76 00 00 00 00 00 00 
+                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    {
+                        _stallKeepAlive = false;
+                        return false;
+                    }
+                    //canUsbDevice.RequestDeviceReady();
+                    BroadcastKeepAlive();
+
+                }
+            }
+            return true;
+        }
+
+        public bool WriteFlashT8(string filename)
+        {
+            if (!canUsbDevice.isOpen()) return false;
+            _needRecovery = false;
+            BlockManager bm = new BlockManager();
+            bm.SetFilename(filename);
+
+            _stallKeepAlive = true;
+
+            SendKeepAlive();
+            sw.Reset();
+            sw.Start();
+            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
+            StartSession10();
+            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
+            RequestECUInfo(0x90);
+            RequestECUInfo(0x97);
+            RequestECUInfo(0x92);
+            RequestECUInfo(0xB4);
+            RequestECUInfo(0xC1);
+            RequestECUInfo(0xC2);
+            RequestECUInfo(0xC3);
+            RequestECUInfo(0xC4);
+            RequestECUInfo(0xC5);
+            RequestECUInfo(0xC6);
+            Send0120();
+            Thread.Sleep(1000);
+            StartSession1081();
+            StartSession10();
+            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
+            SendShutup();
+            SendA2();
+            SendA5();
+            SendA503();
+            Thread.Sleep(500);
+            SendKeepAlive();
+
+            // verified upto here
+
+            _securityLevel = AccessLevel.AccessLevel01;
+            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
+            if (!RequestSecurityAccess(2000))
+            {
+                CastInfoEvent("Failed to get security access", ActivityType.UploadingFlash);
+                _stallKeepAlive = false;
+                return false;
+            }
+            Thread.Sleep(500);
+            CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
+            if (!UploadBootloaderT8Write())
+            {
+                CastInfoEvent("Failed to upload bootloader", ActivityType.UploadingFlash);
+                _stallKeepAlive = false;
+                return false;
+            }
+            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
+            // start bootloader in ECU
+            //SendKeepAlive();
+            Thread.Sleep(500);
+            if (!StartBootloader())
+            {
+                CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
+                _stallKeepAlive = false;
+                return false;
+            }
+            Thread.Sleep(500);
+            SendKeepAlive();
+            Thread.Sleep(200);
+
+            CastInfoEvent("Erasing flash", ActivityType.StartErasingFlash);
+            if (SendrequestDownload(false))
+            {
+                _needRecovery = true;
+                SendShutup();
+                CastInfoEvent("Programming flash", ActivityType.UploadingFlash);
+                bool success = ProgramFlashT8(bm);
+
+                if (success)
+                    CastInfoEvent("Flash upload completed", ActivityType.ConvertingFile);
+                else
+                    CastInfoEvent("Flash upload failed", ActivityType.ConvertingFile);
+
+                sw.Stop();
+                _needRecovery = false;
+
+                // what else to do?
+                Send0120();
+                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+            }
+            else
+            {
+                sw.Stop();
+                _needRecovery = false;
+                _stallKeepAlive = false;
+                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
+                Send0120();
+                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+                return false;
+
+            }
+            _stallKeepAlive = false;
+            return true;
+        }
+
+        private bool ProgramFlashT8(BlockManager bm)
+        {
+            int startAddress = 0x020000;
+
+            for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
+            {
+                float percentage = ((float)blockNumber * 100) / 3920F;
+                CastProgressWriteEvent(percentage);
+                bool canSkip = false;// bm.CanSkipCurrentBlock();
+                byte[] data2Send = bm.GetNextBlock();
+                int length = 0xF0;
+                if (blockNumber == 0xF50) length = 0xE6;
+
+                Stopwatch blockSw = new Stopwatch();
+                int currentAddress = startAddress + (blockNumber * 0xEA);
+                if (!canSkip)
+                {
+                    sw.Reset();
+                    sw.Start();
+                    if (SendTransferData(length, currentAddress, 0x7E8))
+                    {
+                        canUsbDevice.RequestDeviceReady();
+                        // calculate number of frames
+                        int numberOfFrames = (int)data2Send.Length / 7; // remnants?
+                        if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
+                        byte iFrameNumber = 0x21;
+                        int txpnt = 0;
+                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                        for (int frame = 0; frame < numberOfFrames; frame++)
+                        {
+                            var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
+                            msg.setData(cmd);
+                            txpnt += 7;
+                            iFrameNumber++;
+                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
+
+                            if (frame == numberOfFrames - 1)
+                                m_canListener.ClearQueue();
+
+                            if (!canUsbDevice.sendMessage(msg))
+                            {
+                                AddToCanTrace("Couldn't send message");
+                            }
+                            if (m_sleepTime > 0)
+                                Thread.Sleep(m_sleepTime);
+                        }
+                        Application.DoEvents();
+
+                        // now wait for 01 76 00 00 00 00 00 00 
+                        ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                        {
+                            CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
+                            _stallKeepAlive = false;
+                            return false;
+                        }
+                        canUsbDevice.RequestDeviceReady();
+                        SendKeepAlive();
+                    }
+                    sw.Stop();
+                    //Console.WriteLine(string.Format("Programming block {0} took {1}", blockNumber, sw.Elapsed),ActivityType.UploadingFlash);
+                }
+                else
+                {
+                    Console.WriteLine("Skipping block at " + currentAddress);
+                }
+            }
+            return true;
+        }
+
+        public byte[] ReadFlashT8()
+        {
+            _stallKeepAlive = true;
+            bool success = false;
+            int retryCount = 0;
+            int startAddress = 0x000000;
+            int blockSize = 0x80; // defined in bootloader... keep it that way!
+            int bufpnt = 0;
+            byte[] buf = new byte[0x100000];
+            int blockCount = 0;
+            SendKeepAlive();
+            sw.Reset();
+            sw.Start();
+            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
+
+            StartSession10();
+            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
+
+            RequestECUInfo(0x90);
+            RequestECUInfo(0x97);
+            RequestECUInfo(0x92);
+            RequestECUInfo(0xB4);
+            RequestECUInfo(0xC1);
+            RequestECUInfo(0xC2);
+            RequestECUInfo(0xC3);
+            RequestECUInfo(0xC4);
+            RequestECUInfo(0xC5);
+            RequestECUInfo(0xC6);
+            Send0120();
+            Thread.Sleep(1000);
+
+            StartSession1081();
+
+            StartSession10();
+            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
+            SendShutup();
+            SendA2();
+            SendA5();
+            SendA503();
+            Thread.Sleep(500);
+            SendKeepAlive();
+            _securityLevel = AccessLevel.AccessLevel01;
+            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
+            RequestSecurityAccess(2000);
+            Thread.Sleep(500);
+            CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
+            if (!UploadBootloaderT8Read())
+            {
+                CastInfoEvent("Uploading bootloader FAILED", ActivityType.UploadingBootloader);
+                return new byte[1024 * 1024];
+            }
+            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
+            // start bootloader in ECU
+            Thread.Sleep(500);
+            StartBootloader();
+            SendKeepAlive();
+            Thread.Sleep(500);
+
+            CastInfoEvent("Downloading flash", ActivityType.DownloadingFlash);
+
+
+
+            // now start sending commands:
+            //06 21 80 00 00 00 00 00 
+            // response: 
+            //10 82 61 80 00 10 0C 00 // 4 bytes data already
+
+            //for (int i = 0; i < buf.Length / blockSize; i++)
+            Stopwatch keepAliveSw = new Stopwatch();
+            keepAliveSw.Start();
+            while (startAddress < buf.Length)
+            {
+                if (!canUsbDevice.isOpen())
+                {
+                    _stallKeepAlive = false;
+                    return buf;
+                }
+
+                byte[] readbuf = readDataByLocalIdentifier(startAddress, blockSize, out success);
+                if (success)
+                {
+                    if (readbuf.Length == blockSize)
+                    {
+                        for (int j = 0; j < blockSize; j++)
+                        {
+                            buf[bufpnt++] = readbuf[j];
+                        }
+                    }
+                    //string infoStr = "Address: " + startAddress.ToString("X8"); //+ " ";
+                    CastProgressReadEvent((float)(bufpnt * 100) / (float)buf.Length);
+                    startAddress += blockSize;
+                    retryCount = 0;
+                }
+                else
+                {
+                    CastInfoEvent("Frame dropped, retrying " + startAddress.ToString("X8") + " " + retryCount.ToString(), ActivityType.DownloadingFlash);
+                    retryCount++;
+                    // read all available message from the bus now
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        CANMessage response = new CANMessage();
+                        ulong data = 0;
+                        response = new CANMessage();
+                        response = m_canListener.waitMessage(10);
+                        data = response.getData();
+                    }
+
+
+
+                    if (retryCount == maxRetries)
+                    {
+                        CastInfoEvent("Failed to download flash content", ActivityType.ConvertingFile);
+                        _stallKeepAlive = false;
+                        return buf;
+                    }
+                }
+                blockCount++;
+                if (keepAliveSw.ElapsedMilliseconds > 3000) // once every 3 seconds
+                {
+                    keepAliveSw.Stop();
+                    keepAliveSw.Reset();
+                    SendKeepAlive();
+                    keepAliveSw.Start();
+                }
+                Application.DoEvents();
+            }
+            sw.Stop();
+            _stallKeepAlive = false;
+            return buf;
+        }
+
+        public byte[] ReadT8SRAMSnapshot()
+        {
+            _stallKeepAlive = true;
+            bool success = false;
+            int retryCount = 0;
+            int startAddress = 0x107000;
+            int blockSize = 0x80; // defined in bootloader... keep it that way!
+            int bufpnt = 0;
+            byte[] buf = new byte[0x001000];
+            int blockCount = 0;
+            SendKeepAlive();
+            sw.Reset();
+            sw.Start();
+            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
+
+            StartSession10();
+            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
+
+            RequestECUInfo(0x90);
+            RequestECUInfo(0x97);
+            RequestECUInfo(0x92);
+            RequestECUInfo(0xB4);
+            RequestECUInfo(0xC1);
+            RequestECUInfo(0xC2);
+            RequestECUInfo(0xC3);
+            RequestECUInfo(0xC4);
+            RequestECUInfo(0xC5);
+            RequestECUInfo(0xC6);
+            Send0120();
+            Thread.Sleep(1000);
+
+            StartSession1081();
+
+            StartSession10();
+            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
+            SendShutup();
+            SendA2();
+            SendA5();
+            SendA503();
+            Thread.Sleep(500);
+            SendKeepAlive();
+            _securityLevel = AccessLevel.AccessLevel01;
+            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
+            RequestSecurityAccess(500);
+            Thread.Sleep(500);
+            CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
+            UploadBootloaderT8Read();
+            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
+            // start bootloader in ECU
+            Thread.Sleep(500);
+            StartBootloader();
+            SendKeepAlive();
+            Thread.Sleep(500);
+
+            CastInfoEvent("Downloading snapshot", ActivityType.DownloadingFlash);
+
+
+
+            // now start sending commands:
+            //06 21 80 00 00 00 00 00 
+            // response: 
+            //10 82 61 80 00 10 0C 00 // 4 bytes data already
+
+            //for (int i = 0; i < buf.Length / blockSize; i++)
+            while (startAddress < 0x108000)
+            {
+                if (!canUsbDevice.isOpen())
+                {
+                    _stallKeepAlive = false;
+                    return buf;
+                }
+                byte[] readbuf = readDataByLocalIdentifier(startAddress, blockSize, out success);
+                if (success)
+                {
+                    if (readbuf.Length == blockSize)
+                    {
+                        for (int j = 0; j < blockSize; j++)
+                        {
+                            buf[bufpnt++] = readbuf[j];
+                        }
+                    }
+                    //string infoStr = "Address: " + startAddress.ToString("X8"); //+ " ";
+                    CastProgressReadEvent((float)(bufpnt * 100) / (float)buf.Length);
+                    startAddress += blockSize;
+                    retryCount = 0;
+                }
+                else
+                {
+                    CastInfoEvent("Frame dropped, retrying " + startAddress.ToString("X8") + " " + retryCount.ToString(), ActivityType.DownloadingFlash);
+                    retryCount++;
+                    // read all available message from the bus now
+
+                    for (int i = 0; i < 10; i++)
+                    {
+                        CANMessage response = new CANMessage();
+                        ulong data = 0;
+                        response = new CANMessage();
+                        response = m_canListener.waitMessage(10);
+                        data = response.getData();
+                    }
+
+
+
+                    if (retryCount == maxRetries)
+                    {
+                        CastInfoEvent("Failed to download flash content", ActivityType.ConvertingFile);
+                        _stallKeepAlive = false;
+                        return buf;
+                    }
+                }
+                blockCount++;
+                if (sw.ElapsedMilliseconds > 3000) // once every 3 seconds
+                //if ((blockCount % 10) == 0)
+                {
+                    sw.Stop();
+                    sw.Reset();
+                    SendKeepAlive();
+                    sw.Start();
+                }
+
+            }
+            sw.Stop();
+            _stallKeepAlive = false;
+            return buf;
+        }
+
+        private bool SendrequestDownload(bool recoveryMode)
+        {
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
+            //06 34 01 00 00 00 00 00
+            ulong cmd = 0x0000000000013406;
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                Console.WriteLine("Couldn't send message");
+            }
+            bool eraseDone = false;
+            int eraseCount = 0;
+            int waitCount = 0;
+            while (!eraseDone)
+            {
+                m_canListener.setupWaitMessage(0x7E8); // TEST ELM327 31082011
+                CANMessage response = new CANMessage();
+                response = m_canListener.waitMessage(500); // 1 seconds!
+                ulong data = response.getData();
+                if (data == 0)
+                {
+                    m_canListener.setupWaitMessage(0x311); // TEST ELM327 31082011
+                    response = new CANMessage();
+                    response = m_canListener.waitMessage(500); // 1 seconds!
+                    data = response.getData();
+                }
+                // response will be 03 7F 34 78 00 00 00 00 a couple of times while erasing
+                if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x78)
+                {
+                    if (recoveryMode) BroadcastKeepAlive();
+                    else SendKeepAlive();
+                    eraseCount++;
+                    string info = "Erasing flash";
+                    for (int i = 0; i < eraseCount; i++) info += ".";
+                    CastInfoEvent(info, ActivityType.ErasingFlash);
+                }
+                else if (getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x74)
+                {
+                    if (recoveryMode) BroadcastKeepAlive();
+                    else SendKeepAlive();
+                    eraseDone = true;
+                    return true;
+                }
+                else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x11)
+                {
+                    CastInfoEvent("Erase cannot be performed", ActivityType.ErasingFlash);
+                    return false;
+                }
+                else
+                {
+                    Console.WriteLine("Rx: " + data.ToString("X16"));
+                    if (canUsbDevice is CANELM327Device)
+                    {
+                        if (recoveryMode) BroadcastKeepAlive();
+                        else SendKeepAlive();
+                    }
+                }
+                waitCount++;
+                if (waitCount > 30)
+                {
+                    CastInfoEvent("Erase timed out after 30 seconds", ActivityType.ErasingFlash);
+                    // ELM327 seem to be unable to wait long enough for this response
+                    // Instead we assume its finnished ok after 30 seconds
+                    if (canUsbDevice is CANELM327Device)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                Thread.Sleep(m_sleepTime);
+
+            }
+            return true;
+        }
+
+        private bool SendTransferData011(int length, int address, uint waitforResponseID)
+        {
+            CANMessage msg = new CANMessage(0x11, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
+            ulong cmd = 0x0000000000360010; // 0x36 = transferData
+            ulong addressHigh = (uint)address & 0x0000000000FF0000;
+            addressHigh /= 0x10000;
+            ulong addressMiddle = (uint)address & 0x000000000000FF00;
+            addressMiddle /= 0x100;
+            ulong addressLow = (uint)address & 0x00000000000000FF;
+            ulong len = (ulong)length;
+
+            cmd |= (addressLow * 0x100000000000000);
+            cmd |= (addressMiddle * 0x1000000000000);
+            cmd |= (addressHigh * 0x10000000000);
+            cmd |= (len * 0x100);
+            //Console.WriteLine("send: " + cmd.ToString("X16"));
+            msg.elmExpectedResponses = 1;
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(waitforResponseID);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                AddToCanTrace("Couldn't send message");
+            }
+
+            CANMessage response = new CANMessage();
+            response = new CANMessage();
+            response = m_canListener.waitMessage(1000);
+            ulong data = response.getData();
+            //Console.WriteLine("Received in SendTransferData: " + data.ToString("X16"));
+            if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private bool SendTransferData(int length, int address, uint waitforResponseID)
+        {
+            CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
+            ulong cmd = 0x0000000000360010; // 0x36 = transferData
+            ulong addressHigh = (uint)address & 0x0000000000FF0000;
+            addressHigh /= 0x10000;
+            ulong addressMiddle = (uint)address & 0x000000000000FF00;
+            addressMiddle /= 0x100;
+            ulong addressLow = (uint)address & 0x00000000000000FF;
+            ulong len = (ulong)length;
+
+            cmd |= (addressLow * 0x100000000000000);
+            cmd |= (addressMiddle * 0x1000000000000);
+            cmd |= (addressHigh * 0x10000000000);
+            cmd |= (len * 0x100);
+            //Console.WriteLine("send: " + cmd.ToString("X16"));
+
+            msg.setData(cmd);
+            msg.elmExpectedResponses = 1;
+            m_canListener.setupWaitMessage(waitforResponseID);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                AddToCanTrace("Couldn't send message");
+            }
+
+            CANMessage response = new CANMessage();
+            response = new CANMessage();
+            response = m_canListener.waitMessage(1000);
+            ulong data = response.getData();
+            //Console.WriteLine("Received in SendTransferData: " + data.ToString("X16"));
+            if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
+            {
+                return false;
+            }
+            return true;
+        }
+
+
+        #endregion T8
 
     }
 }

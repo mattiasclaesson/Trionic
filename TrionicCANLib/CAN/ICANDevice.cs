@@ -270,6 +270,12 @@ namespace TrionicCANLib.CAN
         /// If set to 000, then all the can traffic will be visible to ELM</param>
         public virtual void SetupCANFilter(string canAddress, string canMask) { }
 
+        /// <summary>
+        /// Used to send control message for ELM device
+        /// </summary>
+        /// <param name="msg"></param>
+        public virtual void SendControlMessage(string msg) { }
+
         #endregion ELM327 specific
     }
 }
