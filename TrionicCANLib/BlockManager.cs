@@ -63,5 +63,16 @@ namespace TrionicCANLib
                 return array;
             }
         }
+
+        // Determine last part of the FLASH chip that is used (to save time when reading (DUMPing))
+        // Address 0x020140 stores a pointer to the BIN file Header which is the last used area in FLASH
+        public bool CanSkipCurrentBlock()
+        {
+            int lastAddress = (int)filebytes[0x020141] << 16 | (int)filebytes[0x020142] << 8 | (int)filebytes[0x020143];
+            // Add another 512 bytes to include header region (with margin)!!!
+            lastAddress += 0x200;
+            int currentAddress = 0x020000 + _blockNumber * 0xEA;
+            return currentAddress < lastAddress ? false : true;
+        }
     }
 }

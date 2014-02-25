@@ -94,7 +94,7 @@ namespace TrionicCANFlasher
                         if (trionicCan.openT7Device())
                         {
                             Thread.Sleep(1000);
-                            AddLogItem("Update flash content");
+                            AddLogItem("Update FLASH content");
                             Application.DoEvents();
                             dtstart = DateTime.Now;
                             trionicCan.UpdateFlashWithT7Flasher(ofd.FileName);
@@ -115,15 +115,15 @@ namespace TrionicCANFlasher
                         {
                             Thread.Sleep(1000);
                             dtstart = DateTime.Now;
-                            AddLogItem("Update flash content");
+                            AddLogItem("Update FLASH content");
                             Application.DoEvents();
                             if (trionicCan.WriteFlashT8(ofd.FileName))
                             {
-                                AddLogItem("Flash sequence done");
+                                AddLogItem("FLASH sequence done");
                             }
                             else
                             {
-                                AddLogItem("Failed to update flash");
+                                AddLogItem("Failed to update FLASH");
                             }
                             TimeSpan ts = DateTime.Now - dtstart;
                             AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
@@ -234,7 +234,7 @@ namespace TrionicCANFlasher
                                     // check reading status periodically
 
                                     Thread.Sleep(1000);
-                                    AddLogItem("Aquiring flash content");
+                                    AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
                                     dtstart = DateTime.Now;
                                     trionicCan.getFlashWithT7Flasher(sfd.FileName);
@@ -255,14 +255,14 @@ namespace TrionicCANFlasher
                                 {
                                     Thread.Sleep(1000);
                                     dtstart = DateTime.Now;
-                                    AddLogItem("Aquiring flash content");
+                                    AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
                                     //byte[] snapshot = trionicCan.getFlashContent();
                                     byte[] snapshot = null;
-                                    for (int i = 0; i < 100; i++)
-                                    {
-                                        snapshot = trionicCan.ReadFlashT8();
-                                    }
+                                    //for (int i = 0; i < 100; i++)
+                                    //{
+                                    snapshot = trionicCan.ReadFlashT8();
+                                    //}
                                     try
                                     {
                                         File.WriteAllBytes(sfd.FileName, snapshot);
