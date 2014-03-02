@@ -40,9 +40,7 @@ namespace TrionicCANLib
         LAWICEL,
         COMBI,
         ELM327,
-        JUST4TRIONIC,
-        OBDLinkSX,
-        LAWICEL_VCP
+        JUST4TRIONIC
     };
 
     public enum ECU : int
@@ -230,10 +228,6 @@ namespace TrionicCANLib
             {
                 canUsbDevice = new LPCCANDevice();
             }
-            else if (adapterType == CANBusAdapter.LAWICEL_VCP)
-            {
-                canUsbDevice = new CANUSBDirectDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
-            }
             canUsbDevice.EnableCanLog = m_EnableCanLog;
             canUsbDevice.UseOnlyPBus = m_OnlyPBus;
             canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
@@ -330,31 +324,6 @@ namespace TrionicCANLib
             else if (adapterType == CANBusAdapter.COMBI)
             {
                 canUsbDevice = new LPCCANDevice();
-            }
-            else if (adapterType == CANBusAdapter.LAWICEL_VCP)
-            {
-                canUsbDevice = new CANUSBDirectDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
-                kwpCanDevice = new KWPCANDevice();
-                kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableCanLog = m_EnableCanLog;
-                KWPHandler.setKWPDevice(kwpCanDevice);
-                if (m_EnableCanLog)
-                {
-                    KWPHandler.startLogging();
-                }
-                kwpHandler = KWPHandler.getInstance();
-                try
-                {
-                    T7Flasher.setKWPHandler(kwpHandler);
-                }
-                catch (Exception E)
-                {
-                    Console.WriteLine(E.Message);
-                    AddToCanTrace("Failed to set FLASHer object to KWPHandler");
-                }
-                flash = T7Flasher.getInstance();
-                flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableCanLog = m_EnableCanLog;
             }
 
             canUsbDevice.EnableCanLog = m_EnableCanLog;
@@ -4926,71 +4895,62 @@ namespace TrionicCANLib
 
         private bool ProgramFlashT8(BlockManager bm)
         {
-            int startAddress = 0x020000;
+            const int startAddress = 0x020000;
+            int lastBlockNumber = bm.GetLastBlockNumber();
 
-            for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
+            for (int blockNumber = 0; blockNumber <= lastBlockNumber; blockNumber++) // All blocks == 0xF50
             {
-                float percentage = ((float)blockNumber * 100) / 3920F;
+                float percentage = ((float)blockNumber * 100) / (float)lastBlockNumber;
                 CastProgressWriteEvent(percentage);
-                bool canSkip = bm.CanSkipCurrentBlock();
                 byte[] data2Send = bm.GetNextBlock();
                 int length = 0xF0;
                 if (blockNumber == 0xF50) length = 0xE6;
 
-                Stopwatch blockSw = new Stopwatch();
                 int currentAddress = startAddress + (blockNumber * 0xEA);
-                if (!canSkip)
+                sw.Reset();
+                sw.Start();
+                if (SendTransferData(length, currentAddress, 0x7E8))
                 {
-                    sw.Reset();
-                    sw.Start();
-                    if (SendTransferData(length, currentAddress, 0x7E8))
+                    canUsbDevice.RequestDeviceReady();
+                    // calculate number of frames
+                    int numberOfFrames = (int)data2Send.Length / 7; // remnants?
+                    if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
+                    byte iFrameNumber = 0x21;
+                    int txpnt = 0;
+                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                    for (int frame = 0; frame < numberOfFrames; frame++)
                     {
-                        canUsbDevice.RequestDeviceReady();
-                        // calculate number of frames
-                        int numberOfFrames = (int)data2Send.Length / 7; // remnants?
-                        if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
-                        byte iFrameNumber = 0x21;
-                        int txpnt = 0;
-                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
-                        for (int frame = 0; frame < numberOfFrames; frame++)
+                        var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
+                        msg.setData(cmd);
+                        txpnt += 7;
+                        iFrameNumber++;
+                        if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                        msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
+
+                        if (frame == numberOfFrames - 1)
+                            m_canListener.ClearQueue();
+
+                        if (!canUsbDevice.sendMessage(msg))
                         {
-                            var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
-                            msg.setData(cmd);
-                            txpnt += 7;
-                            iFrameNumber++;
-                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                            msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
-
-                            if (frame == numberOfFrames - 1)
-                                m_canListener.ClearQueue();
-
-                            if (!canUsbDevice.sendMessage(msg))
-                            {
-                                AddToCanTrace("Couldn't send message");
-                            }
-                            if (m_sleepTime > 0)
-                                Thread.Sleep(m_sleepTime);
+                            AddToCanTrace("Couldn't send message");
                         }
-                        Application.DoEvents();
-
-                        // now wait for 01 76 00 00 00 00 00 00 
-                        ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
-                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                        {
-                            CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
-                            _stallKeepAlive = false;
-                            return false;
-                        }
-                        canUsbDevice.RequestDeviceReady();
-                        SendKeepAlive();
+                        if (m_sleepTime > 0)
+                            Thread.Sleep(m_sleepTime);
                     }
-                    sw.Stop();
-                    //Console.WriteLine(string.Format("Programming block {0} took {1}", blockNumber, sw.Elapsed),ActivityType.UploadingFlash);
+                    Application.DoEvents();
+
+                    // now wait for 01 76 00 00 00 00 00 00 
+                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    {
+                        CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
+                        _stallKeepAlive = false;
+                        return false;
+                    }
+                    canUsbDevice.RequestDeviceReady();
+                    SendKeepAlive();
                 }
-                else
-                {
-                    Console.WriteLine("Skipping block at " + currentAddress);
-                }
+                sw.Stop();
             }
             return true;
         }
