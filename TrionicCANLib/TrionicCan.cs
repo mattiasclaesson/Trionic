@@ -4374,6 +4374,13 @@ namespace TrionicCANLib
             return KWPHandler.getInstance().ResetECU();
         }
 
+        public string[] ReadDTCCodesT7()
+        {
+            List<string> list;
+            KWPHandler.getInstance().ReadDTCCodes(out list);
+            return list.ToArray();
+        }
+
         #region T8
 
         private bool UploadBootloaderT8Read()
@@ -4471,12 +4478,7 @@ namespace TrionicCANLib
             }
             return true;
         }
-        public string[] ReadDTCCodesT7()
-        {
-            List<string> list;
-            KWPHandler.getInstance().ReadDTCCodes(out list);
-            return list.ToArray();
-        }
+       
         private bool UploadBootloaderT8Write()
         {
             int startAddress = 0x102400;
@@ -5045,13 +5047,14 @@ namespace TrionicCANLib
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
             CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            RequestSecurityAccess(2000);
+            if(!RequestSecurityAccess(2000))
+                return null;
             Thread.Sleep(500);
             CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
             if (!UploadBootloaderT8Read())
             {
                 CastInfoEvent("Uploading bootloader FAILED", ActivityType.UploadingBootloader);
-                return new byte[1024 * 1024];
+                return null;
             }
             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
             // start bootloader in ECU
