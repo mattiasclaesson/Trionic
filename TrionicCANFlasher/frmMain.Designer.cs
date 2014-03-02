@@ -178,9 +178,7 @@
             "Lawicel CANUSB",
             "CombiAdapter",
             "ELM327 v1.3 or higher",
-            "Just4Trionic",
-            "OBDLink SX (ELM compatible)",
-            "Lawicel CANUSB VCP"});
+            "Just4Trionic"});
             this.cbxAdapterType.Location = new System.Drawing.Point(866, 220);
             this.cbxAdapterType.Name = "cbxAdapterType";
             this.cbxAdapterType.Size = new System.Drawing.Size(150, 21);
