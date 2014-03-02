@@ -2787,11 +2787,19 @@ namespace TrionicCANLib
                 success = false;
                 return retData;
             }
-            else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23)
+            else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23 && getCanData(data, 3) == 0x31)
             {
-                // reason was 0x31
+                // reason was 0x31 RequestOutOfRange
+                // memory address is either: invalid, restricted, secure + ECU locked
+                // memory size: is greater than max
                 AddToCanTrace("No security access granted");
                 RequestSecurityAccess(0);
+                success = false;
+                return retData;
+            }
+            else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23)
+            {
+                AddToCanTrace("readMemoryByAddress " + TranslateErrorCode(getCanData(data, 3)));
                 success = false;
                 return retData;
             }
