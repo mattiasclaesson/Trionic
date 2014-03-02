@@ -518,6 +518,7 @@ namespace TrionicCANLib.CAN
         {
             if (m_serialPort.IsOpen)
             {
+                m_serialPort.ReadTimeout = 3000;
                 WriteToSerialAndWait("ATSP00\r");    // Reset to automatic protocol
                 WriteToSerialWithTrace("ATZ\r");    //Reset all
                 Thread.Sleep(100);
