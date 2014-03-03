@@ -2971,17 +2971,18 @@ namespace TrionicCANLib
             //byte failureTypeByte = responseDTC.getCanData(3);
 
             byte statusByte = responseDTC.getCanData(4);
-            String statusDescription = string.Empty;
-            if (0x80 == (0x80 & statusByte)) statusDescription += "warningIndicatorRequestedState ";
-            if (0x40 == (0x40 & statusByte)) statusDescription += "currentDTCSincePowerUp ";
-            if (0x20 == (0x20 & statusByte)) statusDescription += "testNotPassedSinceCurrentPowerUp ";
-            if (0x10 == (0x10 & statusByte)) statusDescription += "historyDTC ";
-            if (0x08 == (0x08 & statusByte)) statusDescription += "testFailedSinceDTCCleared ";
-            if (0x04 == (0x04 & statusByte)) statusDescription += "testNotPassedSinceDTCCleared ";
-            if (0x02 == (0x02 & statusByte)) statusDescription += "currentDTC ";
-            if (0x01 == (0x01 & statusByte)) statusDescription += "DTCSupportedByCalibration ";
+            //Removed this output
+            //String statusDescription = string.Empty;
+            //if (0x80 == (0x80 & statusByte)) statusDescription += "warningIndicatorRequestedState ";
+            //if (0x40 == (0x40 & statusByte)) statusDescription += "currentDTCSincePowerUp ";
+            //if (0x20 == (0x20 & statusByte)) statusDescription += "testNotPassedSinceCurrentPowerUp ";
+            //if (0x10 == (0x10 & statusByte)) statusDescription += "historyDTC ";
+            //if (0x08 == (0x08 & statusByte)) statusDescription += "testFailedSinceDTCCleared ";
+            //if (0x04 == (0x04 & statusByte)) statusDescription += "testNotPassedSinceDTCCleared ";
+            //if (0x02 == (0x02 & statusByte)) statusDescription += "currentDTC ";
+            //if (0x01 == (0x01 & statusByte)) statusDescription += "DTCSupportedByCalibration ";
 
-            return "DTC: " + firstDtcChar + secondDtcNum.ToString("d") + thirdDtcNum.ToString("X") + forthDtcNum.ToString("X") + fifthDtcNum.ToString("X") + " StatusByte: " + statusByte.ToString("X2") + " StatusDescription: " + statusDescription;
+            return "DTC: " + firstDtcChar + secondDtcNum.ToString("d") + thirdDtcNum.ToString("X") + forthDtcNum.ToString("X") + fifthDtcNum.ToString("X") + " StatusByte: " + statusByte.ToString("X2");
         }
 
         public string[] readDTCCodes()
