@@ -19,6 +19,12 @@ namespace TrionicCANLib.KWP
         /// <returns>The number of PIDs.</returns>
         public uint getNrOfPID() { return m_nrOfPid; }
 
+        private int elmResponseResponses = -1;
+        /// <summary>
+        /// Tells elm how many responses to expect back
+        /// </summary>
+        public int ElmExpectedResponses { get { return elmResponseResponses; } set { elmResponseResponses = value; } }
+
         /// <summary>
         /// Constructor for request with one PID.
         /// </summary>

@@ -126,7 +126,7 @@ namespace TrionicCANLib.CAN
                 if (m_serialPort != null)
                 {
                     if (m_serialPort.IsOpen)
-                    {
+                    {                       
                         if (m_serialPort.BytesToRead > 0)
                         {
                             string rawString = m_serialPort.ReadExisting();
@@ -243,7 +243,16 @@ namespace TrionicCANLib.CAN
                 }
                 lastSentCanMessage = a_message.Clone();
                 string sendString = GetELMRequest(a_message);
-                if (a_message.getLength() < 8 || supports8ByteResponse) //ELM 2.0 supports 8 bytes + response  count, previous versions dont
+
+                
+                if (sendString.Length == 16 && !supports8ByteResponse)
+                {
+                    bool canIgnoreLastByte = a_message.getCanData(7) == 0;
+                    if (canIgnoreLastByte)
+                        sendString = sendString.Substring(0, 14);
+                }
+                
+                if (sendString.Length<=14 || supports8ByteResponse) //ELM 2.0 supports 8 bytes + response  count, previous versions dont
                 {
                     //add expected responses, but this has to be one char only :(
                     if (a_message.elmExpectedResponses != -1 && a_message.elmExpectedResponses < 16)
@@ -361,7 +370,7 @@ namespace TrionicCANLib.CAN
                     }
 
                     bool gotVersion = false;
-                    int tries = 10;
+                    int tries = 20;
                     while (!gotVersion && tries-- > 0)
                     {
                         string elmVersion = m_serialPort.ReadExisting();

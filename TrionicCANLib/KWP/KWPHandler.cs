@@ -883,7 +883,9 @@ namespace TrionicCANLib.KWP
             lengthAndAddress[2] = (byte)(a_address >> 16);
             lengthAndAddress[3] = (byte)(a_address >> 8);
             lengthAndAddress[4] = (byte)(a_address);
-            result = sendRequest(new KWPRequest(0x2C, 0xF0, 0x03, lengthAndAddress), out reply);
+            var request = new KWPRequest(0x2C, 0xF0, 0x03, lengthAndAddress);
+            request.ElmExpectedResponses = 1;
+            result = sendRequest(request, out reply);
             if (result == KWPResult.OK)
                 return true;
             else
@@ -1125,12 +1127,19 @@ namespace TrionicCANLib.KWP
 
             KWPReply reply = new KWPReply();
             KWPResult result;
-            result = sendRequest(new KWPRequest(0x21, 0xF0), out reply);
-            r_data = reply.getData();
+            var request = new KWPRequest(0x21, 0xF0);
+            request.ElmExpectedResponses=1;
+            result = sendRequest(request, out reply);
             if (result == KWPResult.OK)
+            {
+                r_data = reply.getData();
                 return true;
-            else 
+            }
+            else
+            {
+                r_data = new byte[0];
                 return false;
+            }
         }
 
         public static void startLogging()

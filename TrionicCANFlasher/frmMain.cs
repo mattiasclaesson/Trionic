@@ -192,7 +192,7 @@ namespace TrionicCANFlasher
                 if (IsElmAdapterSelected)
                 {
                     btnFlashECU.Enabled = false;
-                    btnReadECU.Enabled = false;
+                    //btnReadECU.Enabled = false;
                 }
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
@@ -263,14 +263,17 @@ namespace TrionicCANFlasher
                                     {
                                         snapshot = trionicCan.ReadFlashT8();
                                     }
-                                    try
+                                    if (snapshot != null)
                                     {
-                                        File.WriteAllBytes(sfd.FileName, snapshot);
-                                        AddLogItem("Download done");
-                                    }
-                                    catch (Exception E)
-                                    {
-                                        AddLogItem("Could not write file... " + E.Message);
+                                        try
+                                        {
+                                            File.WriteAllBytes(sfd.FileName, snapshot);
+                                            AddLogItem("Download done");
+                                        }
+                                        catch (Exception E)
+                                        {
+                                            AddLogItem("Could not write file... " + E.Message);
+                                        }
                                     }
                                     TimeSpan ts = DateTime.Now - dtstart;
                                     AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");

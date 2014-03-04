@@ -225,7 +225,7 @@ namespace TrionicCANLib.KWP
         /// <returns>The status of the request.</returns>
         public RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
         {
-            CANMessage msg = new CANMessage(0x240, 0, 8);
+            
             uint row = nrOfRowsToSend(a_request.getData());
 
             m_kwpCanListener.setupWaitMessage(0x258);
@@ -233,7 +233,12 @@ namespace TrionicCANLib.KWP
             // Send one or several request messages.
             for (; row > 0; row--)
             {
+                CANMessage msg = new CANMessage(0x240, 0, 8);
+                msg.elmExpectedResponses = a_request.ElmExpectedResponses;
                 msg.setData(createCanMessage(a_request.getData(), row - 1));
+                if ((msg.getData() & 0xFFFFUL) == 0xA141UL)
+                    msg.elmExpectedResponses = 0;
+
                 if (!m_canDevice.sendMessage(msg))
                 {
                     r_reply = new KWPReply();
@@ -241,19 +246,19 @@ namespace TrionicCANLib.KWP
                 }
             }
 
-            msg = m_kwpCanListener.waitMessage(timeoutPeriod);          
+            var response = m_kwpCanListener.waitMessage(timeoutPeriod);          
  //         msg = m_kwpCanListener.waitForMessage(0x258, timeoutPeriod);    
             
             // Receive one or several replys and send an ack for each reply.
-            if (msg.getID() == 0x258)
+            if (response.getID() == 0x258)
             {
-                uint nrOfRows = (uint)(msg.getCanData(0) & 0x3F)+ 1;
+                uint nrOfRows = (uint)(response.getCanData(0) & 0x3F) + 1;
                 row = 0;
                 if (nrOfRows == 0)
                     throw new Exception("Wrong nr of rows");
                 //Assume that no KWP reply contains more than 0x200 bytes
                 byte[] reply = new byte[0x200];
-                reply = collectReply(reply, msg.getData(), row);
+                reply = collectReply(reply, response.getData(), row);
                 sendAck(nrOfRows - 1);
                 nrOfRows--;
 
@@ -262,11 +267,11 @@ namespace TrionicCANLib.KWP
                 while (nrOfRows > 0)
                 {
 //                    msg = m_kwpCanListener.waitForMessage(0x258, timeoutPeriod);
-                    msg = m_kwpCanListener.waitMessage(timeoutPeriod);
-                    if (msg.getID() == 0x258)
+                    response = m_kwpCanListener.waitMessage(timeoutPeriod);
+                    if (response.getID() == 0x258)
                     {
                         row++;
-                        reply = collectReply(reply, msg.getData(), row);
+                        reply = collectReply(reply, response.getData(), row);
                         sendAck(nrOfRows - 1);
                         nrOfRows--;
                     }
@@ -399,6 +404,7 @@ namespace TrionicCANLib.KWP
         private void sendAck(uint a_rowNr)
         {
             CANMessage msg = new CANMessage(0x266,0,5);
+            msg.elmExpectedResponses =(a_rowNr==0)?0:1;
             uint i = 0;
             ulong data = 0;
             data = setCanData(data, (byte)0x40, i++);

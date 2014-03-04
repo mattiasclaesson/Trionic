@@ -152,11 +152,11 @@ namespace TrionicCANLib.Flasher
                         return;
                     }
                 }
-                if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Starting session..."));
+                NotifyStatusChanged(this, new StatusEventArgs("Starting session..."));
                 
                 m_kwpHandler.startSession();
                 AddToCanTrace("Session started");
-                if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Session started, requesting security access to ECU"));
+                NotifyStatusChanged(this, new StatusEventArgs("Session started, requesting security access to ECU"));
                 if (!gotSequrityAccess)
                 {
                     AddToCanTrace("No security access");
@@ -182,260 +182,289 @@ namespace TrionicCANLib.Flasher
                 {
                     SetFlashStatus(FlashStatus.NoSequrityAccess);
                     AddToCanTrace("No security access granted after 5 retries");
-                    if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to get security access after 5 retries"));
+                    NotifyStatusChanged(this, new StatusEventArgs("Failed to get security access after 5 retries"));
                 }
                 //Here it would make sense to stop if we didn't ge security access but
                 //let's try anyway. It could be that we don't get a possitive reply from the 
                 //ECU if we alredy have security access (from a previous, interrupted, session).
                 if (m_command == FlashCommand.ReadCommand)
                 {
-                    const int nrOfBytes = 64;
-                    byte[] data;
-                    AddToCanTrace("Reading flash content to file: " + m_fileName);
-                    if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Reading data from ECU..."));
-
-
-                    if (File.Exists(m_fileName))
-                        File.Delete(m_fileName);
-                    FileStream fileStream = File.Create(m_fileName, 1024);
-                    AddToCanTrace("File created");
-                    SetFlashStatus(FlashStatus.Reading);
-                    AddToCanTrace("Flash status is reading");
-
-                    for (int i = 0; i < 512 * 1024 / nrOfBytes; i++)
-                    {
-                        lock (m_synchObject)
-                        {
-                            if (m_command == FlashCommand.StopCommand)
-                                continue;
-                            if (m_endThread)
-                                return;
-                        }
-
-                        while (!m_kwpHandler.sendReadRequest((uint)(nrOfBytes * i), (uint)nrOfBytes))
-                        {
-                            m_nrOfRetries++;
-                        }
-
-                        while (!m_kwpHandler.sendRequestDataByOffset(out data))
-                        {
-                            m_nrOfRetries++;
-                        }
-                        fileStream.Write(data, 0, nrOfBytes);
-                        m_nrOfBytesRead += nrOfBytes;
-                    }
-                    fileStream.Close();
-                    AddToCanTrace("Closed file");
-
-                    m_kwpHandler.sendDataTransferExitRequest();
-                    AddToCanTrace("Done reading");
-
+                    ReadCommand();
                 }
                 else if (m_command == FlashCommand.ReadMemoryCommand)
                 {
-                    int nrOfBytes = 64;
-                    byte[] data;
-                    if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Reading data from ECU..."));
-
-                    if (File.Exists(m_fileName))
-                        File.Delete(m_fileName);
-                    FileStream fileStream = File.Create(m_fileName, 1024);
-                    int nrOfReads = (int)m_length / nrOfBytes;
-                    for (int i = 0; i < nrOfReads; i++)
-                    {
-                        lock (m_synchObject)
-                        {
-                            if (m_command == FlashCommand.StopCommand)
-                                continue;
-                            if (m_endThread)
-                                return;
-                        }
-                        SetFlashStatus(FlashStatus.Reading);
-
-                        if (i == nrOfReads - 1)
-                            nrOfBytes = (int)m_length - nrOfBytes * i;
-                        while (!m_kwpHandler.sendReadRequest((uint)m_offset + (uint)(nrOfBytes * i), (uint)nrOfBytes))
-                        {
-                            m_nrOfRetries++;
-                        }
-
-                        while (!m_kwpHandler.sendRequestDataByOffset(out data))
-                        {
-                            m_nrOfRetries++;
-                        }
-                        Console.WriteLine("Writing data to file: " + m_length + " bytes");
-                        fileStream.Write(data, 0, nrOfBytes);
-                        m_nrOfBytesRead += nrOfBytes;
-                    }
-                    fileStream.Close();
-                    Console.WriteLine("Done reading");
-                    m_kwpHandler.sendDataTransferExitRequest();
+                    ReadMemoryCommand();
                 }
                 else if (m_command == FlashCommand.ReadSymbolMapCommand)
                 {
-                    byte[] data;
-                    string swVersion = "";
-                    m_nrOfBytesRead = 0;
-                    if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Reading symbol map from ECU..."));
-
-                    if (File.Exists(m_fileName))
-                        File.Delete(m_fileName);
-                    FileStream fileStream = File.Create(m_fileName, 1024);
-                    if (m_kwpHandler.sendUnknownRequest() != KWPResult.OK)
-                    {
-                        if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to read data from ECU..."));
-                        SetFlashStatus(FlashStatus.ReadError);
-                        continue;
-                    }
-                    SetFlashStatus(FlashStatus.Reading);
-                    m_kwpHandler.getSwVersionFromDR51(out swVersion);
-
-                    if (m_kwpHandler.sendReadSymbolMapRequest() != KWPResult.OK)
-                    {
-                        if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to read data from ECU..."));
-
-                        SetFlashStatus(FlashStatus.ReadError);
-                        continue;
-                    }
-                    m_kwpHandler.sendDataTransferRequest(out data);
-                    while (data.Length > 0x10)
-                    {
-                        fileStream.Write(data, 1, data.Length - 3);
-                        m_nrOfBytesRead += data.Length - 3;
-                        lock (m_synchObject)
-                        {
-                            if (m_command == FlashCommand.StopCommand)
-                                continue;
-                            if (m_endThread)
-                                return;
-                        }
-                        m_kwpHandler.sendDataTransferRequest(out data);
-                    }
-                    fileStream.Flush();
-                    fileStream.Close();
+                    ReadSymbolMapCommand();  
                 }
                 else if (m_command == FlashCommand.WriteCommand)
                 {
-                    AddToCanTrace("Write command seen");
-                    const int nrOfBytes = 128;
-                    int i = 0;
-                    byte[] data = new byte[nrOfBytes];
-                    if (!gotSequrityAccess)
-                    {
-                        SetFlashStatus(FlashStatus.Completed);
-                        continue;
-                    }
-                    if (!File.Exists(m_fileName))
-                    {
-                        SetFlashStatus(FlashStatus.NoSuchFile);
-                        AddToCanTrace("No such file found: " + m_fileName);
-                        if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to find file to flash..."));
-
-                        continue;
-                    }
-                    AddToCanTrace("Start erasing");
-                    if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Erasing flash..."));
-
-                    SetFlashStatus(FlashStatus.Eraseing);
-                    if (m_kwpHandler.sendEraseRequest() != KWPResult.OK)
-                    {
-                        if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to erase flash..."));
-                        SetFlashStatus(FlashStatus.EraseError);
-                        AddToCanTrace("Erase error occured");
-                        // break;
-                    }
-                    AddToCanTrace("Opening file for reading");
-
-                    FileStream fs = new FileStream(m_fileName, FileMode.Open, FileAccess.Read);
-
-                    SetFlashStatus(FlashStatus.Writing);
-                    AddToCanTrace("Set flash status to writing");
-                    if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Writing flash... 0x00000-0x7B000"));
-
-                    //Write 0x0-0x7B000
-                    AddToCanTrace("0x0-0x7B000");
-                    Thread.Sleep(100);
-                    if (m_kwpHandler.sendWriteRequest(0x0, 0x7B000) != KWPResult.OK)
-                    {
-                        if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
-
-                        SetFlashStatus(FlashStatus.WriteError);
-                        AddToCanTrace("Write error occured");
-
-                        continue;
-                    }
-                    for (i = 0; i < 0x7B000 / nrOfBytes; i++)
-                    {
-                        fs.Read(data, 0, nrOfBytes);
-                        m_nrOfBytesRead = i * nrOfBytes;
-                        AddToCanTrace("sendWriteDataRequest " + m_nrOfBytesRead);
-                        if (m_kwpHandler.sendWriteDataRequest(data) != KWPResult.OK)
-                        {
-                            if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
-                            SetFlashStatus(FlashStatus.WriteError);
-                            AddToCanTrace("Write error occured " + m_nrOfBytesRead);
-
-                            continue;
-                        }
-                        lock (m_synchObject)
-                        {
-                            if (m_command == FlashCommand.StopCommand)
-                            {
-                                AddToCanTrace("Stop command seen");
-                                continue;
-                            }
-                            if (m_endThread)
-                            {
-                                AddToCanTrace("Thread ended");
-                                return;
-                            }
-                        }
-                    }
-
-                    //Write 0x7FE00-0x7FFFF
-                    AddToCanTrace("Write 0x7FE00-0x7FFFF");
-                    if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Writing flash... 0x7FE00-0x7FFFF"));
-
-                    if (m_kwpHandler.sendWriteRequest(0x7FE00, 0x200) != KWPResult.OK)
-                    {
-                        if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
-                        SetFlashStatus(FlashStatus.WriteError);
-                        AddToCanTrace("Write error occured");
-                        continue;
-                    }
-                    fs.Seek(0x7FE00, System.IO.SeekOrigin.Begin);
-                    for (i = 0x7FE00 / nrOfBytes; i < 0x80000 / nrOfBytes; i++)
-                    {
-                        fs.Read(data, 0, nrOfBytes);
-                        m_nrOfBytesRead = i * nrOfBytes;
-                        AddToCanTrace("sendWriteDataRequest " + m_nrOfBytesRead.ToString());
-
-                        if (m_kwpHandler.sendWriteDataRequest(data) != KWPResult.OK)
-                        {
-                            if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
-                            SetFlashStatus(FlashStatus.WriteError);
-                            AddToCanTrace("Write error occured " + m_nrOfBytesRead);
-                            continue;
-                        }
-                        lock (m_synchObject)
-                        {
-                            if (m_command == FlashCommand.StopCommand)
-                            {
-                                AddToCanTrace("Stop command seen");
-                                continue;
-                            }
-                            if (m_endThread)
-                            {
-                                AddToCanTrace("Thread ended");
-                                return;
-                            }
-                        }
-                    }
+                    WriteCommand();
                 }
-                if (onStatusChanged != null) onStatusChanged(this, new StatusEventArgs("Flasing procedure completed"));
+
+                if (m_endThread)
+                    return;
+                NotifyStatusChanged(this, new StatusEventArgs("Flasing procedure completed"));
                 AddToCanTrace("T7Flasher completed");
                 SetFlashStatus(FlashStatus.Completed);
             }
+        }
+
+
+        private void ReadCommand()
+        {
+            const int nrOfBytes = 64;
+            byte[] data;
+            AddToCanTrace("Reading flash content to file: " + m_fileName);
+            NotifyStatusChanged(this, new StatusEventArgs("Reading data from ECU..."));
+
+
+            if (File.Exists(m_fileName))
+                File.Delete(m_fileName);
+            FileStream fileStream = File.Create(m_fileName, 1024);
+            AddToCanTrace("File created");
+            SetFlashStatus(FlashStatus.Reading);
+            AddToCanTrace("Flash status is reading");
+
+            for (int i = 0; i < 512 * 1024 / nrOfBytes; i++)
+            {
+                lock (m_synchObject)
+                {
+                    if (m_command == FlashCommand.StopCommand)
+                        continue;
+                    if (m_endThread)
+                        return;
+                }
+
+                while (!m_kwpHandler.sendReadRequest((uint)(nrOfBytes * i), (uint)nrOfBytes))
+                {
+                    m_nrOfRetries++;
+                }
+
+                while (!m_kwpHandler.sendRequestDataByOffset(out data))
+                {
+                    m_nrOfRetries++;
+                }
+                fileStream.Write(data, 0, nrOfBytes);
+                m_nrOfBytesRead += nrOfBytes;
+            }
+            fileStream.Close();
+            AddToCanTrace("Closed file");
+
+            m_kwpHandler.sendDataTransferExitRequest();
+            AddToCanTrace("Done reading");
+        }
+
+        private void ReadMemoryCommand()
+        {
+            int nrOfBytes = 64;
+            byte[] data;
+            NotifyStatusChanged(this, new StatusEventArgs("Reading data from ECU..."));
+
+            if (File.Exists(m_fileName))
+                File.Delete(m_fileName);
+            FileStream fileStream = File.Create(m_fileName, 1024);
+            int nrOfReads = (int)m_length / nrOfBytes;
+            for (int i = 0; i < nrOfReads; i++)
+            {
+                lock (m_synchObject)
+                {
+                    if (m_command == FlashCommand.StopCommand)
+                        continue;
+                    if (m_endThread)
+                        return;
+                }
+                SetFlashStatus(FlashStatus.Reading);
+
+                if (i == nrOfReads - 1)
+                    nrOfBytes = (int)m_length - nrOfBytes * i;
+                while (!m_kwpHandler.sendReadRequest((uint)m_offset + (uint)(nrOfBytes * i), (uint)nrOfBytes))
+                {
+                    m_nrOfRetries++;
+                }
+
+                while (!m_kwpHandler.sendRequestDataByOffset(out data))
+                {
+                    m_nrOfRetries++;
+                }
+                Console.WriteLine("Writing data to file: " + m_length + " bytes");
+                fileStream.Write(data, 0, nrOfBytes);
+                m_nrOfBytesRead += nrOfBytes;
+            }
+            fileStream.Close();
+            Console.WriteLine("Done reading");
+            m_kwpHandler.sendDataTransferExitRequest();
+        }
+
+        private void ReadSymbolMapCommand()
+        {
+            byte[] data;
+            string swVersion = "";
+            m_nrOfBytesRead = 0;
+            NotifyStatusChanged(this, new StatusEventArgs("Reading symbol map from ECU..."));
+
+            if (File.Exists(m_fileName))
+                File.Delete(m_fileName);
+            FileStream fileStream = File.Create(m_fileName, 1024);
+            if (m_kwpHandler.sendUnknownRequest() != KWPResult.OK)
+            {
+                NotifyStatusChanged(this, new StatusEventArgs("Failed to read data from ECU..."));
+                SetFlashStatus(FlashStatus.ReadError);
+                return;
+            }
+            SetFlashStatus(FlashStatus.Reading);
+            m_kwpHandler.getSwVersionFromDR51(out swVersion);
+
+            if (m_kwpHandler.sendReadSymbolMapRequest() != KWPResult.OK)
+            {
+                NotifyStatusChanged(this, new StatusEventArgs("Failed to read data from ECU..."));
+
+                SetFlashStatus(FlashStatus.ReadError);
+                return;
+            }
+            m_kwpHandler.sendDataTransferRequest(out data);
+            while (data.Length > 0x10)
+            {
+                fileStream.Write(data, 1, data.Length - 3);
+                m_nrOfBytesRead += data.Length - 3;
+                lock (m_synchObject)
+                {
+                    if (m_command == FlashCommand.StopCommand)
+                        continue;
+                    if (m_endThread)
+                        return;
+                }
+                m_kwpHandler.sendDataTransferRequest(out data);
+            }
+            fileStream.Flush();
+            fileStream.Close();
+        }
+
+        private void WriteCommand()
+        {
+            AddToCanTrace("Write command seen");
+            const int nrOfBytes = 128;
+            int i = 0;
+            byte[] data = new byte[nrOfBytes];
+            if (!gotSequrityAccess)
+            {
+                SetFlashStatus(FlashStatus.Completed);
+                return;
+            }
+            if (!File.Exists(m_fileName))
+            {
+                SetFlashStatus(FlashStatus.NoSuchFile);
+                AddToCanTrace("No such file found: " + m_fileName);
+                NotifyStatusChanged(this, new StatusEventArgs("Failed to find file to flash..."));
+
+                return;
+            }
+            AddToCanTrace("Start erasing");
+            NotifyStatusChanged(this, new StatusEventArgs("Erasing flash..."));
+
+            SetFlashStatus(FlashStatus.Eraseing);
+            if (m_kwpHandler.sendEraseRequest() != KWPResult.OK)
+            {
+                NotifyStatusChanged(this, new StatusEventArgs("Failed to erase flash..."));
+                SetFlashStatus(FlashStatus.EraseError);
+                AddToCanTrace("Erase error occured");
+                // break;
+            }
+            AddToCanTrace("Opening file for reading");
+
+            FileStream fs = new FileStream(m_fileName, FileMode.Open, FileAccess.Read);
+
+            SetFlashStatus(FlashStatus.Writing);
+            AddToCanTrace("Set flash status to writing");
+            NotifyStatusChanged(this, new StatusEventArgs("Writing flash... 0x00000-0x7B000"));
+
+            //Write 0x0-0x7B000
+            AddToCanTrace("0x0-0x7B000");
+            Thread.Sleep(100);
+            if (m_kwpHandler.sendWriteRequest(0x0, 0x7B000) != KWPResult.OK)
+            {
+                NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
+
+                SetFlashStatus(FlashStatus.WriteError);
+                AddToCanTrace("Write error occured");
+
+                return;
+            }
+            for (i = 0; i < 0x7B000 / nrOfBytes; i++)
+            {
+                fs.Read(data, 0, nrOfBytes);
+                m_nrOfBytesRead = i * nrOfBytes;
+                AddToCanTrace("sendWriteDataRequest " + m_nrOfBytesRead);
+                if (m_kwpHandler.sendWriteDataRequest(data) != KWPResult.OK)
+                {
+                    NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
+                    SetFlashStatus(FlashStatus.WriteError);
+                    AddToCanTrace("Write error occured " + m_nrOfBytesRead);
+
+                    continue;
+                }
+                lock (m_synchObject)
+                {
+                    if (m_command == FlashCommand.StopCommand)
+                    {
+                        AddToCanTrace("Stop command seen");
+                        continue;
+                    }
+                    if (m_endThread)
+                    {
+                        AddToCanTrace("Thread ended");
+                        return;
+                    }
+                }
+            }
+
+            //Write 0x7FE00-0x7FFFF
+            AddToCanTrace("Write 0x7FE00-0x7FFFF");
+            NotifyStatusChanged(this, new StatusEventArgs("Writing flash... 0x7FE00-0x7FFFF"));
+
+            if (m_kwpHandler.sendWriteRequest(0x7FE00, 0x200) != KWPResult.OK)
+            {
+                NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
+                SetFlashStatus(FlashStatus.WriteError);
+                AddToCanTrace("Write error occured");
+                return;
+            }
+            fs.Seek(0x7FE00, System.IO.SeekOrigin.Begin);
+            for (i = 0x7FE00 / nrOfBytes; i < 0x80000 / nrOfBytes; i++)
+            {
+                fs.Read(data, 0, nrOfBytes);
+                m_nrOfBytesRead = i * nrOfBytes;
+                AddToCanTrace("sendWriteDataRequest " + m_nrOfBytesRead.ToString());
+
+                if (m_kwpHandler.sendWriteDataRequest(data) != KWPResult.OK)
+                {
+                    NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
+                    SetFlashStatus(FlashStatus.WriteError);
+                    AddToCanTrace("Write error occured " + m_nrOfBytesRead);
+                    continue;
+                }
+                lock (m_synchObject)
+                {
+                    if (m_command == FlashCommand.StopCommand)
+                    {
+                        AddToCanTrace("Stop command seen");
+                        continue;
+                    }
+                    if (m_endThread)
+                    {
+                        AddToCanTrace("Thread ended");
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void NotifyStatusChanged(T7Flasher t7Flasher, StatusEventArgs statusEventArgs)
+        {
+            if (onStatusChanged != null)
+                onStatusChanged(t7Flasher, statusEventArgs);
         }
 
 
