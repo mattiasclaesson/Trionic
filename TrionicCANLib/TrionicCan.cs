@@ -40,9 +40,7 @@ namespace TrionicCANLib
         LAWICEL,
         COMBI,
         ELM327,
-        JUST4TRIONIC,
-        OBDLinkSX,
-        LAWICEL_VCP
+        JUST4TRIONIC
     };
 
     public enum ECU : int
@@ -230,10 +228,6 @@ namespace TrionicCANLib
             {
                 canUsbDevice = new LPCCANDevice();
             }
-            else if (adapterType == CANBusAdapter.LAWICEL_VCP)
-            {
-                canUsbDevice = new CANUSBDirectDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
-            }
             canUsbDevice.EnableCanLog = m_EnableCanLog;
             canUsbDevice.UseOnlyPBus = m_OnlyPBus;
             canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
@@ -269,7 +263,7 @@ namespace TrionicCANLib
                 catch (Exception E)
                 {
                     Console.WriteLine(E.Message);
-                    AddToCanTrace("Failed to set flasher object to KWPHandler");
+                    AddToCanTrace("Failed to set FLASHer object to KWPHandler");
                 }
                 flash = T7Flasher.getInstance();
                 flash.onStatusChanged += flash_onStatusChanged;
@@ -295,7 +289,7 @@ namespace TrionicCANLib
                 catch (Exception E)
                 {
                     Console.WriteLine(E.Message);
-                    AddToCanTrace("Failed to set flasher object to KWPHandler");
+                    AddToCanTrace("Failed to set FLASHer object to KWPHandler");
                 }
                 flash = T7Flasher.getInstance();
                 flash.onStatusChanged += flash_onStatusChanged;
@@ -321,7 +315,7 @@ namespace TrionicCANLib
                 catch (Exception E)
                 {
                     Console.WriteLine(E.Message);
-                    AddToCanTrace("Failed to set flasher object to KWPHandler");
+                    AddToCanTrace("Failed to set FLASHer object to KWPHandler");
                 }
                 flash = T7Flasher.getInstance();
                 flash.onStatusChanged += flash_onStatusChanged;
@@ -330,31 +324,6 @@ namespace TrionicCANLib
             else if (adapterType == CANBusAdapter.COMBI)
             {
                 canUsbDevice = new LPCCANDevice();
-            }
-            else if (adapterType == CANBusAdapter.LAWICEL_VCP)
-            {
-                canUsbDevice = new CANUSBDirectDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
-                kwpCanDevice = new KWPCANDevice();
-                kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableCanLog = m_EnableCanLog;
-                KWPHandler.setKWPDevice(kwpCanDevice);
-                if (m_EnableCanLog)
-                {
-                    KWPHandler.startLogging();
-                }
-                kwpHandler = KWPHandler.getInstance();
-                try
-                {
-                    T7Flasher.setKWPHandler(kwpHandler);
-                }
-                catch (Exception E)
-                {
-                    Console.WriteLine(E.Message);
-                    AddToCanTrace("Failed to set flasher object to KWPHandler");
-                }
-                flash = T7Flasher.getInstance();
-                flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableCanLog = m_EnableCanLog;
             }
 
             canUsbDevice.EnableCanLog = m_EnableCanLog;
@@ -1403,7 +1372,7 @@ namespace TrionicCANLib
             success = false;
             byte[] buffer = this.sendReadDataByLocalIdentifier(address, length, out success);
 
-            Thread.Sleep(1); //was 1 <GS-05052011>
+            //Thread.Sleep(1); //was 1 <GS-05052011>
             return buffer;
         }
 
@@ -2205,10 +2174,10 @@ namespace TrionicCANLib
 
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Erasing flash", ActivityType.StartErasingFlash);
+            CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
             if (SendrequestDownload(true))
             {
-                CastInfoEvent("Programming flash", ActivityType.UploadingFlash);
+                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
                 for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
                 {
                     float percentage = ((float)blockNumber * 100) / 3920F;
@@ -2262,7 +2231,7 @@ namespace TrionicCANLib
                     }
                 }
                 sw.Stop();
-                CastInfoEvent("Flash upload completed", ActivityType.ConvertingFile);
+                CastInfoEvent("FLASH upload completed", ActivityType.ConvertingFile);
                 // what else to do?
                 Send0120();
                 CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
@@ -2270,7 +2239,7 @@ namespace TrionicCANLib
             else
             {
                 sw.Stop();
-                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
+                CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
                 Send0120();
                 CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
                 return false;
@@ -2502,7 +2471,7 @@ namespace TrionicCANLib
 
                     if (retryCount == maxRetries)
                     {
-                        CastInfoEvent("Failed to download flash content", ActivityType.ConvertingFile);
+                        CastInfoEvent("Failed to download FLASH content", ActivityType.ConvertingFile);
                         _stallKeepAlive = false;
                         return buf;
                     }
@@ -2787,11 +2756,19 @@ namespace TrionicCANLib
                 success = false;
                 return retData;
             }
-            else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23)
+            else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23 && getCanData(data, 3) == 0x31)
             {
-                // reason was 0x31
+                // reason was 0x31 RequestOutOfRange
+                // memory address is either: invalid, restricted, secure + ECU locked
+                // memory size: is greater than max
                 AddToCanTrace("No security access granted");
                 RequestSecurityAccess(0);
+                success = false;
+                return retData;
+            }
+            else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23)
+            {
+                AddToCanTrace("readMemoryByAddress " + TranslateErrorCode(getCanData(data, 3)));
                 success = false;
                 return retData;
             }
@@ -2994,17 +2971,18 @@ namespace TrionicCANLib
             //byte failureTypeByte = responseDTC.getCanData(3);
 
             byte statusByte = responseDTC.getCanData(4);
-            String statusDescription = string.Empty;
-            if (0x80 == (0x80 & statusByte)) statusDescription += "warningIndicatorRequestedState ";
-            if (0x40 == (0x40 & statusByte)) statusDescription += "currentDTCSincePowerUp ";
-            if (0x20 == (0x20 & statusByte)) statusDescription += "testNotPassedSinceCurrentPowerUp ";
-            if (0x10 == (0x10 & statusByte)) statusDescription += "historyDTC ";
-            if (0x08 == (0x08 & statusByte)) statusDescription += "testFailedSinceDTCCleared ";
-            if (0x04 == (0x04 & statusByte)) statusDescription += "testNotPassedSinceDTCCleared ";
-            if (0x02 == (0x02 & statusByte)) statusDescription += "currentDTC ";
-            if (0x01 == (0x01 & statusByte)) statusDescription += "DTCSupportedByCalibration ";
+            //Removed this output
+            //String statusDescription = string.Empty;
+            //if (0x80 == (0x80 & statusByte)) statusDescription += "warningIndicatorRequestedState ";
+            //if (0x40 == (0x40 & statusByte)) statusDescription += "currentDTCSincePowerUp ";
+            //if (0x20 == (0x20 & statusByte)) statusDescription += "testNotPassedSinceCurrentPowerUp ";
+            //if (0x10 == (0x10 & statusByte)) statusDescription += "historyDTC ";
+            //if (0x08 == (0x08 & statusByte)) statusDescription += "testFailedSinceDTCCleared ";
+            //if (0x04 == (0x04 & statusByte)) statusDescription += "testNotPassedSinceDTCCleared ";
+            //if (0x02 == (0x02 & statusByte)) statusDescription += "currentDTC ";
+            //if (0x01 == (0x01 & statusByte)) statusDescription += "DTCSupportedByCalibration ";
 
-            return "DTC: " + firstDtcChar + secondDtcNum.ToString("d") + thirdDtcNum.ToString("X") + forthDtcNum.ToString("X") + fifthDtcNum.ToString("X") + " StatusByte: " + statusByte.ToString("X2") + " StatusDescription: " + statusDescription;
+            return "DTC: " + firstDtcChar + secondDtcNum.ToString("d") + thirdDtcNum.ToString("X") + forthDtcNum.ToString("X") + fifthDtcNum.ToString("X") + " StatusByte: " + statusByte.ToString("X2");
         }
 
         public string[] readDTCCodes()
@@ -4225,7 +4203,7 @@ namespace TrionicCANLib
             }
             if (CheckStatusT7Flasher())
             {
-                CastInfoEvent("Starting download of flash", ActivityType.ConvertingFile);
+                CastInfoEvent("Starting download of FLASH", ActivityType.ConvertingFile);
                 tmrReadProcessChecker.Enabled = true;
                 flash.readFlash(a_fileName);
             }
@@ -4240,11 +4218,11 @@ namespace TrionicCANLib
             if (!tmrReadProcessChecker.Enabled)
             {
                 // check reading status periodically
-                AddToCanTrace("Starting flash procedure, checking flashing process status");
+                AddToCanTrace("Starting FLASH procedure, checking FLASHing process status");
                 if (CheckStatusT7Flasher())
                 {
                     tmrWriteProcessChecker.Enabled = true;
-                    CastInfoEvent("Flashing: " + a_fileName, ActivityType.ConvertingFile);
+                    CastInfoEvent("FLASHing: " + a_fileName, ActivityType.ConvertingFile);
                     AddToCanTrace("Calling flash.writeFlash with filename: " + a_fileName);
                     flash.writeFlash(a_fileName);
                 }
@@ -4263,7 +4241,7 @@ namespace TrionicCANLib
                 {
                     flash.stopFlasher();
                     tmrReadProcessChecker.Enabled = false;
-                    CastInfoEvent("Finished download of flash", ActivityType.FinishedDownloadingFlash);
+                    CastInfoEvent("Finished download of FLASH", ActivityType.FinishedDownloadingFlash);
                 }
             }
         }
@@ -4280,7 +4258,7 @@ namespace TrionicCANLib
                 switch (stat)
                 {
                     case T7Flasher.FlashStatus.Completed:
-                        AddToCanTrace("tmrWriteProcessChecker_Tick: Completed flashing procedure");
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: Completed FLASHing procedure");
                         break;
                     case T7Flasher.FlashStatus.DoinNuthin:
                         AddToCanTrace("tmrWriteProcessChecker_Tick: DoinNuthin");
@@ -4292,7 +4270,7 @@ namespace TrionicCANLib
                         AddToCanTrace("tmrWriteProcessChecker_Tick: Eraseing");
                         break;
                     case T7Flasher.FlashStatus.NoSequrityAccess:
-                        AddToCanTrace("tmrWriteProcessChecker_Tick: NoSequrityAccess");
+                        AddToCanTrace("tmrWriteProcessChecker_Tick: NoSecurityAccess");
                         break;
                     case T7Flasher.FlashStatus.NoSuchFile:
                         AddToCanTrace("tmrWriteProcessChecker_Tick: NoSuchFile");
@@ -4316,7 +4294,7 @@ namespace TrionicCANLib
                 {
                     flash.stopFlasher();
                     tmrWriteProcessChecker.Enabled = false;
-                    CastInfoEvent("Finished flash session", ActivityType.FinishedFlashing);
+                    CastInfoEvent("Finished FLASH session", ActivityType.FinishedFlashing);
                 }
                 else if (stat == T7Flasher.FlashStatus.NoSequrityAccess)
                 {
@@ -4340,7 +4318,7 @@ namespace TrionicCANLib
                 {
                     flash.stopFlasher();
                     tmrWriteProcessChecker.Enabled = false;
-                    CastInfoEvent("A write error occured, please retry to flash without cutting power to the ECU", ActivityType.FinishedFlashing);
+                    CastInfoEvent("A write error occured, please retry to FLASH without cutting power to the ECU", ActivityType.FinishedFlashing);
                 }
             }
         }
@@ -4718,11 +4696,11 @@ namespace TrionicCANLib
                             Thread.Sleep(500);
                             StartBootloader011();
                             Thread.Sleep(500);
-                            CastInfoEvent("Erasing flash", ActivityType.StartErasingFlash);
+                            CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
                             if (SendrequestDownload(true))
                             {
                                 _needRecovery = true;
-                                CastInfoEvent("Programming flash", ActivityType.UploadingFlash);
+                                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
                                 bool success = WriteFlashT8Recover(bm);
                                 sw.Stop();
                                 _needRecovery = false;
@@ -4745,7 +4723,7 @@ namespace TrionicCANLib
                                 sw.Stop();
                                 _needRecovery = false;
                                 _stallKeepAlive = false;
-                                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
+                                CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
                                 Send0120();
                                 CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
                                 return false;
@@ -4843,40 +4821,25 @@ namespace TrionicCANLib
             sw.Start();
             CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
             StartSession10();
-            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
-            RequestECUInfo(0x90);
-            RequestECUInfo(0x97);
-            RequestECUInfo(0x92);
-            RequestECUInfo(0xB4);
-            RequestECUInfo(0xC1);
-            RequestECUInfo(0xC2);
-            RequestECUInfo(0xC3);
-            RequestECUInfo(0xC4);
-            RequestECUInfo(0xC5);
-            RequestECUInfo(0xC6);
-            Send0120();
-            Thread.Sleep(1000);
-            StartSession1081();
-            StartSession10();
             CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
             SendShutup();
             SendA2();
             SendA5();
             SendA503();
-            Thread.Sleep(500);
+            Thread.Sleep(50);
             SendKeepAlive();
 
             // verified upto here
 
             _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            if (!RequestSecurityAccess(2000))
+            //CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
+            if (!RequestSecurityAccess(0))   // was 2000 milli-seconds
             {
                 CastInfoEvent("Failed to get security access", ActivityType.UploadingFlash);
                 _stallKeepAlive = false;
                 return false;
             }
-            Thread.Sleep(500);
+            Thread.Sleep(50);
             CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
             if (!UploadBootloaderT8Write())
             {
@@ -4887,29 +4850,29 @@ namespace TrionicCANLib
             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
             // start bootloader in ECU
             //SendKeepAlive();
-            Thread.Sleep(500);
+            Thread.Sleep(50);
             if (!StartBootloader())
             {
                 CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
                 _stallKeepAlive = false;
                 return false;
             }
-            Thread.Sleep(500);
+            Thread.Sleep(100);
             SendKeepAlive();
-            Thread.Sleep(200);
+            Thread.Sleep(50);
 
-            CastInfoEvent("Erasing flash", ActivityType.StartErasingFlash);
+            CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
             if (SendrequestDownload(false))
             {
                 _needRecovery = true;
                 SendShutup();
-                CastInfoEvent("Programming flash", ActivityType.UploadingFlash);
+                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
                 bool success = ProgramFlashT8(bm);
 
                 if (success)
-                    CastInfoEvent("Flash upload completed", ActivityType.ConvertingFile);
+                    CastInfoEvent("FLASH upload completed", ActivityType.ConvertingFile);
                 else
-                    CastInfoEvent("Flash upload failed", ActivityType.ConvertingFile);
+                    CastInfoEvent("FLASH upload failed", ActivityType.ConvertingFile);
 
                 sw.Stop();
                 _needRecovery = false;
@@ -4923,7 +4886,7 @@ namespace TrionicCANLib
                 sw.Stop();
                 _needRecovery = false;
                 _stallKeepAlive = false;
-                CastInfoEvent("Failed to erase flash", ActivityType.ConvertingFile);
+                CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
                 Send0120();
                 CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
                 return false;
@@ -4935,71 +4898,62 @@ namespace TrionicCANLib
 
         private bool ProgramFlashT8(BlockManager bm)
         {
-            int startAddress = 0x020000;
+            const int startAddress = 0x020000;
+            int lastBlockNumber = bm.GetLastBlockNumber();
 
-            for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
+            for (int blockNumber = 0; blockNumber <= lastBlockNumber; blockNumber++) // All blocks == 0xF50
             {
-                float percentage = ((float)blockNumber * 100) / 3920F;
+                float percentage = ((float)blockNumber * 100) / (float)lastBlockNumber;
                 CastProgressWriteEvent(percentage);
-                bool canSkip = false;// bm.CanSkipCurrentBlock();
                 byte[] data2Send = bm.GetNextBlock();
                 int length = 0xF0;
                 if (blockNumber == 0xF50) length = 0xE6;
 
-                Stopwatch blockSw = new Stopwatch();
                 int currentAddress = startAddress + (blockNumber * 0xEA);
-                if (!canSkip)
+                sw.Reset();
+                sw.Start();
+                if (SendTransferData(length, currentAddress, 0x7E8))
                 {
-                    sw.Reset();
-                    sw.Start();
-                    if (SendTransferData(length, currentAddress, 0x7E8))
+                    canUsbDevice.RequestDeviceReady();
+                    // calculate number of frames
+                    int numberOfFrames = (int)data2Send.Length / 7; // remnants?
+                    if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
+                    byte iFrameNumber = 0x21;
+                    int txpnt = 0;
+                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                    for (int frame = 0; frame < numberOfFrames; frame++)
                     {
-                        canUsbDevice.RequestDeviceReady();
-                        // calculate number of frames
-                        int numberOfFrames = (int)data2Send.Length / 7; // remnants?
-                        if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
-                        byte iFrameNumber = 0x21;
-                        int txpnt = 0;
-                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
-                        for (int frame = 0; frame < numberOfFrames; frame++)
+                        var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
+                        msg.setData(cmd);
+                        txpnt += 7;
+                        iFrameNumber++;
+                        if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                        msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
+
+                        if (frame == numberOfFrames - 1)
+                            m_canListener.ClearQueue();
+
+                        if (!canUsbDevice.sendMessage(msg))
                         {
-                            var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
-                            msg.setData(cmd);
-                            txpnt += 7;
-                            iFrameNumber++;
-                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                            msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
-
-                            if (frame == numberOfFrames - 1)
-                                m_canListener.ClearQueue();
-
-                            if (!canUsbDevice.sendMessage(msg))
-                            {
-                                AddToCanTrace("Couldn't send message");
-                            }
-                            if (m_sleepTime > 0)
-                                Thread.Sleep(m_sleepTime);
+                            AddToCanTrace("Couldn't send message");
                         }
-                        Application.DoEvents();
-
-                        // now wait for 01 76 00 00 00 00 00 00 
-                        ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
-                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                        {
-                            CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
-                            _stallKeepAlive = false;
-                            return false;
-                        }
-                        canUsbDevice.RequestDeviceReady();
-                        SendKeepAlive();
+                        if (m_sleepTime > 0)
+                            Thread.Sleep(m_sleepTime);
                     }
-                    sw.Stop();
-                    //Console.WriteLine(string.Format("Programming block {0} took {1}", blockNumber, sw.Elapsed),ActivityType.UploadingFlash);
+                    Application.DoEvents();
+
+                    // now wait for 01 76 00 00 00 00 00 00 
+                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    {
+                        CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
+                        _stallKeepAlive = false;
+                        return false;
+                    }
+                    canUsbDevice.RequestDeviceReady();
+                    SendKeepAlive();
                 }
-                else
-                {
-                    Console.WriteLine("Skipping block at " + currentAddress);
-                }
+                sw.Stop();
             }
             return true;
         }
@@ -5010,46 +4964,31 @@ namespace TrionicCANLib
             bool success = false;
             int retryCount = 0;
             int startAddress = 0x000000;
+            int lastAddress = 0x100000;
             int blockSize = 0x80; // defined in bootloader... keep it that way!
             int bufpnt = 0;
-            byte[] buf = new byte[0x100000];
-            int blockCount = 0;
+            byte[] buf = new byte[lastAddress];
+            // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
+            for (int i = 0; i < lastAddress; i++) buf[i] = 0xFF;
             SendKeepAlive();
             sw.Reset();
             sw.Start();
             CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
-
-            StartSession10();
-            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
-
-            RequestECUInfo(0x90);
-            RequestECUInfo(0x97);
-            RequestECUInfo(0x92);
-            RequestECUInfo(0xB4);
-            RequestECUInfo(0xC1);
-            RequestECUInfo(0xC2);
-            RequestECUInfo(0xC3);
-            RequestECUInfo(0xC4);
-            RequestECUInfo(0xC5);
-            RequestECUInfo(0xC6);
-            Send0120();
-            Thread.Sleep(1000);
-
             StartSession1081();
-
             StartSession10();
             CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
             SendShutup();
             SendA2();
             SendA5();
             SendA503();
-            Thread.Sleep(500);
+            Thread.Sleep(50);
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
             CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            if(!RequestSecurityAccess(2000))
+            if(!RequestSecurityAccess(0))
                 return null;
-            Thread.Sleep(500);
+            Thread.Sleep(50);
+
             CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
             if (!UploadBootloaderT8Read())
             {
@@ -5058,25 +4997,37 @@ namespace TrionicCANLib
             }
             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
             // start bootloader in ECU
-            Thread.Sleep(500);
+            Thread.Sleep(50);
             StartBootloader();
             SendKeepAlive();
-            Thread.Sleep(500);
+            Thread.Sleep(100);
 
-            CastInfoEvent("Downloading flash", ActivityType.DownloadingFlash);
+            CastInfoEvent("Downloading FLASH", ActivityType.DownloadingFlash);
 
+            Stopwatch keepAliveSw = new Stopwatch();
+            keepAliveSw.Start();
 
+            // Determine last part of the FLASH chip that is used (to save time when reading (DUMPing))
+            // Address 0x020140 stores a pointer to the BIN file Header which is the last used area in FLASH
+            byte[] buffer = readDataByLocalIdentifier(0x020140, blockSize, out success);
+            if (success)
+            {
+                if (buffer.Length == blockSize)
+                {
+                    lastAddress = (int)buffer[1] << 16 | (int)buffer[2] << 8 | (int)buffer[3];
+                    // Add another 512 bytes to include header region (with margin)!!!
+                    lastAddress += 0x200;
+                }
+            }
+            CastInfoEvent("Downloading " + lastAddress.ToString("X8") + " Bytes.", ActivityType.DownloadingFlash);
 
             // now start sending commands:
             //06 21 80 00 00 00 00 00 
             // response: 
             //10 82 61 80 00 10 0C 00 // 4 bytes data already
 
-            //for (int i = 0; i < buf.Length / blockSize; i++)
-            Stopwatch keepAliveSw = new Stopwatch();
-            keepAliveSw.Start();
-            while (startAddress < buf.Length)
-            {
+            while (startAddress < lastAddress)
+                {
                 if (!canUsbDevice.isOpen())
                 {
                     _stallKeepAlive = false;
@@ -5094,7 +5045,7 @@ namespace TrionicCANLib
                         }
                     }
                     //string infoStr = "Address: " + startAddress.ToString("X8"); //+ " ";
-                    CastProgressReadEvent((float)(bufpnt * 100) / (float)buf.Length);
+                    CastProgressReadEvent((float)(bufpnt * 100) / (float)lastAddress);
                     startAddress += blockSize;
                     retryCount = 0;
                 }
@@ -5112,17 +5063,13 @@ namespace TrionicCANLib
                         response = m_canListener.waitMessage(10);
                         data = response.getData();
                     }
-
-
-
                     if (retryCount == maxRetries)
                     {
-                        CastInfoEvent("Failed to download flash content", ActivityType.ConvertingFile);
+                        CastInfoEvent("Failed to download FLASH content", ActivityType.ConvertingFile);
                         _stallKeepAlive = false;
                         return buf;
                     }
                 }
-                blockCount++;
                 if (keepAliveSw.ElapsedMilliseconds > 3000) // once every 3 seconds
                 {
                     keepAliveSw.Stop();
@@ -5242,7 +5189,7 @@ namespace TrionicCANLib
 
                     if (retryCount == maxRetries)
                     {
-                        CastInfoEvent("Failed to download flash content", ActivityType.ConvertingFile);
+                        CastInfoEvent("Failed to download FLASH content", ActivityType.ConvertingFile);
                         _stallKeepAlive = false;
                         return buf;
                     }
@@ -5296,7 +5243,7 @@ namespace TrionicCANLib
                     if (recoveryMode) BroadcastKeepAlive();
                     else SendKeepAlive();
                     eraseCount++;
-                    string info = "Erasing flash";
+                    string info = "Erasing FLASH";
                     for (int i = 0; i < eraseCount; i++) info += ".";
                     CastInfoEvent(info, ActivityType.ErasingFlash);
                 }

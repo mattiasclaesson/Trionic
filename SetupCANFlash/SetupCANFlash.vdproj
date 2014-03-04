@@ -63,6 +63,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_AB4ACEBEAE0220A6152C8FAA65089B9E"
+        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AB4ACEBEAE0220A6152C8FAA65089B9E"
+        "OwnerKey" = "8:_742DE0BE9E2362B6F6D50F07248E8079"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_B69D594B59284F939B1F4A00C77E172B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -113,6 +125,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_3E6DBBAFA05528D441D9987A22F49669"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_AB4ACEBEAE0220A6152C8FAA65089B9E"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -317,7 +335,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.0.0.1, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.0.0.4, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_742DE0BE9E2362B6F6D50F07248E8079"
@@ -327,6 +345,37 @@
                     }
                 }
             "SourcePath" = "8:TrionicCANLib.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AB4ACEBEAE0220A6152C8FAA65089B9E"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_AB4ACEBEAE0220A6152C8FAA65089B9E"
+                    {
+                    "Name" = "8:log4net.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:log4net.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
@@ -451,14 +500,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{32224C67-AB59-47DC-9414-102B7A007FF7}"
-        "PackageCode" = "8:{6187ECB1-BDB7-468D-9C4B-86B0CE440B7E}"
+        "ProductCode" = "8:{334DCCFF-D991-4F5B-A7F2-EC077EF6B4E0}"
+        "PackageCode" = "8:{B6EC191E-AFB6-4DE6-8502-9CD85242E1B5}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.0.1"
+        "ProductVersion" = "8:0.0.3"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
