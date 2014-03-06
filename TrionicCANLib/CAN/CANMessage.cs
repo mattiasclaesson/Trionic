@@ -50,7 +50,7 @@ namespace TrionicCANLib.CAN
         /// <param name="a_length">Length of data</param>
         /// <param name="a_data">The data</param>
         public CANMessage(uint a_id, uint a_timestamp, byte a_flags, byte a_length, ulong a_data)
-        {
+        {            
             m_id = a_id;
             m_timestamp = a_timestamp;
             m_flags = a_flags;
@@ -140,5 +140,7 @@ namespace TrionicCANLib.CAN
             return new CANMessage(m_id, m_timestamp, m_flags, m_length, m_data);
         }
 
+        public bool NeedRepeat { get; set; }
+        public bool ForceSend { get; set; }
     }
 }

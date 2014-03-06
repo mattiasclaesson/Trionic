@@ -168,7 +168,6 @@ namespace TrionicCANLib.CAN
         /// <param name="a_message">The CANMessage</param>
         /// <returns>true on success, otherwise false.</returns>
         abstract public bool sendMessage(CANMessage a_message);
-
         abstract public uint waitForMessage(uint a_canID, uint timeout, out CANMessage canMsg);
         abstract public float GetThermoValue();
         abstract public float GetADCValue(uint channel);
@@ -271,10 +270,13 @@ namespace TrionicCANLib.CAN
         public virtual void SetupCANFilter(string canAddress, string canMask) { }
 
         /// <summary>
-        /// Used to send control message for ELM device
+        /// sends control command (like ATST)
         /// </summary>
-        /// <param name="msg"></param>
-        public virtual void SendControlMessage(string msg) { }
+        /// <param name="cmd">The command with \r like "ATST01\r"</param>
+        public virtual void SendControlCommand(string cmd)
+        {
+
+        }
 
         #endregion ELM327 specific
     }

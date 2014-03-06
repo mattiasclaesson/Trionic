@@ -650,8 +650,8 @@ namespace TrionicCANLib.CAN
 
         public override void SetupCANFilter(string canAddress, string canMask)
         {
-            SendControlMessage(string.Format("AT CF {0} \r", canAddress));
-            SendControlMessage(string.Format("AT CM {0} \r", canMask));
+            SendControlCommand(string.Format("AT CF {0} \r", canAddress));
+            SendControlCommand(string.Format("AT CM {0} \r", canMask));
         }
 
         public override List<uint> AcceptOnlyMessageIds
@@ -692,7 +692,7 @@ namespace TrionicCANLib.CAN
 
         }
 
-        public override void SendControlMessage(string msg)
+        public override void SendControlCommand(string msg)
         {
             SendControlMessage(msg, true);
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.IO.Ports;
 using System.Threading;
@@ -343,7 +342,7 @@ namespace TrionicCANLib.CAN
             if (strFriendlyName.StartsWith("mbed Serial Port"))
             {
                 object oPortNameValue = Registry.GetValue("HKEY_LOCAL_MACHINE\\" + strStartKey + "\\Device Parameters", "PortName", null);
-                return oPortNamesToMatch.Contains(oPortNameValue.ToString()) ? oPortNameValue.ToString() : null;
+                return new List<string>(oPortNamesToMatch).Contains(oPortNameValue.ToString()) ? oPortNameValue.ToString() : null;
             }
             else
             {

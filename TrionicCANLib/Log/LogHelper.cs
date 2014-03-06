@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Configuration;
 using log4net;
@@ -9,6 +8,7 @@ using log4net.Config;
 using TrionicCANLib.Properties;
 using System.Threading;
 using System.Collections;
+using System.Diagnostics;
 
 namespace TrionicCANLib.Log
 {
@@ -95,18 +95,27 @@ namespace TrionicCANLib.Log
 
         private class LogEntry
         {
+            private static Stopwatch sw = new Stopwatch();
+            static LogEntry()
+            {
+                sw.Start();
+            }
+
             public LogType type;
             public string msg;
             DateTime time;
+            TimeSpan ts;
 
             public LogEntry()
             {
+                ts = sw.Elapsed;
                 time = DateTime.Now;
             }
 
             public override string ToString()
             {
                 return string.Format("{0:yyyy-MM-dd HH:mm:ss.fff} - {1}", time, msg);
+                //return string.Format("{0} - {1}",ts,msg);
             }
         }
 
