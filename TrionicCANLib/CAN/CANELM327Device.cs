@@ -125,79 +125,81 @@ namespace TrionicCANLib.CAN
 
                 if (m_serialPort != null)
                 {
-                    if (m_serialPort.IsOpen)
-                    {                       
-                        if (m_serialPort.BytesToRead > 0)
+                    if (m_serialPort.IsOpen && m_serialPort.BytesToRead > 0)
+                    {
+                        string rawString = string.Empty;
+                        try
                         {
-                            string rawString = m_serialPort.ReadExisting();
-                            //AddToSerialTrace("RAW RX: " + rawString.Replace("\r",m_cr_sequence));
-                            string rxString = rawString.Replace("\n", "").Replace(">", "");// remove prompt characters... we don't need that stuff
-                            bool isStopped = false;
+                            rawString = m_serialPort.ReadExisting();
+                        }
+                        catch (Exception e) { };
+                        //AddToSerialTrace("RAW RX: " + rawString.Replace("\r",m_cr_sequence));
+                        string rxString = rawString.Replace("\n", "").Replace(">", "");// remove prompt characters... we don't need that stuff
+                        bool isStopped = false;
 
-                            if (rxString.Length > 0)
+                        if (rxString.Length > 0)
+                        {
+                            rxString = rxString.Replace("\r", m_cr_sequence); //replace , because stringbuilder cannot handle \r
+                            receiveText.Append(rxString);
+                            //AddToSerialTrace("RECEIVE TEXT: " + receiveText.ToString());                                
+                            //System.Diagnostics.Debug.WriteLine("SERMSG: " + receiveText);
+                            var lines = ExtractLines(ref receiveText);
+                            foreach (var rxMessage in lines)
                             {
-                                rxString = rxString.Replace("\r", m_cr_sequence); //replace , because stringbuilder cannot handle \r
-                                receiveText.Append(rxString);
-                                //AddToSerialTrace("RECEIVE TEXT: " + receiveText.ToString());                                
-                                //System.Diagnostics.Debug.WriteLine("SERMSG: " + receiveText);
-                                var lines = ExtractLines(ref receiveText);
-                                foreach (var rxMessage in lines)
+                                if (rxMessage.StartsWith("STOPPED")) { isStopped = true; }
+                                else if (rxMessage.StartsWith("NO DATA")) { } //skip it
+                                else if (rxMessage.StartsWith("CAN ERROR"))
                                 {
-                                    if (rxMessage.StartsWith("STOPPED")) { isStopped = true; }
-                                    else if (rxMessage.StartsWith("NO DATA")) { } //skip it
-                                    else if (rxMessage.StartsWith("CAN ERROR"))
+                                    //handle error?
+                                }
+                                else if (rxMessage.StartsWith("ELM")) { isStopped = false; } //skip it, this is a trick to stop ELM from listening to more messages and send ready char
+                                else if (rxMessage.StartsWith("?")) { isStopped = false; }
+                                else if (rxMessage.StartsWith("NO DATA"))
+                                {
+                                    AddToSerialTrace("NO DATA");
+                                    Console.WriteLine("NO DATA");
+                                }
+                                else if (rxMessage.Length == 19) // is it a valid line
+                                {
+                                    try
                                     {
-                                        //handle error?
-                                    }
-                                    else if (rxMessage.StartsWith("ELM")) { isStopped = false; } //skip it, this is a trick to stop ELM from listening to more messages and send ready char
-                                    else if (rxMessage.StartsWith("?")) { isStopped = false; }
-                                    else if (rxMessage.StartsWith("NO DATA"))
-                                    {
-                                        AddToSerialTrace("NO DATA");
-                                        Console.WriteLine("NO DATA");
-                                    }
-                                    else if (rxMessage.Length == 19) // is it a valid line
-                                    {
-                                        try
+                                        rxMessage.Replace(" ", "");//remove all whitespaces
+                                        uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
+                                        if (acceptMessageId(id))
                                         {
-                                            rxMessage.Replace(" ", "");//remove all whitespaces
-                                            uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
-                                            if (acceptMessageId(id))
-                                            {
-                                                canMessage.setID(id);
-                                                canMessage.setLength(8); // TODO: alter to match data
-                                                //canMessage.setData(0x0000000000000000); // reset message content
-                                                canMessage.setData(ExtractDataFromString(rxMessage));
+                                            canMessage.setID(id);
+                                            canMessage.setLength(8); // TODO: alter to match data
+                                            //canMessage.setData(0x0000000000000000); // reset message content
+                                            canMessage.setData(ExtractDataFromString(rxMessage));
 
-                                                lock (m_listeners)
+                                            lock (m_listeners)
+                                            {
+                                                AddToCanTrace(string.Format("RX: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
+                                                foreach (ICANListener listener in m_listeners)
                                                 {
-                                                    AddToCanTrace(string.Format("RX: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
-                                                    foreach (ICANListener listener in m_listeners)
-                                                    {
-                                                        listener.handleMessage(canMessage);
-                                                    }
+                                                    listener.handleMessage(canMessage);
                                                 }
                                             }
                                         }
-                                        catch (Exception)
-                                        {
-                                            //Console.WriteLine("MSG: " + rxMessage);
-                                        }
                                     }
-                                     //disable whitespace logging
-                                    if (rxMessage.Length > 0)
+                                    catch (Exception)
                                     {
-                                        AddToSerialTrace("SERRX: " + rxMessage);
+                                        //Console.WriteLine("MSG: " + rxMessage);
                                     }
                                 }
+                                 //disable whitespace logging
+                                if (rxMessage.Length > 0)
+                                {
+                                    AddToSerialTrace("SERRX: " + rxMessage);
+                                }
                             }
-                            if (rawString.Contains(">") && !isStopped)
-                            {
-                                AddToSerialTrace("SERIAL READY");
-                                sendDataSempahore.WaitOne(0);
-                                sendDataSempahore.Release();
-                                interfaceBusy = false;
-                            }
+                        }
+                        if (rawString.Contains(">") && !isStopped)
+                        {
+                            AddToSerialTrace("SERIAL READY");
+                            sendDataSempahore.WaitOne(0);
+                            sendDataSempahore.Release();
+                            interfaceBusy = false;
                         }
                     }
                 }
