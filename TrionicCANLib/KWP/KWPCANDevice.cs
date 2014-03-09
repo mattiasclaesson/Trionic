@@ -225,8 +225,8 @@ namespace TrionicCANLib.KWP
         /// <returns>The status of the request.</returns>
         public RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
         {
-            
-            uint row = nrOfRowsToSend(a_request.getData());
+            uint row;
+            uint all_rows = row = nrOfRowsToSend(a_request.getData());
 
             m_kwpCanListener.setupWaitMessage(0x258);
 
@@ -238,7 +238,10 @@ namespace TrionicCANLib.KWP
                 msg.setData(createCanMessage(a_request.getData(), row - 1));
                 if ((msg.getData() & 0xFFFFUL) == 0xA141UL)
                     msg.elmExpectedResponses = 0;
-
+                if (all_rows == 22)
+                {
+                    msg.elmExpectedResponses = row == 1 ? 1 : 0; // on last message (expect 1 reply)
+                }
                 if (!m_canDevice.sendMessage(msg))
                 {
                     r_reply = new KWPReply();
@@ -247,7 +250,6 @@ namespace TrionicCANLib.KWP
             }
 
             var response = m_kwpCanListener.waitMessage(timeoutPeriod);          
- //         msg = m_kwpCanListener.waitForMessage(0x258, timeoutPeriod);    
             
             // Receive one or several replys and send an ack for each reply.
             if (response.getID() == 0x258)
@@ -266,7 +268,6 @@ namespace TrionicCANLib.KWP
 
                 while (nrOfRows > 0)
                 {
-//                    msg = m_kwpCanListener.waitForMessage(0x258, timeoutPeriod);
                     response = m_kwpCanListener.waitMessage(timeoutPeriod);
                     if (response.getID() == 0x258)
                     {

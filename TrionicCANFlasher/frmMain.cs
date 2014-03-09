@@ -160,7 +160,7 @@ namespace TrionicCANFlasher
             cbOnlyPBus.Enabled = enable;
             cbDisableConnectionCheck.Enabled = enable;
 
-            if (IsElmAdapterSelected ||
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
                 cbxComPort.Enabled = enable;
@@ -187,24 +187,10 @@ namespace TrionicCANFlasher
                     btnGetECUInfo.Enabled = false;
                     btnSetE85.Enabled = false;
                 }
-
-                if (IsElmAdapterSelected)
-                {
-                    btnFlashECU.Enabled = false;
-                    //btnReadECU.Enabled = false;
-                }
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
                 btnResetECU.Enabled = false;
-            }
-        }
-
-        private bool IsElmAdapterSelected
-        {
-            get
-            {
-                return cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327;
             }
         }
 
@@ -471,17 +457,15 @@ namespace TrionicCANFlasher
 
         private void SetT8AdapterType()
         {
-            if (IsElmAdapterSelected ||
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
                 trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
                 //set selected com speed
                 SetComPortSpeed();
             }
-            if (IsElmAdapterSelected)
-                trionicCan.setCANDevice(CANBusAdapter.ELM327);
-            else
-                trionicCan.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
+            
+            trionicCan.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
         }
 
         private void SetComPortSpeed()
@@ -514,17 +498,15 @@ namespace TrionicCANFlasher
 
         private void SetT7AdapterType()
         {
-            if (IsElmAdapterSelected ||
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
                 trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
                 //set selected com speed
                 SetComPortSpeed();
             }
-            if (IsElmAdapterSelected)
-                trionicCan.setT7CANDevice(CANBusAdapter.ELM327);
-            else
-                trionicCan.setT7CANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
+
+            trionicCan.setT7CANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
         }
 
         private void frmMain_Shown(object sender, EventArgs e)
