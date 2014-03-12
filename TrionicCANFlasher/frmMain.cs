@@ -178,7 +178,6 @@ namespace TrionicCANFlasher
                 btnReadSRAM.Enabled = false;
                 btnRecoverECU.Enabled = false;
                 btnSecurityAccess.Enabled = false;
-                btnReadDTC.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
 
