@@ -51,7 +51,7 @@ namespace TrionicCANLib
 
     public enum SleepTime : int
     {
-        Default = 1,
+        Default = 2,
         ELM327 = 0
     };
 
