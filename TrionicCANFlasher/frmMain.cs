@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.IO.Ports;
+using System.ComponentModel;
 using Microsoft.Win32;
 using TrionicCANLib;
 using System.Drawing;
@@ -101,6 +102,9 @@ namespace TrionicCANFlasher
                         else
                         {
                             AddLogItem("Unable to connect to Trionic 7 ECU");
+                            trionicCan.Cleanup();
+                            EnableUserInput(true);
+                            AddLogItem("Connection terminated");
                         }
                     }
                     else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
@@ -116,28 +120,41 @@ namespace TrionicCANFlasher
                             dtstart = DateTime.Now;
                             AddLogItem("Update FLASH content");
                             Application.DoEvents();
-                            if (trionicCan.WriteFlashT8(ofd.FileName))
-                            {
-                                AddLogItem("FLASH sequence done");
-                            }
-                            else
-                            {
-                                AddLogItem("Failed to update FLASH");
-                            }
-                            TimeSpan ts = DateTime.Now - dtstart;
-                            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                            BackgroundWorker bgWorker;
+                            bgWorker = new BackgroundWorker();
+                            bgWorker.DoWork += new DoWorkEventHandler(trionicCan.WriteFlashT8);
+                            bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                            bgWorker.RunWorkerAsync(ofd.FileName);
                         }
                         else
                         {
                             AddLogItem("Unable to connect to Trionic 8 ECU");
+                            trionicCan.Cleanup();
+                            EnableUserInput(true);
+                            AddLogItem("Connection terminated");
                         }
-                        trionicCan.Cleanup();
-                        EnableUserInput(true);
-                        AddLogItem("Connection terminated");
                     }
                 }
             }
         }
+
+        void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if ((bool)e.Result)
+            {
+                AddLogItem("Operation done");
+            }
+            else
+            {
+                AddLogItem("Operation failed");
+            }
+            TimeSpan ts = DateTime.Now - dtstart;
+            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+            trionicCan.Cleanup();
+            EnableUserInput(true);
+            AddLogItem("Connection terminated");
+        }
+
 
         private void EnableUserInput(bool enable)
         {
@@ -241,29 +258,19 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    byte[] snapshot = trionicCan.ReadFlashT8();
-                                    if (snapshot != null)
-                                    {
-                                        try
-                                        {
-                                            File.WriteAllBytes(sfd.FileName, snapshot);
-                                            AddLogItem("Download done");
-                                        }
-                                        catch (Exception E)
-                                        {
-                                            AddLogItem("Could not write file... " + E.Message);
-                                        }
-                                    }
-                                    TimeSpan ts = DateTime.Now - dtstart;
-                                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                                    BackgroundWorker bgWorker;
+                                    bgWorker = new BackgroundWorker();
+                                    bgWorker.DoWork += new DoWorkEventHandler(trionicCan.ReadFlashT8);
+                                    bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                    bgWorker.RunWorkerAsync(sfd.FileName);
                                 }
                                 else
                                 {
                                     AddLogItem("Unable to connect to Trionic 8 ECU");
+                                    trionicCan.Cleanup();
+                                    EnableUserInput(true);
+                                    AddLogItem("Connection terminated");
                                 }
-                                trionicCan.Cleanup();
-                                EnableUserInput(true);
-                                AddLogItem("Connection terminated");
                             }
                         }
                     }
@@ -409,24 +416,19 @@ namespace TrionicCANFlasher
                             dtstart = DateTime.Now;
                             AddLogItem("Recovering ECU");
                             Application.DoEvents();
-                            if (trionicCan.RecoverECUT8(ofd.FileName))
-                            {
-                                AddLogItem("Recovery done");
-                            }
-                            else
-                            {
-                                AddLogItem("Failed to recover ECU");
-                            }
-                            TimeSpan ts = DateTime.Now - dtstart;
-                            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                            BackgroundWorker bgWorker;
+                            bgWorker = new BackgroundWorker();
+                            bgWorker.DoWork += new DoWorkEventHandler(trionicCan.RecoverECUT8);
+                            bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                            bgWorker.RunWorkerAsync(ofd.FileName);
                         }
                         else
                         {
                             AddLogItem("Unable to connect to Trionic 8 ECU");
+                            trionicCan.Cleanup();
+                            EnableUserInput(true);
+                            AddLogItem("Connection terminated");
                         }
-                        trionicCan.Cleanup();
-                        EnableUserInput(true);
-                        AddLogItem("Connection terminated");
                     }
                 }
             }
@@ -850,12 +852,15 @@ namespace TrionicCANFlasher
         private void updateStatusInBox(TrionicCANLib.TrionicCan.CanInfoEventArgs e)
         {
             AddLogItem(e.Info);
-            if (e.Type == ActivityType.FinishedFlashing || e.Type == ActivityType.FinishedDownloadingFlash)
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                TimeSpan ts = DateTime.Now - dtstart;
-                AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-                trionicCan.Cleanup();
-                EnableUserInput(true);
+                if (e.Type == ActivityType.FinishedFlashing || e.Type == ActivityType.FinishedDownloadingFlash)
+                {
+                    TimeSpan ts = DateTime.Now - dtstart;
+                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                    trionicCan.Cleanup();
+                    EnableUserInput(true);
+                }
             }
         }
 

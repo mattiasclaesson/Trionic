@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.IO;
 using System.Diagnostics;
+using System.ComponentModel;
 using TrionicCANLib.CAN;
 using TrionicCANLib.KWP;
 using TrionicCANLib.Flasher;
@@ -4646,8 +4647,9 @@ namespace TrionicCANLib
             return true;
         }
 
-        public bool RecoverECUT8(string filename)
+        public void RecoverECUT8(object sender, DoWorkEventArgs e)
         {
+            string filename = (string)e.Argument;
             string diagDataID = GetDiagnosticDataIdentifier0101();
             Console.WriteLine("DataID: " + diagDataID);
             if (diagDataID == string.Empty)
@@ -4710,12 +4712,14 @@ namespace TrionicCANLib
                                 {
                                     CastInfoEvent("Recovery completed", ActivityType.ConvertingFile);
                                     CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                                    return true;
+                                    e.Result = true;
+                                    return;
                                 }
                                 else
                                 {
                                     CastInfoEvent("Recovery failed", ActivityType.ConvertingFile);
-                                    return false;
+                                    e.Result = false;
+                                    return;
                                 }
                             }
                             else
@@ -4726,7 +4730,8 @@ namespace TrionicCANLib
                                 CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
                                 Send0120();
                                 CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                                return false;
+                                e.Result = false;
+                                return;
 
                             }
                         }
@@ -4750,7 +4755,8 @@ namespace TrionicCANLib
             {
                 CastInfoEvent("Recovery not needed...", ActivityType.UploadingBootloader);
             }
-            return false;
+            e.Result = false;
+            return;
         }
 
         private bool WriteFlashT8Recover(BlockManager bm)
@@ -4807,9 +4813,11 @@ namespace TrionicCANLib
             return true;
         }
 
-        public bool WriteFlashT8(string filename)
+        public void WriteFlashT8(object sender, DoWorkEventArgs e)
         {
-            if (!canUsbDevice.isOpen()) return false;
+            string filename = (string)e.Argument;
+
+            if (!canUsbDevice.isOpen()) return;
             _needRecovery = false;
             BlockManager bm = new BlockManager();
             bm.SetFilename(filename);
@@ -4837,7 +4845,8 @@ namespace TrionicCANLib
             {
                 CastInfoEvent("Failed to get security access", ActivityType.UploadingFlash);
                 _stallKeepAlive = false;
-                return false;
+                e.Result = false;
+                return;
             }
             Thread.Sleep(50);
             CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
@@ -4845,7 +4854,8 @@ namespace TrionicCANLib
             {
                 CastInfoEvent("Failed to upload bootloader", ActivityType.UploadingFlash);
                 _stallKeepAlive = false;
-                return false;
+                e.Result = false;
+                return;
             }
             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
             // start bootloader in ECU
@@ -4855,7 +4865,8 @@ namespace TrionicCANLib
             {
                 CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
                 _stallKeepAlive = false;
-                return false;
+                e.Result = false;
+                return;
             }
             Thread.Sleep(100);
             SendKeepAlive();
@@ -4889,11 +4900,12 @@ namespace TrionicCANLib
                 CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
                 Send0120();
                 CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                return false;
+                e.Result = false;
+                return;
 
             }
             _stallKeepAlive = false;
-            return true;
+            e.Result = true;
         }
 
         private bool ProgramFlashT8(BlockManager bm)
@@ -4958,8 +4970,10 @@ namespace TrionicCANLib
             return true;
         }
 
-        public byte[] ReadFlashT8()
+        public void ReadFlashT8(object sender, DoWorkEventArgs e)
         {
+            string filename = (string)e.Argument;
+
             _stallKeepAlive = true;
             bool success = false;
             int retryCount = 0;
@@ -4986,14 +5000,15 @@ namespace TrionicCANLib
             _securityLevel = AccessLevel.AccessLevel01;
             CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
             if(!RequestSecurityAccess(0))
-                return null;
+                return;
             Thread.Sleep(50);
 
             CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
             if (!UploadBootloaderT8Read())
             {
                 CastInfoEvent("Uploading bootloader FAILED", ActivityType.UploadingBootloader);
-                return null;
+                e.Result = false;
+                return;
             }
             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
             // start bootloader in ECU
@@ -5019,7 +5034,7 @@ namespace TrionicCANLib
                     lastAddress += 0x200;
                 }
             }
-            CastInfoEvent("Downloading " + lastAddress.ToString("X8") + " Bytes.", ActivityType.DownloadingFlash);
+            CastInfoEvent("Downloading " + lastAddress.ToString("D") + " Bytes.", ActivityType.DownloadingFlash);
 
             // now start sending commands:
             //06 21 80 00 00 00 00 00 
@@ -5031,7 +5046,8 @@ namespace TrionicCANLib
                 if (!canUsbDevice.isOpen())
                 {
                     _stallKeepAlive = false;
-                    return buf;
+                    e.Result = false;
+                    return;
                 }
 
                 byte[] readbuf = readDataByLocalIdentifier(startAddress, blockSize, out success);
@@ -5067,7 +5083,8 @@ namespace TrionicCANLib
                     {
                         CastInfoEvent("Failed to download FLASH content", ActivityType.ConvertingFile);
                         _stallKeepAlive = false;
-                        return buf;
+                        e.Result = false;
+                        return;
                     }
                 }
                 if (keepAliveSw.ElapsedMilliseconds > 3000) // once every 3 seconds
@@ -5081,7 +5098,26 @@ namespace TrionicCANLib
             }
             sw.Stop();
             _stallKeepAlive = false;
-            return buf;
+
+            if (buf != null)
+            {
+                try
+                {
+                    File.WriteAllBytes(filename, buf);
+                    CastInfoEvent("Download done", ActivityType.FinishedDownloadingFlash);
+                    e.Result = true;
+                }
+                catch (Exception E)
+                {
+                    CastInfoEvent("Could not write file... " + E.Message, ActivityType.ConvertingFile);
+                    e.Result = false;
+                }
+            }
+            else
+            {
+                e.Result = false;
+            }
+            return;
         }
 
         public byte[] ReadT8SRAMSnapshot()
