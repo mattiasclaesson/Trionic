@@ -73,18 +73,6 @@ namespace TrionicCANLib.CAN
             return 0F;
         }
 
-        /// <summary>
-        /// Destructor for CANUSBDevice.
-        /// </summary>
-        ~CANUSBDevice()
-        {
-            lock (m_synchObject)
-            {
-                m_endThread = true;
-            }
-            close();
-        }
-
         public override void Flush()
         {
             Lawicel.CANUSB.canusb_Flush(m_deviceHandle, 0x01);
@@ -99,14 +87,14 @@ namespace TrionicCANLib.CAN
             int readResult = 0;
             Lawicel.CANUSB.CANMsg r_canMsg = new Lawicel.CANUSB.CANMsg();
             CANMessage canMessage = new CANMessage();
-            Console.WriteLine("readMessages started");
+            AddToDeviceTrace("readMessages started");
             while (true)
             {
                 lock (m_synchObject)
                 {
                     if (m_endThread)
                     {
-                        Console.WriteLine("readMessages ended");
+                        AddToDeviceTrace("readMessages thread ended");
                         return;
                     }
                 }
@@ -154,12 +142,11 @@ namespace TrionicCANLib.CAN
                 close();
             }
             Thread.Sleep(200);
-            m_readThread = new Thread(readMessages);
-            m_readThread.Name = "CANUSBDevice.m_readThread";
+            m_readThread = new Thread(readMessages) { Name = "CANUSBDevice.m_readThread" };
 
             if (!UseOnlyPBus)
             {
-                Console.WriteLine("Getting handle");
+                AddToDeviceTrace("Lawicel.CANUSB.canusb_Open()");
                 if (TrionicECU == ECU.TRIONIC7)
                 {
                     m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
@@ -181,6 +168,7 @@ namespace TrionicCANLib.CAN
                 {
                     if (waitAnyMessage(1000, out msg) != 0)
                     {
+                        AddToDeviceTrace("I bus connected");
                         if (m_readThread.ThreadState == ThreadState.Unstarted)
                             m_readThread.Start();
                         return OpenResult.OK;
@@ -200,6 +188,7 @@ namespace TrionicCANLib.CAN
 
             //I bus wasn't connected.
             //Check if P bus is connected
+            AddToDeviceTrace("Lawicel.CANUSB.canusb_Open()");
             m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
             Lawicel.CANUSB.CAN_BAUD_500K,
             Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
@@ -211,12 +200,12 @@ namespace TrionicCANLib.CAN
             }
             if(DisableCanConnectionCheck || boxIsThere())
             {
-                Console.WriteLine("Box is there, starting thread");
+                AddToDeviceTrace("P bus connected");
                 if (m_readThread.ThreadState == ThreadState.Unstarted)
                     m_readThread.Start();
                 return OpenResult.OK;
             }
-            Console.WriteLine("Box not there");
+            AddToDeviceTrace("Box not there");
             close();
             return OpenResult.OpenError;
         }
@@ -227,17 +216,19 @@ namespace TrionicCANLib.CAN
         /// <returns>CloseResult.OK on success, otherwise CloseResult.CloseError.</returns>
         override public CloseResult close()
         {
+            m_endThread = true;
+
             int res = 0;
             try
             {
+                AddToDeviceTrace("Lawicel.CANUSB.canusb_Close()");
                 res = Lawicel.CANUSB.canusb_Close(m_deviceHandle);
             }
             catch(DllNotFoundException e)
             {
-                Console.WriteLine("Dll exception" + e);
+                AddToDeviceTrace("Dll exception" + e);
                 return CloseResult.CloseError;
             }
-            m_endThread = true;
 
             m_deviceHandle = 0;
             if (Lawicel.CANUSB.ERROR_CANUSB_OK == res)

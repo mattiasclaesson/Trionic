@@ -156,7 +156,7 @@ namespace TrionicCANLib.CAN
                                 else if (rxMessage.StartsWith("?")) { isStopped = false; }
                                 else if (rxMessage.StartsWith("NO DATA"))
                                 {
-                                    AddToSerialTrace("NO DATA");
+                                    AddToDeviceTrace("NO DATA");
                                     Console.WriteLine("NO DATA");
                                 }
                                 else if (rxMessage.Length == 19) // is it a valid line
@@ -190,13 +190,13 @@ namespace TrionicCANLib.CAN
                                  //disable whitespace logging
                                 if (rxMessage.Length > 0)
                                 {
-                                    AddToSerialTrace("SERRX: " + rxMessage);
+                                    AddToDeviceTrace("SERRX: " + rxMessage);
                                 }
                             }
                         }
                         if (rawString.Contains(">") && !isStopped)
                         {
-                            AddToSerialTrace("SERIAL READY");
+                            AddToDeviceTrace("SERIAL READY");
                             sendDataSempahore.WaitOne(0);
                             sendDataSempahore.Release();
                             interfaceBusy = false;
@@ -337,7 +337,7 @@ namespace TrionicCANLib.CAN
                 }
                 catch (UnauthorizedAccessException e)
                 {
-                    AddToSerialTrace("exception" + e.ToString());
+                    AddToDeviceTrace("exception" + e.ToString());
                     return OpenResult.OpenError;
                 }
 
@@ -367,7 +367,7 @@ namespace TrionicCANLib.CAN
                     }
                     catch (UnauthorizedAccessException e)
                     {
-                        AddToSerialTrace("exception" + e.ToString());
+                        AddToDeviceTrace("exception" + e.ToString());
                         return OpenResult.OpenError;
                     }
 
@@ -376,7 +376,7 @@ namespace TrionicCANLib.CAN
                     while (!gotVersion && tries-- > 0)
                     {
                         string elmVersion = m_serialPort.ReadExisting();
-                        AddToSerialTrace("elmVersion:" + elmVersion);
+                        AddToDeviceTrace("elmVersion:" + elmVersion);
                         Console.WriteLine("elmVersion: " + elmVersion);
                         if (elmVersion.Length > 5)
                         {
@@ -391,7 +391,7 @@ namespace TrionicCANLib.CAN
                     ok = WriteToSerialAndWait("\r");
                     if (ok == null)
                         return OpenResult.OpenError;
-                    AddToSerialTrace("ok:" + ok);
+                    AddToDeviceTrace("ok:" + ok);
                     Console.WriteLine("ok: " + ok);
                 }
 
@@ -543,13 +543,13 @@ namespace TrionicCANLib.CAN
         protected void WriteToSerialWithTrace(string line)
         {
             m_serialPort.Write(line);
-            AddToSerialTrace("SERTX: " + line);
+            AddToDeviceTrace("SERTX: " + line);
         }
 
         protected string ReadFromSerialToWithTrace(string readTo)
         {
             string answer = m_serialPort.ReadTo(readTo);
-            AddToSerialTrace("SERRX: " + answer + readTo);
+            AddToDeviceTrace("SERRX: " + answer + readTo);
             return answer;
         }
 
@@ -574,11 +574,11 @@ namespace TrionicCANLib.CAN
                 catch (TimeoutException x)
                 {
                     tries--;
-                    AddToSerialTrace("SERTIMOUT: left tries " + tries);
+                    AddToDeviceTrace("SERTIMOUT: left tries " + tries);
                 }
                 catch (Exception x)
                 {
-                    AddToSerialTrace("Exception" + x);
+                    AddToDeviceTrace("Exception" + x);
                 }
             }
 
@@ -677,7 +677,7 @@ namespace TrionicCANLib.CAN
                 Console.Write(".");
             }
             start = Environment.TickCount - start;
-            AddToSerialTrace(string.Format("Got {0} responses in {1} ms", 1000, start));
+            AddToDeviceTrace(string.Format("Got {0} responses in {1} ms", 1000, start));
             Console.WriteLine(string.Format("Got {0} responses in {1} ms", 1000, start));
         }
 
@@ -686,11 +686,11 @@ namespace TrionicCANLib.CAN
             var start = Environment.TickCount;
             for (int i = 0; i < 10000; i++)
             {
-                AddToSerialTrace("Checking performance " + i);
+                AddToDeviceTrace("Checking performance " + i);
             }
             var end = Environment.TickCount;
 
-            AddToSerialTrace(string.Format("Could write {0}/sec", 10 / (end - start)));
+            AddToDeviceTrace(string.Format("Could write {0}/sec", 10 / (end - start)));
 
         }
 

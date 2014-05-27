@@ -47,7 +47,6 @@
             this.btnSetECUVIN = new System.Windows.Forms.Button();
             this.tbParameter = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.btnSecurityAccess = new System.Windows.Forms.Button();
             this.btnSetE85 = new System.Windows.Forms.Button();
             this.btnSetSpeed = new System.Windows.Forms.Button();
             this.btnResetECU = new System.Windows.Forms.Button();
@@ -255,17 +254,6 @@
             this.label3.TabIndex = 48;
             this.label3.Text = "Set Parameter";
             // 
-            // btnSecurityAccess
-            // 
-            this.btnSecurityAccess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSecurityAccess.Location = new System.Drawing.Point(678, 67);
-            this.btnSecurityAccess.Name = "btnSecurityAccess";
-            this.btnSecurityAccess.Size = new System.Drawing.Size(107, 50);
-            this.btnSecurityAccess.TabIndex = 50;
-            this.btnSecurityAccess.Text = "Security Access";
-            this.btnSecurityAccess.UseVisualStyleBackColor = true;
-            this.btnSecurityAccess.Click += new System.EventHandler(this.btnSecurityAccess_Click);
-            // 
             // btnSetE85
             // 
             this.btnSetE85.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -291,7 +279,7 @@
             // btnResetECU
             // 
             this.btnResetECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnResetECU.Location = new System.Drawing.Point(678, 124);
+            this.btnResetECU.Location = new System.Drawing.Point(678, 68);
             this.btnResetECU.Name = "btnResetECU";
             this.btnResetECU.Size = new System.Drawing.Size(107, 50);
             this.btnResetECU.TabIndex = 54;
@@ -388,7 +376,6 @@
             this.Controls.Add(this.btnResetECU);
             this.Controls.Add(this.btnSetSpeed);
             this.Controls.Add(this.btnSetE85);
-            this.Controls.Add(this.btnSecurityAccess);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.tbParameter);
             this.Controls.Add(this.btnSetECUVIN);
@@ -438,7 +425,6 @@
         private System.Windows.Forms.Button btnSetECUVIN;
         private System.Windows.Forms.TextBox tbParameter;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button btnSecurityAccess;
         private System.Windows.Forms.Button btnSetE85;
         private System.Windows.Forms.Button btnSetSpeed;
         private System.Windows.Forms.Button btnResetECU;

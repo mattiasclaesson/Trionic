@@ -12,10 +12,9 @@
     </layout>
   </appender>
 
-  <appender name="RollingLogFileAppenderSerial" type="log4net.Appender.RollingFileAppender,log4net">
+  <appender name="RollingLogFileAppenderDevice" type="log4net.Appender.RollingFileAppender,log4net">
     <lockingModel type="log4net.Appender.FileAppender+ExclusiveLock"/>
-    <!--<lockingModel type="log4net.Appender.FileAppender+MinimalLock"/>-->
-    <file value="serialLog.txt" /> 
+    <file value="deviceLog.txt" /> 
     <param name="StaticLogFileName" value="true"/>
     <appendToFile value="true" />
     <param name="RollingStyle" value="Date"/>
@@ -30,8 +29,8 @@
     <appender-ref ref="RollingLogFileAppenderCan" />
   </logger>
 
-  <logger name="SerialLog">
+  <logger name="DeviceLog">
     <level value="ALL" />
-    <appender-ref ref="RollingLogFileAppenderSerial" />
+    <appender-ref ref="RollingLogFileAppenderDevice" />
   </logger>
 </log4net>

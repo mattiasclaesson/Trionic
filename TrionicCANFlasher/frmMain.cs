@@ -163,7 +163,6 @@ namespace TrionicCANFlasher
             btnGetECUInfo.Enabled = enable;
             btnReadSRAM.Enabled = enable;
             btnRecoverECU.Enabled = enable;
-            btnSecurityAccess.Enabled = enable;
             btnReadDTC.Enabled = enable;
             btnSetECUVIN.Enabled = enable;
             btnSetE85.Enabled = enable;
@@ -194,7 +193,6 @@ namespace TrionicCANFlasher
             {
                 btnReadSRAM.Enabled = false;
                 btnRecoverECU.Enabled = false;
-                btnSecurityAccess.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
 
@@ -726,21 +724,6 @@ namespace TrionicCANFlasher
 
                 trionicCan.Cleanup();
                 AddLogItem("Connection closed");
-                EnableUserInput(true);
-            }
-        }
-
-        private void btnSecurityAccess_Click(object sender, EventArgs e)
-        {
-            GetUIOptions();
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                SetT8AdapterType();
-
-                EnableUserInput(false);
-                AddLogItem("Opening connection");
-                trionicCan.openDevice(true);
                 EnableUserInput(true);
             }
         }

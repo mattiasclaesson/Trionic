@@ -214,14 +214,14 @@ namespace TrionicCANLib.CAN
             }
         }
 
-        protected void AddToSerialTrace(string line)
+        protected void AddToDeviceTrace(string line)
         {
             if (this.EnableCanLog)
             {
                 line = line.Replace("\n", "");
                 line = line.Replace("\r", "");
                 line = line.Replace("\t", "");
-                LogHelper.LogSerial(line);
+                LogHelper.LogDevice(line);
                 //LogHelper.LogDebug(line);
             }
         }

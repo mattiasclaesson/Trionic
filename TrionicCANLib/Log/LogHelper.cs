@@ -16,7 +16,7 @@ namespace TrionicCANLib.Log
     {
         static Thread logThread;
         static ILog canLog;
-        static ILog serialLog;
+        static ILog deviceLog;
         static LogQueue<LogEntry> logQueue;
         static bool isRunning = false;
 
@@ -46,8 +46,8 @@ namespace TrionicCANLib.Log
                     if (logItem.type == LogType.Can)
                         GetCanLog().Info(logItem);
 
-                    else if (logItem.type == LogType.Serial)
-                        GetSerialLog().Info(logItem);
+                    else if (logItem.type == LogType.Device)
+                        GetDeviceLog().Info(logItem);
                 }
             }
         }
@@ -59,11 +59,11 @@ namespace TrionicCANLib.Log
             return canLog;
         }
 
-        private static ILog GetSerialLog()
+        private static ILog GetDeviceLog()
         {
-            if (serialLog == null)
-                serialLog = LogManager.GetLogger("SerialLog");
-            return serialLog;
+            if (deviceLog == null)
+                deviceLog = LogManager.GetLogger("DeviceLog");
+            return deviceLog;
         }
 
         internal static void LogDebug(string info)
@@ -79,9 +79,9 @@ namespace TrionicCANLib.Log
             logQueue.Enqueue(new LogEntry { type = LogType.Can, msg = info });
         }
 
-        internal static void LogSerial(string info)
+        internal static void LogDevice(string info)
         {
-            logQueue.Enqueue(new LogEntry { type = LogType.Serial, msg = info });
+            logQueue.Enqueue(new LogEntry { type = LogType.Device, msg = info });
         }
 
         internal static void Flush()
@@ -121,7 +121,7 @@ namespace TrionicCANLib.Log
 
         private enum LogType
         {
-            Can, Serial
+            Can, Device
         }
     }
 }
