@@ -24,6 +24,30 @@
     </layout>
   </appender>
 
+  <appender name="RollingLogFileAppenderFlasher" type="log4net.Appender.RollingFileAppender,log4net">
+    <lockingModel type="log4net.Appender.FileAppender+ExclusiveLock"/>
+    <file value="flasherLog.txt" />
+    <param name="StaticLogFileName" value="true"/>
+    <appendToFile value="true" />
+    <param name="RollingStyle" value="Date"/>
+    <param name="DatePattern" value="yyyy-MM-dd"/>
+    <layout type="log4net.Layout.PatternLayout">
+      <conversionPattern value="%message%newline"/>
+    </layout>
+  </appender>
+
+  <appender name="RollingLogFileAppenderKwp" type="log4net.Appender.RollingFileAppender,log4net">
+    <lockingModel type="log4net.Appender.FileAppender+ExclusiveLock"/>
+    <file value="kwpLog.txt" />
+    <param name="StaticLogFileName" value="true"/>
+    <appendToFile value="true" />
+    <param name="RollingStyle" value="Date"/>
+    <param name="DatePattern" value="yyyy-MM-dd"/>
+    <layout type="log4net.Layout.PatternLayout">
+      <conversionPattern value="%message%newline"/>
+    </layout>
+  </appender>
+
   <logger name="CanLog">
     <level value="ALL" />
     <appender-ref ref="RollingLogFileAppenderCan" />
@@ -32,5 +56,15 @@
   <logger name="DeviceLog">
     <level value="ALL" />
     <appender-ref ref="RollingLogFileAppenderDevice" />
+  </logger>
+
+  <logger name="FlasherLog">
+    <level value="ALL" />
+    <appender-ref ref="RollingLogFileAppenderFlasher" />
+  </logger>
+
+  <logger name="KwpLog">
+    <level value="ALL" />
+    <appender-ref ref="RollingLogFileAppenderKwp" />
   </logger>
 </log4net>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Threading;
+using TrionicCANLib.Log;
 
 namespace TrionicCANLib.KWP
 {
@@ -142,18 +143,7 @@ namespace TrionicCANLib.KWP
 
         private void LogEntry(string entry)
         {
-            try
-            {  
-                using (StreamWriter sw = new StreamWriter(System.Windows.Forms.Application.StartupPath + "\\kwplog.txt", true))
-                {
-                    sw.WriteLine(entry);
-                    //Console.WriteLine(entry);
-                }
-            }
-            catch (Exception E)
-            {
-                Console.WriteLine(E.Message);
-            }
+            LogHelper.LogKwp(entry);
         }
 
         private void LogDataString(string entry)
@@ -162,20 +152,10 @@ namespace TrionicCANLib.KWP
             {
                 if (entry != "")
                 {
-                    LogEntry(DateTime.Now.ToString("HH:mm:ss:fff") + " - " + entry);
-//                    m_logFileStream.WriteLine(DateTime.Now.ToString("HH:mm:ss:fff") + " - " + entry);
+                    LogEntry(entry);
                 }
-                else
-                {
-                    //m_logFileStream.WriteLine();
-                    LogEntry("");
-                }
-//                m_logFileStream.Flush();
-
             }
         }
-
-       
 
         public bool ResetECU()
         {

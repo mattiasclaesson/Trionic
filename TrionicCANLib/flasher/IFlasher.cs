@@ -1,6 +1,6 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
+using TrionicCANLib.Log;
 
 namespace TrionicCANLib.Flasher
 {
@@ -66,7 +66,7 @@ namespace TrionicCANLib.Flasher
         protected Object m_synchObject = new Object();  ///< state lock
 
         // configuration
-        private bool m_EnableCanLog = false;            ///< CAN logging flag
+        private bool m_EnableFlasherLog = false;            ///< CAN logging flag
 
         //-------------------------------------------------------------------------
         /**
@@ -81,32 +81,25 @@ namespace TrionicCANLib.Flasher
 
         //-------------------------------------------------------------------------
         /**
-            Sets CAN logging on/off.
+            Sets logging on/off.
         */
-        public bool EnableCanLog
+        public bool EnableFlasherLog
         {
-            get { return m_EnableCanLog; }
-            set { m_EnableCanLog = value; }
+            get { return m_EnableFlasherLog; }
+            set { m_EnableFlasherLog = value; }
         }
 
         //-------------------------------------------------------------------------
         /**
-            Adds a line to CAN log file.
-         
+            Adds a line to log file.
             @param      line        line to add
         */
-        protected void AddToCanTrace(string line)
+        protected void AddToFlasherTrace(string line)
         {
             Console.WriteLine(line);
-            if (!this.m_EnableCanLog)
+            if (this.m_EnableFlasherLog)
             {
-                return;
-            }
-
-            DateTime dtnow = DateTime.Now;
-            using (StreamWriter sw = new StreamWriter(System.Windows.Forms.Application.StartupPath + "\\CanTraceT7Flasher.txt", true))
-            {
-                sw.WriteLine(dtnow.ToString("dd/MM/yyyy HH:mm:ss:fff") + " - " + line);
+                LogHelper.LogFlasher(line);
             }
         }
 

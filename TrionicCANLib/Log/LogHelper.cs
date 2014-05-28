@@ -17,6 +17,8 @@ namespace TrionicCANLib.Log
         static Thread logThread;
         static ILog canLog;
         static ILog deviceLog;
+        static ILog flasherLog;
+        static ILog kwpLog;
         static LogQueue<LogEntry> logQueue;
         static bool isRunning = false;
 
@@ -44,10 +46,22 @@ namespace TrionicCANLib.Log
                         }
                     }
                     if (logItem.type == LogType.Can)
+                    {
                         GetCanLog().Info(logItem);
-
+                    }
                     else if (logItem.type == LogType.Device)
+                    {
                         GetDeviceLog().Info(logItem);
+                    }
+                    else if (logItem.type == LogType.Flasher)
+                    {
+                        GetFlasherLog().Info(logItem);
+                    }
+                    else if (logItem.type == LogType.Kwp)
+                    {
+                        GetKwpLog().Info(logItem);
+                    }
+
                 }
             }
         }
@@ -66,6 +80,20 @@ namespace TrionicCANLib.Log
             return deviceLog;
         }
 
+        private static ILog GetFlasherLog()
+        {
+            if (flasherLog == null)
+                flasherLog = LogManager.GetLogger("FlasherLog");
+            return flasherLog;
+        }
+
+        private static ILog GetKwpLog()
+        {
+            if (kwpLog == null)
+                kwpLog = LogManager.GetLogger("KwpLog");
+            return kwpLog;
+        }
+
         internal static void LogDebug(string info)
         {
             if (System.Diagnostics.Debugger.IsAttached)
@@ -82,6 +110,16 @@ namespace TrionicCANLib.Log
         internal static void LogDevice(string info)
         {
             logQueue.Enqueue(new LogEntry { type = LogType.Device, msg = info });
+        }
+
+        internal static void LogFlasher(string info)
+        {
+            logQueue.Enqueue(new LogEntry { type = LogType.Flasher, msg = info });
+        }
+
+        internal static void LogKwp(string info)
+        {
+            logQueue.Enqueue(new LogEntry { type = LogType.Kwp, msg = info });
         }
 
         internal static void Flush()
@@ -121,7 +159,7 @@ namespace TrionicCANLib.Log
 
         private enum LogType
         {
-            Can, Device
+            Can, Device, Flasher, Kwp
         }
     }
 }

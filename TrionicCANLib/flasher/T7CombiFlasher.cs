@@ -109,7 +109,7 @@ namespace TrionicCANLib.Flasher
 
             catch (Exception e)
             {
-                this.AddToCanTrace("Read error: " + e.Message);
+                this.AddToFlasherTrace("Read error: " + e.Message);
                 this.m_flashStatus = FlashStatus.ReadError;
             }
         }
@@ -140,7 +140,7 @@ namespace TrionicCANLib.Flasher
 
             catch (Exception e)
             {
-                this.AddToCanTrace("Write error: " + e.Message);
+                this.AddToFlasherTrace("Write error: " + e.Message);
                 this.m_flashStatus = FlashStatus.WriteError;
             }
         }
@@ -161,7 +161,7 @@ namespace TrionicCANLib.Flasher
 
             catch (Exception e)
             {
-                this.AddToCanTrace("Session error: " + e.Message);
+                this.AddToFlasherTrace("Session error: " + e.Message);
                 return false;
             }
         }

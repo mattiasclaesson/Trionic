@@ -140,7 +140,7 @@ namespace TrionicCANLib.Flasher
         {
             while (true)
             {
-                AddToCanTrace("Running T7Flasher");
+                AddToFlasherTrace("Running T7Flasher");
                 m_nrOfRetries = 0;
                 m_nrOfBytesRead = 0;
                 m_resetEvent.WaitOne(-1, true);
@@ -155,24 +155,24 @@ namespace TrionicCANLib.Flasher
                 NotifyStatusChanged(this, new StatusEventArgs("Starting session..."));
                 
                 m_kwpHandler.startSession();
-                AddToCanTrace("Session started");
+                AddToFlasherTrace("Session started");
                 NotifyStatusChanged(this, new StatusEventArgs("Session started, requesting security access to ECU"));
                 if (!gotSequrityAccess)
                 {
-                    AddToCanTrace("No security access");
+                    AddToFlasherTrace("No security access");
 
                     for (int nrOfSequrityTries = 0; nrOfSequrityTries < 5; nrOfSequrityTries++)
                     {
 
                         if (!KWPHandler.getInstance().requestSequrityAccess(true))
                         {
-                            AddToCanTrace("No security access granted");
+                            AddToFlasherTrace("No security access granted");
                             
                         }
                         else
                         {
                             gotSequrityAccess = true;
-                            AddToCanTrace("Security access granted");
+                            AddToFlasherTrace("Security access granted");
 
                             break;
                         }
@@ -181,7 +181,7 @@ namespace TrionicCANLib.Flasher
                 if (!gotSequrityAccess)
                 {
                     SetFlashStatus(FlashStatus.NoSequrityAccess);
-                    AddToCanTrace("No security access granted after 5 retries");
+                    AddToFlasherTrace("No security access granted after 5 retries");
                     NotifyStatusChanged(this, new StatusEventArgs("Failed to get security access after 5 retries"));
                 }
                 //Here it would make sense to stop if we didn't ge security access but
@@ -207,7 +207,7 @@ namespace TrionicCANLib.Flasher
                 if (m_endThread)
                     return;
                 NotifyStatusChanged(this, new StatusEventArgs("Flasing procedure completed"));
-                AddToCanTrace("T7Flasher completed");
+                AddToFlasherTrace("T7Flasher completed");
                 SetFlashStatus(FlashStatus.Completed);
             }
         }
@@ -217,16 +217,16 @@ namespace TrionicCANLib.Flasher
         {
             const int nrOfBytes = 64;
             byte[] data;
-            AddToCanTrace("Reading flash content to file: " + m_fileName);
+            AddToFlasherTrace("Reading flash content to file: " + m_fileName);
             NotifyStatusChanged(this, new StatusEventArgs("Reading data from ECU..."));
 
 
             if (File.Exists(m_fileName))
                 File.Delete(m_fileName);
             FileStream fileStream = File.Create(m_fileName, 1024);
-            AddToCanTrace("File created");
+            AddToFlasherTrace("File created");
             SetFlashStatus(FlashStatus.Reading);
-            AddToCanTrace("Flash status is reading");
+            AddToFlasherTrace("Flash status is reading");
 
             for (int i = 0; i < 512 * 1024 / nrOfBytes; i++)
             {
@@ -251,10 +251,10 @@ namespace TrionicCANLib.Flasher
                 m_nrOfBytesRead += nrOfBytes;
             }
             fileStream.Close();
-            AddToCanTrace("Closed file");
+            AddToFlasherTrace("Closed file");
 
             m_kwpHandler.sendDataTransferExitRequest();
-            AddToCanTrace("Done reading");
+            AddToFlasherTrace("Done reading");
         }
 
         private void ReadMemoryCommand()
@@ -344,7 +344,7 @@ namespace TrionicCANLib.Flasher
 
         private void WriteCommand()
         {
-            AddToCanTrace("Write command seen");
+            AddToFlasherTrace("Write command seen");
             const int nrOfBytes = 128;
             int i = 0;
             byte[] data = new byte[nrOfBytes];
@@ -356,12 +356,12 @@ namespace TrionicCANLib.Flasher
             if (!File.Exists(m_fileName))
             {
                 SetFlashStatus(FlashStatus.NoSuchFile);
-                AddToCanTrace("No such file found: " + m_fileName);
+                AddToFlasherTrace("No such file found: " + m_fileName);
                 NotifyStatusChanged(this, new StatusEventArgs("Failed to find file to flash..."));
 
                 return;
             }
-            AddToCanTrace("Start erasing");
+            AddToFlasherTrace("Start erasing");
             NotifyStatusChanged(this, new StatusEventArgs("Erasing flash..."));
 
             SetFlashStatus(FlashStatus.Eraseing);
@@ -369,26 +369,26 @@ namespace TrionicCANLib.Flasher
             {
                 NotifyStatusChanged(this, new StatusEventArgs("Failed to erase flash..."));
                 SetFlashStatus(FlashStatus.EraseError);
-                AddToCanTrace("Erase error occured");
+                AddToFlasherTrace("Erase error occured");
                 // break;
             }
-            AddToCanTrace("Opening file for reading");
+            AddToFlasherTrace("Opening file for reading");
 
             FileStream fs = new FileStream(m_fileName, FileMode.Open, FileAccess.Read);
 
             SetFlashStatus(FlashStatus.Writing);
-            AddToCanTrace("Set flash status to writing");
+            AddToFlasherTrace("Set flash status to writing");
             NotifyStatusChanged(this, new StatusEventArgs("Writing flash... 0x00000-0x7B000"));
 
             //Write 0x0-0x7B000
-            AddToCanTrace("0x0-0x7B000");
+            AddToFlasherTrace("0x0-0x7B000");
             Thread.Sleep(100);
             if (m_kwpHandler.sendWriteRequest(0x0, 0x7B000) != KWPResult.OK)
             {
                 NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
 
                 SetFlashStatus(FlashStatus.WriteError);
-                AddToCanTrace("Write error occured");
+                AddToFlasherTrace("Write error occured");
 
                 return;
             }
@@ -396,12 +396,12 @@ namespace TrionicCANLib.Flasher
             {
                 fs.Read(data, 0, nrOfBytes);
                 m_nrOfBytesRead = i * nrOfBytes;
-                AddToCanTrace("sendWriteDataRequest " + m_nrOfBytesRead);
+                AddToFlasherTrace("sendWriteDataRequest " + m_nrOfBytesRead);
                 if (m_kwpHandler.sendWriteDataRequest(data) != KWPResult.OK)
                 {
                     NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
                     SetFlashStatus(FlashStatus.WriteError);
-                    AddToCanTrace("Write error occured " + m_nrOfBytesRead);
+                    AddToFlasherTrace("Write error occured " + m_nrOfBytesRead);
 
                     continue;
                 }
@@ -409,26 +409,26 @@ namespace TrionicCANLib.Flasher
                 {
                     if (m_command == FlashCommand.StopCommand)
                     {
-                        AddToCanTrace("Stop command seen");
+                        AddToFlasherTrace("Stop command seen");
                         continue;
                     }
                     if (m_endThread)
                     {
-                        AddToCanTrace("Thread ended");
+                        AddToFlasherTrace("Thread ended");
                         return;
                     }
                 }
             }
 
             //Write 0x7FE00-0x7FFFF
-            AddToCanTrace("Write 0x7FE00-0x7FFFF");
+            AddToFlasherTrace("Write 0x7FE00-0x7FFFF");
             NotifyStatusChanged(this, new StatusEventArgs("Writing flash... 0x7FE00-0x7FFFF"));
 
             if (m_kwpHandler.sendWriteRequest(0x7FE00, 0x200) != KWPResult.OK)
             {
                 NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
                 SetFlashStatus(FlashStatus.WriteError);
-                AddToCanTrace("Write error occured");
+                AddToFlasherTrace("Write error occured");
                 return;
             }
             fs.Seek(0x7FE00, System.IO.SeekOrigin.Begin);
@@ -436,25 +436,25 @@ namespace TrionicCANLib.Flasher
             {
                 fs.Read(data, 0, nrOfBytes);
                 m_nrOfBytesRead = i * nrOfBytes;
-                AddToCanTrace("sendWriteDataRequest " + m_nrOfBytesRead.ToString());
+                AddToFlasherTrace("sendWriteDataRequest " + m_nrOfBytesRead.ToString());
 
                 if (m_kwpHandler.sendWriteDataRequest(data) != KWPResult.OK)
                 {
                     NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
                     SetFlashStatus(FlashStatus.WriteError);
-                    AddToCanTrace("Write error occured " + m_nrOfBytesRead);
+                    AddToFlasherTrace("Write error occured " + m_nrOfBytesRead);
                     continue;
                 }
                 lock (m_synchObject)
                 {
                     if (m_command == FlashCommand.StopCommand)
                     {
-                        AddToCanTrace("Stop command seen");
+                        AddToFlasherTrace("Stop command seen");
                         continue;
                     }
                     if (m_endThread)
                     {
-                        AddToCanTrace("Thread ended");
+                        AddToFlasherTrace("Thread ended");
                         return;
                     }
                 }

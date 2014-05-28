@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using TrionicCANLib.CAN;
-using System.IO;
+using TrionicCANLib.Log;
 
 namespace TrionicCANLib.KWP
 {
@@ -72,12 +71,12 @@ namespace TrionicCANLib.KWP
         KWPCANListener m_kwpCanListener = new KWPCANListener();
         const int timeoutPeriod = 1000; // if timeout <GS-11022010> changed from 1000 to 250 to not intefere with the keepalive timer
 
-        private bool m_EnableCanLog = false;
+        private bool m_EnableKwpLog = false;
 
-        public bool EnableCanLog
+        public bool EnableKwpLog
         {
-            get { return m_EnableCanLog; }
-            set { m_EnableCanLog = value; }
+            get { return m_EnableKwpLog; }
+            set { m_EnableKwpLog = value; }
         }
 
         /// <summary>
@@ -166,20 +165,9 @@ namespace TrionicCANLib.KWP
         private void AddToCanTrace(string line)
         {
             Console.WriteLine("KWPCANDevice: " + line);
-            DateTime dtnow = DateTime.Now;
-            if (m_EnableCanLog)
+            if (m_EnableKwpLog)
             {
-                try
-                {
-                    using (StreamWriter sw = new StreamWriter(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\CanTraceKWPCANDevice.txt", true))
-                    {
-                        sw.WriteLine(dtnow.ToString("dd/MM/yyyy HH:mm:ss") + " - " + line);
-                    }
-                }
-                catch (Exception)
-                {
-
-                }
+                LogHelper.LogKwp(line);
             }
         }
 

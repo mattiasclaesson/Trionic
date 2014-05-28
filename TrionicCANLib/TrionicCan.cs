@@ -250,7 +250,7 @@ namespace TrionicCANLib
                 canUsbDevice = new CANUSBDevice();
                 kwpCanDevice = new KWPCANDevice();
                 kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableCanLog = m_EnableCanLog;
+                kwpCanDevice.EnableKwpLog = m_EnableCanLog;
                 KWPHandler.setKWPDevice(kwpCanDevice);
                 if (m_EnableCanLog)
                 {
@@ -268,7 +268,7 @@ namespace TrionicCANLib
                 }
                 flash = T7Flasher.getInstance();
                 flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableCanLog = m_EnableCanLog;
+                flash.EnableFlasherLog = m_EnableCanLog;
             }
             else if (adapterType == CANBusAdapter.ELM327)
             {
@@ -276,7 +276,7 @@ namespace TrionicCANLib
                 canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
                 kwpCanDevice = new KWPCANDevice();
                 kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableCanLog = m_EnableCanLog;
+                kwpCanDevice.EnableKwpLog = m_EnableCanLog;
                 KWPHandler.setKWPDevice(kwpCanDevice);
                 if (m_EnableCanLog)
                 {
@@ -294,14 +294,14 @@ namespace TrionicCANLib
                 }
                 flash = T7Flasher.getInstance();
                 flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableCanLog = m_EnableCanLog;
+                flash.EnableFlasherLog = m_EnableCanLog;
             }
             else if (adapterType == CANBusAdapter.JUST4TRIONIC)
             {
                 canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
                 kwpCanDevice = new KWPCANDevice();
                 kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableCanLog = m_EnableCanLog;
+                kwpCanDevice.EnableKwpLog = m_EnableCanLog;
                 KWPHandler.setKWPDevice(kwpCanDevice);
                 if (m_EnableCanLog)
                 {
@@ -320,7 +320,7 @@ namespace TrionicCANLib
                 }
                 flash = T7Flasher.getInstance();
                 flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableCanLog = m_EnableCanLog;
+                flash.EnableFlasherLog = m_EnableCanLog;
             }
             else if (adapterType == CANBusAdapter.COMBI)
             {
@@ -424,7 +424,7 @@ namespace TrionicCANLib
                 {
                     // get flasher object
                     flash = lpc.createFlasher();
-                    flash.EnableCanLog = m_EnableCanLog;
+                    flash.EnableFlasherLog = m_EnableCanLog;
 
                     AddToCanTrace("T7CombiFlasher object created");
                     CastInfoEvent("CombiAdapter ready", ActivityType.ConvertingFile);
