@@ -221,7 +221,6 @@ namespace TrionicCANFlasher
                     {
                         if (Path.GetFileName(sfd.FileName) != string.Empty)
                         {
-
                             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetT7AdapterType();

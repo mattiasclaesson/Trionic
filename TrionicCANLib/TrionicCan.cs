@@ -10,6 +10,7 @@ using System.ComponentModel;
 using TrionicCANLib.CAN;
 using TrionicCANLib.KWP;
 using TrionicCANLib.Flasher;
+using TrionicCANLib.Log;
 using System.Windows.Forms;
 
 namespace TrionicCANLib
@@ -2395,21 +2396,7 @@ namespace TrionicCANLib
             //Console.WriteLine(line);
             if (m_EnableCanLog)
             {
-                DateTime dtnow = DateTime.Now;
-                lock (this)
-                {
-                    try
-                    {
-                        using (StreamWriter sw = new StreamWriter(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\dataTrace.txt", true))
-                        {
-                            sw.WriteLine(dtnow.ToString("dd/MM/yyyy HH:mm:ss.fff") + " - " + line);
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                }
+                LogHelper.LogFlasher(line);
             }
         }
 
