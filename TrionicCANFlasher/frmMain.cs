@@ -200,6 +200,8 @@ namespace TrionicCANFlasher
                 {
                     btnGetECUInfo.Enabled = false;
                     btnSetE85.Enabled = false;
+                    btnReadDTC.Enabled = false;
+                    btnResetECU.Enabled = false;
                 }
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
