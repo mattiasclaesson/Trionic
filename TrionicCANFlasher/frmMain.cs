@@ -85,53 +85,68 @@ namespace TrionicCANFlasher
             {
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
+                    FileInfo fi = new FileInfo(ofd.FileName);
                     if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                     {
-                        SetT7AdapterType();
-
-                        AddLogItem("Opening connection");
-                        EnableUserInput(false);
-                        if (trionicCan.openT7Device())
+                        if (fi.Length == 0x80000)
                         {
-                            Thread.Sleep(1000);
-                            AddLogItem("Update FLASH content");
-                            Application.DoEvents();
-                            dtstart = DateTime.Now;
-                            trionicCan.UpdateFlashWithT7Flasher(ofd.FileName);
+                            SetT7AdapterType();
+
+                            AddLogItem("Opening connection");
+                            EnableUserInput(false);
+                            if (trionicCan.openT7Device())
+                            {
+                                Thread.Sleep(1000);
+                                AddLogItem("Update FLASH content");
+                                Application.DoEvents();
+                                dtstart = DateTime.Now;
+                                trionicCan.UpdateFlashWithT7Flasher(ofd.FileName);
+                            }
+                            else
+                            {
+                                AddLogItem("Unable to connect to Trionic 7 ECU");
+                                trionicCan.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
+                            }
                         }
                         else
                         {
-                            AddLogItem("Unable to connect to Trionic 7 ECU");
-                            trionicCan.Cleanup();
-                            EnableUserInput(true);
-                            AddLogItem("Connection terminated");
+                            AddLogItem("Not a trionic 7 file");
                         }
                     }
                     else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                     {
-                        trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                        SetT8AdapterType();
-
-                        EnableUserInput(false);
-                        AddLogItem("Opening connection");
-                        if (trionicCan.openDevice(false))
+                        if (fi.Length == 0x100000)
                         {
-                            Thread.Sleep(1000);
-                            dtstart = DateTime.Now;
-                            AddLogItem("Update FLASH content");
-                            Application.DoEvents();
-                            BackgroundWorker bgWorker;
-                            bgWorker = new BackgroundWorker();
-                            bgWorker.DoWork += new DoWorkEventHandler(trionicCan.WriteFlashT8);
-                            bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                            bgWorker.RunWorkerAsync(ofd.FileName);
+                            trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
+                            SetT8AdapterType();
+
+                            EnableUserInput(false);
+                            AddLogItem("Opening connection");
+                            if (trionicCan.openDevice(false))
+                            {
+                                Thread.Sleep(1000);
+                                dtstart = DateTime.Now;
+                                AddLogItem("Update FLASH content");
+                                Application.DoEvents();
+                                BackgroundWorker bgWorker;
+                                bgWorker = new BackgroundWorker();
+                                bgWorker.DoWork += new DoWorkEventHandler(trionicCan.WriteFlashT8);
+                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                bgWorker.RunWorkerAsync(ofd.FileName);
+                            }
+                            else
+                            {
+                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                trionicCan.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
+                            }
                         }
                         else
                         {
-                            AddLogItem("Unable to connect to Trionic 8 ECU");
-                            trionicCan.Cleanup();
-                            EnableUserInput(true);
-                            AddLogItem("Connection terminated");
+                            AddLogItem("Not a trionic 8 file");
                         }
                     }
                 }
