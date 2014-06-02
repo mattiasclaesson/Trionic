@@ -45,19 +45,19 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_44E62BF4767E48B0EFA9381A4E0CB841"
-        "OwnerKey" = "8:_EDD4C6DA3A0AA8F948E03F360BA615E4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_44E62BF4767E48B0EFA9381A4E0CB841"
+        "MsmKey" = "8:_742DE0BE9E2362B6F6D50F07248E8079"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_742DE0BE9E2362B6F6D50F07248E8079"
+        "MsmKey" = "8:_AA28C903175CD9914A9E79EAF3496AD3"
+        "OwnerKey" = "8:_EDD4C6DA3A0AA8F948E03F360BA615E4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AA28C903175CD9914A9E79EAF3496AD3"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -124,7 +124,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_44E62BF4767E48B0EFA9381A4E0CB841"
+        "OwnerKey" = "8:_AA28C903175CD9914A9E79EAF3496AD3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -300,20 +300,20 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_44E62BF4767E48B0EFA9381A4E0CB841"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_742DE0BE9E2362B6F6D50F07248E8079"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:FTD2XX_NET, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.0.0.6, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
-                    "_44E62BF4767E48B0EFA9381A4E0CB841"
+                    "_742DE0BE9E2362B6F6D50F07248E8079"
                     {
-                    "Name" = "8:FTD2XX_NET.dll"
+                    "Name" = "8:TrionicCANLib.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:FTD2XX_NET.dll"
+            "SourcePath" = "8:TrionicCANLib.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
@@ -331,20 +331,20 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_742DE0BE9E2362B6F6D50F07248E8079"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AA28C903175CD9914A9E79EAF3496AD3"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.0.0.5, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:FTD2XX_NET, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_742DE0BE9E2362B6F6D50F07248E8079"
+                    "_AA28C903175CD9914A9E79EAF3496AD3"
                     {
-                    "Name" = "8:TrionicCANLib.dll"
+                    "Name" = "8:FTD2XX_NET.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:TrionicCANLib.dll"
+            "SourcePath" = "8:FTD2XX_NET.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
@@ -500,14 +500,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{E86502DB-6481-4BE8-BAB0-049710DE6525}"
-        "PackageCode" = "8:{5084ACEB-9B96-4C9E-8097-AFD3AE0B2F3F}"
+        "ProductCode" = "8:{720FDD18-6613-4BB4-A5AD-51BC998F5B8A}"
+        "PackageCode" = "8:{75608077-F936-4097-824E-6FEA11F8254D}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.0.4"
+        "ProductVersion" = "8:0.0.5"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
