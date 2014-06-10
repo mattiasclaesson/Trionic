@@ -524,6 +524,11 @@ namespace TrionicCANFlasher
             trionicCan.setT7CANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
         }
 
+        private void frmMain_Load(object sender, EventArgs e)
+        {
+            this.Text = "TrionicCANFlasher v" + System.Windows.Forms.Application.ProductVersion;
+        }
+
         private void frmMain_Shown(object sender, EventArgs e)
         {
             Application.DoEvents();
@@ -707,11 +712,6 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
-        }
-
-        private void frmMain_Load(object sender, EventArgs e)
-        {
-
         }
 
         private void btnSetECUVIN_Click(object sender, EventArgs e)
