@@ -60,8 +60,6 @@ namespace TrionicCANLib
     public enum ComSpeed : int
     {
         DEFAULT,
-        S38400,
-        S57600,
         S115200,
         S230400,
         S1Mbit,

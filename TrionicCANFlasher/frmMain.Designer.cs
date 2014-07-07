@@ -350,8 +350,6 @@
             this.cbxComSpeed.FormattingEnabled = true;
             this.cbxComSpeed.Items.AddRange(new object[] {
             "Adapter default",
-            "38400",
-            "57600",
             "115200",
             "230400",
             "1Mbit",

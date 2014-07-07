@@ -499,12 +499,6 @@ namespace TrionicCANFlasher
                 case (int)ComSpeed.S115200:
                     trionicCan.ForcedBaudrate = 115200;
                     break;
-                case (int)ComSpeed.S57600:
-                    trionicCan.ForcedBaudrate = 57600;
-                    break;
-                case (int)ComSpeed.S38400:
-                    trionicCan.ForcedBaudrate = 38400;
-                    break;
                 default:
                     trionicCan.ForcedBaudrate = 0; //default , no speed will be changed
                     break;
