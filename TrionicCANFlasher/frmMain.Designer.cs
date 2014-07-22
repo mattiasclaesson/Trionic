@@ -84,6 +84,8 @@
             // 
             this.cbEnableLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbEnableLogging.AutoSize = true;
+            this.cbEnableLogging.Checked = true;
+            this.cbEnableLogging.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbEnableLogging.Location = new System.Drawing.Point(866, 301);
             this.cbEnableLogging.Name = "cbEnableLogging";
             this.cbEnableLogging.Size = new System.Drawing.Size(96, 17);
@@ -315,6 +317,8 @@
             // 
             this.cbOnlyPBus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbOnlyPBus.AutoSize = true;
+            this.cbOnlyPBus.Checked = true;
+            this.cbOnlyPBus.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbOnlyPBus.Location = new System.Drawing.Point(866, 324);
             this.cbOnlyPBus.Name = "cbOnlyPBus";
             this.cbOnlyPBus.Size = new System.Drawing.Size(134, 17);
@@ -326,6 +330,8 @@
             // 
             this.cbDisableConnectionCheck.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbDisableConnectionCheck.AutoSize = true;
+            this.cbDisableConnectionCheck.Checked = true;
+            this.cbDisableConnectionCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbDisableConnectionCheck.Location = new System.Drawing.Point(866, 347);
             this.cbDisableConnectionCheck.Name = "cbDisableConnectionCheck";
             this.cbDisableConnectionCheck.Size = new System.Drawing.Size(150, 17);
