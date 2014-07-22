@@ -355,7 +355,6 @@
             this.cbxComSpeed.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbxComSpeed.FormattingEnabled = true;
             this.cbxComSpeed.Items.AddRange(new object[] {
-            "Adapter default",
             "115200",
             "230400",
             "1Mbit",
