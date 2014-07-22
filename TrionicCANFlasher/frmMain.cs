@@ -9,6 +9,7 @@ using System.ComponentModel;
 using Microsoft.Win32;
 using TrionicCANLib;
 using System.Drawing;
+using System.Diagnostics;
 
 namespace TrionicCANFlasher
 {
@@ -648,6 +649,17 @@ namespace TrionicCANFlasher
                                         if (!Latency.Equals("2"))
                                         {
                                             MessageBox.Show("Warning LatencyTimer should be set to 2 ms", "ELM327 FTDI setting", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                            string fileName = Path.Combine(System.Windows.Forms.Application.StartupPath, "ConfigFTDI");
+                                            ProcessStartInfo startinfo = new ProcessStartInfo(fileName);
+                                            startinfo.CreateNoWindow = true;
+                                            startinfo.WindowStyle = ProcessWindowStyle.Hidden;
+                                            startinfo.Verb = "runas";
+                                            startinfo.UseShellExecute = true;
+                                            startinfo.Arguments = PortName;
+                                            using (System.Diagnostics.Process conv_proc = System.Diagnostics.Process.Start(startinfo))
+                                            {
+                                                conv_proc.WaitForExit();
+                                            }
                                         }
                                     }
                                 }

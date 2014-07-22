@@ -1,10 +1,15 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrionicCANFlasher", "TrionicCANFlasher\TrionicCANFlasher.csproj", "{AD7871BE-0280-47D4-9492-2181BB1C789B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B797A381-EF56-4206-A5F8-F8B491634D56} = {B797A381-EF56-4206-A5F8-F8B491634D56}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrionicCANLib", "TrionicCANLib\TrionicCANLib.csproj", "{3FE690B8-7A3B-425E-913C-BFF7A55F7BC4}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SetupCANFlash", "SetupCANFlash\SetupCANFlash.vdproj", "{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigFTDI", "ConfigFTDI\ConfigFTDI.csproj", "{B797A381-EF56-4206-A5F8-F8B491634D56}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +43,12 @@ Global
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|Any CPU.Build.0 = Release
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|x86.ActiveCfg = Release
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|x86.Build.0 = Release
+		{B797A381-EF56-4206-A5F8-F8B491634D56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B797A381-EF56-4206-A5F8-F8B491634D56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B797A381-EF56-4206-A5F8-F8B491634D56}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B797A381-EF56-4206-A5F8-F8B491634D56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B797A381-EF56-4206-A5F8-F8B491634D56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B797A381-EF56-4206-A5F8-F8B491634D56}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

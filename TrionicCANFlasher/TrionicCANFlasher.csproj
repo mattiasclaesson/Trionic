@@ -17,6 +17,7 @@
     <GenerateManifests>true</GenerateManifests>
     <SignManifests>false</SignManifests>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <ApplicationIcon>TrionicCanFlasher.ico</ApplicationIcon>
     <PublishUrl>C:\publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -33,7 +34,6 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <ApplicationIcon>TrionicCanFlasher.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -161,6 +161,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ConfigFTDI\ConfigFTDI.csproj">
+      <Project>{B797A381-EF56-4206-A5F8-F8B491634D56}</Project>
+      <Name>ConfigFTDI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TrionicCANLib\TrionicCANLib.csproj">
       <Project>{3FE690B8-7A3B-425E-913C-BFF7A55F7BC4}</Project>
       <Name>TrionicCANLib</Name>
