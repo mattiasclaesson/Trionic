@@ -535,6 +535,7 @@ namespace TrionicCANFlasher
 
             // get additional info from registry if available
             LoadRegistrySettings();
+            CheckRegistryFTDI();
             Application.DoEvents();
 
             trionicCan.onReadProgress += trionicCan_onReadProgress;
@@ -618,6 +619,39 @@ namespace TrionicCANFlasher
                         }
                         catch (Exception)
                         {
+                        }
+                    }
+                }
+            }
+        }
+
+        private void CheckRegistryFTDI()
+        {
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
+            {
+                using (RegistryKey FTDIBUSKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Enum\\FTDIBUS"))
+                {
+                    if (FTDIBUSKey != null)
+                    {
+                        string[] vals = FTDIBUSKey.GetSubKeyNames();
+                        foreach (string name in vals)
+                        {
+                            if (name.StartsWith("VID_0403+PID_6001"))
+                            {
+                                using (RegistryKey NameKey = FTDIBUSKey.OpenSubKey(name + "\\0000\\Device Parameters"))
+                                {
+                                    String PortName = NameKey.GetValue("PortName").ToString();
+                                    if (cbxComPort.SelectedItem != null && cbxComPort.SelectedItem.Equals(PortName))
+                                    {
+                                        String Latency = NameKey.GetValue("LatencyTimer").ToString();
+                                        AddLogItem(String.Format("ELM327 FTDI setting for {0} LatencyTimer {1}ms.", PortName, Latency));
+                                        if (!Latency.Equals("2"))
+                                        {
+                                            MessageBox.Show("Warning LatencyTimer should be set to 2 ms", "ELM327 FTDI setting", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
