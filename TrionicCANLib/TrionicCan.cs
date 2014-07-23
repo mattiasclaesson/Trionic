@@ -2697,6 +2697,9 @@ namespace TrionicCANLib
             if (!canUsbDevice.isOpen()) return retData;
 
             CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
+            //optimize reading speed for ELM
+            if (length <= 6)
+                msg.elmExpectedResponses = 1;
             //Console.WriteLine("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
             ulong cmd = 0x0000000000002306; // always 2 bytes
             ulong addressHigh = (uint)address & 0x0000000000FF0000;

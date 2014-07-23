@@ -640,14 +640,17 @@ namespace TrionicCANFlasher
                             {
                                 using (RegistryKey NameKey = FTDIBUSKey.OpenSubKey(name + "\\0000\\Device Parameters"))
                                 {
-                                    String PortName = NameKey.GetValue("PortName").ToString();
-                                    if (cbxComPort.SelectedItem != null && cbxComPort.SelectedItem.Equals(PortName))
+                                    if (NameKey != null)
                                     {
-                                        String Latency = NameKey.GetValue("LatencyTimer").ToString();
-                                        AddLogItem(String.Format("ELM327 FTDI setting for {0} LatencyTimer {1}ms.", PortName, Latency));
-                                        if (!Latency.Equals("2"))
+                                        String PortName = NameKey.GetValue("PortName").ToString();
+                                        if (cbxComPort.SelectedItem != null && cbxComPort.SelectedItem.Equals(PortName))
                                         {
-                                            MessageBox.Show("Warning LatencyTimer should be set to 2 ms", "ELM327 FTDI setting", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                            String Latency = NameKey.GetValue("LatencyTimer").ToString();
+                                            AddLogItem(String.Format("ELM327 FTDI setting for {0} LatencyTimer {1}ms.", PortName, Latency));
+                                            if (!Latency.Equals("2"))
+                                            {
+                                                MessageBox.Show("Warning LatencyTimer should be set to 2 ms", "ELM327 FTDI setting", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                            }
                                         }
                                     }
                                 }
