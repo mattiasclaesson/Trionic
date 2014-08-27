@@ -157,6 +157,7 @@ namespace TrionicCANLib.KWP
             }
         }
 
+        // This function work well to reset the T7 ECU, but doing so in car will cause limphome of throttlebody. 
         public bool ResetECU()
         {
             LogDataString("ResetECU");

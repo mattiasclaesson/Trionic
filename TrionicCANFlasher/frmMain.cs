@@ -182,7 +182,6 @@ namespace TrionicCANFlasher
             btnSetECUVIN.Enabled = enable;
             btnSetE85.Enabled = enable;
             btnSetSpeed.Enabled = enable;
-            btnResetECU.Enabled = enable;
             cbxAdapterType.Enabled = enable;
             cbxEcuType.Enabled = enable;
             label1.Enabled = enable;
@@ -216,12 +215,7 @@ namespace TrionicCANFlasher
                     btnGetECUInfo.Enabled = false;
                     btnSetE85.Enabled = false;
                     btnReadDTC.Enabled = false;
-                    btnResetECU.Enabled = false;
                 }
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                btnResetECU.Enabled = false;
             }
         }
 
@@ -842,34 +836,6 @@ namespace TrionicCANFlasher
                     }
                 }
 
-                trionicCan.Cleanup();
-                AddLogItem("Connection closed");
-                EnableUserInput(true);
-            }
-        }
-
-        private void btnResetECU_Click(object sender, EventArgs e)
-        {
-            GetUIOptions();
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-
-                SetT7AdapterType();
-
-                AddLogItem("Opening connection");
-                EnableUserInput(false);
-
-                if (trionicCan.openT7Device())
-                {
-                    Thread.Sleep(1000);
-                    AddLogItem("Reset T7");
-                    Application.DoEvents();
-                    trionicCan.ResetT7();
-                }
-                else
-                {
-                    AddLogItem("Unable to connect to Trionic 7 ECU");
-                }
                 trionicCan.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);

@@ -49,7 +49,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.btnSetE85 = new System.Windows.Forms.Button();
             this.btnSetSpeed = new System.Windows.Forms.Button();
-            this.btnResetECU = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.cbxEcuType = new System.Windows.Forms.ComboBox();
             this.cbOnlyPBus = new System.Windows.Forms.CheckBox();
@@ -278,17 +277,6 @@
             this.btnSetSpeed.UseVisualStyleBackColor = true;
             this.btnSetSpeed.Click += new System.EventHandler(this.btnSetSpeed_Click);
             // 
-            // btnResetECU
-            // 
-            this.btnResetECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnResetECU.Location = new System.Drawing.Point(678, 68);
-            this.btnResetECU.Name = "btnResetECU";
-            this.btnResetECU.Size = new System.Drawing.Size(107, 50);
-            this.btnResetECU.TabIndex = 54;
-            this.btnResetECU.Text = "Reset ECU";
-            this.btnResetECU.UseVisualStyleBackColor = true;
-            this.btnResetECU.Click += new System.EventHandler(this.btnResetECU_Click);
-            // 
             // label2
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -376,7 +364,6 @@
             this.Controls.Add(this.cbOnlyPBus);
             this.Controls.Add(this.cbxEcuType);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.btnResetECU);
             this.Controls.Add(this.btnSetSpeed);
             this.Controls.Add(this.btnSetE85);
             this.Controls.Add(this.label3);
@@ -430,7 +417,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnSetE85;
         private System.Windows.Forms.Button btnSetSpeed;
-        private System.Windows.Forms.Button btnResetECU;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cbxEcuType;
         private System.Windows.Forms.CheckBox cbOnlyPBus;

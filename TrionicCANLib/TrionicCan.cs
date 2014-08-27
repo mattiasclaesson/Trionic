@@ -4333,11 +4333,6 @@ namespace TrionicCANLib
             return level;
         }
 
-        public bool ResetT7()
-        {
-            return KWPHandler.getInstance().ResetECU();
-        }
-
         public string[] ReadDTCCodesT7()
         {
             List<string> list;
