@@ -353,6 +353,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
+            LogHelper.Flush();
         }
 
         private void btnReadSRAM_Click(object sender, EventArgs e)
@@ -876,6 +877,10 @@ namespace TrionicCANFlasher
                 progressBar1.Value = (int)percentage;
             }
             string text = percentage.ToString("F0") + "%";
+            if (cbEnableLogging.Checked)
+            {
+                LogHelper.Log("progress: " + text);
+            }
             if (label1.Text != text)
             {
                 label1.Text = text;

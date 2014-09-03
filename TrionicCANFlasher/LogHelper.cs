@@ -16,6 +16,7 @@ namespace TrionicCANFlasher
         static Thread logThread;
         static ILog uiLog = LogManager.GetLogger("UILog");
         static TrionicCANLib.Log.LogQueue<LogEntry> logQueue;
+        static bool isRunning = false;
 
         static LogHelper()
         {
@@ -31,6 +32,15 @@ namespace TrionicCANFlasher
             while (true)
             {
                 var logItem = logQueue.Dequeue();
+                if (!isRunning)
+                {
+                    lock (logThread)
+                    {
+                        XmlConfigurator.Configure(new MemoryStream(TrionicCANFlasher.Properties.Resources.log4net_config));
+                        isRunning = true;
+                    }
+                }
+                
                 if (logItem != null)
                 {
                     uiLog.Info(logItem);
@@ -56,6 +66,15 @@ namespace TrionicCANFlasher
             public override string ToString()
             {
                 return string.Format("{0:yyyy-MM-dd HH:mm:ss.ffff} - {1}", time, msg);
+            }
+        }
+
+        internal static void Flush()
+        {
+            lock (logThread)
+            {
+                LogManager.Shutdown();
+                isRunning = false;
             }
         }
     }
