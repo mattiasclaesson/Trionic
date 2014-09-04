@@ -1,2 +1,2 @@
-TrionicCANFlasher.version=v0.0.0.8
-TrionicCANLib.version=v0.0.0.8
+TrionicCANFlasher.version=v0.0.0.9
+TrionicCANLib.version=v0.0.0.9

@@ -304,7 +304,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.0.0.8, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.0.0.9, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_742DE0BE9E2362B6F6D50F07248E8079"
@@ -500,14 +500,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{A04E915B-FD1C-4C96-8F8F-731426407908}"
-        "PackageCode" = "8:{85924109-B987-41E7-B630-6546A0177818}"
+        "ProductCode" = "8:{579259A3-D778-4BCB-B600-650C6D545A87}"
+        "PackageCode" = "8:{32961FC3-6A13-48BA-95A3-D8E3D78F4B05}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.0.8"
+        "ProductVersion" = "8:0.0.9"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
