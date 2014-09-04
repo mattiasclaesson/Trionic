@@ -147,7 +147,7 @@ namespace TrionicCANLib.Flasher
 
         //---------------------------------------------------------------------------------------------
         /**
-            Begins a communicatons session with ECU.
+            Begins a communication session with ECU.
           
             @return             succ / fail
         */
@@ -168,10 +168,11 @@ namespace TrionicCANLib.Flasher
 
         //---------------------------------------------------------------------------------------------
         /**
-            Ends a communicatons session with ECU.     
+            Ends a communication session with ECU.     
         */
         public void endSession()
         {
+            this.AddToFlasherTrace("End communication session");
             this.combi.CAN_DisconnectECU(false);
         }
     };

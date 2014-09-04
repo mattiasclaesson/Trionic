@@ -151,6 +151,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
+            LogHelper.Flush();
         }
 
         void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -284,6 +285,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
+            LogHelper.Flush();
         }
 
         private void btnGetEcuInfo_Click(object sender, EventArgs e)
@@ -403,6 +405,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
+            LogHelper.Flush();
         }
 
         private void btnRecoverECU_Click(object sender, EventArgs e)
@@ -441,6 +444,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
+            LogHelper.Flush();
         }
 
         private void btnExit_Click(object sender, EventArgs e)
@@ -735,6 +739,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
+            LogHelper.Flush();
         }
 
         private void btnSetECUVIN_Click(object sender, EventArgs e)
@@ -765,6 +770,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
+            LogHelper.Flush();
         }
 
         private void btnSetE85_Click(object sender, EventArgs e)
@@ -809,6 +815,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
+            LogHelper.Flush();
         }
 
         private void GetUIOptions()
@@ -841,6 +848,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
+            LogHelper.Flush();
         }
 
         private void updateStatusInBox(TrionicCANLib.TrionicCan.CanInfoEventArgs e)
