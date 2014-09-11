@@ -23,7 +23,7 @@ namespace TrionicCANLib.Flasher
         public T7CombiFlasher(caCombiAdapter _combi)
         {
             Debug.Assert(_combi != null);
-            this.combi = _combi;
+            combi = _combi;
         }
 
         //---------------------------------------------------------------------------------------------
@@ -34,16 +34,16 @@ namespace TrionicCANLib.Flasher
         */
         public override FlashStatus getStatus()
         {
-            if (this.combi.OperationRunning())
+            if (combi.OperationRunning())
             {
                 // in progress
-                return this.m_flashStatus;
+                return m_flashStatus;
             }
 
-            if (!this.combi.OperationSucceeded())
+            if (!combi.OperationSucceeded())
             {
                 // failed (no way to know the real reason)
-                switch (this.m_command)
+                switch (m_command)
                 {
                     case FlashCommand.ReadCommand:
                     case FlashCommand.ReadMemoryCommand:
@@ -68,7 +68,7 @@ namespace TrionicCANLib.Flasher
         */
         public override int getNrOfBytesRead()
         {
-            return (int)this.combi.GetOperationProgress();
+            return (int)combi.GetOperationProgress();
         }
 
         //---------------------------------------------------------------------------------------------
@@ -77,10 +77,10 @@ namespace TrionicCANLib.Flasher
         */
         public override void stopFlasher()
         {
-            this.endSession();
+            endSession();
 
             base.stopFlasher();
-            this.m_flashStatus = FlashStatus.Completed;
+            m_flashStatus = FlashStatus.Completed;
         }
 
         //---------------------------------------------------------------------------------------------
@@ -97,20 +97,20 @@ namespace TrionicCANLib.Flasher
             {
                 // connect to ECU; this may take some time as both
                 // P-Bus and I-bus are checked for traffic
-                if (!this.beginSession())
+                if (!beginSession())
                 {
                     throw new Exception("Failed to start session");
                 }
 
                 // read flash    
-                this.combi.CAN_ReadFlash(a_fileName);
-                this.m_flashStatus = FlashStatus.Reading;
+                combi.CAN_ReadFlash(a_fileName);
+                m_flashStatus = FlashStatus.Reading;
             }
 
             catch (Exception e)
             {
-                this.AddToFlasherTrace("Read error: " + e.Message);
-                this.m_flashStatus = FlashStatus.ReadError;
+                AddToFlasherTrace("Read error: " + e.Message);
+                m_flashStatus = FlashStatus.ReadError;
             }
         }
 
@@ -128,20 +128,20 @@ namespace TrionicCANLib.Flasher
             {
                 // connect to ECU; this may take some time as both
                 // P-Bus and I-bus are checked for traffic
-                if (!this.beginSession())
+                if (!beginSession())
                 {
                     throw new Exception("Failed to start session");
                 }
 
                 // read flash    
-                this.combi.CAN_WriteFlash(a_fileName, 0);
-                this.m_flashStatus = FlashStatus.Writing;
+                combi.CAN_WriteFlash(a_fileName, 0);
+                m_flashStatus = FlashStatus.Writing;
             }
 
             catch (Exception e)
             {
-                this.AddToFlasherTrace("Write error: " + e.Message);
-                this.m_flashStatus = FlashStatus.WriteError;
+                AddToFlasherTrace("Write error: " + e.Message);
+                m_flashStatus = FlashStatus.WriteError;
             }
         }
 
@@ -155,13 +155,13 @@ namespace TrionicCANLib.Flasher
         {
             try
             {
-                this.combi.CAN_ConnectECU(3);
+                combi.CAN_ConnectECU(3);
                 return true;
             }
 
             catch (Exception e)
             {
-                this.AddToFlasherTrace("Session error: " + e.Message);
+                AddToFlasherTrace("Session error: " + e.Message);
                 return false;
             }
         }
@@ -172,8 +172,8 @@ namespace TrionicCANLib.Flasher
         */
         public void endSession()
         {
-            this.AddToFlasherTrace("End communication session");
-            this.combi.CAN_DisconnectECU(false);
+            AddToFlasherTrace("End communication session");
+            combi.CAN_DisconnectECU(false);
         }
     };
 }

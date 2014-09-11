@@ -33,8 +33,8 @@ public class LPCCANDevice : ICANDevice
     public LPCCANDevice()
     {  
         // create adapter
-        this.combi = new caCombiAdapter();
-        Debug.Assert(this.combi != null);
+        combi = new caCombiAdapter();
+        Debug.Assert(combi != null);
     }
 
     //---------------------------------------------------------------------------------------------
@@ -44,8 +44,8 @@ public class LPCCANDevice : ICANDevice
     ~LPCCANDevice()
     {
         // release adapter
-        this.close();
-        this.combi = null;
+        close();
+        combi = null;
     }
 
     //---------------------------------------------------------------------------------------------
@@ -59,15 +59,15 @@ public class LPCCANDevice : ICANDevice
         try
         {
             // connect to adapter
-            this.combi.Open();
-            uint fw_ver = this.combi.GetFirmwareVersion();
+            combi.Open();
+            uint fw_ver = combi.GetFirmwareVersion();
 
             return true;
         }
 
         catch (Exception e)
         {
-            this.AddToCanTrace("Failed to connect to adapter: " + e.Message);
+            AddToCanTrace("Failed to connect to adapter: " + e.Message);
             return false;
         }
     }
@@ -80,7 +80,7 @@ public class LPCCANDevice : ICANDevice
     */
     public void disconnect()
     {
-        this.combi.Close();
+        combi.Close();
     }
 
     private int m_forcedBaudrate = 38400;
@@ -122,53 +122,53 @@ public class LPCCANDevice : ICANDevice
         try
         {
             // connect to adapter
-            Console.WriteLine("Connecting LPCCanDevice");
-            this.connect();
-            Console.WriteLine("Connected LPCCanDevice");
+            AddToDeviceTrace("Connecting LPCCanDevice");
+            connect();
+            AddToDeviceTrace("Connected LPCCanDevice");
 
             // try listening on I-bus first
-            if (!UseOnlyPBus && this.try_bitrate(47619, !DisableCanConnectionCheck))
+            if (!UseOnlyPBus && try_bitrate(47619, !DisableCanConnectionCheck))
             {
                 // got traffic
-                Console.WriteLine("I-bus connected");
+                AddToDeviceTrace("I-bus connected");
 
                 return OpenResult.OK;
             }
- 
-            Console.WriteLine("Trying P-bus connection");
+
+            AddToDeviceTrace("Trying P-bus connection");
 
             // try P-bus next
-            if (!this.try_bitrate(500000, !DisableCanConnectionCheck))
+            if (!try_bitrate(500000, !DisableCanConnectionCheck))
             {
                 // give up
-                Console.WriteLine("Failed to open canchannel");
-                this.combi.Close();
+                AddToDeviceTrace("Failed to open canchannel");
+                combi.Close();
                 return OpenResult.OpenError;
             }
 
-            Console.WriteLine("Canchannel opened");
-            if(read_thread != null) Console.WriteLine("Threadstate: " + read_thread.ThreadState.ToString());
+            AddToDeviceTrace("Canchannel opened");
+            if (read_thread != null) AddToDeviceTrace("Threadstate: " + read_thread.ThreadState);
             // start reader thread
             try
             {
-                if (this.read_thread != null) this.read_thread.Abort();
+                if (read_thread != null) read_thread.Abort();
             }
             catch (Exception tE)
             {
-                Console.WriteLine("Failed to abort thread: " + tE.Message);
+                AddToDeviceTrace("Failed to abort thread: " + tE.Message);
             }
             term_requested = false;
-            this.read_thread = new Thread(this.read_messages); // move here to ensure a new thread is started
-            this.read_thread.Name = "LPCCANDevice.read_thread";
-            this.read_thread.Start();
+            read_thread = new Thread(read_messages); // move here to ensure a new thread is started
+            read_thread.Name = "LPCCANDevice.read_thread";
+            read_thread.Start();
             return OpenResult.OK;        
         }
 
         catch (Exception E)
         {
-            Console.WriteLine("Failed to open LPCCanDevice: " + E.Message);
+            AddToDeviceTrace("Failed to open LPCCanDevice: " + E.Message);
             // cleanup
-            this.close();
+            close();
 
             // adapter not present
             return OpenResult.OpenError;            
@@ -183,7 +183,7 @@ public class LPCCANDevice : ICANDevice
     */
     public override bool isOpen()
     {
-        return this.combi.IsOpen();
+        return combi.IsOpen();
     }
 
     //---------------------------------------------------------------------------------------------
@@ -197,15 +197,15 @@ public class LPCCANDevice : ICANDevice
         try
         {
             // terminate worker thread
-            Debug.Assert(this.term_mutex != null);
-            lock (this.term_mutex)
+            Debug.Assert(term_mutex != null);
+            lock (term_mutex)
             {
-                this.term_requested = true;
+                term_requested = true;
             }
             
             // close connection
-            Console.WriteLine("Disconnected from LPCCANDevice");
-            this.disconnect();
+            AddToDeviceTrace("Disconnected from LPCCANDevice");
+            disconnect();
             return CloseResult.OK;
         }
 
@@ -235,8 +235,8 @@ public class LPCCANDevice : ICANDevice
     */
     public bool GetADCFiltering(uint channel)
     {
-        Debug.Assert(this.combi != null);
-        return this.combi.GetADCFiltering(channel);
+        Debug.Assert(combi != null);
+        return combi.GetADCFiltering(channel);
     }
 
     //---------------------------------------------------------------------------------------------
@@ -249,8 +249,8 @@ public class LPCCANDevice : ICANDevice
     */
     public void SetADCFiltering(uint channel, bool enable)
     {
-        Debug.Assert(this.combi != null);
-        this.combi.SetADCFiltering(channel, enable);
+        Debug.Assert(combi != null);
+        combi.SetADCFiltering(channel, enable);
     }
 
     //---------------------------------------------------------------------------------------------
@@ -263,8 +263,8 @@ public class LPCCANDevice : ICANDevice
     */
     public override float GetADCValue(uint channel)
     {
-        Debug.Assert(this.combi != null);
-        return this.combi.GetADCValue(channel);
+        Debug.Assert(combi != null);
+        return combi.GetADCValue(channel);
     }
 
     //---------------------------------------------------------------------------------------------
@@ -275,8 +275,8 @@ public class LPCCANDevice : ICANDevice
     */
     public override float GetThermoValue()
     {
-        Debug.Assert(this.combi != null);
-        return this.combi.GetThermoValue();
+        Debug.Assert(combi != null);
+        return combi.GetThermoValue();
     }
 
     //---------------------------------------------------------------------------------------------
@@ -287,14 +287,14 @@ public class LPCCANDevice : ICANDevice
     */
     public TrionicCANLib.Flasher.T7CombiFlasher createFlasher()
     {
-        Debug.Assert(this.combi != null);
-        if (!this.combi.IsOpen())
+        Debug.Assert(combi != null);
+        if (!combi.IsOpen())
         {
-            this.AddToCanTrace("Failed to create flasher: not connected to adapter");
+            AddToCanTrace("Failed to create flasher: not connected to adapter");
             return null;
         }
 
-        return new TrionicCANLib.Flasher.T7CombiFlasher(this.combi);
+        return new TrionicCANLib.Flasher.T7CombiFlasher(combi);
     }
 
     //---------------------------------------------------------------------------------------------
@@ -307,26 +307,26 @@ public class LPCCANDevice : ICANDevice
     */
     public override bool sendMessage(CANMessage msg)
     {
-        this.AddToCanTrace("Sending message: " + msg.getID().ToString("X4") + " " + msg.getData().ToString("X16") + " " + msg.getLength().ToString("X2"));
+        AddToCanTrace("Sending message: " + msg.getID().ToString("X4") + " " + msg.getData().ToString("X16") + " " + msg.getLength().ToString("X2"));
 
         try
         {
-            Combi.caCombiAdapter.caCANFrame frame;
+            caCombiAdapter.caCANFrame frame;
             frame.id = msg.getID(); 
             frame.length = msg.getLength();
             frame.data = msg.getData();
             frame.is_extended = 0;
             frame.is_remote = 0;
 
-            this.combi.CAN_SendMessage(ref frame);
+            combi.CAN_SendMessage(ref frame);
 
-            this.AddToCanTrace("Message sent successfully");
+            AddToCanTrace("Message sent successfully");
             return true;
         }
 
         catch (Exception e)
         {
-            this.AddToCanTrace("Message failed to send: " + e.Message);
+            AddToCanTrace("Message failed to send: " + e.Message);
             return false;
         }
     }
@@ -349,7 +349,7 @@ public class LPCCANDevice : ICANDevice
         canMsg.setID(0);
 
         caCombiAdapter.caCANFrame frame = new caCombiAdapter.caCANFrame();
-        if (this.combi.CAN_GetMessage(ref frame, timeout) && 
+        if (combi.CAN_GetMessage(ref frame, timeout) && 
             (frame.id == a_canID || a_canID == 0))
         {
             // message received
@@ -378,8 +378,8 @@ public class LPCCANDevice : ICANDevice
         try
         {
             // try connecting
-            this.combi.CAN_SetBitrate(bitrate);
-            this.combi.CAN_Open(true);
+            combi.CAN_SetBitrate(bitrate);
+            combi.CAN_Open(true);
 
             if (check_traffic)
             {
@@ -387,7 +387,7 @@ public class LPCCANDevice : ICANDevice
                 CANMessage msg = new CANMessage();
                 Debug.Assert(msg != null);
 
-                if (this.waitForMessage(0, 1000, out msg) < 1)
+                if (waitForMessage(0, 1000, out msg) < 1)
                 {
                     throw new Exception("No traffic at given bitrate");
                 }
@@ -399,7 +399,7 @@ public class LPCCANDevice : ICANDevice
         catch 
         {
             // failed
-            this.combi.CAN_Open(false);
+            combi.CAN_Open(false);
             return false;
         }
     }
@@ -416,34 +416,34 @@ public class LPCCANDevice : ICANDevice
         while (true)
         {
             // check for thread termination request
-            Debug.Assert(this.term_mutex != null);
-            lock (this.term_mutex)
+            Debug.Assert(term_mutex != null);
+            lock (term_mutex)
             {
-                if (this.term_requested)
+                if (term_requested)
                 {
                     // exit
-                    Console.WriteLine("Reader thread ended");
+                    AddToDeviceTrace("Reader thread ended");
                     return;
                 }
             }
 
             // receive messages
-            if (this.combi.CAN_GetMessage(ref frame, 1000))
+            if (combi.CAN_GetMessage(ref frame, 1000))
             {
                 if (acceptMessageId(frame.id))
                 {
                     // convert message
-                    this.in_msg.setID(frame.id);
-                    this.in_msg.setLength(frame.length);
-                    this.in_msg.setData(frame.data);
+                    in_msg.setID(frame.id);
+                    in_msg.setLength(frame.length);
+                    in_msg.setData(frame.data);
 
                     // pass message to listeners
-                    lock (this.m_listeners)
+                    lock (m_listeners)
                     {
                         AddToCanTrace("RX: " + frame.id.ToString("X4") + " " + frame.data.ToString("X16"));
-                        foreach (ICANListener listener in this.m_listeners)
+                        foreach (ICANListener listener in m_listeners)
                         {
-                            listener.handleMessage(this.in_msg);
+                            listener.handleMessage(in_msg);
                         }
                     }
                 }

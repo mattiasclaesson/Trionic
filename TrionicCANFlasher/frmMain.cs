@@ -12,12 +12,13 @@ using System.Drawing;
 
 namespace TrionicCANFlasher
 {
-    public delegate void DelegateUpdateStatus(TrionicCANLib.TrionicCan.CanInfoEventArgs e);
-    public delegate void DelegateProgressStatus(float percentage);
+    public delegate void DelegateUpdateStatus(ITrionic.CanInfoEventArgs e);
+    public delegate void DelegateProgressStatus(int percentage);
 
     public partial class frmMain : Form
     {
-        readonly TrionicCANLib.TrionicCan trionicCan = new TrionicCANLib.TrionicCan();
+        readonly Trionic8 trionic8 = new Trionic8();
+        readonly Trionic7 trionic7 = new Trionic7();
         DateTime dtstart;
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
@@ -80,7 +81,6 @@ namespace TrionicCANFlasher
 
         private void btnFlashEcu_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
             using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Bin files|*.bin", Multiselect = false })
             {
                 if (ofd.ShowDialog() == DialogResult.OK)
@@ -90,22 +90,22 @@ namespace TrionicCANFlasher
                     {
                         if (fi.Length == 0x80000)
                         {
-                            SetT7AdapterType();
+                            SetOptions(trionic7);
 
                             AddLogItem("Opening connection");
                             EnableUserInput(false);
-                            if (trionicCan.openT7Device())
+                            if (trionic7.openDevice(false))
                             {
                                 Thread.Sleep(1000);
                                 AddLogItem("Update FLASH content");
                                 Application.DoEvents();
                                 dtstart = DateTime.Now;
-                                trionicCan.UpdateFlashWithT7Flasher(ofd.FileName);
+                                trionic7.WriteFlash(ofd.FileName);
                             }
                             else
                             {
                                 AddLogItem("Unable to connect to Trionic 7 ECU");
-                                trionicCan.Cleanup();
+                                trionic7.Cleanup();
                                 EnableUserInput(true);
                                 AddLogItem("Connection terminated");
                             }
@@ -119,12 +119,11 @@ namespace TrionicCANFlasher
                     {
                         if (fi.Length == 0x100000)
                         {
-                            trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                            SetT8AdapterType();
+                            SetOptions(trionic8);
 
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
-                            if (trionicCan.openDevice(false))
+                            if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
                                 dtstart = DateTime.Now;
@@ -132,14 +131,14 @@ namespace TrionicCANFlasher
                                 Application.DoEvents();
                                 BackgroundWorker bgWorker;
                                 bgWorker = new BackgroundWorker();
-                                bgWorker.DoWork += new DoWorkEventHandler(trionicCan.WriteFlashT8);
+                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlash);
                                 bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
                                 bgWorker.RunWorkerAsync(ofd.FileName);
                             }
                             else
                             {
                                 AddLogItem("Unable to connect to Trionic 8 ECU");
-                                trionicCan.Cleanup();
+                                trionic8.Cleanup();
                                 EnableUserInput(true);
                                 AddLogItem("Connection terminated");
                             }
@@ -166,7 +165,7 @@ namespace TrionicCANFlasher
             }
             TimeSpan ts = DateTime.Now - dtstart;
             AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-            trionicCan.Cleanup();
+            trionic8.Cleanup();
             EnableUserInput(true);
             AddLogItem("Connection terminated");
         }
@@ -206,7 +205,7 @@ namespace TrionicCANFlasher
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                btnReadSRAM.Enabled = false;
+                //btnReadSRAM.Enabled = false;
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
@@ -222,7 +221,6 @@ namespace TrionicCANFlasher
 
         private void btnReadECU_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
             using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Bin files|*.bin" })
             {
                 if (sfd.ShowDialog() == DialogResult.OK)
@@ -233,12 +231,12 @@ namespace TrionicCANFlasher
                         {
                             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
-                                SetT7AdapterType();
+                                SetOptions(trionic7);
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);
 
-                                if (trionicCan.openT7Device())
+                                if (trionic7.openDevice(false))
                                 {
                                     // check reading status periodically
 
@@ -246,7 +244,7 @@ namespace TrionicCANFlasher
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
                                     dtstart = DateTime.Now;
-                                    trionicCan.getFlashWithT7Flasher(sfd.FileName);
+                                    trionic7.ReadFlash(sfd.FileName);
                                 }
                                 else
                                 {
@@ -256,12 +254,11 @@ namespace TrionicCANFlasher
                             }
                             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                             {
-                                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                                SetT8AdapterType();
+                                SetOptions(trionic8);
 
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
-                                if (trionicCan.openDevice(false))
+                                if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);
                                     dtstart = DateTime.Now;
@@ -269,14 +266,14 @@ namespace TrionicCANFlasher
                                     Application.DoEvents();
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();
-                                    bgWorker.DoWork += new DoWorkEventHandler(trionicCan.ReadFlashT8);
+                                    bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlash);
                                     bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
                                     bgWorker.RunWorkerAsync(sfd.FileName);
                                 }
                                 else
                                 {
                                     AddLogItem("Unable to connect to Trionic 8 ECU");
-                                    trionicCan.Cleanup();
+                                    trionic8.Cleanup();
                                     EnableUserInput(true);
                                     AddLogItem("Connection terminated");
                                 }
@@ -290,68 +287,66 @@ namespace TrionicCANFlasher
 
         private void btnGetEcuInfo_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetT7AdapterType();
+                SetOptions(trionic7);
 
                 AddLogItem("Opening connection");
                 EnableUserInput(false);
 
-                if (trionicCan.openT7Device())
+                if (trionic7.openDevice(false))
                 {
                     Thread.Sleep(1000);
                     AddLogItem("Aquiring ECU info");
                     Application.DoEvents();
-                    trionicCan.GetVehicleVINfromT7();
+                    trionic7.GetECUInfo();
                 }
                 else
                 {
                     AddLogItem("Unable to connect to Trionic 7 ECU");
                 }
-                trionicCan.Cleanup();
+                trionic7.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                SetT8AdapterType();
+                SetOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionicCan.openDevice(false))
+                if (trionic8.openDevice(false))
                 {
-                    AddLogItem("VINNumber       : " + trionicCan.GetVehicleVIN());           //0x90
-                    AddLogItem("Calibration set : " + trionicCan.GetCalibrationSet());       //0x74
-                    AddLogItem("Codefile version: " + trionicCan.GetCodefileVersion());      //0x73
-                    AddLogItem("ECU description : " + trionicCan.GetECUDescription());       //0x72
-                    AddLogItem("ECU hardware    : " + trionicCan.GetECUHardware());          //0x71
-                    AddLogItem("ECU sw number   : " + trionicCan.GetECUSWVersionNumber());   //0x95
-                    AddLogItem("Programming date: " + trionicCan.GetProgrammingDate());      //0x99
-                    AddLogItem("Build date      : " + trionicCan.GetBuildDate());            //0x0A
-                    AddLogItem("Serial number   : " + trionicCan.GetSerialNumber());         //0xB4       
-                    AddLogItem("Software version: " + trionicCan.GetSoftwareVersion());      //0x08
-                    AddLogItem("0F identifier   : " + trionicCan.RequestECUInfo(0x0F, ""));
-                    AddLogItem("SW identifier 1 : " + trionicCan.RequestECUInfo(0xC1, ""));
-                    AddLogItem("SW identifier 2 : " + trionicCan.RequestECUInfo(0xC2, ""));
-                    AddLogItem("SW identifier 3 : " + trionicCan.RequestECUInfo(0xC3, ""));
-                    AddLogItem("SW identifier 4 : " + trionicCan.RequestECUInfo(0xC4, ""));
-                    AddLogItem("SW identifier 5 : " + trionicCan.RequestECUInfo(0xC5, ""));
-                    AddLogItem("SW identifier 6 : " + trionicCan.RequestECUInfo(0xC6, ""));
-                    AddLogItem("Hardware type   : " + trionicCan.RequestECUInfo(0x97, ""));
-                    AddLogItem("75 identifier   : " + trionicCan.RequestECUInfo(0x75, ""));
-                    AddLogItem("Engine type     : " + trionicCan.RequestECUInfo(0x0C, ""));
-                    AddLogItem("Supplier ID     : " + trionicCan.RequestECUInfo(0x92, ""));
-                    AddLogItem("Speed limiter   : " + trionicCan.GetTopSpeed() + " km/h");
-                    AddLogItem("Oil quality     : " + trionicCan.GetOilQualityPercentage().ToString("F2") + " %");
-                    AddLogItem("SAAB partnumber : " + trionicCan.GetSaabPartnumber());
-                    AddLogItem("Diagnostic ID   : " + trionicCan.GetDiagnosticDataIdentifier());
-                    AddLogItem("End model partnr: " + trionicCan.GetInt64FromID(0xCB));
-                    AddLogItem("Basemodel partnr: " + trionicCan.GetInt64FromID(0xCC));
+                    AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());           //0x90
+                    AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());       //0x74
+                    AddLogItem("Codefile version: " + trionic8.GetCodefileVersion());      //0x73
+                    AddLogItem("ECU description : " + trionic8.GetECUDescription());       //0x72
+                    AddLogItem("ECU hardware    : " + trionic8.GetECUHardware());          //0x71
+                    AddLogItem("ECU sw number   : " + trionic8.GetECUSWVersionNumber());   //0x95
+                    AddLogItem("Programming date: " + trionic8.GetProgrammingDate());      //0x99
+                    AddLogItem("Build date      : " + trionic8.GetBuildDate());            //0x0A
+                    AddLogItem("Serial number   : " + trionic8.GetSerialNumber());         //0xB4       
+                    AddLogItem("Software version: " + trionic8.GetSoftwareVersion());      //0x08
+                    AddLogItem("0F identifier   : " + trionic8.RequestECUInfo(0x0F, ""));
+                    AddLogItem("SW identifier 1 : " + trionic8.RequestECUInfo(0xC1, ""));
+                    AddLogItem("SW identifier 2 : " + trionic8.RequestECUInfo(0xC2, ""));
+                    AddLogItem("SW identifier 3 : " + trionic8.RequestECUInfo(0xC3, ""));
+                    AddLogItem("SW identifier 4 : " + trionic8.RequestECUInfo(0xC4, ""));
+                    AddLogItem("SW identifier 5 : " + trionic8.RequestECUInfo(0xC5, ""));
+                    AddLogItem("SW identifier 6 : " + trionic8.RequestECUInfo(0xC6, ""));
+                    AddLogItem("Hardware type   : " + trionic8.RequestECUInfo(0x97, ""));
+                    AddLogItem("75 identifier   : " + trionic8.RequestECUInfo(0x75, ""));
+                    AddLogItem("Engine type     : " + trionic8.RequestECUInfo(0x0C, ""));
+                    AddLogItem("Supplier ID     : " + trionic8.RequestECUInfo(0x92, ""));
+                    AddLogItem("Speed limiter   : " + trionic8.GetTopSpeed() + " km/h");
+                    AddLogItem("Oil quality     : " + trionic8.GetOilQualityPercentage().ToString("F2") + " %");
+                    AddLogItem("SAAB partnumber : " + trionic8.GetSaabPartnumber());
+                    AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
+                    AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
+                    AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromID(0xCC));
                 }
 
-                trionicCan.Cleanup();
+                trionic8.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
@@ -360,26 +355,55 @@ namespace TrionicCANFlasher
 
         private void btnReadSRAM_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                        SetT8AdapterType();
+                        SetOptions(trionic7);
+
+                        AddLogItem("Opening connection");
+                        EnableUserInput(false);
+
+                        if (trionic7.openDevice(false))
+                        {
+                            // check reading status periodically
+
+                            Thread.Sleep(1000);
+                            AddLogItem("Aquiring snapshot");
+                            Application.DoEvents();
+                            dtstart = DateTime.Now;
+                            trionic7.GetSRAMSnapshot(sfd.FileName);
+                        }
+                        else
+                        {
+                            AddLogItem("Unable to connect to Trionic 7 ECU");
+                        }
+                        trionic7.Cleanup();
+                        EnableUserInput(true);
+                        AddLogItem("Connection terminated");
+                    }
+                }
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            {
+                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
+                {
+                    if (sfd.ShowDialog() == DialogResult.OK)
+                    {
+                        SetOptions(trionic8);
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
-                        if (trionicCan.openDevice(false))
+                        if (trionic8.openDevice(false))
                         {
                             Thread.Sleep(1000);
                             dtstart = DateTime.Now;
                             AddLogItem("Aquiring snapshot");
                             Application.DoEvents();
-                            byte[] snapshot = trionicCan.getSRAMSnapshot();
-                            byte[] snapshot7000 = trionicCan.ReadT8SRAMSnapshot();
+                            byte[] snapshot = trionic8.getSRAMSnapshot();
+                            byte[] snapshot7000 = trionic8.ReadSRAMSnapshot();
                             byte[] total = new byte[0x008000];
                             snapshot.CopyTo(total, 0);
                             snapshot7000.CopyTo(total, 0x7000);
@@ -388,9 +412,9 @@ namespace TrionicCANFlasher
                                 File.WriteAllBytes(sfd.FileName, total);
                                 AddLogItem("Snapshot done");
                             }
-                            catch (Exception E)
+                            catch (Exception ex)
                             {
-                                AddLogItem("Could not write file... " + E.Message);
+                                AddLogItem("Could not write file... " + ex.Message);
                             }
                             TimeSpan ts = DateTime.Now - dtstart;
                             AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
@@ -399,7 +423,7 @@ namespace TrionicCANFlasher
                         {
                             AddLogItem("Unable to connect to Trionic 8 ECU");
                         }
-                        trionicCan.Cleanup();
+                        trionic8.Cleanup();
                         EnableUserInput(true);
                         AddLogItem("Connection terminated");
                     }
@@ -410,19 +434,17 @@ namespace TrionicCANFlasher
 
         private void btnRecoverECU_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
                 using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Binary files|*.bin", Multiselect = false })
                 {
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
-                        trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                        SetT8AdapterType();
+                        SetOptions(trionic8);
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
-                        if (trionicCan.openDevice(false))
+                        if (trionic8.openDevice(false))
                         {
                             Thread.Sleep(1000);
                             dtstart = DateTime.Now;
@@ -430,14 +452,14 @@ namespace TrionicCANFlasher
                             Application.DoEvents();
                             BackgroundWorker bgWorker;
                             bgWorker = new BackgroundWorker();
-                            bgWorker.DoWork += new DoWorkEventHandler(trionicCan.RecoverECUT8);
+                            bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU);
                             bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
                             bgWorker.RunWorkerAsync(ofd.FileName);
                         }
                         else
                         {
                             AddLogItem("Unable to connect to Trionic 8 ECU");
-                            trionicCan.Cleanup();
+                            trionic8.Cleanup();
                             EnableUserInput(true);
                             AddLogItem("Connection terminated");
                         }
@@ -459,67 +481,56 @@ namespace TrionicCANFlasher
             {
                 SaveRegistrySetting("Comport", cbxComPort.SelectedItem.ToString());
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                AddLogItem(ex.Message);
+            }
             SaveRegistrySetting("ECU", cbxEcuType.SelectedItem.ToString());
             SaveRegistrySetting("EnableLogging", cbEnableLogging.Checked);
             SaveRegistrySetting("OnlyPBus", cbOnlyPBus.Checked);
             SaveRegistrySetting("DisableCanCheck", cbDisableConnectionCheck.Checked);
             SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem.ToString());
-            trionicCan.Cleanup();
+            trionic8.Cleanup();
             Environment.Exit(0);
         }
 
-        private void SetT8AdapterType()
+        private void SetOptions(ITrionic trionic)
         {
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
-            {
-                trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
-                //set selected com speed
-                SetComPortSpeed();
-            }
+            trionic.EnableLog = cbEnableLogging.Checked;
+            trionic.OnlyPBus = cbOnlyPBus.Checked;
+            trionic.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
             
-            trionicCan.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
-        }
-
-        private void SetComPortSpeed()
-        {
-            switch (cbxComSpeed.SelectedIndex)
-            {
-                case (int)ComSpeed.S2Mbit:
-                    trionicCan.ForcedBaudrate = 2000000;
-                    break;
-                case (int)ComSpeed.S1Mbit:
-                    trionicCan.ForcedBaudrate = 1000000;
-                    break;
-                case (int)ComSpeed.S230400:
-                    trionicCan.ForcedBaudrate = 230400;
-                    break;
-                case (int)ComSpeed.S115200:
-                    trionicCan.ForcedBaudrate = 115200;
-                    break;
-                default:
-                    trionicCan.ForcedBaudrate = 0; //default , no speed will be changed
-                    break;
-            }
-        }
-
-        private void SetT7AdapterType()
-        {
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
-                trionicCan.ForcedComport = cbxComPort.SelectedItem.ToString();
+                trionic.ForcedComport = cbxComPort.SelectedItem.ToString();
                 //set selected com speed
-                SetComPortSpeed();
+                switch (cbxComSpeed.SelectedIndex)
+                {
+                    case (int)ComSpeed.S2Mbit:
+                        trionic.ForcedBaudrate = 2000000;
+                        break;
+                    case (int)ComSpeed.S1Mbit:
+                        trionic.ForcedBaudrate = 1000000;
+                        break;
+                    case (int)ComSpeed.S230400:
+                        trionic.ForcedBaudrate = 230400;
+                        break;
+                    case (int)ComSpeed.S115200:
+                        trionic.ForcedBaudrate = 115200;
+                        break;
+                    default:
+                        trionic.ForcedBaudrate = 0; //default , no speed will be changed
+                        break;
+                }
             }
 
-            trionicCan.setT7CANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
+            trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
         }
 
         private void frmMain_Load(object sender, EventArgs e)
         {
-            this.Text = "TrionicCANFlasher v" + System.Windows.Forms.Application.ProductVersion;
+            Text = "TrionicCANFlasher v" + System.Windows.Forms.Application.ProductVersion;
         }
 
         private void frmMain_Shown(object sender, EventArgs e)
@@ -537,9 +548,14 @@ namespace TrionicCANFlasher
             CheckRegistryFTDI();
             Application.DoEvents();
 
-            trionicCan.onReadProgress += trionicCan_onReadProgress;
-            trionicCan.onWriteProgress += trionicCan_onWriteProgress;
-            trionicCan.onCanInfo += trionicCan_onCanInfo;
+            trionic7.onReadProgress += trionicCan_onReadProgress;
+            trionic7.onWriteProgress += trionicCan_onWriteProgress;
+            trionic7.onCanInfo += trionicCan_onCanInfo;
+
+            trionic8.onReadProgress += trionicCan_onReadProgress;
+            trionic8.onWriteProgress += trionicCan_onWriteProgress;
+            trionic8.onCanInfo += trionicCan_onCanInfo;
+            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
 
             EnableUserInput(true);
 
@@ -559,8 +575,9 @@ namespace TrionicCANFlasher
                 if (ports.Length > 0)
                     cbxComPort.SelectedIndex = 0;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                AddLogItem(e.Message);
             }
         }
 
@@ -616,8 +633,9 @@ namespace TrionicCANFlasher
                                 cbxComSpeed.SelectedItem = Settings.GetValue(a).ToString();
                             }
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
+                            AddLogItem(e.Message);
                         }
                     }
                 }
@@ -677,17 +695,17 @@ namespace TrionicCANFlasher
             }
         }
 
-        void trionicCan_onWriteProgress(object sender, TrionicCANLib.TrionicCan.WriteProgressEventArgs e)
+        void trionicCan_onWriteProgress(object sender, ITrionic.WriteProgressEventArgs e)
         {
             UpdateProgressStatus(e.Percentage);
         }
 
-        void trionicCan_onCanInfo(object sender, TrionicCANLib.TrionicCan.CanInfoEventArgs e)
+        void trionicCan_onCanInfo(object sender, ITrionic.CanInfoEventArgs e)
         {
             UpdateFlashStatus(e);
         }
 
-        void trionicCan_onReadProgress(object sender, TrionicCANLib.TrionicCan.ReadProgressEventArgs e)
+        void trionicCan_onReadProgress(object sender, ITrionic.ReadProgressEventArgs e)
         {
             UpdateProgressStatus(e.Percentage);
         }
@@ -699,43 +717,41 @@ namespace TrionicCANFlasher
 
         private void btnReadDTC_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetT7AdapterType();
+                SetOptions(trionic7);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionicCan.openT7Device())
+                if (trionic7.openDevice(false))
                 {
-                    string[] codes = trionicCan.ReadDTCCodesT7();
+                    string[] codes = trionic7.ReadDTC();
                     foreach (string a in codes)
                     {
                         AddLogItem(a);
                     }
                 }
 
-                trionicCan.Cleanup();
+                trionic7.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                SetT8AdapterType();
+                SetOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionicCan.openDevice(false))
+                if (trionic8.openDevice(false))
                 {
-                    string[] codes = trionicCan.readDTCCodes();
+                    string[] codes = trionic8.ReadDTC();
                     foreach (string a in codes)
                     {
                         AddLogItem(a);
                     }
                 }
 
-                trionicCan.Cleanup();
+                trionic8.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
@@ -744,21 +760,19 @@ namespace TrionicCANFlasher
 
         private void btnSetECUVIN_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                SetT8AdapterType();
+                SetOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionicCan.openDevice(true))
+                if (trionic8.openDevice(true))
                 {
                     string vin = tbParameter.Text;
                     if (vin.Length == 17)
                     {
                         AddLogItem("setECUparameterVIN:");
-                        trionicCan.setECUparameterVIN(vin);
+                        trionic8.SetVIN(vin);
                     }
                     else
                     {
@@ -766,7 +780,7 @@ namespace TrionicCANFlasher
                     }
                 }
 
-                trionicCan.Cleanup();
+                trionic8.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
@@ -775,83 +789,93 @@ namespace TrionicCANFlasher
 
         private void btnSetE85_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetT7AdapterType();
+                SetOptions(trionic7);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionicCan.openT7Device())
+                if (trionic7.openDevice(false))
                 {
                     int e85;
                     if (int.TryParse(tbParameter.Text, out e85))
                     {
-                        AddLogItem("SetE85:" + trionicCan.SetE85LevelT7(e85));
+                        if (trionic7.SetE85Percentage(e85))
+                        {
+                            AddLogItem("Set E85% successfull");
+                        }
+                        else
+                        {
+                            AddLogItem("Set E85% failed");
+                        }
                     }
                 }
 
-                trionicCan.Cleanup();
+                trionic7.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                SetT8AdapterType();
+                SetOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionicCan.openDevice(true))
+                if (trionic8.openDevice(true))
                 {
                     float e85;
                     if (float.TryParse(tbParameter.Text, out e85))
                     {
-                        AddLogItem("SetE85:" + trionicCan.setECUparameterE85(e85));
+                        if (trionic8.SetE85Percentage(e85))
+                        {
+                            AddLogItem("Set E85% successfull");
+                        }
+                        else
+                        {
+                            AddLogItem("Set E85% failed");
+                        }
                     }
                 }
 
-                trionicCan.Cleanup();
+                trionic8.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
             LogHelper.Flush();
-        }
-
-        private void GetUIOptions()
-        {
-            trionicCan.EnableCanLog = cbEnableLogging.Checked;
-            trionicCan.OnlyPBus = cbOnlyPBus.Checked;
-            trionicCan.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
         }
 
         private void btnSetSpeed_Click(object sender, EventArgs e)
         {
-            GetUIOptions();
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                trionicCan.SecurityLevel = TrionicCANLib.AccessLevel.AccessLevel01;
-                SetT8AdapterType();
+                SetOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionicCan.openDevice(true))
+                if (trionic8.openDevice(true))
                 {
                     int speed;
                     if (int.TryParse(tbParameter.Text, out speed))
                     {
-                        AddLogItem("SetSpeed:" + trionicCan.SetSpeedLimiter(speed));
+                        if (trionic8.SetSpeedLimiter(speed))
+                        {
+                            AddLogItem("Set SpeedLimiter successfull");
+                        }
+                        else
+                        {
+                            AddLogItem("Set SpeedLimiter failed");
+                        }
                     }
                 }
 
-                trionicCan.Cleanup();
+                trionic8.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
             LogHelper.Flush();
         }
 
-        private void updateStatusInBox(TrionicCANLib.TrionicCan.CanInfoEventArgs e)
+        private void updateStatusInBox(ITrionic.CanInfoEventArgs e)
         {
             AddLogItem(e.Info);
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
@@ -860,29 +884,29 @@ namespace TrionicCANFlasher
                 {
                     TimeSpan ts = DateTime.Now - dtstart;
                     AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-                    trionicCan.Cleanup();
+                    trionic7.Cleanup();
                     EnableUserInput(true);
                 }
             }
         }
 
-        private void UpdateFlashStatus(TrionicCANLib.TrionicCan.CanInfoEventArgs e)
+        private void UpdateFlashStatus(ITrionic.CanInfoEventArgs e)
         {
             try
             {
                 Invoke(m_DelegateUpdateStatus, e);
             }
-            catch (Exception E)
+            catch (Exception ex)
             {
-                Console.WriteLine(E.Message);
+                AddLogItem(ex.Message);
             }
         }
 
-        private void updateProgress(float percentage)
+        private void updateProgress(int percentage)
         {
-            if (progressBar1.Value != (int)percentage)
+            if (progressBar1.Value != percentage)
             {
-                progressBar1.Value = (int)percentage;
+                progressBar1.Value = percentage;
             }
             string text = percentage.ToString("F0") + "%";
             if (cbEnableLogging.Checked)
@@ -896,15 +920,15 @@ namespace TrionicCANFlasher
             }
         }
 
-        private void UpdateProgressStatus(float percentage)
+        private void UpdateProgressStatus(int percentage)
         {
             try
             {
                 Invoke(m_DelegateProgressStatus, percentage);
             }
-            catch (Exception E)
+            catch (Exception e)
             {
-                Console.WriteLine(E.Message);
+                AddLogItem(e.Message);
             }
         }
 
