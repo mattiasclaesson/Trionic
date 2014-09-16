@@ -29,9 +29,6 @@ namespace TrionicCANLib
         [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
         public static extern uint MM_EndPeriod(uint uMilliseconds);
 
-        //protected System.Timers.Timer tmrReadProcessChecker = new System.Timers.Timer(1000);
-        //protected System.Timers.Timer tmrWriteProcessChecker = new System.Timers.Timer(1000);
-
         protected bool m_EnableLog = false;
 
         public bool EnableLog

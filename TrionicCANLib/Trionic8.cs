@@ -14,8 +14,6 @@ namespace TrionicCANLib
 {
     public class Trionic8 : ITrionic
     {
-        ICANDevice canUsbDevice;
-
         AccessLevel _securityLevel = AccessLevel.AccessLevelFD; // by default 0xFD
 
         public AccessLevel SecurityLevel
