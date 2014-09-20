@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading;
 using System.IO.Ports;
 using System.ComponentModel;
+using System.Diagnostics;
 using Microsoft.Win32;
 using TrionicCANLib;
 using System.Drawing;
@@ -937,5 +938,9 @@ namespace TrionicCANFlasher
             EnableUserInput(true);
         }
 
+        private void documentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("TrionicCanFlasher.pdf");
+        }
     }
 }

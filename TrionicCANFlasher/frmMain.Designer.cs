@@ -55,7 +55,7 @@
             this.cbDisableConnectionCheck = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
-            this.bwTrionic = new System.ComponentModel.BackgroundWorker();
+            this.documentation = new System.Windows.Forms.LinkLabel();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -352,11 +352,24 @@
             this.cbxComSpeed.Size = new System.Drawing.Size(150, 21);
             this.cbxComSpeed.TabIndex = 59;
             // 
+            // documentation
+            // 
+            this.documentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.documentation.AutoSize = true;
+            this.documentation.Location = new System.Drawing.Point(863, 367);
+            this.documentation.Name = "documentation";
+            this.documentation.Size = new System.Drawing.Size(103, 13);
+            this.documentation.TabIndex = 61;
+            this.documentation.TabStop = true;
+            this.documentation.Text = "View documentation";
+            this.documentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.documentation_LinkClicked);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.cbxComSpeed);
             this.Controls.Add(this.label1);
@@ -423,7 +436,7 @@
         private System.Windows.Forms.CheckBox cbDisableConnectionCheck;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cbxComSpeed;
-        private System.ComponentModel.BackgroundWorker bwTrionic;
+        private System.Windows.Forms.LinkLabel documentation;
     }
 }
 
