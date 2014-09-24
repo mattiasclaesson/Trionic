@@ -1179,25 +1179,28 @@ namespace TrionicCANLib.KWP
             m_requestMutex.WaitOne();
 
             LogDataString(a_request.ToString());
-
-            result = m_kwpDevice.sendRequest(a_request, out reply);
-            a_reply = reply;
-            if (result == RequestResult.NoError)
+            for (int retry = 0; retry < 3; retry++)
             {
-                LogDataString(reply.ToString());
-                LogDataString(""); // empty line
+                result = m_kwpDevice.sendRequest(a_request, out reply);
+                a_reply = reply;
+                if (result == RequestResult.NoError)
+                {
+                    LogDataString(reply.ToString());
+                    LogDataString(""); // empty line
 
-                m_requestMutex.ReleaseMutex();
-                return KWPResult.OK;
+                    m_requestMutex.ReleaseMutex();
+                    return KWPResult.OK;
+                }
+                else
+                {
+                    LogDataString("Timeout in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
+                    Console.WriteLine("Timeout in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
+                }
             }
-            else
-            {
-                LogDataString("Timeout in KWPHandler::sendRequest: " + result.ToString());
-                Console.WriteLine("Timeout in KWPHandler::sendRequest: " + result.ToString());
-                m_requestMutex.ReleaseMutex();
-                return KWPResult.Timeout;
-            }
+            m_requestMutex.ReleaseMutex();
+            return KWPResult.Timeout;
         }
+
         /// <summary>
         /// This method sends a KWPRequest and returns a KWPReply.
         /// </summary>
