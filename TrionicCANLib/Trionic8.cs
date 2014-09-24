@@ -54,7 +54,7 @@ namespace TrionicCANLib
             }
         }
 
-        override public void setCANDevice(CANBusAdapter adapterType)
+        override public void setCANDevice(CANBusAdapter adapterType, bool useFlasherOnDevice)
         {
             if (adapterType == CANBusAdapter.LAWICEL)
             {
@@ -92,7 +92,7 @@ namespace TrionicCANLib
             CastInfoEvent(e.Info, ActivityType.ConvertingFile);
         }
 
-        override public bool openDevice(bool requestSecurityAccess)
+        override public bool openDevice(bool requestSecurityAccess, bool useFlasherOnDevice)
         {
             CastInfoEvent("Open called in Trionic8", ActivityType.ConvertingFile);
             MM_BeginPeriod(1);

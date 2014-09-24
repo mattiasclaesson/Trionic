@@ -100,9 +100,9 @@ namespace TrionicCANLib
             set { m_DisableCanConnectionCheck = value; }
         }
 
-        abstract public void setCANDevice(CANBusAdapter adapterType);
+        abstract public void setCANDevice(CANBusAdapter adapterType, bool useFlasherOnDevice);
 
-        abstract public bool openDevice(bool requestSecurityAccess);
+        abstract public bool openDevice(bool requestSecurityAccess, bool useFlasherOnDevice);
 
         abstract public void Cleanup();
 

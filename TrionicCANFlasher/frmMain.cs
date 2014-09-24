@@ -91,11 +91,11 @@ namespace TrionicCANFlasher
                     {
                         if (fi.Length == 0x80000)
                         {
-                            SetOptions(trionic7);
+                            SetOptions(trionic7, true);
 
                             AddLogItem("Opening connection");
                             EnableUserInput(false);
-                            if (trionic7.openDevice(false))
+                            if (trionic7.openDevice(false, true))
                             {
                                 Thread.Sleep(1000);
                                 AddLogItem("Update FLASH content");
@@ -120,11 +120,11 @@ namespace TrionicCANFlasher
                     {
                         if (fi.Length == 0x100000)
                         {
-                            SetOptions(trionic8);
+                            SetOptions(trionic8, false);
 
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
-                            if (trionic8.openDevice(false))
+                            if (trionic8.openDevice(false, false))
                             {
                                 Thread.Sleep(1000);
                                 dtstart = DateTime.Now;
@@ -206,17 +206,9 @@ namespace TrionicCANFlasher
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                //btnReadSRAM.Enabled = false;
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
-
-                if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.COMBI)
-                {
-                    btnGetECUInfo.Enabled = false;
-                    btnSetE85.Enabled = false;
-                    btnReadDTC.Enabled = false;
-                }
             }
         }
 
@@ -232,12 +224,12 @@ namespace TrionicCANFlasher
                         {
                             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
-                                SetOptions(trionic7);
+                                SetOptions(trionic7, true);
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);
 
-                                if (trionic7.openDevice(false))
+                                if (trionic7.openDevice(false, true))
                                 {
                                     // check reading status periodically
 
@@ -255,11 +247,11 @@ namespace TrionicCANFlasher
                             }
                             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                             {
-                                SetOptions(trionic8);
+                                SetOptions(trionic8, false);
 
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
-                                if (trionic8.openDevice(false))
+                                if (trionic8.openDevice(false, false))
                                 {
                                     Thread.Sleep(1000);
                                     dtstart = DateTime.Now;
@@ -290,12 +282,12 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetOptions(trionic7);
+                SetOptions(trionic7, false);
 
                 AddLogItem("Opening connection");
                 EnableUserInput(false);
 
-                if (trionic7.openDevice(false))
+                if (trionic7.openDevice(false, false))
                 {
                     Thread.Sleep(1000);
                     AddLogItem("Aquiring ECU info");
@@ -312,11 +304,11 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8);
+                SetOptions(trionic8, false);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(false))
+                if (trionic8.openDevice(false, false))
                 {
                     AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());           //0x90
                     AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());       //0x74
@@ -362,12 +354,12 @@ namespace TrionicCANFlasher
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        SetOptions(trionic7);
+                        SetOptions(trionic7, false);
 
                         AddLogItem("Opening connection");
                         EnableUserInput(false);
 
-                        if (trionic7.openDevice(false))
+                        if (trionic7.openDevice(false, false))
                         {
                             // check reading status periodically
 
@@ -393,11 +385,11 @@ namespace TrionicCANFlasher
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        SetOptions(trionic8);
+                        SetOptions(trionic8, false);
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
-                        if (trionic8.openDevice(false))
+                        if (trionic8.openDevice(false, false))
                         {
                             Thread.Sleep(1000);
                             dtstart = DateTime.Now;
@@ -441,11 +433,11 @@ namespace TrionicCANFlasher
                 {
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
-                        SetOptions(trionic8);
+                        SetOptions(trionic8, false);
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
-                        if (trionic8.openDevice(false))
+                        if (trionic8.openDevice(false, false))
                         {
                             Thread.Sleep(1000);
                             dtstart = DateTime.Now;
@@ -495,7 +487,7 @@ namespace TrionicCANFlasher
             Environment.Exit(0);
         }
 
-        private void SetOptions(ITrionic trionic)
+        private void SetOptions(ITrionic trionic, bool useFlasherOnDevice)
         {
             trionic.EnableLog = cbEnableLogging.Checked;
             trionic.OnlyPBus = cbOnlyPBus.Checked;
@@ -526,7 +518,7 @@ namespace TrionicCANFlasher
                 }
             }
 
-            trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
+            trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex, useFlasherOnDevice);
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -720,11 +712,11 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetOptions(trionic7);
+                SetOptions(trionic7, false);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic7.openDevice(false))
+                if (trionic7.openDevice(false, false))
                 {
                     string[] codes = trionic7.ReadDTC();
                     foreach (string a in codes)
@@ -739,11 +731,11 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8);
+                SetOptions(trionic8, false);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(false))
+                if (trionic8.openDevice(false, false))
                 {
                     string[] codes = trionic8.ReadDTC();
                     foreach (string a in codes)
@@ -763,11 +755,11 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8);
+                SetOptions(trionic8, false);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(true))
+                if (trionic8.openDevice(true, false))
                 {
                     string vin = tbParameter.Text;
                     if (vin.Length == 17)
@@ -792,11 +784,11 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetOptions(trionic7);
+                SetOptions(trionic7, false);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic7.openDevice(false))
+                if (trionic7.openDevice(false, false))
                 {
                     int e85;
                     if (int.TryParse(tbParameter.Text, out e85))
@@ -818,11 +810,11 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8);
+                SetOptions(trionic8, false);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(true))
+                if (trionic8.openDevice(true, false))
                 {
                     float e85;
                     if (float.TryParse(tbParameter.Text, out e85))
@@ -849,11 +841,11 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8);
+                SetOptions(trionic8, false);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(true))
+                if (trionic8.openDevice(true, false))
                 {
                     int speed;
                     if (int.TryParse(tbParameter.Text, out speed))

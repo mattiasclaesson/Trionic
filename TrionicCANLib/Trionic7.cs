@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Threading;
 using TrionicCANLib.CAN;
 using TrionicCANLib.KWP;
 using TrionicCANLib.Flasher;
@@ -26,62 +27,28 @@ namespace TrionicCANLib
             tmrWriteProcessChecker.Elapsed += new System.Timers.ElapsedEventHandler(tmrWriteProcessChecker_Tick);
         }
 
-        override public void setCANDevice(CANBusAdapter adapterType)
+        override public void setCANDevice(CANBusAdapter adapterType, bool useFlasherOnDevice)
         {
             if (adapterType == CANBusAdapter.LAWICEL)
             {
                 canUsbDevice = new CANUSBDevice();
-                kwpCanDevice = new KWPCANDevice();
-                kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableKwpLog = m_EnableLog;
-                KWPHandler.setKWPDevice(kwpCanDevice);
-                if (m_EnableLog)
-                {
-                    KWPHandler.startLogging();
-                }
-                kwpHandler = KWPHandler.getInstance();
-                try
-                {
-                    T7Flasher.setKWPHandler(kwpHandler);
-                }
-                catch (Exception E)
-                {
-                    Console.WriteLine(E.Message);
-                    AddToFlasherLog("Failed to set FLASHer object to KWPHandler");
-                }
-                flash = T7Flasher.getInstance();
-                flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableFlasherLog = m_EnableLog;
             }
             else if (adapterType == CANBusAdapter.ELM327)
             {
                 Sleeptime = SleepTime.ELM327;
                 canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
-                kwpCanDevice = new KWPCANDevice();
-                kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableKwpLog = m_EnableLog;
-                KWPHandler.setKWPDevice(kwpCanDevice);
-                if (m_EnableLog)
-                {
-                    KWPHandler.startLogging();
-                }
-                kwpHandler = KWPHandler.getInstance();
-                try
-                {
-                    T7Flasher.setKWPHandler(kwpHandler);
-                }
-                catch (Exception E)
-                {
-                    Console.WriteLine(E.Message);
-                    AddToFlasherLog("Failed to set FLASHer object to KWPHandler");
-                }
-                flash = T7Flasher.getInstance();
-                flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableFlasherLog = m_EnableLog;
             }
             else if (adapterType == CANBusAdapter.JUST4TRIONIC)
             {
                 canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
+            }
+            else if (adapterType == CANBusAdapter.COMBI)
+            {
+                canUsbDevice = new LPCCANDevice();
+            }
+
+            if (adapterType != CANBusAdapter.COMBI || !useFlasherOnDevice)
+            {
                 kwpCanDevice = new KWPCANDevice();
                 kwpCanDevice.setCANDevice(canUsbDevice);
                 kwpCanDevice.EnableKwpLog = m_EnableLog;
@@ -91,7 +58,6 @@ namespace TrionicCANLib
                     KWPHandler.startLogging();
                 }
                 kwpHandler = KWPHandler.getInstance();
-                kwpHandler.ResumeAlivePolling();
                 try
                 {
                     T7Flasher.setKWPHandler(kwpHandler);
@@ -104,10 +70,6 @@ namespace TrionicCANLib
                 flash = T7Flasher.getInstance();
                 flash.onStatusChanged += flash_onStatusChanged;
                 flash.EnableFlasherLog = m_EnableLog;
-            }
-            else if (adapterType == CANBusAdapter.COMBI)
-            {
-                canUsbDevice = new LPCCANDevice();
             }
 
             canUsbDevice.EnableCanLog = m_EnableLog;
@@ -129,15 +91,15 @@ namespace TrionicCANLib
             CastInfoEvent(e.Info, ActivityType.ConvertingFile);
         }
 
-        override public bool openDevice(bool requestSecurityAccess)
+        override public bool openDevice(bool requestSecurityAccess, bool useFlasherOnDevice)
         {
             bool opened = true;
             CastInfoEvent("Open called in Trionic7", ActivityType.ConvertingFile);
             MM_BeginPeriod(1);
 
-            if (canUsbDevice is LPCCANDevice)
+            if (canUsbDevice is LPCCANDevice && useFlasherOnDevice)
             {
-                // connect to adapter                   
+                // connect to adapter
                 LPCCANDevice lpc = (LPCCANDevice)canUsbDevice;
 
                 if (lpc.connect())
@@ -153,9 +115,8 @@ namespace TrionicCANLib
                 {
                     opened = false;
                 }
-
             }
-            else if (canUsbDevice is CANUSBDevice || canUsbDevice is Just4TrionicDevice || canUsbDevice is CANELM327Device || canUsbDevice is CANUSBDirectDevice)
+            else
             {
                 if (kwpHandler.openDevice())
                 {
@@ -503,12 +464,29 @@ namespace TrionicCANLib
                     for (int i = 0; i < /*0x800*/ 0x10000 / blockSize; i++)
                     {
                         long curaddress = (0xF00000 + i * blockSize);
+                        if (canUsbDevice is LPCCANDevice)
+                        {
+                            Thread.Sleep(1);
+                        }
                         if (KWPHandler.getInstance().sendReadRequest((uint)(curaddress), (uint)blockSize))
                         {
+                            Thread.Sleep(0);
+                            if (canUsbDevice is LPCCANDevice)
+                            {
+                                Thread.Sleep(1);
+                            }
                             if (!KWPHandler.getInstance().sendRequestDataByOffset(out data))
                             {
-                                AddToFlasherLog("Failed to read data: " + curaddress.ToString("X8"));
+                                AddToFlasherLog("Failed to read data. sendRequestDataByOffset: " + curaddress.ToString("X8"));
+                                CastInfoEvent("Failed to read data. sendRequestDataByOffset: " + curaddress.ToString("X8"), ActivityType.FinishedDownloadingFlash);
+                                return;
                             }
+                        }
+                        else
+                        {
+                            AddToFlasherLog("Failed to read data. sendReadRequest: " + curaddress.ToString("X8"));
+                            CastInfoEvent("Failed to read data. sendReadRequest: " + curaddress.ToString("X8"), ActivityType.FinishedDownloadingFlash);
+                            return;
                         }
                         CastProgressReadEvent((i * 100) / (0x10000 / blockSize));
                         br.Write(data);
