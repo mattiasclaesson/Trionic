@@ -18,9 +18,7 @@ namespace TrionicCANLib.CAN
         Object m_synchObject = new Object();
         bool m_endThread = false;
         private uint _ECUAddress;
-        private int m_forcedBaudrate = 38400;
         private int m_transmissionRepeats = 5;
-        private bool m_isVirtualCom = true;
         CANMessage lastSentCanMessage = null;
         private string m_cr_sequence = "&CR";
         private int timeoutWithoutReadyChar = 300;
@@ -34,6 +32,8 @@ namespace TrionicCANLib.CAN
         private long lastSentTimestamp = 0;
 
         object lockObj = new object();
+
+        private int m_forcedBaudrate = 38400;
 
         public override int ForcedBaudrate
         {
@@ -132,7 +132,10 @@ namespace TrionicCANLib.CAN
                         {
                             rawString = m_serialPort.ReadExisting();
                         }
-                        catch (Exception e) { };
+                        catch (Exception e)
+                        {
+                            AddToDeviceTrace("CANELM372Device ReadExisting()" + e.Message);
+                        }
                         //AddToSerialTrace("RAW RX: " + rawString.Replace("\r",m_cr_sequence));
                         string rxString = rawString.Replace("\n", "").Replace(">", "");// remove prompt characters... we don't need that stuff
                         bool isStopped = false;
@@ -496,6 +499,7 @@ namespace TrionicCANLib.CAN
                     }
                     catch (Exception x)
                     {
+                        AddToDeviceTrace("CANELM372Device DetectInitialPortSpeedAndReset" + x.Message);
                         m_serialPort.Close();
                     }
                 }
@@ -571,7 +575,7 @@ namespace TrionicCANLib.CAN
                     else
                         return result;
                 }
-                catch (TimeoutException x)
+                catch (TimeoutException)
                 {
                     tries--;
                     AddToDeviceTrace("SERTIMOUT: left tries " + tries);

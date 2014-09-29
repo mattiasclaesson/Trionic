@@ -2,11 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
 using TrionicCANLib.CAN;
-using TrionicCANLib.KWP;
-using TrionicCANLib.Flasher;
-using TrionicCANLib.Log;
 
 namespace TrionicCANLib
 {

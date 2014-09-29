@@ -11,9 +11,7 @@ using TrionicCANLib.Log;
 namespace TrionicCANLib
 {
     public class Trionic7 : ITrionic
-    {
-        private readonly CANListener m_canListener;
-        
+    {   
         private KWPCANDevice kwpCanDevice;
         private KWPHandler kwpHandler;
         private IFlasher flash;
@@ -209,11 +207,6 @@ namespace TrionicCANLib
             {
                 MM_EndPeriod(1);
                 Console.WriteLine("Cleanup called in Trionic7");
-                //m_canDevice.removeListener(m_canListener);
-                if (m_canListener != null)
-                {
-                    m_canListener.FlushQueue();
-                }
                 if (flash != null)
                 {
                     flash.onStatusChanged -= flash_onStatusChanged;
