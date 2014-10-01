@@ -71,19 +71,47 @@ namespace TrionicCANLib.KWP
         KWPCANListener m_kwpCanListener = new KWPCANListener();
         const int timeoutPeriod = 1000; // if timeout <GS-11022010> changed from 1000 to 250 to not intefere with the keepalive timer
 
-        private bool m_EnableKwpLog = false;
+        private bool m_EnableLog = false;
 
-        public bool EnableKwpLog
+        public override bool EnableLog
         {
-            get { return m_EnableKwpLog; }
-            set { m_EnableKwpLog = value; }
+            get { return m_EnableLog; }
+            set { m_EnableLog = value; }
+        }
+
+        private int m_forcedBaudrate = 38400;
+
+        public override int ForcedBaudrate
+        {
+            get
+            {
+                return m_forcedBaudrate;
+            }
+            set
+            {
+                m_forcedBaudrate = value;
+            }
+        }
+
+        private string m_forcedComport = string.Empty;
+
+        public override string ForcedComport
+        {
+            get
+            {
+                return m_forcedComport;
+            }
+            set
+            {
+                m_forcedComport = value;
+            }
         }
 
         /// <summary>
         /// Set the CAN device to be used by this class.
         /// </summary>
         /// <param name="a_canDevice">A ICANDevice.</param>
-        public void setCANDevice(ICANDevice a_canDevice)
+        public override void setCANDevice(ICANDevice a_canDevice)
         {
             if (m_canDevice == null)
             {
@@ -104,7 +132,7 @@ namespace TrionicCANLib.KWP
         /// Open the CAN device.
         /// </summary>
         /// <returns>True if the device was opened, otherwise false.</returns>
-        public bool open()
+        public override bool open()
         {
             Console.WriteLine("******* KWPCANDevice: Opening KWPCANDevice");
 
@@ -130,7 +158,7 @@ namespace TrionicCANLib.KWP
         /// Check if the CAN device is opened.
         /// </summary>
         /// <returns>True if the device is open, otherwise false.</returns>
-        public bool isOpen()
+        public override bool isOpen()
         {
             bool retVal = false;
             //lock (m_lockObject)
@@ -147,7 +175,7 @@ namespace TrionicCANLib.KWP
         /// Close the CAN device.
         /// </summary>
         /// <returns>True if the device was closed, otherwise false.</returns>
-        public bool close()
+        public override bool close()
         {
             Console.WriteLine("******* KWPCANDevice: Closing KWPCANDevice");
 
@@ -165,7 +193,7 @@ namespace TrionicCANLib.KWP
         private void AddToCanTrace(string line)
         {
             Console.WriteLine("KWPCANDevice: " + line);
-            if (m_EnableKwpLog)
+            if (m_EnableLog)
             {
                 LogHelper.LogKwp(line);
             }
@@ -179,7 +207,7 @@ namespace TrionicCANLib.KWP
         /// A KWP session must be started before any requests can be sent.
         /// </remarks>
         /// <returns>True if the session was started, otherwise false.</returns>
-        public bool startSession()
+        public override bool startSession()
         {
             CANMessage msg = new CANMessage(0x220, 0, 7);
             msg.setData(0x000040021100813F);
@@ -211,7 +239,7 @@ namespace TrionicCANLib.KWP
         /// <param name="a_request">A KWP request.</param>
         /// <param name="r_reply">A KWP reply.</param>
         /// <returns>The status of the request.</returns>
-        public RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
+        public override RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
         {
             uint row;
             uint all_rows = row = nrOfRowsToSend(a_request.getData());

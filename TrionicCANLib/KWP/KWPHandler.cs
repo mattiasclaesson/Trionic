@@ -1123,33 +1123,12 @@ namespace TrionicCANLib.KWP
             }
         }
 
-        public static void startLogging()
-        {
-            m_logginEnabled = true;
-            /*DateTime dateTime = DateTime.Now;
-            String fileName = "kwplog.txt";
-            if (!File.Exists(fileName))
-                File.Create(fileName);
-            try
-            {
-                m_logFileStream = new StreamWriter(fileName);
-                m_logFileStream.WriteLine("New logging started: " + dateTime);
-                m_logFileStream.WriteLine();
-                m_logginEnabled = true;
-            }
-            catch (Exception E)
-            {
-                Console.WriteLine("Failed to enable logging");
-            }*/
-            
-        }
+        private bool m_logginEnabled = false;
 
-        public static void stopLogging()
+        public bool EnableLog
         {
-            m_logginEnabled = false;
-            /*if(m_logFileStream != null)
-                m_logFileStream.Close();*/
-
+            get { return m_logginEnabled; }
+            set { m_logginEnabled = value; }
         }
 
         /// <summary>
@@ -1422,8 +1401,6 @@ namespace TrionicCANLib.KWP
             return retval;
         }
 
-        private static bool m_logginEnabled = false;
-        //private static StreamWriter m_logFileStream;
         private static KWPHandler m_instance;
         private Mutex m_requestMutex = new Mutex();
         private TimerCallback timerDelegate;

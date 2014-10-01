@@ -56,6 +56,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
             this.documentation = new System.Windows.Forms.LinkLabel();
+            this.cbELM327Kline = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -356,7 +357,7 @@
             // 
             this.documentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.documentation.AutoSize = true;
-            this.documentation.Location = new System.Drawing.Point(863, 367);
+            this.documentation.Location = new System.Drawing.Point(675, 370);
             this.documentation.Name = "documentation";
             this.documentation.Size = new System.Drawing.Size(103, 13);
             this.documentation.TabIndex = 61;
@@ -364,11 +365,23 @@
             this.documentation.Text = "View documentation";
             this.documentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.documentation_LinkClicked);
             // 
+            // cbELM327Kline
+            // 
+            this.cbELM327Kline.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbELM327Kline.AutoSize = true;
+            this.cbELM327Kline.Location = new System.Drawing.Point(866, 370);
+            this.cbELM327Kline.Name = "cbELM327Kline";
+            this.cbELM327Kline.Size = new System.Drawing.Size(99, 17);
+            this.cbELM327Kline.TabIndex = 62;
+            this.cbELM327Kline.Text = "ELM327 K-Line";
+            this.cbELM327Kline.UseVisualStyleBackColor = true;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.Controls.Add(this.cbELM327Kline);
             this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.cbxComSpeed);
@@ -437,6 +450,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cbxComSpeed;
         private System.Windows.Forms.LinkLabel documentation;
+        private System.Windows.Forms.CheckBox cbELM327Kline;
     }
 }
 

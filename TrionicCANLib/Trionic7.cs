@@ -12,7 +12,7 @@ namespace TrionicCANLib
 {
     public class Trionic7 : ITrionic
     {   
-        private KWPCANDevice kwpCanDevice;
+        private IKWPDevice kwpDevice;
         private KWPHandler kwpHandler;
         private IFlasher flash;
 
@@ -31,7 +31,7 @@ namespace TrionicCANLib
             {
                 canUsbDevice = new CANUSBDevice();
             }
-            else if (adapterType == CANBusAdapter.ELM327)
+            else if (adapterType == CANBusAdapter.ELM327 && !m_ELM327Kline)
             {
                 Sleeptime = SleepTime.ELM327;
                 canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
@@ -45,38 +45,40 @@ namespace TrionicCANLib
                 canUsbDevice = new LPCCANDevice();
             }
 
-            if (adapterType != CANBusAdapter.COMBI || !useFlasherOnDevice)
+            if (canUsbDevice != null)
             {
-                kwpCanDevice = new KWPCANDevice();
-                kwpCanDevice.setCANDevice(canUsbDevice);
-                kwpCanDevice.EnableKwpLog = m_EnableLog;
-                KWPHandler.setKWPDevice(kwpCanDevice);
-                if (m_EnableLog)
-                {
-                    KWPHandler.startLogging();
-                }
-                kwpHandler = KWPHandler.getInstance();
-                try
-                {
-                    T7Flasher.setKWPHandler(kwpHandler);
-                }
-                catch (Exception E)
-                {
-                    Console.WriteLine(E.Message);
-                    AddToFlasherLog("Failed to set FLASHer object to KWPHandler");
-                }
-                flash = T7Flasher.getInstance();
-                flash.onStatusChanged += flash_onStatusChanged;
-                flash.EnableFlasherLog = m_EnableLog;
+                canUsbDevice.EnableCanLog = m_EnableLog;
+                canUsbDevice.UseOnlyPBus = m_OnlyPBus;
+                canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
+                canUsbDevice.TrionicECU = ECU.TRIONIC7;
+                canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
+                //canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
+                //canUsbDevice.acceptOnlyMessageIds = new List<uint> { 0x258,0x238 }; //t7suite
             }
 
-            canUsbDevice.EnableCanLog = m_EnableLog;
-            canUsbDevice.UseOnlyPBus = m_OnlyPBus;
-            canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
-            canUsbDevice.TrionicECU = ECU.TRIONIC7;
-            canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
-            //canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
-            //canUsbDevice.acceptOnlyMessageIds = new List<uint> { 0x258,0x238 }; //t7suite
+            if (adapterType == CANBusAdapter.ELM327 && m_ELM327Kline)
+            {
+                kwpDevice = new ELM327Device() { EnableLog = m_EnableLog, ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
+                setFlasher();
+            }
+            else if (adapterType != CANBusAdapter.COMBI || !useFlasherOnDevice)
+            {
+                kwpDevice = new KWPCANDevice() { EnableLog = m_EnableLog };
+                kwpDevice.setCANDevice(canUsbDevice);
+                setFlasher();
+            }
+        }
+
+        private void setFlasher()
+        {
+            KWPHandler.setKWPDevice(kwpDevice);
+            kwpHandler = KWPHandler.getInstance();
+            kwpHandler.EnableLog = m_EnableLog;
+
+            T7Flasher.setKWPHandler(kwpHandler);
+            flash = T7Flasher.getInstance();
+            flash.onStatusChanged += flash_onStatusChanged;
+            flash.EnableFlasherLog = m_EnableLog;
         }
 
         void flash_onStatusChanged(object sender, IFlasher.StatusEventArgs e)
@@ -212,9 +214,9 @@ namespace TrionicCANLib
                     flash.onStatusChanged -= flash_onStatusChanged;
                     flash = null;
                 }
-                KWPHandler.stopLogging();
                 if (kwpHandler != null)
                 {
+                    kwpHandler.EnableLog = false;
                     kwpHandler.SuspendAlivePolling();
                     kwpHandler.closeDevice();
                 }
@@ -259,10 +261,6 @@ namespace TrionicCANLib
             string swVersion;
             float e85level;
 
-            if (m_EnableLog)
-            {
-                KWPHandler.startLogging();
-            }
             KWPResult res = kwpHandler.getVIN(out vin);
             if (res == KWPResult.OK)
                 CastInfoEvent("VIN: " + vin, ActivityType.ConvertingFile);
@@ -286,10 +284,6 @@ namespace TrionicCANLib
 
         public void ReadFlash(string a_fileName)
         {
-            if (m_EnableLog)
-            {
-                KWPHandler.startLogging();
-            }
             if (CheckFlashStatus())
             {
                 CastInfoEvent("Starting download of FLASH", ActivityType.ConvertingFile);
@@ -300,10 +294,6 @@ namespace TrionicCANLib
 
         public void WriteFlash(string a_fileName)
         {
-            if (m_EnableLog)
-            {
-                KWPHandler.startLogging();
-            }
             if (!tmrReadProcessChecker.Enabled)
             {
                 // check reading status periodically

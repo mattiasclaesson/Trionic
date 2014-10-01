@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using TrionicCANLib.CAN;
 
 namespace TrionicCANLib.KWP
 {
@@ -20,14 +22,34 @@ namespace TrionicCANLib.KWP
     /// 
     /// All devices that supports KWP must implementd this interface.
     /// </summary>
-    public interface IKWPDevice
+    public abstract class IKWPDevice
     {
         /// <summary>
         /// This method starts a new KWP session. It must be called before the sendRequest
         /// method can be called.
         /// </summary>
         /// <returns>true on success, otherwise false.</returns>
-        bool startSession();
+        public abstract bool startSession();
+
+        public abstract bool EnableLog
+        {
+            get;
+            set;
+        }
+
+        abstract public int ForcedBaudrate
+        {
+            get;
+            set;
+        }
+
+        abstract public string ForcedComport
+        {
+            get;
+            set;
+        }
+
+        public abstract void setCANDevice(ICANDevice a_canDevice);
 
         /// <summary>
         /// This method sends a KWP request and returns a KWPReply. The method returns
@@ -38,24 +60,24 @@ namespace TrionicCANLib.KWP
         /// <param name="a_request">The KWPRequest.</param>
         /// <param name="r_reply">The reply to the KWPRequest.</param>
         /// <returns>RequestResult.</returns>
-        RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply);
+        public abstract RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply);
 
         /// <summary>
         /// This method opens a KWP device for usage.
         /// </summary>
         /// <returns>true on success, otherwise false.</returns>
-        bool open();
+        public abstract bool open();
 
         /// <summary>
         /// This method closes a KWP device for usage.
         /// </summary>
         /// <returns>true on success, otherwise false.</returns>
-        bool close();
+        public abstract bool close();
 
         /// <summary>
         /// This method checks if the IKWPDevice is opened or not.
         /// </summary>
         /// <returns>true if device is open, otherwise false.</returns>
-        bool isOpen();
+        public abstract bool isOpen();
     }
 }

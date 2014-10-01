@@ -86,10 +86,9 @@ namespace TrionicCANFlasher
             {
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    FileInfo fi = new FileInfo(ofd.FileName);
-                    if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+                    if (checkFileSize(ofd.FileName))
                     {
-                        if (fi.Length == 0x80000)
+                        if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
                             SetOptions(trionic7, true);
 
@@ -111,14 +110,7 @@ namespace TrionicCANFlasher
                                 AddLogItem("Connection terminated");
                             }
                         }
-                        else
-                        {
-                            AddLogItem("Not a trionic 7 file");
-                        }
-                    }
-                    else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-                    {
-                        if (fi.Length == 0x100000)
+                        else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
                             SetOptions(trionic8, false);
 
@@ -144,14 +136,32 @@ namespace TrionicCANFlasher
                                 AddLogItem("Connection terminated");
                             }
                         }
-                        else
-                        {
-                            AddLogItem("Not a trionic 8 file");
-                        }
                     }
                 }
             }
             LogHelper.Flush();
+        }
+
+        bool checkFileSize(string fileName)
+        {
+            FileInfo fi = new FileInfo(fileName);
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                if (fi.Length != 0x80000)
+                {
+                    AddLogItem("Not a trionic 7 file");
+                    return false;
+                }
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            {
+                if (fi.Length != 0x100000)
+                {
+                    AddLogItem("Not a trionic 8 file");
+                    return false;
+                }
+            }
+            return true;
         }
 
         void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -201,6 +211,16 @@ namespace TrionicCANFlasher
             {
                 cbxComPort.Enabled = false;
                 cbxComSpeed.Enabled = false;
+            }
+
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 &&
+                cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                cbELM327Kline.Enabled = enable;
+            }
+            else
+            {
+                cbELM327Kline.Enabled = false;
             }
 
             // Always disable
@@ -483,6 +503,7 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("OnlyPBus", cbOnlyPBus.Checked);
             SaveRegistrySetting("DisableCanCheck", cbDisableConnectionCheck.Checked);
             SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem.ToString());
+            SaveRegistrySetting("ELM327Kline", cbELM327Kline.Checked);
             trionic8.Cleanup();
             Environment.Exit(0);
         }
@@ -492,6 +513,7 @@ namespace TrionicCANFlasher
             trionic.EnableLog = cbEnableLogging.Checked;
             trionic.OnlyPBus = cbOnlyPBus.Checked;
             trionic.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
+            trionic.ELM327Kline = cbELM327Kline.Checked;
             
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
@@ -624,6 +646,10 @@ namespace TrionicCANFlasher
                             else if (a == "ComSpeed")
                             {
                                 cbxComSpeed.SelectedItem = Settings.GetValue(a).ToString();
+                            }
+                            else if (a == "ELM327Kline")
+                            {
+                                cbELM327Kline.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
                         }
                         catch (Exception e)
