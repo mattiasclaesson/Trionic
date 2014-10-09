@@ -15,7 +15,13 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_2F8579046A019871E88E67E352F01132"
+        "MsmKey" = "8:_285AE70388FBBF9E6A87E207A21D62CF"
+        "OwnerKey" = "8:_EDD4C6DA3A0AA8F948E03F360BA615E4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_285AE70388FBBF9E6A87E207A21D62CF"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -27,20 +33,32 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_528D3AAF96E79A92961782A23545D884"
+        "MsmKey" = "8:_3E6DBBAFA05528D441D9987A22F49669"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_528D3AAF96E79A92961782A23545D884"
-        "OwnerKey" = "8:_2F8579046A019871E88E67E352F01132"
+        "MsmKey" = "8:_3E6DBBAFA05528D441D9987A22F49669"
+        "OwnerKey" = "8:_742DE0BE9E2362B6F6D50F07248E8079"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_4CDEAFCBEB56453B95C75FF390EB2878"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_742DE0BE9E2362B6F6D50F07248E8079"
+        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_AA28C903175CD9914A9E79EAF3496AD3"
-        "OwnerKey" = "8:_FDBFCB0EA692093661E878C720414B29"
+        "OwnerKey" = "8:_EDD4C6DA3A0AA8F948E03F360BA615E4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -58,7 +76,7 @@
         "Entry"
         {
         "MsmKey" = "8:_AB4ACEBEAE0220A6152C8FAA65089B9E"
-        "OwnerKey" = "8:_2F8579046A019871E88E67E352F01132"
+        "OwnerKey" = "8:_742DE0BE9E2362B6F6D50F07248E8079"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -69,26 +87,14 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_C4AE1652D56038017078822D4D25DCF5"
-        "OwnerKey" = "8:_FDBFCB0EA692093661E878C720414B29"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_C4AE1652D56038017078822D4D25DCF5"
+        "MsmKey" = "8:_EDD4C6DA3A0AA8F948E03F360BA615E4"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_FDBFCB0EA692093661E878C720414B29"
-        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_FDBFCB0EA692093661E878C720414B29"
-        "OwnerKey" = "8:_2F8579046A019871E88E67E352F01132"
+        "MsmKey" = "8:_EDD4C6DA3A0AA8F948E03F360BA615E4"
+        "OwnerKey" = "8:_742DE0BE9E2362B6F6D50F07248E8079"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -100,31 +106,31 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_2F8579046A019871E88E67E352F01132"
+        "OwnerKey" = "8:_742DE0BE9E2362B6F6D50F07248E8079"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_FDBFCB0EA692093661E878C720414B29"
+        "OwnerKey" = "8:_EDD4C6DA3A0AA8F948E03F360BA615E4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_C4AE1652D56038017078822D4D25DCF5"
+        "OwnerKey" = "8:_285AE70388FBBF9E6A87E207A21D62CF"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_3E6DBBAFA05528D441D9987A22F49669"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_AA28C903175CD9914A9E79EAF3496AD3"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_528D3AAF96E79A92961782A23545D884"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -238,20 +244,20 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_2F8579046A019871E88E67E352F01132"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_285AE70388FBBF9E6A87E207A21D62CF"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.0.0.7, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_2F8579046A019871E88E67E352F01132"
+                    "_285AE70388FBBF9E6A87E207A21D62CF"
                     {
-                    "Name" = "8:TrionicCANLib.dll"
+                    "Name" = "8:LibUsbDotNet.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:TrionicCANLib.dll"
+            "SourcePath" = "8:LibUsbDotNet.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
@@ -269,20 +275,71 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_528D3AAF96E79A92961782A23545D884"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3E6DBBAFA05528D441D9987A22F49669"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:canusbdrv_net, Version=2.0.0.1, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
-                    "_528D3AAF96E79A92961782A23545D884"
+                    "_3E6DBBAFA05528D441D9987A22F49669"
                     {
                     "Name" = "8:canusbdrv_net.dll"
                     "Attributes" = "3:512"
                     }
                 }
             "SourcePath" = "8:canusbdrv_net.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4CDEAFCBEB56453B95C75FF390EB2878"
+            {
+            "SourcePath" = "8:..\\TrionicCANFlasher\\TrionicCanFlasher.pdf"
+            "TargetName" = "8:TrionicCanFlasher.pdf"
+            "Tag" = "8:"
+            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_742DE0BE9E2362B6F6D50F07248E8079"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.0.0.12, Culture=neutral, processorArchitecture=x86"
+                "ScatterAssemblies"
+                {
+                    "_742DE0BE9E2362B6F6D50F07248E8079"
+                    {
+                    "Name" = "8:TrionicCANLib.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:TrionicCANLib.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
@@ -382,45 +439,14 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C4AE1652D56038017078822D4D25DCF5"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_C4AE1652D56038017078822D4D25DCF5"
-                    {
-                    "Name" = "8:LibUsbDotNet.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:LibUsbDotNet.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FDBFCB0EA692093661E878C720414B29"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EDD4C6DA3A0AA8F948E03F360BA615E4"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:combilib-net, Version=1.0.4093.28460, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
-                    "_FDBFCB0EA692093661E878C720414B29"
+                    "_EDD4C6DA3A0AA8F948E03F360BA615E4"
                     {
                     "Name" = "8:combilib-net.dll"
                     "Attributes" = "3:512"
@@ -500,14 +526,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{38CD85AF-DC19-41D6-B229-4BEE62788197}"
-        "PackageCode" = "8:{DBFA16D3-3384-4BD3-B01E-30D76B123C99}"
+        "ProductCode" = "8:{0397909B-1A26-42B6-ADBC-F29ED33AA64D}"
+        "PackageCode" = "8:{8A6DA884-1791-496C-987F-D2CFB5DB99A1}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.0.7"
+        "ProductVersion" = "8:0.0.14"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

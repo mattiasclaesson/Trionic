@@ -157,6 +157,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\log4net.config.xml" />
+    <None Include="TrionicCanFlasher.pdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="TrionicCanFlasher.ico">
     </Content>
   </ItemGroup>

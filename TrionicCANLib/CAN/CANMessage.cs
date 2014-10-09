@@ -50,7 +50,7 @@ namespace TrionicCANLib.CAN
         /// <param name="a_length">Length of data</param>
         /// <param name="a_data">The data</param>
         public CANMessage(uint a_id, uint a_timestamp, byte a_flags, byte a_length, ulong a_data)
-        {            
+        {
             m_id = a_id;
             m_timestamp = a_timestamp;
             m_flags = a_flags;
@@ -64,14 +64,13 @@ namespace TrionicCANLib.CAN
         /// <param name="a_id">CAN id</param>
         /// <param name="a_flags">Flags</param>
         /// <param name="a_length">Length of data</param>
-        /// <param name="responseCount">Used by ELM to indicate number of expected responses</param>
         public CANMessage(uint a_id, byte a_flags, byte a_length)
         {
             m_id = a_id;
             m_timestamp = 0;
             m_flags = a_flags;
             m_length = a_length;
-            m_data = 0;            
+            m_data = 0;
         }
 
         /// <summary>

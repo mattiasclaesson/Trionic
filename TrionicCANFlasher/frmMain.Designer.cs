@@ -49,14 +49,14 @@
             this.label3 = new System.Windows.Forms.Label();
             this.btnSetE85 = new System.Windows.Forms.Button();
             this.btnSetSpeed = new System.Windows.Forms.Button();
-            this.btnResetECU = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.cbxEcuType = new System.Windows.Forms.ComboBox();
             this.cbOnlyPBus = new System.Windows.Forms.CheckBox();
             this.cbDisableConnectionCheck = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
-            this.bwTrionic = new System.ComponentModel.BackgroundWorker();
+            this.documentation = new System.Windows.Forms.LinkLabel();
+            this.cbELM327Kline = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -278,17 +278,6 @@
             this.btnSetSpeed.UseVisualStyleBackColor = true;
             this.btnSetSpeed.Click += new System.EventHandler(this.btnSetSpeed_Click);
             // 
-            // btnResetECU
-            // 
-            this.btnResetECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnResetECU.Location = new System.Drawing.Point(678, 68);
-            this.btnResetECU.Name = "btnResetECU";
-            this.btnResetECU.Size = new System.Drawing.Size(107, 50);
-            this.btnResetECU.TabIndex = 54;
-            this.btnResetECU.Text = "Reset ECU";
-            this.btnResetECU.UseVisualStyleBackColor = true;
-            this.btnResetECU.Click += new System.EventHandler(this.btnResetECU_Click);
-            // 
             // label2
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -364,11 +353,36 @@
             this.cbxComSpeed.Size = new System.Drawing.Size(150, 21);
             this.cbxComSpeed.TabIndex = 59;
             // 
+            // documentation
+            // 
+            this.documentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.documentation.AutoSize = true;
+            this.documentation.Location = new System.Drawing.Point(675, 370);
+            this.documentation.Name = "documentation";
+            this.documentation.Size = new System.Drawing.Size(103, 13);
+            this.documentation.TabIndex = 61;
+            this.documentation.TabStop = true;
+            this.documentation.Text = "View documentation";
+            this.documentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.documentation_LinkClicked);
+            // 
+            // cbELM327Kline
+            // 
+            this.cbELM327Kline.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbELM327Kline.AutoSize = true;
+            this.cbELM327Kline.Location = new System.Drawing.Point(866, 370);
+            this.cbELM327Kline.Name = "cbELM327Kline";
+            this.cbELM327Kline.Size = new System.Drawing.Size(99, 17);
+            this.cbELM327Kline.TabIndex = 62;
+            this.cbELM327Kline.Text = "ELM327 K-Line";
+            this.cbELM327Kline.UseVisualStyleBackColor = true;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.Controls.Add(this.cbELM327Kline);
+            this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.cbxComSpeed);
             this.Controls.Add(this.label1);
@@ -376,7 +390,6 @@
             this.Controls.Add(this.cbOnlyPBus);
             this.Controls.Add(this.cbxEcuType);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.btnResetECU);
             this.Controls.Add(this.btnSetSpeed);
             this.Controls.Add(this.btnSetE85);
             this.Controls.Add(this.label3);
@@ -430,14 +443,14 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnSetE85;
         private System.Windows.Forms.Button btnSetSpeed;
-        private System.Windows.Forms.Button btnResetECU;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cbxEcuType;
         private System.Windows.Forms.CheckBox cbOnlyPBus;
         private System.Windows.Forms.CheckBox cbDisableConnectionCheck;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cbxComSpeed;
-        private System.ComponentModel.BackgroundWorker bwTrionic;
+        private System.Windows.Forms.LinkLabel documentation;
+        private System.Windows.Forms.CheckBox cbELM327Kline;
     }
 }
 

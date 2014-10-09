@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.IO.Ports;
 using System.Threading;
+using TrionicCANLib.CAN;
 
 namespace TrionicCANLib.KWP
 {
@@ -11,6 +13,19 @@ namespace TrionicCANLib.KWP
         bool m_deviceIsOpen = false;
         SerialPort m_serialPort = new SerialPort();
 
+        private int m_baseBaudrate = 38400;
+        public int BaseBaudrate
+        {
+            get
+            {
+                return m_baseBaudrate;
+            }
+            set
+            {
+                m_baseBaudrate = value;
+            }
+        }
+
         /// <summary>
         /// Constructor for ELM327Device.
         /// </summary>
@@ -19,19 +34,78 @@ namespace TrionicCANLib.KWP
           
         }
 
+        private bool m_EnableLog = false;
+
+        public override bool EnableLog
+        {
+            get { return m_EnableLog; }
+            set { m_EnableLog = value; }
+        }
+
+        private int m_forcedBaudrate = 38400;
+
+        public override int ForcedBaudrate
+        {
+            get
+            {
+                return m_forcedBaudrate;
+            }
+            set
+            {
+                m_forcedBaudrate = value;
+            }
+        }
+
+        private string m_forcedComport = string.Empty;
+
+        public override string ForcedComport
+        {
+            get
+            {
+                return m_forcedComport;
+            }
+            set
+            {
+                m_forcedComport = value;
+            }
+        }
+
+        /// <summary>
+        /// Set the CAN device to be used by this class.
+        /// </summary>
+        /// <param name="a_canDevice">A ICANDevice.</param>
+        public override void setCANDevice(ICANDevice a_canDevice)
+        {
+           
+        }
+
         /// <summary>
         /// This method starts a new KWP session. It must be called before the sendRequest
         /// method can be called.
         /// </summary>
         /// <returns>true on success, otherwise false.</returns>
-        public bool startSession()
+        public override bool startSession()
         {
             string str = "";
-            m_serialPort.Write("AT IIA 11\r"); //Set ISO init address to 0x11
-            m_serialPort.ReadTo(">");
+            try
+            {
+                m_serialPort.Write("ATSP5\r");
+                str = m_serialPort.ReadTo(">");
 
-            m_serialPort.Write("AT SH CF A1 F1\r");    //Set header
-            str = m_serialPort.ReadTo(">");
+                m_serialPort.Write("ATAL\r");
+                str = m_serialPort.ReadTo(">");
+
+                m_serialPort.Write("ATSH8011F1\r");    //Set header
+                str = m_serialPort.ReadTo(">");
+                m_serialPort.Write("1A90\r");             //Read VIN. This is only done to initiate the bus.
+                str = m_serialPort.ReadTo(">");
+                if (str.StartsWith("BUS INIT: ERROR"))
+                    return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
             return true;
         }
 
@@ -44,75 +118,86 @@ namespace TrionicCANLib.KWP
         /// <param name="a_request">The KWPRequest.</param>
         /// <param name="r_reply">The reply to the KWPRequest.</param>
         /// <returns>RequestResult.</returns>
-        public RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
+        public override RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
         {
             string sendString = "";
             string receiveString = "";
-            for (int i = 1; i < a_request.getData().Length; i++)
-                sendString += a_request.getData()[i].ToString("X") + " ";
-            sendString += "\r";
-            m_serialPort.Write(sendString);
-            //receiveString = "49 01 01 00 00 00 31 \n\r49 02 02 44 34 47 50 \n\r49 02 03 30 30 52 35 \n\r49 02 04 25 42";// m_serialPort.ReadTo(">");
-            receiveString = m_serialPort.ReadTo(">");
-            char[] chrArray = receiveString.ToCharArray();
             byte[] reply = new byte[0xFF];
-            int insertPos = 1;
-            int index = 0;
-            string subString = "";
-            while(receiveString.Length > 4)
+            try
             {
-                //Remove first three bytes
-
-                //TODO. Remove Mode and PIDs
-                for (int i = 0; i < 3; i++)
+                for (int i = 1; i < a_request.getData().Length; i++)
                 {
-                    index = receiveString.IndexOf(" ");
-                    receiveString = receiveString.Remove(0, index + 1);
+                    string tmpStr = a_request.getData()[i].ToString("X");
+                    if (tmpStr.Length == 1)
+                        sendString += "0" + tmpStr + " ";
+                    else
+                        sendString += tmpStr + " ";
                 }
-                //Read data for the rest of the row.
-                for (int i = 0; i < 4; i++)
+                sendString += "\r";
+
+                m_serialPort.Write(sendString);
+                //receiveString = "5A 90 59 53 33 45 46 35 39 45 32 33 33 30 32 30 38 32 37 \r\n\r\n";// m_serialPort.ReadTo(">");
+                receiveString = m_serialPort.ReadTo(">");
+                string tmpString = receiveString;
+
+                int insertPos = 1;
+                string subString = "";
+
+                while (receiveString.Length > 4)
                 {
-                    index = receiveString.IndexOf(" ");
-                    if (index == 0) //Last row not 4 bytes of data.
-                    {
-                        continue;
-                    }
+                    int index = receiveString.IndexOf(" ");
                     subString = receiveString.Substring(0, index);
-                    reply[insertPos] = (byte)Convert.ToInt16("0x"+subString, 16);
+                    reply[insertPos] = (byte)Convert.ToInt16("0x" + subString, 16);
                     insertPos++;
                     receiveString = receiveString.Remove(0, index + 1);
                 }
+                insertPos--;
 
+                reply[0] = (byte)insertPos; //Length
+
+                r_reply = new KWPReply(reply, a_request.getNrOfPID());
+                return RequestResult.NoError;
             }
-
-            reply[0] = (byte)insertPos; //Length
-
-            r_reply = new KWPReply(reply, a_request.getNrOfPID());
-            return RequestResult.NoError;
+            catch (Exception)
+            {
+                r_reply = new KWPReply(reply, a_request.getNrOfPID());
+                return RequestResult.ErrorSending;
+            }
         }
 
         /// <summary>
         /// This method opens a KWP device for usage.
         /// </summary>
         /// <returns>true on success, otherwise false.</returns>
-        public bool open()
+        public override bool open()
         {
-            //Automatically find port with ELM327
-            
-            //Detect all serial ports.
-            string[] serialPortNames = SerialPort.GetPortNames();
-            m_serialPort.BaudRate = 38400;
-            m_serialPort.Handshake = Handshake.None;
-            m_serialPort.ReadTimeout = 3000;
-            bool readException = false;
+            var detectedRate = DetectInitialPortSpeedAndReset();
+            if (detectedRate != 0)
+                BaseBaudrate = detectedRate;
 
-            //Check if a ELM327 v1.2 is connected to any port.
-            foreach (string port in serialPortNames)
+            m_serialPort.BaudRate = BaseBaudrate;
+            m_serialPort.Handshake = Handshake.None;
+            //m_serialPort.ReadTimeout = 100;
+            m_serialPort.WriteTimeout = 1000;
+            m_serialPort.ReadBufferSize = 1024;
+            m_serialPort.WriteBufferSize = 1024;
+
+            //m_serialPort.BaudRate = m_portSpeed;
+            //m_serialPort.Handshake = Handshake.None;
+            m_serialPort.ReadTimeout = 3000;
+            //m_serialPort.Parity = Parity.None;
+            //m_serialPort.StopBits = StopBits.One;
+            //m_serialPort.DtrEnable = true;
+            //m_serialPort.RtsEnable = true;
+            //bool readException = false;
+            string str;
+
+            if (m_forcedComport != string.Empty)
             {
-                readException = false;
+                //readException = false;
                 if (m_serialPort.IsOpen)
                     m_serialPort.Close();
-                m_serialPort.PortName = port;
+                m_serialPort.PortName = m_forcedComport;
 
                 try
                 {
@@ -122,42 +207,189 @@ namespace TrionicCANLib.KWP
                 {
                     return false;
                 }
-                    
-                m_serialPort.Write("ATZ\r");    //Reset all
-                Thread.Sleep(3000);
 
-                //Try to set up ELM327
+                //if (m_portSpeed == 38400)
+                //{
+                //    m_serialPort.BaudRate = 57600;
+                //    m_serialPort.Write("ATZ\r");    //Reset all
+                //    Thread.Sleep(3000);
+                //    m_serialPort.BaudRate = 38400;
+                //}
+                //else if (m_portSpeed == 115200)
+                //{
+                //    m_serialPort.BaudRate = 2000000;
+                //    m_serialPort.Write("ATZ\r");    //Reset all
+                //    Thread.Sleep(3000);
+                //    m_serialPort.BaudRate = 115200;
+                //}
+                //m_serialPort.Write("ATZ\r");    //Reset all
+                //Thread.Sleep(3000);
+
+                ////Try to set up ELM327
+                //try
+                //{
+                //    str = m_serialPort.ReadTo(">");
+                //}
+                //catch (Exception)
+                //{
+                //    //readException = true;
+                //}
+
+
+
+
+
+                string answer;
                 try
                 {
-                    m_serialPort.ReadTo(">");
+                    m_serialPort.Write("ATL1\r");   //Linefeeds On
+                    str = m_serialPort.ReadTo(">");
+                    m_serialPort.Write("ATE0\r");   //Echo off
+                    str = m_serialPort.ReadTo(">");
+                    m_serialPort.Write("ATAT2\r");   //Automatic timing
+                    str = m_serialPort.ReadTo(">");
+                    string localStr = "";
+                    if (detectedRate == 115200)  //Try setting the speed to 2Mbit
+                    {
+                        m_serialPort.Write("ATBRT28\r"); //Set baudrate timeout 200 ms
+                        m_serialPort.ReadTo(">");
+
+                        m_serialPort.Write("AT BRD 02\r");   //Automaic timing
+                        str = m_serialPort.ReadLine();
+                        if (str.StartsWith("OK"))
+                        {
+                            try
+                            {
+                                m_serialPort.Close();
+                                m_serialPort.BaudRate = 2000000;
+                                m_serialPort.Open();
+                            }
+                            catch (UnauthorizedAccessException e)
+                            {
+                                //AddToSerialTrace("exception" + e.ToString());
+                                return false;
+                            }
+
+                            try
+                            {
+                                //m_serialPort.BaudRate = 2000000;
+                                bool gotVersion = false;
+                                int tries = 20;
+                                while (!gotVersion && tries-- > 0)
+                                {
+                                    string elmVersion = m_serialPort.ReadExisting();
+                                    //AddToSerialTrace("elmVersion:" + elmVersion);
+                                    Console.WriteLine("elmVersion: " + elmVersion);
+                                    if (elmVersion.Length > 5)
+                                    {
+                                        gotVersion = true;
+                                    }
+                                    Thread.Sleep(10);
+                                    m_serialPort.Write("\r");
+                                }
+
+                                if (!gotVersion)
+                                    return false;
+
+                                m_serialPort.Write("\r");
+                                answer = m_serialPort.ReadTo(">");
+                            }
+                            catch (Exception e)
+                            {
+                                //Could not connect at 2Mbit
+                                m_serialPort.BaudRate = 115200;
+                            }
+                        }
+                    }
+                    m_serialPort.Write("ATI\r");    //Print version
+                    answer = m_serialPort.ReadTo(">");
+
                 }
-                catch(Exception)
+                catch (Exception)
                 {
-                    readException = true;
+                    return false;
                 }
-                if (readException)
-                    continue;
-                m_serialPort.Write("ATL1\r");   //Linefeeds On
-                m_serialPort.ReadTo(">");       
-                m_serialPort.Write("ATE0\r");   //Echo off
-                m_serialPort.ReadTo(">");
-                m_serialPort.Write("ATI\r");    //Print version
-                string answer = m_serialPort.ReadTo(">");
                 if (answer.StartsWith("ELM327"))
                 {
                     m_deviceIsOpen = true;
                     return true;
                 }
-
             }
+
             return false;
+        }
+
+        /// <summary>
+        /// Detects the port speed, resets the interface, then detects the speed again
+        /// </summary>
+        /// <returns></returns>
+        private int DetectInitialPortSpeedAndReset()
+        {
+            int[] speeds = new int[] { 9600, 38400, 115200, 230400, 285714, 500000, 1000000, 2000000 }; ///*2000000, 1000000, 500000, 230400,*/ 115200, 57600, 38400, 19200, 9600 };
+
+            for (int i = 0; i < 2; i++)
+            {
+                foreach (var speed in speeds)
+                {
+                    Console.Out.WriteLine("Try speed:" + speed);
+                    //if (m_serialPort.IsOpen)
+                    m_serialPort.Close();
+                    m_serialPort.BaudRate = speed;
+                    m_serialPort.PortName = m_forcedComport;
+                    m_serialPort.ReadTimeout = 1000;
+                    m_serialPort.Open();
+                    try
+                    {
+                        m_serialPort.DiscardInBuffer();
+                        WriteToSerialWithTrace("ATI\r");
+                        Thread.Sleep(50);
+                        WriteToSerialWithTrace("ATI\r"); //need to send 2 times for some reason...
+                        Thread.Sleep(50);
+                        string reply = m_serialPort.ReadExisting();
+                        Console.Out.WriteLine("Result:" + reply);
+                        bool success = !string.IsNullOrEmpty(reply) && reply.Contains("ELM327");
+                        if (success)
+                        {
+                            if (i == 0)
+                            {
+                                WriteToSerialWithTrace("ATZ\r");//do reset
+                                Thread.Sleep(2000);//wait for it to transfer data 
+                                m_serialPort.Close();
+                                break;
+                            }
+                            else
+                            {
+                                m_serialPort.Close();
+                                return speed;
+                            }
+                        }
+                        else
+                        {
+                            Console.Out.WriteLine("Failed");
+                            m_serialPort.Close();
+                        }
+                    }
+                    catch (Exception x)
+                    {
+                        //AddToDeviceTrace("ELM372Device DetectInitialPortSpeedAndReset" + x.Message);
+                        m_serialPort.Close();
+                    }
+                }
+            }
+            return 0;
+        }
+
+        protected void WriteToSerialWithTrace(string line)
+        {
+            m_serialPort.Write(line);
+            //AddToDeviceTrace("SERTX: " + line);
         }
 
         /// <summary>
         /// This method closes a KWP device for usage.
         /// </summary>
         /// <returns>true on success, otherwise false.</returns>
-        public bool close()
+        public override bool close()
         {
             m_serialPort.Close();
             return true;
@@ -167,7 +399,7 @@ namespace TrionicCANLib.KWP
         /// This method checks if the IKWPDevice is opened or not.
         /// </summary>
         /// <returns>true if device is open, otherwise false.</returns>
-        public bool isOpen()
+        public override bool isOpen()
         {
             return m_deviceIsOpen;
         }

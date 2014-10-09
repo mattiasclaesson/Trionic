@@ -157,6 +157,7 @@ namespace TrionicCANLib.KWP
             }
         }
 
+        // This function work well to reset the T7 ECU, but doing so in car will cause limphome of throttlebody. 
         public bool ResetECU()
         {
             LogDataString("ResetECU");
@@ -1122,33 +1123,12 @@ namespace TrionicCANLib.KWP
             }
         }
 
-        public static void startLogging()
-        {
-            m_logginEnabled = true;
-            /*DateTime dateTime = DateTime.Now;
-            String fileName = "kwplog.txt";
-            if (!File.Exists(fileName))
-                File.Create(fileName);
-            try
-            {
-                m_logFileStream = new StreamWriter(fileName);
-                m_logFileStream.WriteLine("New logging started: " + dateTime);
-                m_logFileStream.WriteLine();
-                m_logginEnabled = true;
-            }
-            catch (Exception E)
-            {
-                Console.WriteLine("Failed to enable logging");
-            }*/
-            
-        }
+        private bool m_logginEnabled = false;
 
-        public static void stopLogging()
+        public bool EnableLog
         {
-            m_logginEnabled = false;
-            /*if(m_logFileStream != null)
-                m_logFileStream.Close();*/
-
+            get { return m_logginEnabled; }
+            set { m_logginEnabled = value; }
         }
 
         /// <summary>
@@ -1178,25 +1158,28 @@ namespace TrionicCANLib.KWP
             m_requestMutex.WaitOne();
 
             LogDataString(a_request.ToString());
-
-            result = m_kwpDevice.sendRequest(a_request, out reply);
-            a_reply = reply;
-            if (result == RequestResult.NoError)
+            for (int retry = 0; retry < 3; retry++)
             {
-                LogDataString(reply.ToString());
-                LogDataString(""); // empty line
+                result = m_kwpDevice.sendRequest(a_request, out reply);
+                a_reply = reply;
+                if (result == RequestResult.NoError)
+                {
+                    LogDataString(reply.ToString());
+                    LogDataString(""); // empty line
 
-                m_requestMutex.ReleaseMutex();
-                return KWPResult.OK;
+                    m_requestMutex.ReleaseMutex();
+                    return KWPResult.OK;
+                }
+                else
+                {
+                    LogDataString("Timeout in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
+                    Console.WriteLine("Timeout in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
+                }
             }
-            else
-            {
-                LogDataString("Timeout in KWPHandler::sendRequest: " + result.ToString());
-                Console.WriteLine("Timeout in KWPHandler::sendRequest: " + result.ToString());
-                m_requestMutex.ReleaseMutex();
-                return KWPResult.Timeout;
-            }
+            m_requestMutex.ReleaseMutex();
+            return KWPResult.Timeout;
         }
+
         /// <summary>
         /// This method sends a KWPRequest and returns a KWPReply.
         /// </summary>
@@ -1418,8 +1401,6 @@ namespace TrionicCANLib.KWP
             return retval;
         }
 
-        private static bool m_logginEnabled = false;
-        //private static StreamWriter m_logFileStream;
         private static KWPHandler m_instance;
         private Mutex m_requestMutex = new Mutex();
         private TimerCallback timerDelegate;
