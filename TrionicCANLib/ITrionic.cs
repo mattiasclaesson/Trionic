@@ -104,7 +104,17 @@ namespace TrionicCANLib
             set { m_ELM327Kline = value; }
         }
 
+        public virtual void setCANDevice(CANBusAdapter adapterType)
+        {
+            setCANDevice(adapterType, false);
+        }
+
         abstract public void setCANDevice(CANBusAdapter adapterType, bool useFlasherOnDevice);
+
+        public virtual bool openDevice(bool requestSecurityAccess)
+        {
+            return openDevice(requestSecurityAccess, false);
+        }
 
         abstract public bool openDevice(bool requestSecurityAccess, bool useFlasherOnDevice);
 
@@ -119,7 +129,7 @@ namespace TrionicCANLib
         {
             return canUsbDevice.GetThermoValue();
         }
-        
+
         protected void CastProgressWriteEvent(int percentage)
         {
             if (onWriteProgress != null)
