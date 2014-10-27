@@ -19,6 +19,9 @@ namespace TrionicCANLib
         public delegate void CanInfo(object sender, CanInfoEventArgs e);
         public event ITrionic.CanInfo onCanInfo;
 
+        public delegate void CanFrame(object sender, CanFrameEventArgs e);
+        public event ITrionic.CanFrame onCanFrame;
+
         // implements functions for canbus access for Trionic 8
         [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
         public static extern uint MM_BeginPeriod(uint uMilliseconds);
@@ -155,6 +158,15 @@ namespace TrionicCANLib
             }
         }
 
+        protected void CastFrameEvent(CANMessage message)
+        {
+            Console.WriteLine(message);
+            if (onCanFrame != null)
+            {
+                onCanFrame(this, new CanFrameEventArgs(message));
+            }
+        }
+
         public class CanInfoEventArgs : System.EventArgs
         {
             private ActivityType _type;
@@ -177,6 +189,22 @@ namespace TrionicCANLib
             {
                 _info = info;
                 _type = type;
+            }
+        }
+
+        public class CanFrameEventArgs : System.EventArgs
+        {
+            private CANMessage _message;
+
+            public CANMessage Message
+            {
+                get { return _message; }
+                set { _message = value; }
+            }
+
+            public CanFrameEventArgs(CANMessage message)
+            {
+                _message = message;
             }
         }
 

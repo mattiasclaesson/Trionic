@@ -78,7 +78,7 @@ namespace TrionicCANLib
             canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
             canUsbDevice.TrionicECU = ECU.TRIONIC8;
             canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
-            //canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
+            canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
             if (m_canListener == null)
             {
                 m_canListener = new CANListener();
@@ -90,6 +90,11 @@ namespace TrionicCANLib
         void canUsbDevice_onReceivedAdditionalInformation(object sender, ICANDevice.InformationEventArgs e)
         {
             CastInfoEvent(e.Info, ActivityType.ConvertingFile);
+        }
+
+        void canUsbDevice_onReceivedAdditionalInformationFrame(object sender, ICANDevice.InformationFrameEventArgs e)
+        {
+            CastFrameEvent(e.Message);
         }
 
         override public bool openDevice(bool requestSecurityAccess, bool useFlasherOnDevice)

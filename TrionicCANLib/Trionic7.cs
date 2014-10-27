@@ -7,6 +7,7 @@ using TrionicCANLib.CAN;
 using TrionicCANLib.KWP;
 using TrionicCANLib.Flasher;
 using TrionicCANLib.Log;
+using CommonSuite;
 
 namespace TrionicCANLib
 {
@@ -52,8 +53,8 @@ namespace TrionicCANLib
                 canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
                 canUsbDevice.TrionicECU = ECU.TRIONIC7;
                 canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
-                //canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
-                //canUsbDevice.acceptOnlyMessageIds = new List<uint> { 0x258,0x238 }; //t7suite
+                canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
+                canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x258,0x238 }; //t7suite
             }
 
             if (adapterType == CANBusAdapter.ELM327 && m_ELM327Kline)
@@ -89,6 +90,11 @@ namespace TrionicCANLib
         void canUsbDevice_onReceivedAdditionalInformation(object sender, ICANDevice.InformationEventArgs e)
         {
             CastInfoEvent(e.Info, ActivityType.ConvertingFile);
+        }
+
+        void canUsbDevice_onReceivedAdditionalInformationFrame(object sender, ICANDevice.InformationFrameEventArgs e)
+        {
+            CastFrameEvent(e.Message);
         }
 
         override public bool openDevice(bool requestSecurityAccess, bool useFlasherOnDevice)
@@ -144,7 +150,10 @@ namespace TrionicCANLib
             if (!opened)
             {
                 CastInfoEvent("Open failed in Trinoic7", ActivityType.ConvertingFile);
-                canUsbDevice.close();
+                if (canUsbDevice != null)
+                {
+                    canUsbDevice.close();
+                }
                 MM_EndPeriod(1);
             }
             return opened;
@@ -429,11 +438,24 @@ namespace TrionicCANLib
         public string[] ReadDTC()
         {
             List<string> list;
+            KWPHandler.getInstance().requestSequrityAccess(false);
             KWPHandler.getInstance().ReadDTCCodes(out list);
             return list.ToArray();
         }
 
-        public void GetSRAMSnapshot(string a_fileName)
+        public bool ClearDTCCode(int dtccode)
+        {
+            KWPHandler.getInstance().requestSequrityAccess(false);
+            return KWPHandler.getInstance().ClearDTCCode(dtccode);
+        }
+
+        public bool ClearDTCCodes()
+        {
+            KWPHandler.getInstance().requestSequrityAccess(false);
+            return KWPHandler.getInstance().ClearDTCCodes();
+        }
+
+        public bool GetSRAMSnapshot(string a_fileName)
         {
             const int blockSize = 0x80;
             byte[] data = new byte[blockSize];
@@ -444,7 +466,7 @@ namespace TrionicCANLib
                 FileStream fs = new FileStream(a_fileName, FileMode.Create);
                 using (BinaryWriter br = new BinaryWriter(fs))
                 {
-                    for (int i = 0; i < /*0x800*/ 0x10000 / blockSize; i++)
+                    for (int i = 0; i < 0x10000 / blockSize; i++)
                     {
                         long curaddress = (0xF00000 + i * blockSize);
                         if (canUsbDevice is LPCCANDevice)
@@ -462,14 +484,14 @@ namespace TrionicCANLib
                             {
                                 AddToFlasherLog("Failed to read data. sendRequestDataByOffset: " + curaddress.ToString("X8"));
                                 CastInfoEvent("Failed to read data. sendRequestDataByOffset: " + curaddress.ToString("X8"), ActivityType.FinishedDownloadingFlash);
-                                return;
+                                return false;
                             }
                         }
                         else
                         {
                             AddToFlasherLog("Failed to read data. sendReadRequest: " + curaddress.ToString("X8"));
                             CastInfoEvent("Failed to read data. sendReadRequest: " + curaddress.ToString("X8"), ActivityType.FinishedDownloadingFlash);
-                            return;
+                            return false;
                         }
                         CastProgressReadEvent((i * 100) / (0x10000 / blockSize));
                         br.Write(data);
@@ -478,11 +500,220 @@ namespace TrionicCANLib
                 fs.Close();
                 CastProgressReadEvent(100);
                 CastInfoEvent("Snapshot downloaded", ActivityType.FinishedDownloadingFlash);
+                return true;
             }
             catch (Exception E)
             {
                 AddToFlasherLog("Failed to read memory: " + E.Message);
             }
+            return false;
+        }
+
+        public byte[] ReadMapfromSRAM(SymbolHelper sh, bool showProgress)
+        {
+            byte[] completedata = new byte[sh.Length];
+            try
+            {
+                byte[] data;
+                int m_nrBytes = 64;
+                int m_nrOfReads = 0;
+                int m_nrOfRetries = 0;
+                m_nrOfReads = sh.Length / m_nrBytes;
+                if (((sh.Length) % 64) > 0) m_nrOfReads++;
+                int bytecount = 0;
+                KWPHandler.getInstance().requestSequrityAccess(false);
+                for (int readcount = 0; readcount < m_nrOfReads; readcount++)
+                {
+                    if (showProgress)
+                    {
+                        CastProgressReadEvent((int)(readcount * 100 / m_nrOfReads));
+                    }
+
+                    m_nrOfRetries = 0;
+                    int addresstoread = (int)sh.Start_address + (readcount * m_nrBytes);
+                    AddToFlasherLog("Reading 64 bytes from address: " + addresstoread.ToString("X6"));
+
+                    while (!KWPHandler.getInstance().sendReadRequest((uint)(addresstoread), 64) && m_nrOfRetries < 20)
+                    {
+                        m_nrOfRetries++;
+                    }
+                    AddToFlasherLog("Send command in " + m_nrOfRetries.ToString() + " retries");
+                    m_nrOfRetries = 0;
+                    Thread.Sleep(1);
+                    while (!KWPHandler.getInstance().sendRequestDataByOffset(out data) && m_nrOfRetries < 20)
+                    {
+                        m_nrOfRetries++;
+                    }
+                    AddToFlasherLog("Read data in " + m_nrOfRetries.ToString() + " retries");
+                    AddToFlasherLog("Read " + data.Length.ToString() + " bytes from CAN interface");
+                    foreach (byte b in data)
+                    {
+                        // Console.Write(b.ToString("X2") + " ");
+                        if (bytecount < completedata.Length)
+                        {
+                            completedata[bytecount++] = b;
+                        }
+                    }
+                }
+                //AddToFlasherLog("Reading done");
+            }
+            catch (Exception E)
+            {
+                AddToFlasherLog("Failed to read memory: " + E.Message);
+            }
+            return completedata;
+        }
+
+        public byte[] ReadMapFromSRAM(Int64 sramaddress, Int32 length, out bool _success)
+        {
+            _success = false;
+            byte[] data = new byte[length];
+            try
+            {
+                KWPHandler.getInstance().requestSequrityAccess(false);
+
+                if (canUsbDevice is LPCCANDevice) // or ELM327?
+                {
+                    Thread.Sleep(1);
+                }
+                if (KWPHandler.getInstance().sendReadRequest((uint)(sramaddress), (uint)length))
+                {
+                    Thread.Sleep(0); //<GS-11022010>
+                    if (canUsbDevice is LPCCANDevice) // or ELM327?
+                    {
+                        Thread.Sleep(1);
+                    }
+                    if (KWPHandler.getInstance().sendRequestDataByOffset(out data))
+                    {
+                        _success = true;
+                    }
+                }
+            }
+            catch (Exception E)
+            {
+                AddToFlasherLog("Failed to read memory: " + E.Message);
+            }
+            return data;
+        }
+
+        public byte[] ReadSymbolNumber(uint symbolnumber, out bool _success)
+        {
+            _success = false;
+            byte[] data = new byte[0];
+            try
+            {
+                if (KWPHandler.getInstance().setSymbolRequest((uint)symbolnumber))
+                {
+                    Thread.Sleep(0);//<GS-11022010>
+                    if (KWPHandler.getInstance().sendRequestDataByOffset(out data))
+                    {
+                        _success = true;
+                    }
+                }
+            }
+            catch (Exception E)
+            {
+                AddToFlasherLog("Failed to read SymbolNumber: " + E.Message);
+            }
+            return data;
+        }
+
+        public byte[] ReadMapFromSRAMVarLength(SymbolHelper sh)
+        {
+            int varlength = 2;
+            byte[] completedata = new byte[sh.Length];
+            try
+            {
+                byte[] data;
+                int m_nrBytes = varlength;
+                int m_nrOfReads = 0;
+                int m_nrOfRetries = 0;
+                m_nrOfReads = sh.Length / m_nrBytes;
+                if (((sh.Length) % varlength) > 0) m_nrOfReads++;
+                int bytecount = 0;
+                KWPHandler.getInstance().requestSequrityAccess(false); // no seq. access <GS-10022010>
+                for (int readcount = 0; readcount < m_nrOfReads; readcount++)
+                {
+                    m_nrOfRetries = 0;
+                    int addresstoread = (int)sh.Start_address + (readcount * m_nrBytes);
+                    //LogHelper.Log("Reading 64 bytes from address: " + addresstoread.ToString("X6"));
+
+                    while (!KWPHandler.getInstance().sendReadRequest(/*0xF04768*/(uint)(addresstoread), (uint)varlength) && m_nrOfRetries < 20)
+                    {
+                        m_nrOfRetries++;
+                    }
+                    AddToFlasherLog("Send command in " + m_nrOfRetries.ToString() + " retries");
+                    m_nrOfRetries = 0;
+                    while (!KWPHandler.getInstance().sendRequestDataByOffset(out data) && m_nrOfRetries < 20)
+                    {
+                        m_nrOfRetries++;
+                    }
+                    AddToFlasherLog("Read data in " + m_nrOfRetries.ToString() + " retries");
+                    AddToFlasherLog("Read " + data.Length.ToString() + " bytes from CAN interface");
+                    foreach (byte b in data)
+                    {
+                        //Console.Write(b.ToString("X2") + " ");
+                        if (bytecount < completedata.Length)
+                        {
+                            completedata[bytecount++] = b;
+                        }
+                    }
+                }
+            }
+            catch (Exception E)
+            {
+                AddToFlasherLog("Failed to read memory: " + E.Message);
+            }
+            return completedata;
+        }
+
+        public bool WriteSymbolToSRAM(uint symbolnumber, byte[] bytes)
+        {
+            KWPHandler.getInstance().requestSequrityAccess(false);
+            return KWPHandler.getInstance().writeSymbolRequest(symbolnumber, bytes);
+        }
+
+        public void WriteMapToSRAM(string symbolname, byte[] completedata, bool showProgress, uint sramAddress, int symbolindex)
+        {
+            AddToFlasherLog("Writing " + symbolindex.ToString() + " " + symbolname + " SRAM: " + sramAddress.ToString("X8"));
+            // if data length > 64 then split the messages
+            const uint m_nrBytes = 64;
+            uint m_nrOfWrites = 0;
+            m_nrOfWrites = (uint)completedata.Length / m_nrBytes;
+            if (((completedata.Length) % 64) > 0) m_nrOfWrites++;
+            uint bytecount = 0;
+
+
+            KWPHandler.getInstance().requestSequrityAccess(false);
+
+            for (uint readcount = 0; readcount < m_nrOfWrites; readcount++)
+            {
+                if (showProgress)
+                {
+                    CastProgressWriteEvent((int)(readcount * 100 / m_nrOfWrites));
+                }
+
+                uint addresstowrite = sramAddress + (readcount * m_nrBytes);
+                byte[] dataToSend = new byte[64];
+                if (readcount == m_nrOfWrites - 1) // only the last part
+                {
+                    dataToSend = new byte[completedata.Length - bytecount];
+                }
+                for (int t = 0; t < dataToSend.Length; t++)
+                {
+                    dataToSend[t] = completedata[bytecount++];
+                }
+                if (!KWPHandler.getInstance().writeSymbolRequestAddress(addresstowrite, dataToSend))
+                {
+                    AddToFlasherLog("Failed to write data to the ECU");
+                }
+            }
+        }
+
+        public bool WriteMapToSRAM(uint addresstowrite, byte[] dataToSend)
+        {
+            KWPHandler.getInstance().requestSequrityAccess(false);
+            return KWPHandler.getInstance().writeSymbolRequestAddress(addresstowrite, dataToSend);
         }
     }
 }

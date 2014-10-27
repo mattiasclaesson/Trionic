@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ITrionic.cs" />
+    <Compile Include="SymbolHelper.cs" />
     <Compile Include="TrionicEnums.cs" />
     <Compile Include="BitTools.cs" />
     <Compile Include="BlockManager.cs" />
