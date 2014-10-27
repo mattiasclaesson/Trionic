@@ -122,11 +122,27 @@ namespace TrionicCANFlasher
                                 dtstart = DateTime.Now;
                                 AddLogItem("Update FLASH content");
                                 Application.DoEvents();
-                                BackgroundWorker bgWorker;
-                                bgWorker = new BackgroundWorker();
-                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlash);
-                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                bgWorker.RunWorkerAsync(ofd.FileName);
+                                DoWorkEventArgs args = new DoWorkEventArgs(ofd.FileName);
+                                trionic8.WriteFlash(this, args);
+                                while (args.Result == null)
+                                {
+                                    System.Windows.Forms.Application.DoEvents();
+                                    Thread.Sleep(10);
+                                }
+                                if ((bool)args.Result == true)
+                                {
+                                    AddLogItem("Operation done");
+                                }
+                                else
+                                {
+                                    AddLogItem("Operation failed");
+                                }
+                                TimeSpan ts = DateTime.Now - dtstart;
+                                AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                                trionic8.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
+
                             }
                             else
                             {
@@ -163,24 +179,6 @@ namespace TrionicCANFlasher
             }
             return true;
         }
-
-        void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if ((bool)e.Result)
-            {
-                AddLogItem("Operation done");
-            }
-            else
-            {
-                AddLogItem("Operation failed");
-            }
-            TimeSpan ts = DateTime.Now - dtstart;
-            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-            trionic8.Cleanup();
-            EnableUserInput(true);
-            AddLogItem("Connection terminated");
-        }
-
 
         private void EnableUserInput(bool enable)
         {
@@ -252,7 +250,6 @@ namespace TrionicCANFlasher
                                 if (trionic7.openDevice(false, true))
                                 {
                                     // check reading status periodically
-
                                     Thread.Sleep(1000);
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
@@ -277,11 +274,21 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    BackgroundWorker bgWorker;
-                                    bgWorker = new BackgroundWorker();
-                                    bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlash);
-                                    bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                    bgWorker.RunWorkerAsync(sfd.FileName);
+                                    DoWorkEventArgs args = new DoWorkEventArgs(sfd.FileName);
+                                    trionic8.ReadFlash(this, args);
+                                    if ((bool)args.Result == true)
+                                    {
+                                        AddLogItem("Operation done");
+                                    }
+                                    else
+                                    {
+                                        AddLogItem("Operation failed");
+                                    }
+                                    TimeSpan ts = DateTime.Now - dtstart;
+                                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                                    trionic8.Cleanup();
+                                    EnableUserInput(true);
+                                    AddLogItem("Connection terminated");
                                 }
                                 else
                                 {
@@ -463,11 +470,26 @@ namespace TrionicCANFlasher
                             dtstart = DateTime.Now;
                             AddLogItem("Recovering ECU");
                             Application.DoEvents();
-                            BackgroundWorker bgWorker;
-                            bgWorker = new BackgroundWorker();
-                            bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU);
-                            bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                            bgWorker.RunWorkerAsync(ofd.FileName);
+                            DoWorkEventArgs args = new DoWorkEventArgs(ofd.FileName);
+                            trionic8.RecoverECU(this, args);
+                            while (args.Result == null)
+                            {
+                                System.Windows.Forms.Application.DoEvents();
+                                Thread.Sleep(10);
+                            }
+                            if ((bool)args.Result == true)
+                            {
+                                AddLogItem("Operation done");
+                            }
+                            else
+                            {
+                                AddLogItem("Operation failed");
+                            }
+                            TimeSpan ts = DateTime.Now - dtstart;
+                            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                            trionic8.Cleanup();
+                            EnableUserInput(true);
+                            AddLogItem("Connection terminated");
                         }
                         else
                         {
