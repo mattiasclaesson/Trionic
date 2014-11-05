@@ -156,6 +156,7 @@ namespace TrionicCANLib
                 }
                 MM_EndPeriod(1);
             }
+            kwpHandler.ResumeAlivePolling();
             return opened;
         }
 

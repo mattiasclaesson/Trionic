@@ -4573,18 +4573,18 @@ namespace TrionicCANLib
                     }
                 }
                 waitCount++;
-                if (waitCount > 30)
+                if (waitCount > 35)
                 {
                     if (canUsbDevice is CANELM327Device)
                     {
                         CastInfoEvent("Erase completed", ActivityType.ErasingFlash);
                         // ELM327 seem to be unable to wait long enough for this response
-                        // Instead we assume its finnished ok after 30 seconds
+                        // Instead we assume its finnished ok after 35 seconds
                         return true;
                     }
                     else
                     {
-                        CastInfoEvent("Erase timed out after 30 seconds", ActivityType.ErasingFlash);
+                        CastInfoEvent("Erase timed out after 35 seconds", ActivityType.ErasingFlash);
                         return false;
                     }
                 }

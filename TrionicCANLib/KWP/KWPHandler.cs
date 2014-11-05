@@ -78,9 +78,9 @@ namespace TrionicCANLib.KWP
         {
             if (m_kwpDevice.isOpen() && !m_suspendAlivePolling)
             {
+                Console.WriteLine("Sending keep alive");
                 sendUnknownRequest();
             }
-          //  Console.WriteLine("Sending keep alive");
         }
 
 
