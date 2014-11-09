@@ -28,7 +28,14 @@ namespace TrionicCANLib.KWP
         /// IKWPDevice to be used by KWPHandler.
         /// </summary>
         private static IKWPDevice m_kwpDevice;
+
         private bool gotSequrityAccess = false;
+        private int keepAliveTimeout = 1000;
+        private static KWPHandler m_instance;
+        private Mutex m_requestMutex = new Mutex();
+        private TimerCallback timerDelegate;
+        private System.Threading.Timer stateTimer;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -66,6 +73,10 @@ namespace TrionicCANLib.KWP
         public void ResumeAlivePolling()
         {
             m_suspendAlivePolling = false;
+            if (stateTimer == null)
+            {
+                stateTimer = new System.Threading.Timer(sendKeepAlive, new Object(), keepAliveTimeout, keepAliveTimeout);
+            }
         }
         
         /// <summary>
@@ -82,7 +93,6 @@ namespace TrionicCANLib.KWP
                 sendUnknownRequest();
             }
         }
-
 
         /// <summary>
         /// This method starts a KWP session. It must be called before any request can be made.
@@ -1144,16 +1154,15 @@ namespace TrionicCANLib.KWP
             KWPReply reply = new KWPReply();
             RequestResult result;
             a_reply = new KWPReply();
-            //<GS-11012010> was allemaal 1000
-            int keepAliveTimeout = 1000;
             //Console.WriteLine("Checking KWP device open");
             if (!m_kwpDevice.isOpen())
                 return KWPResult.DeviceNotConnected;
 
             // reset the timer for keep alive (set to 1 seconds now)
-            if (stateTimer == null)
-                stateTimer = new System.Threading.Timer(sendKeepAlive, new Object(), keepAliveTimeout, keepAliveTimeout);
-            stateTimer.Change(keepAliveTimeout, keepAliveTimeout);
+            if (stateTimer != null)
+            {
+                stateTimer.Change(keepAliveTimeout, keepAliveTimeout);
+            }
 
             m_requestMutex.WaitOne();
 
@@ -1172,8 +1181,8 @@ namespace TrionicCANLib.KWP
                 }
                 else
                 {
-                    LogDataString("Timeout in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
-                    Console.WriteLine("Timeout in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
+                    LogDataString("Error in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
+                    Console.WriteLine("Error in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
                 }
             }
             m_requestMutex.ReleaseMutex();
@@ -1195,16 +1204,15 @@ namespace TrionicCANLib.KWP
             KWPReply reply = new KWPReply();
             RequestResult result;
             a_reply = new KWPReply();
-            //<GS-11012010> was allemaal 1000
-            int keepAliveTimeout = 1000;
             //Console.WriteLine("Checking KWP device open");
             if (!m_kwpDevice.isOpen())
                 return KWPResult.DeviceNotConnected;
 
             // reset the timer for keep alive (set to 1 seconds now)
-            if (stateTimer == null)
-                stateTimer = new System.Threading.Timer(sendKeepAlive, new Object(), keepAliveTimeout, keepAliveTimeout);
-            stateTimer.Change(keepAliveTimeout, keepAliveTimeout);
+            if (stateTimer != null)
+            {
+                stateTimer.Change(keepAliveTimeout, keepAliveTimeout);
+            }
 
             m_requestMutex.WaitOne();
             int _retryCount = 0;
@@ -1220,6 +1228,7 @@ namespace TrionicCANLib.KWP
                 }
                 if (result == RequestResult.NoError)
                 {
+             
                     a_reply = reply;
                     LogDataString(reply.ToString());
                     LogDataString(""); // empty line
@@ -1229,7 +1238,7 @@ namespace TrionicCANLib.KWP
                 }
                 else
                 {
-                    LogDataString("Timeout in KWPHandler::sendRequest");
+                    LogDataString("Error in KWPHandler::sendRequest" + result.ToString() + " " + reply.ToString());
                     m_requestMutex.ReleaseMutex();
                     //return KWPResult.Timeout;
                     _kwpResult = KWPResult.Timeout;
@@ -1400,13 +1409,5 @@ namespace TrionicCANLib.KWP
             }
             return retval;
         }
-
-        private static KWPHandler m_instance;
-        private Mutex m_requestMutex = new Mutex();
-        private TimerCallback timerDelegate;
-        private System.Threading.Timer stateTimer;
-
     }
-
-
 }

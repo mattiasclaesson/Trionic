@@ -68,7 +68,8 @@ namespace TrionicCANLib.KWP
     {
         private Object m_lockObject = new Object();
         private ICANDevice m_canDevice;
-        KWPCANListener m_kwpCanListener = new KWPCANListener();
+        //KWPCANListener m_kwpCanListener = new KWPCANListener();
+        private CANListener m_canListener = new CANListener();
         const int timeoutPeriod = 1000; // if timeout <GS-11022010> changed from 1000 to 250 to not intefere with the keepalive timer
 
         private bool m_EnableLog = false;
@@ -144,7 +145,7 @@ namespace TrionicCANLib.KWP
                 if (m_canDevice.open() == OpenResult.OK)
                 {
                     Console.WriteLine("Adding listener");
-                    m_canDevice.addListener(m_kwpCanListener);
+                    m_canDevice.addListener(m_canListener);
                     retVal = true;
                 }
                 else
@@ -186,7 +187,7 @@ namespace TrionicCANLib.KWP
                     retVal = true;
                 else
                     retVal = false;
-                m_canDevice.removeListener(m_kwpCanListener);
+                m_canDevice.removeListener(m_canListener);
             }
             return retVal;
         }
@@ -213,7 +214,7 @@ namespace TrionicCANLib.KWP
             msg.setData(0x000040021100813F);
             AddToCanTrace("Sending 0x000040021100813F message");
 
-            m_kwpCanListener.setupWaitMessage(0x238);
+            m_canListener.setupWaitMessage(0x238);
             
             if (!m_canDevice.sendMessage(msg))
             {
@@ -221,7 +222,7 @@ namespace TrionicCANLib.KWP
                 return false;
             }
             Console.WriteLine("Init msg sent");
-            if (m_kwpCanListener.waitMessage(timeoutPeriod).getID() == 0x238)
+            if (m_canListener.waitMessage(timeoutPeriod).getID() == 0x238)
             {
                 AddToCanTrace("Successfully sent 0x000040021100813F message and received reply 0x238");
                 return true;
@@ -244,7 +245,7 @@ namespace TrionicCANLib.KWP
             uint row;
             uint all_rows = row = nrOfRowsToSend(a_request.getData());
 
-            m_kwpCanListener.setupWaitMessage(0x258);
+            m_canListener.setupWaitMessage(0x258);
 
             // Send one or several request messages.
             for (; row > 0; row--)
@@ -265,7 +266,7 @@ namespace TrionicCANLib.KWP
                 }
             }
 
-            var response = m_kwpCanListener.waitMessage(timeoutPeriod);          
+            var response = m_canListener.waitMessage(timeoutPeriod);          
             
             // Receive one or several replys and send an ack for each reply.
             if (response.getID() == 0x258)
@@ -280,11 +281,11 @@ namespace TrionicCANLib.KWP
                 sendAck(nrOfRows - 1);
                 nrOfRows--;
 
-                m_kwpCanListener.setupWaitMessage(0x258);
+                m_canListener.setupWaitMessage(0x258);
 
                 while (nrOfRows > 0)
                 {
-                    response = m_kwpCanListener.waitMessage(timeoutPeriod);
+                    response = m_canListener.waitMessage(timeoutPeriod);
                     if (response.getID() == 0x258)
                     {
                         row++;
@@ -294,6 +295,7 @@ namespace TrionicCANLib.KWP
                     }
                     else
                     {
+                        AddToCanTrace("1response.getID == " + response.getID());
                         r_reply = new KWPReply();
                         return RequestResult.Timeout;
                     }
@@ -304,6 +306,7 @@ namespace TrionicCANLib.KWP
             }
             else
             {
+                AddToCanTrace("2response.getID == " + response.getID());
                 r_reply = new KWPReply();
                 return RequestResult.Timeout;
             }

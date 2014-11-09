@@ -307,7 +307,7 @@ public class LPCCANDevice : ICANDevice
     */
     public override bool sendMessage(CANMessage msg)
     {
-        AddToCanTrace("Sending message: " + msg.getID().ToString("X4") + " " + msg.getData().ToString("X16") + " " + msg.getLength().ToString("X2"));
+        AddToCanTrace("TX: " + msg.getID().ToString("X4") + " " + msg.getData().ToString("X16") + " " + msg.getLength().ToString("X2"));
 
         try
         {
@@ -430,6 +430,7 @@ public class LPCCANDevice : ICANDevice
             // receive messages
             if (combi.CAN_GetMessage(ref frame, 1000))
             {
+                AddToCanTrace("RXCAN_GetMessage: " + frame.id.ToString("X4") + " " + frame.data.ToString("X16"));
                 if (acceptMessageId(frame.id))
                 {
                     // convert message
@@ -439,14 +440,18 @@ public class LPCCANDevice : ICANDevice
 
                     // pass message to listeners
                     lock (m_listeners)
-                    {
-                        AddToCanTrace("RX: " + frame.id.ToString("X4") + " " + frame.data.ToString("X16"));
+                    { 
                         foreach (ICANListener listener in m_listeners)
                         {
                             listener.handleMessage(in_msg);
                         }
+                        AddToCanTrace("RX: " + frame.id.ToString("X4") + " " + frame.data.ToString("X16"));
                     }
                 }
+            }
+            else
+            {
+                Thread.Sleep(1);
             }
         }
     }

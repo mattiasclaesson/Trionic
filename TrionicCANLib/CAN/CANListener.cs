@@ -12,9 +12,7 @@ namespace TrionicCANLib.CAN
     /// </summary>
     class CANListener : ICANListener
     {
-        private CANMessage m_canMessage = new CANMessage();
         private uint m_waitMsgID = 0;
-        private AutoResetEvent m_resetEvent = new AutoResetEvent(false);
 
         public override bool messagePending()
         {
@@ -27,12 +25,6 @@ namespace TrionicCANLib.CAN
         public void setupWaitMessage(uint can_id)
         {
             this.m_waitMsgID = can_id;
-
-            /*this.m_canMessage.setID(0);
-            lock (this.m_canMessage)
-            {
-                this.m_waitMsgID = can_id;
-            }*/
         }
 
         //---------------------------------------------------------------------
@@ -100,17 +92,6 @@ namespace TrionicCANLib.CAN
             }
             sw.Stop();
             return retMsg;
-
-            /*
-            CANMessage retMsg;
-
-            m_resetEvent.WaitOne(a_timeout, true);
-            lock (m_canMessage)
-            {
-                retMsg = m_canMessage;
-            }
-            messageReceived = false;
-            return retMsg;*/
         }
 
         private bool messageReceived = false;
@@ -122,7 +103,6 @@ namespace TrionicCANLib.CAN
 
         public override void dumpQueue()
         {
-            
             for (int idx = 0; idx < _queue.Length; idx ++)
             {
                 if (_receiveMessageIndex == idx && _readMessageIndex == idx)
@@ -147,7 +127,7 @@ namespace TrionicCANLib.CAN
 
         public override void FlushQueue()
         {
-            _queue = new CANMessage[128]; //16 might be a bit too little when some thread stops (i.e. the one that writes the log). 
+            _queue = new CANMessage[128]; //32 might be a bit too little when some thread stops (i.e. the one that writes the log). 
             _receiveMessageIndex = 0;
             _readMessageIndex = 0;
         }
@@ -156,7 +136,7 @@ namespace TrionicCANLib.CAN
         {
             if (_queue == null)
             {
-                _queue = new CANMessage[16];
+                _queue = new CANMessage[32];
                 _receiveMessageIndex = 0;
                 _readMessageIndex = 0;
             }
@@ -175,22 +155,7 @@ namespace TrionicCANLib.CAN
             _receiveMessageIndex++;
             if(_receiveMessageIndex > _queue.Length - 1) _receiveMessageIndex = 0; // make it circular
 
-            //DetermineSize();
-
-
-            /*
-            lock (m_canMessage)
-            {
-                if (a_message.getID() == m_waitMsgID)
-                {
-                    m_canMessage = a_message;
-                    messageReceived = true;
-                }
-            }
-            if (messageReceived)
-            {
-                m_resetEvent.Set();
-            }*/
+            DetermineSize();
         }
 
         private void DetermineSize()
@@ -208,7 +173,7 @@ namespace TrionicCANLib.CAN
             if (size > 1)
             {
                 Console.WriteLine("Buffering: " + size.ToString() + " messages");
-                dumpQueue();
+                //dumpQueue();
             }
         }
 

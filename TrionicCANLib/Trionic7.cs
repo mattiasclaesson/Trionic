@@ -145,18 +145,19 @@ namespace TrionicCANLib
                     kwpHandler.closeDevice();
                     opened = false;
                 }
+
+                kwpHandler.ResumeAlivePolling();
             }
 
             if (!opened)
             {
-                CastInfoEvent("Open failed in Trinoic7", ActivityType.ConvertingFile);
+                CastInfoEvent("Open failed in Trionic7", ActivityType.ConvertingFile);
                 if (canUsbDevice != null)
                 {
                     canUsbDevice.close();
                 }
                 MM_EndPeriod(1);
             }
-            kwpHandler.ResumeAlivePolling();
             return opened;
         }
 
