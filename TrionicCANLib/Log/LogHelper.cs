@@ -126,6 +126,7 @@ namespace TrionicCANLib.Log
         {
             lock (logThread)
             {
+                logThread.Abort();
                 LogManager.Shutdown();
                 isRunning = false;
             }
