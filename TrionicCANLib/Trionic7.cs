@@ -145,8 +145,6 @@ namespace TrionicCANLib
                     kwpHandler.closeDevice();
                     opened = false;
                 }
-
-                kwpHandler.ResumeAlivePolling();
             }
 
             if (!opened)
@@ -228,7 +226,6 @@ namespace TrionicCANLib
                 if (kwpHandler != null)
                 {
                     kwpHandler.EnableLog = false;
-                    kwpHandler.SuspendAlivePolling();
                     kwpHandler.closeDevice();
                 }
                 if (canUsbDevice != null)
@@ -456,6 +453,17 @@ namespace TrionicCANLib
             KWPHandler.getInstance().requestSequrityAccess(false);
             return KWPHandler.getInstance().ClearDTCCodes();
         }
+
+        public void SuspendAlivePolling()
+        {
+            KWPHandler.getInstance().SuspendAlivePolling();
+        }
+
+        public void ResumeAlivePolling()
+        {
+            KWPHandler.getInstance().ResumeAlivePolling();
+        }
+
 
         public bool GetSRAMSnapshot(string a_fileName)
         {
