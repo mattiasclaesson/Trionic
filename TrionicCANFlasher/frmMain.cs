@@ -90,11 +90,11 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
-                            SetOptions(trionic7, false);
+                            SetOptions(trionic7, true);
 
                             AddLogItem("Opening connection");
                             EnableUserInput(false);
-                            if (trionic7.openDevice(false, false))
+                            if (trionic7.openDevice(false, true))
                             {
                                 Thread.Sleep(1000);
                                 AddLogItem("Update FLASH content");
