@@ -17,6 +17,22 @@ namespace TrionicCANLib
         private KWPHandler kwpHandler;
         private IFlasher flash;
 
+        private bool m_UseFlasherOnDevice = false;
+
+        public bool UseFlasherOnDevice
+        {
+            get { return m_UseFlasherOnDevice; }
+            set { m_UseFlasherOnDevice = value; }
+        }
+
+        private bool m_ELM327Kline = false;
+
+        public bool ELM327Kline
+        {
+            get { return m_ELM327Kline; }
+            set { m_ELM327Kline = value; }
+        }
+
         private readonly System.Timers.Timer tmrReadProcessChecker = new System.Timers.Timer(1000);
         private readonly System.Timers.Timer tmrWriteProcessChecker = new System.Timers.Timer(1000);
 
@@ -26,7 +42,7 @@ namespace TrionicCANLib
             tmrWriteProcessChecker.Elapsed += new System.Timers.ElapsedEventHandler(tmrWriteProcessChecker_Tick);
         }
 
-        override public void setCANDevice(CANBusAdapter adapterType, bool useFlasherOnDevice)
+        override public void setCANDevice(CANBusAdapter adapterType)
         {
             if (adapterType == CANBusAdapter.LAWICEL)
             {
@@ -62,7 +78,7 @@ namespace TrionicCANLib
                 kwpDevice = new ELM327Device() { EnableLog = m_EnableLog, ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
                 setFlasher();
             }
-            else if (adapterType != CANBusAdapter.COMBI || !useFlasherOnDevice)
+            else if (adapterType != CANBusAdapter.COMBI || !m_UseFlasherOnDevice)
             {
                 kwpDevice = new KWPCANDevice() { EnableLog = m_EnableLog };
                 kwpDevice.setCANDevice(canUsbDevice);
@@ -97,13 +113,13 @@ namespace TrionicCANLib
             CastFrameEvent(e.Message);
         }
 
-        override public bool openDevice(bool requestSecurityAccess, bool useFlasherOnDevice)
+        public bool openDevice()
         {
             bool opened = true;
             CastInfoEvent("Open called in Trionic7", ActivityType.ConvertingFile);
             MM_BeginPeriod(1);
 
-            if (canUsbDevice is LPCCANDevice && useFlasherOnDevice)
+            if (canUsbDevice is LPCCANDevice && m_UseFlasherOnDevice)
             {
                 // connect to adapter
                 LPCCANDevice lpc = (LPCCANDevice)canUsbDevice;

@@ -90,11 +90,13 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
-                            SetOptions(trionic7, true);
+                            SetGenericOptions(trionic7);
+                            trionic7.ELM327Kline = cbELM327Kline.Checked;
+                            trionic7.UseFlasherOnDevice = true;
 
                             AddLogItem("Opening connection");
                             EnableUserInput(false);
-                            if (trionic7.openDevice(false, true))
+                            if (trionic7.openDevice())
                             {
                                 Thread.Sleep(1000);
                                 AddLogItem("Update FLASH content");
@@ -112,11 +114,11 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            SetOptions(trionic8, false);
+                            SetGenericOptions(trionic8);
 
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
-                            if (trionic8.openDevice(false, false))
+                            if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
                                 dtstart = DateTime.Now;
@@ -242,12 +244,14 @@ namespace TrionicCANFlasher
                         {
                             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
-                                SetOptions(trionic7, true);
+                                SetGenericOptions(trionic7);
+                                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                                trionic7.UseFlasherOnDevice = true;
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);
 
-                                if (trionic7.openDevice(false, true))
+                                if (trionic7.openDevice())
                                 {
                                     // check reading status periodically
                                     Thread.Sleep(1000);
@@ -264,11 +268,11 @@ namespace TrionicCANFlasher
                             }
                             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                             {
-                                SetOptions(trionic8, false);
+                                SetGenericOptions(trionic8);
 
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
-                                if (trionic8.openDevice(false, false))
+                                if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);
                                     dtstart = DateTime.Now;
@@ -309,12 +313,14 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetOptions(trionic7, false);
+                SetGenericOptions(trionic7);
+                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                trionic7.UseFlasherOnDevice = false;
 
                 AddLogItem("Opening connection");
                 EnableUserInput(false);
 
-                if (trionic7.openDevice(false, false))
+                if (trionic7.openDevice())
                 {
                     Thread.Sleep(1000);
                     AddLogItem("Aquiring ECU info");
@@ -331,11 +337,11 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8, false);
+                SetGenericOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(false, false))
+                if (trionic8.openDevice(false))
                 {
                     AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());           //0x90
                     AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());       //0x74
@@ -381,12 +387,14 @@ namespace TrionicCANFlasher
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        SetOptions(trionic7, false);
+                        SetGenericOptions(trionic7);
+                        trionic7.ELM327Kline = cbELM327Kline.Checked;
+                        trionic7.UseFlasherOnDevice = false;
 
                         AddLogItem("Opening connection");
                         EnableUserInput(false);
 
-                        if (trionic7.openDevice(false, false))
+                        if (trionic7.openDevice())
                         {
                             // check reading status periodically
 
@@ -412,11 +420,11 @@ namespace TrionicCANFlasher
                 {
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
-                        SetOptions(trionic8, false);
+                        SetGenericOptions(trionic8);
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
-                        if (trionic8.openDevice(false, false))
+                        if (trionic8.openDevice(false))
                         {
                             Thread.Sleep(1000);
                             dtstart = DateTime.Now;
@@ -460,11 +468,11 @@ namespace TrionicCANFlasher
                 {
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
-                        SetOptions(trionic8, false);
+                        SetGenericOptions(trionic8);
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
-                        if (trionic8.openDevice(false, false))
+                        if (trionic8.openDevice(false))
                         {
                             Thread.Sleep(1000);
                             dtstart = DateTime.Now;
@@ -530,12 +538,11 @@ namespace TrionicCANFlasher
             Environment.Exit(0);
         }
 
-        private void SetOptions(ITrionic trionic, bool useFlasherOnDevice)
+        private void SetGenericOptions(ITrionic trionic)
         {
             trionic.EnableLog = cbEnableLogging.Checked;
             trionic.OnlyPBus = cbOnlyPBus.Checked;
             trionic.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
-            trionic.ELM327Kline = cbELM327Kline.Checked;
             
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
@@ -562,7 +569,7 @@ namespace TrionicCANFlasher
                 }
             }
 
-            trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex, useFlasherOnDevice);
+            trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -763,11 +770,13 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetOptions(trionic7, false);
+                SetGenericOptions(trionic7);
+                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                trionic7.UseFlasherOnDevice = false;
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic7.openDevice(false, false))
+                if (trionic7.openDevice())
                 {
                     string[] codes = trionic7.ReadDTC();
                     foreach (string a in codes)
@@ -782,11 +791,11 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8, false);
+                SetGenericOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(false, false))
+                if (trionic8.openDevice(false))
                 {
                     string[] codes = trionic8.ReadDTC();
                     foreach (string a in codes)
@@ -806,11 +815,11 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8, false);
+                SetGenericOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(true, false))
+                if (trionic8.openDevice(true))
                 {
                     string vin = tbParameter.Text;
                     if (vin.Length == 17)
@@ -835,11 +844,13 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                SetOptions(trionic7, false);
+                SetGenericOptions(trionic7);
+                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                trionic7.UseFlasherOnDevice = false;
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic7.openDevice(false, false))
+                if (trionic7.openDevice())
                 {
                     int e85;
                     if (int.TryParse(tbParameter.Text, out e85))
@@ -861,11 +872,11 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8, false);
+                SetGenericOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(true, false))
+                if (trionic8.openDevice(true))
                 {
                     float e85;
                     if (float.TryParse(tbParameter.Text, out e85))
@@ -892,11 +903,11 @@ namespace TrionicCANFlasher
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                SetOptions(trionic8, false);
+                SetGenericOptions(trionic8);
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
-                if (trionic8.openDevice(true, false))
+                if (trionic8.openDevice(true))
                 {
                     int speed;
                     if (int.TryParse(tbParameter.Text, out speed))

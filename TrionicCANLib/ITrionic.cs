@@ -99,27 +99,7 @@ namespace TrionicCANLib
             set { m_DisableCanConnectionCheck = value; }
         }
 
-        protected bool m_ELM327Kline = false;
-
-        public bool ELM327Kline
-        {
-            get { return m_ELM327Kline; }
-            set { m_ELM327Kline = value; }
-        }
-
-        public virtual void setCANDevice(CANBusAdapter adapterType)
-        {
-            setCANDevice(adapterType, false);
-        }
-
-        abstract public void setCANDevice(CANBusAdapter adapterType, bool useFlasherOnDevice);
-
-        public virtual bool openDevice(bool requestSecurityAccess)
-        {
-            return openDevice(requestSecurityAccess, false);
-        }
-
-        abstract public bool openDevice(bool requestSecurityAccess, bool useFlasherOnDevice);
+        abstract public void setCANDevice(CANBusAdapter adapterType);
 
         abstract public void Cleanup();
 
