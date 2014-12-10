@@ -224,6 +224,10 @@ namespace TrionicCANLib
                             CastInfoEvent("Security access to CIM granted", ActivityType.ConvertingFile);
                             return true;
                         }
+                        else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
+                        {
+                            CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
+                        }
                     }
 
                 }
@@ -235,10 +239,7 @@ namespace TrionicCANLib
             }
             else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
             {
-                Console.WriteLine("Casting error");
-                string info = TranslateErrorCode(response.getCanData(3));
-                Console.WriteLine("Casting error: " + info);
-                CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
             }
             return false;
         }
@@ -318,11 +319,16 @@ namespace TrionicCANLib
                         }
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
+                        Console.WriteLine("---" + response.getData().ToString("X16"));
                         // is it ok or not
                         if (response.getCanData(1) == 0x67 && (response.getCanData(2) == 0xFE || response.getCanData(2) == 0xFC || response.getCanData(2) == 0x02))
                         {
                             CastInfoEvent("Security access granted", ActivityType.ConvertingFile);
                             return true;
+                        }
+                        else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
+                        {
+                            CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
                         }
                     }
 
@@ -335,10 +341,7 @@ namespace TrionicCANLib
             }
             else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
             {
-                Console.WriteLine("Casting error");
-                string info = TranslateErrorCode(response.getCanData(3));
-                Console.WriteLine("Casting error: " + info);
-                CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
             }
             return false;
         }
@@ -509,13 +512,15 @@ namespace TrionicCANLib
                     response = new CANMessage();
                     response = m_canListener.waitMessage(1000);
                     data = response.getData();
-                    if (response.getCanData(1) != 0x7E) _success = true;
+                    if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
+                    {} //RequestCorrectlyReceived-ResponsePending
+                    else if (response.getCanData(1) != 0x7E)
+                    {
+                        _success = true;
+                    }
                     msgcnt++;
                 }
 
-                //CANMessage response = new CANMessage();
-                //response = m_canListener.waitMessage(1000);
-                //ulong data = response.getData();
                 if (response.getCanData(1) == 0x5A)
                 {
                     // only one frame in this repsonse
@@ -539,7 +544,9 @@ namespace TrionicCANLib
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
-                        if (response.getCanData(1) != 0x7E)
+                        if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
+                        { } //RequestCorrectlyReceived-ResponsePending
+                        else if (response.getCanData(1) != 0x7E)
                         {
                             m_nrFrameToReceive--;
                             data = response.getData();
@@ -555,10 +562,9 @@ namespace TrionicCANLib
                     }
                     retval = Encoding.ASCII.GetString(rx_buffer, 0, rx_pnt - 1);
                 }
-                else if (response.getCanData(1) == 0x7F && response.getCanData(1) == 0x27)
+                else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
                 {
-                    string info = TranslateErrorCode(response.getCanData(3));
-                    CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                    CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
                 }
             }
             Thread.Sleep(25);
@@ -600,7 +606,9 @@ namespace TrionicCANLib
                     response = new CANMessage();
                     response = m_canListener.waitMessage(1000);
                     data = response.getData();
-                    if (response.getCanData(1) != 0x7E) _success = true;
+                    if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
+                    { } //RequestCorrectlyReceived-ResponsePending
+                    else if (response.getCanData(1) != 0x7E) _success = true;
                     msgcnt++;
                 }
 
@@ -630,7 +638,9 @@ namespace TrionicCANLib
                         m_canListener.setupWaitMessage(0x645);
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
-                        if (response.getCanData(1) != 0x7E)
+                        if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
+                        { } //RequestCorrectlyReceived-ResponsePending
+                        else if (response.getCanData(1) != 0x7E)
                         {
                             m_nrFrameToReceive--;
                             data = response.getData();
@@ -688,7 +698,12 @@ namespace TrionicCANLib
                     response = new CANMessage();
                     response = m_canListener.waitMessage(1000);
                     data = response.getData();
-                    if (response.getCanData(1) != 0x7E) _success = true;
+                    if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
+                    { } //RequestCorrectlyReceived-ResponsePending
+                    else if (response.getCanData(1) != 0x7E)
+                    {
+                        _success = true;
+                    }
                     msgcnt++;
                 }
 
@@ -719,7 +734,9 @@ namespace TrionicCANLib
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
-                        if (response.getCanData(1) != 0x7E)
+                        if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
+                        { } //RequestCorrectlyReceived-ResponsePending
+                        else if (response.getCanData(1) != 0x7E)
                         {
                             m_nrFrameToReceive--;
                             data = response.getData();
@@ -1611,6 +1628,10 @@ namespace TrionicCANLib
                             CastInfoEvent("Security access granted", ActivityType.ConvertingFile);
                             return true;
                         }
+                        else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
+                        {
+                            CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
+                        }
                     }
 
                 }
@@ -1622,10 +1643,7 @@ namespace TrionicCANLib
             }
             else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
             {
-                Console.WriteLine("Casting error");
-                string info = TranslateErrorCode(response.getCanData(3));
-                Console.WriteLine("Casting error: " + info);
-                CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
             }
             return false;
         }
@@ -1702,7 +1720,12 @@ namespace TrionicCANLib
                     response = new CANMessage();
                     response = m_canListener.waitMessage(1000);
                     data = response.getData();
-                    if (response.getCanData(1) != 0x7E) _success = true;
+                    if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
+                    { } //RequestCorrectlyReceived-ResponsePending
+                    else if (response.getCanData(1) != 0x7E)
+                    {
+                        _success = true;
+                    }
                     msgcnt++;
                 }
 
@@ -1733,7 +1756,9 @@ namespace TrionicCANLib
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
-                        if (response.getCanData(1) != 0x7E)
+                        if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
+                        { } //RequestCorrectlyReceived-ResponsePending
+                        else if (response.getCanData(1) != 0x7E)
                         {
                             m_nrFrameToReceive--;
                             data = response.getData();
@@ -1751,10 +1776,9 @@ namespace TrionicCANLib
                     for (int i = 0; i < rx_pnt; i++) retval[i] = rx_buffer[i];
 
                 }
-                else if (response.getCanData(1) == 0x7F && response.getCanData(1) == 0x27)
+                else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
                 {
-                    string info = TranslateErrorCode(response.getCanData(3));
-                    CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                    CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
                 }
             }
             Thread.Sleep(5);
@@ -3587,8 +3611,7 @@ namespace TrionicCANLib
             // Bug: this is never handled because negative response its sent with id=0x7E8
             else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0xAE)
             {
-                string info = TranslateErrorCode(getCanData(rxdata, 3));
-                CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
             }
             return retval;
         }

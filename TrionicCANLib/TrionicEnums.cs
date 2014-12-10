@@ -36,7 +36,8 @@ namespace TrionicCANLib
     public enum ECU : int
     {
         TRIONIC7,
-        TRIONIC8
+        TRIONIC8,
+        MOTRONIC96
     };
 
     public enum SleepTime : int
