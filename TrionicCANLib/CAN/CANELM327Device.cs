@@ -325,7 +325,7 @@ namespace TrionicCANLib.CAN
             if (m_forcedComport != string.Empty)
             {
                 // only check this comport
-                Console.WriteLine("Opening com: " + m_forcedComport);
+                AddToDeviceTrace("OPEN: Opening com: " + m_forcedComport);
 
                 if (m_serialPort.IsOpen)
                     m_serialPort.Close();
@@ -340,7 +340,7 @@ namespace TrionicCANLib.CAN
                 }
                 catch (UnauthorizedAccessException e)
                 {
-                    AddToDeviceTrace("exception" + e.ToString());
+                    AddToDeviceTrace("OPEN: exception" + e);
                     return OpenResult.OpenError;
                 }
 
@@ -358,7 +358,7 @@ namespace TrionicCANLib.CAN
                     WriteToSerialWithTrace(String.Format("ATBRD{0}\r", divider.ToString("X2")));
 
                     m_forcedBaudrate = 4000000 / divider;
-                    Console.WriteLine("Trying baud rate: " + m_forcedBaudrate);
+                    AddToDeviceTrace("OPEN: Trying baud rate: " + m_forcedBaudrate);
                     Thread.Sleep(50);
                     string ok = m_serialPort.ReadExisting();
 
@@ -370,17 +370,16 @@ namespace TrionicCANLib.CAN
                     }
                     catch (UnauthorizedAccessException e)
                     {
-                        AddToDeviceTrace("exception" + e.ToString());
+                        AddToDeviceTrace("OPEN: exception" + e);
                         return OpenResult.OpenError;
                     }
 
                     bool gotVersion = false;
-                    int tries = 20;
+                    int tries = 30;
                     while (!gotVersion && tries-- > 0)
                     {
                         string elmVersion = m_serialPort.ReadExisting();
-                        AddToDeviceTrace("elmVersion:" + elmVersion);
-                        Console.WriteLine("elmVersion: " + elmVersion);
+                        AddToDeviceTrace("OPEN: elmVersion:" + elmVersion);
                         if (elmVersion.Length > 5)
                         {
                             gotVersion = true;
@@ -395,7 +394,6 @@ namespace TrionicCANLib.CAN
                     if (ok == null)
                         return OpenResult.OpenError;
                     AddToDeviceTrace("ok:" + ok);
-                    Console.WriteLine("ok: " + ok);
                 }
 
                 #endregion
@@ -406,18 +404,18 @@ namespace TrionicCANLib.CAN
                 //TestCommunication();
 
                 string answer = WriteToSerialAndWait("ATI\r");    //Print version
-                Console.WriteLine("Version ELM: " + answer);
+                AddToDeviceTrace("OPEN: Version ELM: " + answer);
 
                 answer = WriteToSerialAndWait("ATSP6\r");   //Set protocol type ISO 15765-4 CAN (11 bit ID, 500kb/s)
 
-                Console.WriteLine("Protocol select response: " + answer);
+                AddToDeviceTrace("OPEN: Protocol select response: " + answer);
                 if (answer.StartsWith("OK"))
                 {
                     m_deviceIsOpen = true;
 
                     answer = WriteToSerialAndWait("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
 
-                    Console.WriteLine("ATH1 response: " + answer);
+                    AddToDeviceTrace("OPEN: ATH1 response: " + answer);
 
                     string command = "ATSH" + _ECUAddress.ToString("X3"); // Set header
                     answer = WriteToSerialAndWait(command + "\r");
@@ -431,7 +429,7 @@ namespace TrionicCANLib.CAN
                     //WriteToSerialAndWait("AT PPS\r"); //display all programmed parameters                    
                     answer = WriteToSerialAndWait("ATAT2\r");  //aggresive timing adoption, should reduce time wasted for not coming response
                     answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (custom generated PCI byte - SingleFrame, FirstFrame, ConsecutiveFrame, FlowControl)
-                    Console.WriteLine("ATCAF0:" + answer);
+                    AddToDeviceTrace("OPEN: ATCAF0 response:" + answer);
                     answer = WriteToSerialAndWait("0102030405060708 0\r", 1,">"); //check if device supports 8bytes + response count
                     supports8ByteResponse = (answer != null);
 
@@ -453,13 +451,13 @@ namespace TrionicCANLib.CAN
         /// <returns></returns>
         private int DetectInitialPortSpeedAndReset()
         {
-            int[] speeds = new int[] { 9600, 38400, 115200, 230400, 285714, 500000, 1000000, 2000000 }; ///*2000000, 1000000, 500000, 230400,*/ 115200, 57600, 38400, 19200, 9600 };
+            int[] speeds = new int[] { 9600, 38400, 115200, 230400, 285714, 500000, 1000000, 2000000 };
 
             for (int i = 0; i < 2; i++)
             {
                 foreach (var speed in speeds)
                 {
-                    Console.Out.WriteLine("Try speed:" + speed);
+                    AddToDeviceTrace("DETECT: Try speed:" + speed);
                     //if (m_serialPort.IsOpen)
                     m_serialPort.Close();
                     m_serialPort.BaudRate = speed;
@@ -474,7 +472,7 @@ namespace TrionicCANLib.CAN
                         WriteToSerialWithTrace("ATI\r"); //need to send 2 times for some reason...
                         Thread.Sleep(50);
                         string reply = m_serialPort.ReadExisting();
-                        Console.Out.WriteLine("Result:" + reply);
+                        AddToDeviceTrace("DETECT: Result:" + reply);
                         bool success = !string.IsNullOrEmpty(reply) && reply.Contains("ELM327");
                         if (success)
                         {
@@ -493,7 +491,7 @@ namespace TrionicCANLib.CAN
                         }
                         else
                         {
-                            Console.Out.WriteLine("Failed");
+                            AddToDeviceTrace("DETECT: Failed");
                             m_serialPort.Close();
                         }
                     }
