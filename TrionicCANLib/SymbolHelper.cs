@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace CommonSuite
 {
@@ -134,5 +133,16 @@ namespace CommonSuite
             set { _subcategory = value; }
         }
 
+        public string SmartVarname
+        {
+            get
+            {
+                if (_userdescription != "" && _userdescription != String.Format("Symbolnumber {0}", symbol_number))
+                {
+                    return _userdescription;
+                }
+                return varname;
+            }
+        }
     }
 }
