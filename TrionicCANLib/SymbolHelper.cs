@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace CommonSuite
 {
@@ -142,6 +143,20 @@ namespace CommonSuite
                     return _userdescription;
                 }
                 return varname;
+            }
+        }
+
+        public void createAndUpdateCategory(string name)
+        {
+            if (name.Contains("."))
+            {
+                try
+                {
+                    _category = name.Substring(0, name.IndexOf("."));
+                }
+                catch (Exception cE)
+                {
+                }
             }
         }
     }
