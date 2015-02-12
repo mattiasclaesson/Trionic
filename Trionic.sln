@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrionicCANFlasher", "TrionicCANFlasher\TrionicCANFlasher.csproj", "{AD7871BE-0280-47D4-9492-2181BB1C789B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrionicCANLib", "TrionicCANLib\TrionicCANLib.csproj", "{3FE690B8-7A3B-425E-913C-BFF7A55F7BC4}"
