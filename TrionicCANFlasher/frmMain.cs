@@ -370,6 +370,16 @@ namespace TrionicCANFlasher
                     AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
                     AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
                     AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromID(0xCC));
+                    AddLogItem("PI 0x01         : " + trionic8.GetPI01());
+                    AddLogItem("PI 0x02         : " + trionic8.GetPI02());
+                    AddLogItem("PI 0x03         : " + trionic8.GetPI03());
+                    AddLogItem("PI 0x04         : " + trionic8.GetPI04());
+                    AddLogItem("PI 0x07         : " + trionic8.GetPI07());
+                    AddLogItem("PI 0x2E         : " + trionic8.GetPI2E());
+                    AddLogItem("PI 0xB9         : " + trionic8.GetPIB9());
+                    AddLogItem("PI 0x24         : " + trionic8.GetPI24());
+                    AddLogItem("PI 0xA0         : " + trionic8.GetPIA0());
+                    AddLogItem("PI 0x96         : " + trionic8.GetPI96());
                 }
 
                 trionic8.Cleanup();

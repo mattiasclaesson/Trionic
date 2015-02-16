@@ -4690,5 +4690,189 @@ namespace TrionicCANLib
             return true;
         }
 
+        public string GetPI01()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x01);
+            Console.WriteLine("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 2)
+            {
+                retval = "0x" + data[0].ToString("X2") + " " + "0x" + data[1].ToString("X2");
+
+                if ((0x04 & data[0]) == 1)
+                {
+                    retval = "Cab on";
+                }
+                else
+                {
+                    retval = "Cab off";
+                }
+
+                if ((0x08 & data[0]) == 0 && (0x01 & data[1]) == 1)
+                {
+                    retval += "|SAI on";
+                }
+                else
+                {
+                    retval += "|SAI off";
+                }
+
+                if ((0x04 & data[1]) == 0 && (0x02 & data[1]) == 1)
+                {
+                    retval += "|Ho";
+                }
+                else
+                {
+                    retval += "|Lo";
+                }
+            }
+            return retval;
+        }
+
+        public string GetPI02()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x02);
+            Console.WriteLine("02data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        public string GetPI03()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x03);
+            Console.WriteLine("03data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        public string GetPI04()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x04);
+            Console.WriteLine("04data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+
+        public string GetPI07()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x07);
+            Console.WriteLine("07data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        public string GetPI2E()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x2E);
+            Console.WriteLine("2Edata: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            //if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        public string GetPIB9()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0xB9);
+            Console.WriteLine("B9data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        public string GetPI24()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x24);
+            Console.WriteLine("24data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        public string GetPIA0()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0xA0);
+            Console.WriteLine("A0data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            //if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        public string GetPI96()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x96);
+            Console.WriteLine("96data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            //if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 11)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
     }
 }
