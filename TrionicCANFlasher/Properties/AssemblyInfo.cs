@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("MattiasC")]
 [assembly: AssemblyProduct("TrionicCANFlasher")]
-[assembly: AssemblyCopyright("Copyright © 2014 Dilemma/Mattias Claesson")]
+[assembly: AssemblyCopyright("Copyright © 2015 Dilemma/Mattias Claesson")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
