@@ -4700,7 +4700,7 @@ namespace TrionicCANLib
             {
                 retval = "0x" + data[0].ToString("X2") + " " + "0x" + data[1].ToString("X2");
 
-                if ((0x04 & data[0]) == 1)
+                if ((0x04 & data[0]) == 0x04)
                 {
                     retval = "Cab on";
                 }
@@ -4709,7 +4709,7 @@ namespace TrionicCANLib
                     retval = "Cab off";
                 }
 
-                if ((0x08 & data[0]) == 0 && (0x01 & data[1]) == 1)
+                if ((0x10 & data[1]) == 0x10 && (0x08 & data[1]) == 0)
                 {
                     retval += "|SAI on";
                 }
@@ -4718,7 +4718,7 @@ namespace TrionicCANLib
                     retval += "|SAI off";
                 }
 
-                if ((0x04 & data[1]) == 0 && (0x02 & data[1]) == 1)
+                if ((0x40 & data[1]) == 0 && (0x20 & data[1]) == 0x20)
                 {
                     retval += "|Ho";
                 }
@@ -4726,6 +4726,7 @@ namespace TrionicCANLib
                 {
                     retval += "|Lo";
                 }
+                //if (0x80 == (0x80 & statusByte)) statusDescription += "warningIndicatorRequestedState ";
             }
             return retval;
         }
