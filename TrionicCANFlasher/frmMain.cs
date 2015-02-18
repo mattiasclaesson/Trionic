@@ -118,6 +118,7 @@ namespace TrionicCANFlasher
 
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
+                            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -200,6 +201,7 @@ namespace TrionicCANFlasher
             cbEnableLogging.Enabled = enable;
             cbOnlyPBus.Enabled = enable;
             cbDisableConnectionCheck.Enabled = enable;
+            btnCabSAIHo.Enabled = enable;
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
@@ -229,6 +231,7 @@ namespace TrionicCANFlasher
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
+                btnCabSAIHo.Enabled = false;
             }
         }
 
@@ -272,6 +275,7 @@ namespace TrionicCANFlasher
 
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
+                                trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                                 if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);
@@ -341,18 +345,19 @@ namespace TrionicCANFlasher
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
                 if (trionic8.openDevice(false))
                 {
-                    AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());           //0x90
-                    AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());       //0x74
-                    AddLogItem("Codefile version: " + trionic8.GetCodefileVersion());      //0x73
-                    AddLogItem("ECU description : " + trionic8.GetECUDescription());       //0x72
-                    AddLogItem("ECU hardware    : " + trionic8.GetECUHardware());          //0x71
-                    AddLogItem("ECU sw number   : " + trionic8.GetECUSWVersionNumber());   //0x95
-                    AddLogItem("Programming date: " + trionic8.GetProgrammingDate());      //0x99
-                    AddLogItem("Build date      : " + trionic8.GetBuildDate());            //0x0A
-                    AddLogItem("Serial number   : " + trionic8.GetSerialNumber());         //0xB4       
-                    AddLogItem("Software version: " + trionic8.GetSoftwareVersion());      //0x08
+                    AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());            //0x90
+                    AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());        //0x74
+                    AddLogItem("Codefile version: " + trionic8.GetCodefileVersion());       //0x73
+                    AddLogItem("ECU description : " + trionic8.GetECUDescription());        //0x72
+                    AddLogItem("ECU hardware    : " + trionic8.GetECUHardware());           //0x71
+                    AddLogItem("ECU sw number   : " + trionic8.GetECUSWVersionNumber());    //0x95
+                    AddLogItem("Programming date: " + trionic8.GetProgrammingDate());       //0x99
+                    AddLogItem("Build date      : " + trionic8.GetBuildDate());             //0x0A
+                    AddLogItem("Serial number   : " + trionic8.GetSerialNumber());          //0xB4       
+                    AddLogItem("Software version: " + trionic8.GetSoftwareVersion());       //0x08
                     AddLogItem("0F identifier   : " + trionic8.RequestECUInfo(0x0F, ""));
                     AddLogItem("SW identifier 1 : " + trionic8.RequestECUInfo(0xC1, ""));
                     AddLogItem("SW identifier 2 : " + trionic8.RequestECUInfo(0xC2, ""));
@@ -365,12 +370,15 @@ namespace TrionicCANFlasher
                     AddLogItem("Engine type     : " + trionic8.RequestECUInfo(0x0C, ""));
                     AddLogItem("Supplier ID     : " + trionic8.RequestECUInfo(0x92, ""));
                     AddLogItem("Speed limiter   : " + trionic8.GetTopSpeed() + " km/h");
+                    AddLogItem("Rpm limiter     : " + trionic8.GetRPMLimiter() + " rpm");   //0x29
                     AddLogItem("Oil quality     : " + trionic8.GetOilQualityPercentage().ToString("F2") + " %");
                     AddLogItem("SAAB partnumber : " + trionic8.GetSaabPartnumber());
                     AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
                     AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
                     AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromID(0xCC));
-                    AddLogItem("PI 0x01         : " + trionic8.GetPI01());
+                    bool cab, sai, highoutput;
+                    trionic8.GetPI01(out cab, out sai, out highoutput);
+                    AddLogItem("PI 0x01         : Cab:" + cab + " SAI:" + sai + " HighOutput:" + highoutput);
                     AddLogItem("PI 0x02         : " + trionic8.GetPI02());
                     AddLogItem("PI 0x03         : " + trionic8.GetPI03());
                     AddLogItem("PI 0x04         : " + trionic8.GetPI04());
@@ -476,6 +484,7 @@ namespace TrionicCANFlasher
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
+                        trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                         if (trionic8.openDevice(false))
                         {
                             Thread.Sleep(1000);
@@ -524,6 +533,7 @@ namespace TrionicCANFlasher
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
+                        trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                         if (trionic8.openDevice(false))
                         {
                             Thread.Sleep(1000);
@@ -651,7 +661,6 @@ namespace TrionicCANFlasher
             trionic8.onReadProgress += trionicCan_onReadProgress;
             trionic8.onWriteProgress += trionicCan_onWriteProgress;
             trionic8.onCanInfo += trionicCan_onCanInfo;
-            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
 
             EnableUserInput(true);
 
@@ -847,6 +856,7 @@ namespace TrionicCANFlasher
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                 if (trionic8.openDevice(false))
                 {
                     string[] codes = trionic8.ReadDTC();
@@ -871,6 +881,7 @@ namespace TrionicCANFlasher
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
                 if (trionic8.openDevice(true))
                 {
                     string vin = tbParameter.Text;
@@ -928,6 +939,7 @@ namespace TrionicCANFlasher
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
                 if (trionic8.openDevice(true))
                 {
                     float e85;
@@ -959,6 +971,7 @@ namespace TrionicCANFlasher
 
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
                 if (trionic8.openDevice(true))
                 {
                     int speed;
@@ -1047,6 +1060,41 @@ namespace TrionicCANFlasher
         private void documentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("TrionicCanFlasher.pdf");
+        }
+
+        private void btnCabSAIHo_Click(object sender, EventArgs e)
+        {
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            {
+                SetGenericOptions(trionic8);
+
+                EnableUserInput(false);
+                AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
+                if (trionic8.openDevice(true))
+                {
+                    PiSelection pi = new PiSelection();
+                    bool cab, sai, highoutput;
+                    trionic8.GetPI01(out cab, out sai, out highoutput);
+                    pi.Cab = cab;
+                    pi.SAI = sai;
+                    pi.Highoutput = highoutput;
+                    pi.ShowDialog();
+                    if (trionic8.SetPI01(pi.Cab, pi.SAI, pi.Highoutput))
+                    {
+                        AddLogItem("Set fields successfull");
+                        AddLogItem("Cab:" + pi.Cab + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
+                    }
+                    else
+                    {
+                        AddLogItem("Set fields failed");
+                    }
+                }
+                trionic8.Cleanup();
+                AddLogItem("Connection closed");
+                EnableUserInput(true);
+            }
+            LogHelper.Flush();
         }
     }
 }

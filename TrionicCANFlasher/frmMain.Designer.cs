@@ -57,6 +57,7 @@
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
             this.documentation = new System.Windows.Forms.LinkLabel();
             this.cbELM327Kline = new System.Windows.Forms.CheckBox();
+            this.btnCabSAIHo = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -95,8 +96,8 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBar1.Location = new System.Drawing.Point(12, 357);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(544, 23);
@@ -126,9 +127,9 @@
             // 
             // listBoxLog
             // 
-            this.listBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.listBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxLog.Font = new System.Drawing.Font("Courier New", 8.25F);
             this.listBoxLog.FormattingEnabled = true;
             this.listBoxLog.ItemHeight = 14;
@@ -230,7 +231,7 @@
             // btnSetECUVIN
             // 
             this.btnSetECUVIN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSetECUVIN.Location = new System.Drawing.Point(565, 68);
+            this.btnSetECUVIN.Location = new System.Drawing.Point(565, 67);
             this.btnSetECUVIN.Name = "btnSetECUVIN";
             this.btnSetECUVIN.Size = new System.Drawing.Size(107, 50);
             this.btnSetECUVIN.TabIndex = 46;
@@ -377,11 +378,23 @@
             this.cbELM327Kline.Text = "ELM327 K-Line";
             this.cbELM327Kline.UseVisualStyleBackColor = true;
             // 
+            // btnCabSAIHo
+            // 
+            this.btnCabSAIHo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCabSAIHo.Location = new System.Drawing.Point(678, 67);
+            this.btnCabSAIHo.Name = "btnCabSAIHo";
+            this.btnCabSAIHo.Size = new System.Drawing.Size(107, 50);
+            this.btnCabSAIHo.TabIndex = 63;
+            this.btnCabSAIHo.Text = "Set Cab SAI HO";
+            this.btnCabSAIHo.UseVisualStyleBackColor = true;
+            this.btnCabSAIHo.Click += new System.EventHandler(this.btnCabSAIHo_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.Controls.Add(this.btnCabSAIHo);
             this.Controls.Add(this.cbELM327Kline);
             this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
@@ -414,9 +427,9 @@
             this.Name = "frmMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Trionic CAN flasher";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.Shown += new System.EventHandler(this.frmMain_Shown);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -452,6 +465,7 @@
         private System.Windows.Forms.ComboBox cbxComSpeed;
         private System.Windows.Forms.LinkLabel documentation;
         private System.Windows.Forms.CheckBox cbELM327Kline;
+        private System.Windows.Forms.Button btnCabSAIHo;
     }
 }
 

@@ -9,6 +9,7 @@ using System.ComponentModel;
 using TrionicCANLib.CAN;
 using TrionicCANLib.Log;
 using System.Windows.Forms;
+using System.Collections;
 
 namespace TrionicCANLib
 {
@@ -3436,6 +3437,8 @@ namespace TrionicCANLib
             // response should be 0000000000027B02
             if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x02)
             {
+                RequestSecurityAccess(0);
+                SendDeviceControlMessage(0x16);
                 retval = true;
             }
             // Negative Response 0x7F Service <nrsi> <service> <returncode>
@@ -3475,9 +3478,11 @@ namespace TrionicCANLib
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
             ulong rxdata = ECMresponse.getData();
-            // response should be 0000000000027B02
+            // response should be 0000000000025B02
             if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x25)
             {
+                RequestSecurityAccess(0);
+                SendDeviceControlMessage(0x16);
                 retval = true;
             }
             return retval;
@@ -3507,10 +3512,28 @@ namespace TrionicCANLib
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
             ulong rxdata = ECMresponse.getData();
-            // response should be 0000000000027B02
+            // response should be 0000000000297B02
             if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x29)
             {
+                RequestSecurityAccess(0);
+                SendDeviceControlMessage(0x16);
                 retval = true;
+            }
+            else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x29)
+            {
+                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
+            }
+            return retval;
+        }
+
+        public int GetRPMLimiter()
+        {
+            int retval = 0;
+            byte[] data = RequestECUInfo(0x29);
+            if (data.Length >= 2)
+            {
+                retval = Convert.ToInt32(data[0]) * 256;
+                retval += Convert.ToInt32(data[1]);
             }
             return retval;
         }
@@ -3578,10 +3601,12 @@ namespace TrionicCANLib
             //CastInfoEvent("Unidentified, security access again?", ActivityType.ConvertingFile);
             //SendCommandNoResponse(0x7E0, 0x000000EFA4022704); // EFA4 securitykey + 02 SPSsendKey + $27 SecurityAccess
 
+            RequestSecurityAccess(0);
+            SendDeviceControlMessage(0x16);
+
             //SendCommandNoResponse(0x7E0, 0x0000000000901A02);
             string newVIN = GetVehicleVIN();
             CastInfoEvent("New VIN: " + newVIN, ActivityType.ConvertingFile);
-
         }
 
         public bool SetE85Percentage(float percentage)
@@ -3605,6 +3630,8 @@ namespace TrionicCANLib
             // response should be 000000000018EE02
             if (getCanData(rxdata, 1) == 0xEE && getCanData(rxdata, 2) == 0x18) // <EE positive response service id> <cpid>
             {
+                RequestSecurityAccess(0);
+                SendDeviceControlMessage(0x16);
                 retval = true;
             }
             // Negative Response 0x7F Service <nrsi> <service> <returncode>
@@ -4690,43 +4717,89 @@ namespace TrionicCANLib
             return true;
         }
 
-        public string GetPI01()
+        public bool GetPI01(out bool cab, out bool sai, out bool highoutput)
         {
-            string retval = string.Empty;
+            cab = false;
+            sai = false;
+            highoutput = false;
             byte[] data = RequestECUInfo(0x01);
             Console.WriteLine("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data[0] == 0x00 && data[1] == 0x00) return false;
             if (data.Length >= 2)
             {
-                retval = "0x" + data[0].ToString("X2") + " " + "0x" + data[1].ToString("X2");
+                // -----C--
+                cab = GetBit(data[0], 2);
 
-                if ((0x04 & data[0]) == 0x04)
-                {
-                    retval = "Cab on";
-                }
-                else
-                {
-                    retval = "Cab off";
-                }
+                // on = ---10---
+                // off= ---01---
+                sai = !GetBit(data[1], 3) && GetBit(data[1], 4) ? true : false; 
 
-                if ((0x10 & data[1]) == 0x10 && (0x08 & data[1]) == 0)
-                {
-                    retval += "|SAI on";
-                }
-                else
-                {
-                    retval += "|SAI off";
-                }
+                // high= -01-----
+                // low = -10-----
+                highoutput = GetBit(data[1], 5) && !GetBit(data[1], 6) ? true : false;
+            }
+            return true;
+        }
 
-                if ((0x40 & data[1]) == 0 && (0x20 & data[1]) == 0x20)
-                {
-                    retval += "|Ho";
-                }
-                else
-                {
-                    retval += "|Lo";
-                }
-                //if (0x80 == (0x80 & statusByte)) statusDescription += "warningIndicatorRequestedState ";
+        bool GetBit(byte b, int pos)
+        {
+            return (b & (1 << pos)) != 0;
+        }
+
+        byte SetBit(byte b, int pos, bool value)
+        {
+            byte mask = (byte)(1 << pos);
+            return (byte)(value ? (b | mask) : (b & ~mask));
+        }
+
+        public bool SetPI01(bool cab, bool sai, bool highoutput)
+        {
+            bool retval = false;
+            byte[] data = RequestECUInfo(0x01);
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
+            //06 3B 01 48 2A 00 00 00
+            ulong cmd = 0x0000000000013B06;
+
+            // -----C--
+            data[0] = SetBit(data[0], 2, cab);
+
+            // on = ---10---
+            // off= ---01---
+            data[1] = SetBit(data[1], 3, !sai); 
+            data[1] = SetBit(data[1], 4, sai); 
+
+            // high= -01-----
+            // low = -10-----
+            data[1] = SetBit(data[1], 5, highoutput);
+            data[1] = SetBit(data[1], 6, !highoutput);
+            
+            cmd = AddByteToCommand(cmd, data[0], 3);
+            cmd = AddByteToCommand(cmd, data[1], 4);
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                Console.WriteLine("Couldn't send message");
+            }
+            CANMessage ECMresponse = new CANMessage();
+            ECMresponse = m_canListener.waitMessage(1000);
+            ulong rxdata = ECMresponse.getData();
+            // response should be 0000000000017B02
+            if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x01)
+            {
+                //7e0  02 27 FD 00 00 00 00 00 request sequrity access FD
+                //7e8  04 67 FD 00 00 00 00 00
+                RequestSecurityAccess(0); 
+              
+                //7e0  07 AE 16 00 00 00 00 00
+                //7e8  02 EE 16 00 00 00 00 00
+                SendDeviceControlMessage(0x16);
+
+                retval = true;
+            }
+            else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
+            {
+                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
             }
             return retval;
         }
@@ -4801,7 +4874,6 @@ namespace TrionicCANLib
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x2E);
             Console.WriteLine("2Edata: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            //if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 5)
             {
                 for (int i = 0; i < data.Length; i++)
@@ -4849,7 +4921,6 @@ namespace TrionicCANLib
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0xA0);
             Console.WriteLine("A0data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            //if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 5)
             {
                 for (int i = 0; i < data.Length; i++)
@@ -4865,7 +4936,6 @@ namespace TrionicCANLib
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x96);
             Console.WriteLine("96data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            //if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 11)
             {
                 for (int i = 0; i < data.Length; i++)
