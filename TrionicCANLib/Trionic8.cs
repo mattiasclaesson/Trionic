@@ -4728,28 +4728,17 @@ namespace TrionicCANLib
             if (data.Length >= 2)
             {
                 // -----C--
-                cab = GetBit(data[0], 2);
+                cab = BitTools.GetBit(data[0], 2);
 
                 // on = ---10---
                 // off= ---01---
-                sai = !GetBit(data[1], 3) && GetBit(data[1], 4) ? true : false; 
+                sai = !BitTools.GetBit(data[1], 3) && BitTools.GetBit(data[1], 4) ? true : false; 
 
                 // high= -01-----
                 // low = -10-----
-                highoutput = GetBit(data[1], 5) && !GetBit(data[1], 6) ? true : false;
+                highoutput = BitTools.GetBit(data[1], 5) && !BitTools.GetBit(data[1], 6) ? true : false;
             }
             return true;
-        }
-
-        bool GetBit(byte b, int pos)
-        {
-            return (b & (1 << pos)) != 0;
-        }
-
-        byte SetBit(byte b, int pos, bool value)
-        {
-            byte mask = (byte)(1 << pos);
-            return (byte)(value ? (b | mask) : (b & ~mask));
         }
 
         public bool SetPI01(bool cab, bool sai, bool highoutput)
@@ -4761,17 +4750,17 @@ namespace TrionicCANLib
             ulong cmd = 0x0000000000013B06;
 
             // -----C--
-            data[0] = SetBit(data[0], 2, cab);
+            data[0] = BitTools.SetBit(data[0], 2, cab);
 
             // on = ---10---
             // off= ---01---
-            data[1] = SetBit(data[1], 3, !sai); 
-            data[1] = SetBit(data[1], 4, sai); 
+            data[1] = BitTools.SetBit(data[1], 3, !sai); 
+            data[1] = BitTools.SetBit(data[1], 4, sai); 
 
             // high= -01-----
             // low = -10-----
-            data[1] = SetBit(data[1], 5, highoutput);
-            data[1] = SetBit(data[1], 6, !highoutput);
+            data[1] = BitTools.SetBit(data[1], 5, highoutput);
+            data[1] = BitTools.SetBit(data[1], 6, !highoutput);
             
             cmd = AddByteToCommand(cmd, data[0], 3);
             cmd = AddByteToCommand(cmd, data[1], 4);

@@ -77,5 +77,16 @@ namespace TrionicCANLib
             return res;
         }
 
+        internal static bool GetBit(byte b, int pos)
+        {
+            return (b & (1 << pos)) != 0;
+        }
+
+        internal static byte SetBit(byte b, int pos, bool value)
+        {
+            byte mask = (byte)(1 << pos);
+            return (byte)(value ? (b | mask) : (b & ~mask));
+        }
+
     }
 }
