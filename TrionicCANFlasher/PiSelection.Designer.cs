@@ -43,9 +43,9 @@
             this.cbCab.AutoSize = true;
             this.cbCab.Location = new System.Drawing.Point(6, 19);
             this.cbCab.Name = "cbCab";
-            this.cbCab.Size = new System.Drawing.Size(45, 17);
+            this.cbCab.Size = new System.Drawing.Size(79, 17);
             this.cbCab.TabIndex = 0;
-            this.cbCab.Text = "Cab";
+            this.cbCab.Text = "Convertible";
             this.cbCab.UseVisualStyleBackColor = true;
             // 
             // cbSAI
