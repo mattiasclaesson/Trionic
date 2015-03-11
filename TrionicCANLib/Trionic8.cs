@@ -171,7 +171,7 @@ namespace TrionicCANLib
             CastInfoEvent("Requesting security access to CIM", ActivityType.ConvertingFile);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -215,7 +215,7 @@ namespace TrionicCANLib
                         m_canListener.setupWaitMessage(0x645);
                         if (!canUsbDevice.sendMessage(msg))
                         {
-                            Console.WriteLine("Couldn't send message");
+                            CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                         }
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
@@ -257,13 +257,13 @@ namespace TrionicCANLib
             {
                 cmd = 0x0000000000FB2702; // request security access
             }
-            CANMessage msg = new CANMessage(0x7E0, 0, 3); //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 3); 
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             CastInfoEvent("Requesting security access", ActivityType.ConvertingFile);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -311,12 +311,12 @@ namespace TrionicCANLib
                         ulong key2 = key[0];
                         key2 *= 0x1000000;
                         keydata ^= key2;
-                        msg = new CANMessage(0x7E0, 0, 5);//<GS-18052011> ELM327 support requires the length byte
+                        msg = new CANMessage(0x7E0, 0, 5);
                         msg.setData(keydata);
                         m_canListener.setupWaitMessage(0x7E8);
                         if (!canUsbDevice.sendMessage(msg))
                         {
-                            Console.WriteLine("Couldn't send message");
+                            CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                         }
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
@@ -501,7 +501,7 @@ namespace TrionicCANLib
                 m_canListener.setupWaitMessage(0x7E8);
                 if (!canUsbDevice.sendMessage(msg))
                 {
-                    Console.WriteLine("Couldn't send message");
+                    CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                 }
 
                 int msgcnt = 0;
@@ -595,7 +595,7 @@ namespace TrionicCANLib
                 m_canListener.setupWaitMessage(0x645);
                 if (!canUsbDevice.sendMessage(msg))
                 {
-                    Console.WriteLine("Couldn't send message");
+                    CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                 }
 
                 int msgcnt = 0;
@@ -668,6 +668,7 @@ namespace TrionicCANLib
             return retval;
         }
 
+        // ReadDataByIdentifier 
         public byte[] RequestECUInfo(uint _pid)
         {
             byte[] retval = new byte[2];
@@ -677,17 +678,12 @@ namespace TrionicCANLib
             if (canUsbDevice.isOpen())
             {
                 ulong cmd = 0x0000000000001A02 | _pid << 16;
-                //ulong lpid = _pid;
-                //lpid *= 256;
-                //lpid *= 256;
-                //cmd ^= lpid;
-                //SendMessage(data);  // software version
                 CANMessage msg = new CANMessage(0x7E0, 0, 3); //<GS-18052011> support for ELM requires length byte
                 msg.setData(cmd);
                 m_canListener.setupWaitMessage(0x7E8);
                 if (!canUsbDevice.sendMessage(msg))
                 {
-                    Console.WriteLine("Couldn't send message");
+                    CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                 }
 
                 int msgcnt = 0;
@@ -766,6 +762,55 @@ namespace TrionicCANLib
             return retval;
         }
 
+        // writeDataByIdentifier service 0x3B
+        public bool WriteECUInfo(uint _pid, byte[] write)
+        {
+            bool retval = false;
+
+            if (canUsbDevice.isOpen())
+            {
+                ulong cmd = 0x0000000000003B00 | _pid << 16;
+                cmd |= (2 + (ulong)write.Length);
+                CANMessage msg = new CANMessage(0x7E0, 0, 7);
+                for (int i = 0; i < write.Length; i++)
+                {
+                    cmd = AddByteToCommand(cmd, write[i], i+3);
+                }
+                msg.setData(cmd);
+                m_canListener.setupWaitMessage(0x7E8);
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                }
+                CANMessage ECMresponse = new CANMessage();
+                ECMresponse = m_canListener.waitMessage(1000);
+                ulong rxdata = ECMresponse.getData();
+                // response should be 0000000000<pid>7B02
+                if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == _pid)
+                {
+                    RequestSecurityAccess(0);
+                    SendDeviceControlMessage(0x16);
+                    retval = true;
+                }
+                else if (getCanData(rxdata, 1) == 0x7E)
+                {
+                    CastInfoEvent("0x3E Service TesterPresent response 0x7E received", ActivityType.ConvertingFile);
+                }
+                // Negative Response 0x7F Service <nrsi> <service> <returncode>
+                // Bug: this is never handled because its sent with id=0x7E8
+                else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
+                {
+                    string info = TranslateErrorCode(getCanData(rxdata, 3));
+                    CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                }
+                else
+                {
+                    CastInfoEvent("Error unexpected response: " + rxdata.ToString("X16"), ActivityType.ConvertingFile);
+                }
+            }
+            return retval;
+        }
+
         private void SendAckMessageCIM()
         {
             if (canUsbDevice is CANELM327Device) return;
@@ -790,17 +835,46 @@ namespace TrionicCANLib
             }
         }
 
-        public float GetOilQualityPercentage()
+        ///////////////////////////////////////////////////////////////////////////
+        /// Set and Get methods for specific ECU parameters
+        ///
+        public float GetOilQuality()
         {
             float retval = 0;
             byte[] data = RequestECUInfo(0x25);
             if (data.Length >= 4)
             {
-                retval = Convert.ToInt32(data[2]) * 256;
-                retval += Convert.ToInt32(data[3]);
+                ulong lper = Convert.ToUInt64(data[0]) * 256 * 256 * 256;
+                lper += Convert.ToUInt64(data[1]) * 256 * 256;
+                lper += Convert.ToUInt64(data[2]) * 256;
+                lper += Convert.ToUInt64(data[3]);
+                retval = lper;
                 retval /= 256;
             }
             return retval;
+        }
+
+        /// <summary>
+        /// Sets the Oil quality indication (used for service interval calculation)
+        /// </summary>
+        /// <param name="percentage">Range from 0 to 16777215 %</param>
+        /// <returns></returns>
+        public bool SetOilQuality(float percentage)
+        {
+            bool retval = false;
+
+            percentage *= 256;
+            ulong lper = Convert.ToUInt64(percentage);
+
+            byte[] write = new byte[4];
+            write[0] = Convert.ToByte(lper / 0x1000000);
+            write[1] = Convert.ToByte(lper / 0x10000 - (ulong)write[0] * 0x100);
+            write[2] = Convert.ToByte(lper / 0x100 - (ulong)write[1] * 0x100 - (ulong)write[0] * 0x10000);
+            write[3] = Convert.ToByte(lper - (ulong)write[2] * 0x100 - (ulong)write[1] * 0x10000 - (ulong)write[0] * 0x1000000);
+
+            //ulong cmd = 0x0000000000253B06;
+            //000D340000253B06 example  0000340D = 52,05078125 percent
+            return retval = WriteECUInfo(0x25, write);
         }
 
         public int GetTopSpeed()
@@ -814,6 +888,27 @@ namespace TrionicCANLib
                 retval /= 10;
             }
             return retval;
+        }
+
+        /// <summary>
+        /// Sets the speed limit in a T8 ECU
+        /// </summary>
+        /// <param name="speedlimit">speed limit in km/h</param>
+        /// <returns></returns>
+        public bool SetTopSpeed(int speedlimit)
+        {
+            bool retval = false;
+
+            speedlimit *= 10;
+
+            byte[] write = new byte[2];
+            write[0] = Convert.ToByte(speedlimit / 256);
+            write[1] = Convert.ToByte(speedlimit - (int)write[0] * 256);
+
+            //ulong cmd = 0x0000000000023B04;
+            //0000008C0A023B04 example  0A8C = 2700
+            
+            return retval = WriteECUInfo(0x02, write);
         }
 
         public string GetDiagnosticDataIdentifier()
@@ -863,33 +958,6 @@ namespace TrionicCANLib
             // read and wait for sequence of acks
             return RequestECUInfo(0x90, "VINNumber", 3);
         }
-
-        /*
-            RequestECUInfo(0x08, "Software version:");
-            RequestECUInfo(0x0A, "Build date      :");  // build date
-            RequestECUInfo(0x0C, "Engine type     :");  // build date
-            RequestECUInfo(0x2C, "Odometer counter:");
-            RequestECUInfo(0x71, "ECU hardware    :");
-            RequestECUInfo(0x72, "ECU description :");
-            RequestECUInfo(0x73, "Codefile version:");
-            RequestECUInfo(0x74, "Calibration set :");
-            RequestECUInfo(0x90, "VIN number      :");
-            RequestECUInfo(0x92, "SystemsupplierID:");
-            RequestECUInfo(0x95, "ECU SW VersionNr:");
-            RequestECUInfo(0x97, "System/engine   :");
-            RequestECUInfo(0x99, "Programming date:");
-            RequestECUInfo(0x9A, "Diag data ID    :");
-            RequestECUInfo(0xA0, "Unknown type    :");
-            RequestECUInfo(0xA2, "Unknown type    :");
-            RequestECUInfo(0xB4, "ECU serialnumber:");
-            RequestECUInfo(0xC1, "SW module ID 1  :");
-            RequestECUInfo(0xC2, "SW module ID 2  :");
-            RequestECUInfo(0xC3, "SW module ID 3  :");
-            RequestECUInfo(0xC4, "SW module ID 4  :");
-            RequestECUInfo(0xC5, "SW module ID 5  :");
-            RequestECUInfo(0xCB, "Endmodel partnr :");
-            RequestECUInfo(0xCB, "Basemodel partnr:");         */
-
 
         public string GetBuildDate()
         {
@@ -946,27 +1014,19 @@ namespace TrionicCANLib
             return retval.Trim();
         }
 
-        public string getSWVersion()
-        {
-            //TODO: Implement
-            string r_swVersion = "";
-
-            return r_swVersion;
-        }
-
         public float GetE85Percentage()
         {
             float retval = 0;
             GetDiagnosticDataIdentifier();
 
-            CastInfoEvent("Request 0xAA", ActivityType.ConvertingFile);
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);//<GS-18052011> ELM327 support requires the length byte
+            // ReadDataByPacketIdentifier ($AA) Service
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);
             ulong cmd = 0x000000007A01AA03;// <dpid=7A> <level=sendOneResponse> <service=AA> <length>
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x5E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -986,16 +1046,373 @@ namespace TrionicCANLib
             return retval;
         }
 
+        public bool SetE85Percentage(float percentage)
+        {
+            bool retval = false;
+            percentage *= 256;
+            int iper = Convert.ToInt32(percentage);
+            CANMessage msg = new CANMessage(0x7E0, 0, 5);
+            // DeviceControl Service
+            ulong cmd = 0x000000000018AE04; // <ControlByte 5-1> <CPID Number 0x18> <Device Control 0xAE service>
+            byte b1 = Convert.ToByte(iper / 256);
+            cmd = AddByteToCommand(cmd, b1, 4);
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+            }
+            CANMessage ECMresponse = new CANMessage();
+            ECMresponse = m_canListener.waitMessage(1000);
+            ulong rxdata = ECMresponse.getData();
+            // response should be 000000000018EE02
+            if (getCanData(rxdata, 1) == 0xEE && getCanData(rxdata, 2) == 0x18) // <EE positive response service id> <cpid>
+            {
+                RequestSecurityAccess(0);
+                SendDeviceControlMessage(0x16);
+                retval = true;
+            }
+            // Negative Response 0x7F Service <nrsi> <service> <returncode>
+            // Bug: this is never handled because negative response its sent with id=0x7E8
+            else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0xAE)
+            {
+                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
+            }
+            return retval;
+        }
+
         public int GetManufacturersEnableCounter()
         {
             int retval = 0;
             byte[] data = RequestECUInfo(0xA0);
-            if (data.Length == 1)
+            if (data.Length >= 1)
             {
                 retval = Convert.ToInt32(data[0]);
             }
             return retval;
         }
+
+        /// <summary>
+        /// Sets the RPM limit in a T8 ECU
+        /// </summary>
+        /// <param name="rpmlimit"></param>
+        /// <returns></returns>
+        public bool SetRPMLimiter(int rpmlimit)
+        {
+            bool retval = false;
+
+            byte[] write = new byte[2];
+            write[0] = Convert.ToByte(rpmlimit / 256);
+            write[1] = Convert.ToByte(rpmlimit - (int)write[0] * 256);
+
+            //ulong cmd = 0x0000000000293B04;
+            //0000000618293B04 example  1806 = 6150
+            return retval = WriteECUInfo(0x29, write);
+        }
+
+        public int GetRPMLimiter()
+        {
+            int retval = 0;
+            byte[] data = RequestECUInfo(0x29);
+            if (data.Length >= 2)
+            {
+                retval = Convert.ToInt32(data[0]) * 256;
+                retval += Convert.ToInt32(data[1]);
+            }
+            return retval;
+        }
+
+        public void SetVIN(string vin)
+        {
+            // 62 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
+            CANMessage msg62 = new CANMessage(0x7E0, 0, 4);
+            msg62.setData(0x000000006201AA03);
+            m_canListener.setupWaitMessage(0x5E8);
+            CastInfoEvent("Wait for response 5E8 62 00 00", ActivityType.ConvertingFile);
+            if (!canUsbDevice.sendMessage(msg62))
+            {
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+            }
+            CANMessage response62 = new CANMessage();
+            response62 = m_canListener.waitMessage(1000);
+            Console.WriteLine("---" + response62.getData().ToString("X16"));
+            //05E8	62	00	00	02	A7	01	7F	01
+            if (response62.getCanData(0) == 0x62)
+            {
+                if (response62.getCanData(1) == 0x00)
+                {
+                    if (response62.getCanData(2) == 0x00)
+                    {
+                        CastInfoEvent("Got response 5E8 62 00 00", ActivityType.ConvertingFile);
+                    }
+                }
+            }
+
+            if (GetManufacturersEnableCounter() == 0x00)
+                CastInfoEvent("GetManufacturersEnableCounter == 0x00", ActivityType.ConvertingFile);
+
+            CastInfoEvent("ECM EOL Parameter Settings-part1", ActivityType.ConvertingFile);
+            // 02 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
+            CANMessage msg = new CANMessage(0x7E0, 0, 4);
+            msg.setData(0x000000000201AA03);
+            m_canListener.setupWaitMessage(0x5E8);
+            CastInfoEvent("Wait for response 5E8 02 02", ActivityType.ConvertingFile);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+            }
+            CANMessage response = new CANMessage();
+            response = m_canListener.waitMessage(1000);
+            Console.WriteLine("---" + response.getData().ToString("X16"));
+            //05E8	02	02	A0	42	80	A0	00	00
+            if (response.getCanData(0) == 0x02)
+            {
+                if (response.getCanData(1) == 0x02)
+                {
+                    CastInfoEvent("Got response 5E8 02 02", ActivityType.ConvertingFile);
+                }
+            }
+
+            if (ProgramVIN(vin))
+                CastInfoEvent("ProgramVIN true", ActivityType.ConvertingFile);
+
+            Thread.Sleep(200);
+
+            //RequestSecurityAccess(2000);
+            //CastInfoEvent("End programming?", ActivityType.ConvertingFile);
+            //SendCommandNoResponse(0x7E0, 0x0000000000012702); // 01 SPSrequestSeed + $27 SecurityAccess
+
+            //CastInfoEvent("Unidentified, security access again?", ActivityType.ConvertingFile);
+            //SendCommandNoResponse(0x7E0, 0x000000EFA4022704); // EFA4 securitykey + 02 SPSsendKey + $27 SecurityAccess
+
+            RequestSecurityAccess(0);
+            SendDeviceControlMessage(0x16);
+
+            //SendCommandNoResponse(0x7E0, 0x0000000000901A02);
+            string newVIN = GetVehicleVIN();
+            CastInfoEvent("New VIN: " + newVIN, ActivityType.ConvertingFile);
+        }
+
+        // Output level - Low, High
+        // Diagnostics - EOBD
+        // Convertible - true, false
+        // SAI - true, false
+        // Clutch start - true, false
+        // Tank type - AWD
+        // Fuel type 
+        public bool GetPI01(out bool convertible, out bool sai, out bool highoutput)
+        {
+            convertible = false;
+            sai = false;
+            highoutput = false;
+            byte[] data = RequestECUInfo(0x01);
+            Console.WriteLine("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return false;
+            if (data.Length >= 2)
+            {
+                // -----C--
+                convertible = BitTools.GetBit(data[0], 2);
+
+                // on = ---10---
+                // off= ---01---
+                sai = !BitTools.GetBit(data[1], 3) && BitTools.GetBit(data[1], 4) ? true : false;
+
+                // high= -01-----
+                // low = -10-----
+                highoutput = BitTools.GetBit(data[1], 5) && !BitTools.GetBit(data[1], 6) ? true : false;
+            }
+            return true;
+        }
+
+        public bool SetPI01(bool convertible, bool sai, bool highoutput)
+        {
+            bool retval = false;
+            byte[] data = RequestECUInfo(0x01);
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            //063B01482A000000
+            ulong cmd = 0x0000000000013B06;
+
+            // -----C--
+            data[0] = BitTools.SetBit(data[0], 2, convertible);
+
+            // on = ---10---
+            // off= ---01---
+            data[1] = BitTools.SetBit(data[1], 3, !sai);
+            data[1] = BitTools.SetBit(data[1], 4, sai);
+
+            // high= -01-----
+            // low = -10-----
+            data[1] = BitTools.SetBit(data[1], 5, highoutput);
+            data[1] = BitTools.SetBit(data[1], 6, !highoutput);
+
+            cmd = AddByteToCommand(cmd, data[0], 3);
+            cmd = AddByteToCommand(cmd, data[1], 4);
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+            }
+            CANMessage ECMresponse = new CANMessage();
+            ECMresponse = m_canListener.waitMessage(1000);
+            ulong rxdata = ECMresponse.getData();
+            // response should be 0000000000017B02
+            if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x01)
+            {
+                //7e0  02 27 FD 00 00 00 00 00 request sequrity access FD
+                //7e8  04 67 FD 00 00 00 00 00
+                RequestSecurityAccess(0);
+
+                //7e0  07 AE 16 00 00 00 00 00
+                //7e8  02 EE 16 00 00 00 00 00
+                SendDeviceControlMessage(0x16);
+
+                retval = true;
+            }
+            else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
+            {
+                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
+            }
+            return retval;
+        }
+
+        // AC (Air Condition) type.
+        public string GetPI03()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x03);
+            Console.WriteLine("03data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        // Shift indicator
+        public string GetPI04()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x04);
+            Console.WriteLine("04data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        // odometer circumference (cm)
+        public string GetPI07()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x07);
+            Console.WriteLine("07data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        // Opel variant programming
+        public string GetPI2E()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x2E);
+            Console.WriteLine("2Edata: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        // Subnet config list highspeed - ECM, ABS, SADS, TCM, CIM
+        public string GetPIB9()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0xB9);
+            Console.WriteLine("B9data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        // Wheel circumference (cm)
+        public string GetPI24()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x24);
+            Console.WriteLine("24data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        // Manufacturer Enable Counter
+        // same as GetManufacturersEnableCounter()
+        public string GetPIA0()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0xA0);
+            Console.WriteLine("A0data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data.Length >= 5)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        // Type Approval no
+        public string GetPI96()
+        {
+            string retval = string.Empty;
+            byte[] data = RequestECUInfo(0x96);
+            Console.WriteLine("96data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            if (data.Length >= 11)
+            {
+                for (int i = 0; i < data.Length; i++)
+                {
+                    retval += "0x" + data[i].ToString("X2") + " ";
+                }
+            }
+            return retval;
+        }
+
+        ///////////////////////////////////////////////////////////////////////////
+        /// Flash and read methods
+        ///
 
         public byte[] readDataByLocalIdentifier(int address, int length, out bool success)
         {
@@ -1030,64 +1447,17 @@ namespace TrionicCANLib
             {
                 AddToCanLog("Couldn't send message");
             }
-
-            /*
-            // first send 
-            ulong data = 0;
-            CANMessage msg = new CANMessage(0x7E0, 0, 8);
-            ulong cmd = 0x0000000000005001;
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!m_canDevice.sendMessage(msg))
-            {
-                AddToCanTrace("Couldn't send message");
-            }
-            response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
-            data = response.getData();
-            Console.WriteLine("Received1: " + data.ToString("X8"));
-
-            cmd = 0x0000000000006801;
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!m_canDevice.sendMessage(msg))
-            {
-                AddToCanTrace("Couldn't send message");
-            }
-            response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
-            data = response.getData();
-            Console.WriteLine("Received2: " + data.ToString("X8"));
-            response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
-            data = response.getData();
-            Console.WriteLine("Received3: " + data.ToString("X8"));
-
-            cmd = 0x000000000000E501;
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!m_canDevice.sendMessage(msg))
-            {
-                AddToCanTrace("Couldn't send message");
-            }
-            response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
-            data = response.getData();
-            Console.WriteLine("Received4: " + data.ToString("X8"));*/
         }
-
-
-
 
         private bool requestDownload()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);   //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);   
             ulong cmd = 0x0000000000003406;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1103,13 +1473,13 @@ namespace TrionicCANLib
 
         private bool Send0120()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 2); //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 2); 
             ulong cmd = 0x0000000000002001;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1128,13 +1498,13 @@ namespace TrionicCANLib
         /// <returns></returns>
         private bool StartSession10()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);
             ulong cmd = 0x0000000000021002; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -1148,13 +1518,13 @@ namespace TrionicCANLib
 
         private bool StartSession1081()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);
             ulong cmd = 0x0000000000811002; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1169,13 +1539,13 @@ namespace TrionicCANLib
 
         private bool StartSession20()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 2);
             ulong cmd = 0x0000000000002001; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1194,13 +1564,13 @@ namespace TrionicCANLib
         /// <returns></returns>
         private bool SendShutup()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 2);
             ulong cmd = 0x0000000000002801; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1219,13 +1589,13 @@ namespace TrionicCANLib
         /// <returns></returns>
         private bool SendA2()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 2);
             ulong cmd = 0x000000000000A201; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1240,13 +1610,13 @@ namespace TrionicCANLib
 
         private bool StartBootloader()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);   //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);   
             ulong cmd = 0x0060241000803606;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1261,13 +1631,13 @@ namespace TrionicCANLib
 
         private bool SendA5()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);   //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);   
             ulong cmd = 0x000000000001A502; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1283,12 +1653,12 @@ namespace TrionicCANLib
         private bool SendA503()
         {
             // expect no response
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);
             ulong cmd = 0x000000000003A502;
             msg.setData(cmd);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             return true;
         }
@@ -1398,20 +1768,19 @@ namespace TrionicCANLib
             if (!canUsbDevice.isOpen()) return false;
 
             return false;
-
         }
 
 
 
         private bool BroadcastSession10()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 3);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 3);
             ulong cmd = 0x0000000000021002; // 0x02 0x10 0x02
             msg.setData(cmd);
             //m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             /*CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1426,13 +1795,13 @@ namespace TrionicCANLib
 
         private bool BroadcastShutup()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 2);
             ulong cmd = 0x0000000000002801; // 0x02 0x10 0x02
             msg.setData(cmd);
             //m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             /*CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1447,13 +1816,13 @@ namespace TrionicCANLib
 
         private bool BroadcastShutup011()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 2);
             ulong cmd = 0x0000000000002801; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1469,13 +1838,13 @@ namespace TrionicCANLib
         private int GetProgrammingState(uint responseID)
         {
             Console.WriteLine("Get programming state");
-            CANMessage msg = new CANMessage(0x11, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 2);
             ulong cmd = 0x000000000000A201; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(responseID);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1493,13 +1862,13 @@ namespace TrionicCANLib
 
         private int GetProgrammingState011()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 2);
             ulong cmd = 0x000000000000A201; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1515,13 +1884,13 @@ namespace TrionicCANLib
 
         private bool SendA5011()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 3);   //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 3);   
             ulong cmd = 0x000000000001A502; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1537,12 +1906,12 @@ namespace TrionicCANLib
         private bool SendA503011()
         {
             // expect no response
-            CANMessage msg = new CANMessage(0x11, 0, 3);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 3);
             ulong cmd = 0x000000000003A502;
             msg.setData(cmd);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             return true;
         }
@@ -1559,13 +1928,13 @@ namespace TrionicCANLib
             {
                 cmd = 0x0000000000FB2702; // request security access
             }
-            CANMessage msg = new CANMessage(0x11, 0, 3); //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 3); 
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
             CastInfoEvent("Requesting security access", ActivityType.ConvertingFile);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -1614,12 +1983,12 @@ namespace TrionicCANLib
                         ulong key2 = key[0];
                         key2 *= 0x1000000;
                         keydata ^= key2;
-                        msg = new CANMessage(0x11, 0, 5);//<GS-18052011> ELM327 support requires the length byte
+                        msg = new CANMessage(0x11, 0, 5);
                         msg.setData(keydata);
                         m_canListener.setupWaitMessage(0x311);
                         if (!canUsbDevice.sendMessage(msg))
                         {
-                            Console.WriteLine("Couldn't send message");
+                            CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                         }
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
@@ -1651,13 +2020,13 @@ namespace TrionicCANLib
 
         private bool requestDownload011()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 7);   //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 7);   
             ulong cmd = 0x0000000000003406;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1674,13 +2043,13 @@ namespace TrionicCANLib
 
         private bool StartBootloader011()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 7);   //<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x11, 0, 7);   
             ulong cmd = 0x0060241000803606;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1709,7 +2078,7 @@ namespace TrionicCANLib
                 m_canListener.setupWaitMessage(0x7E8);
                 if (!canUsbDevice.sendMessage(msg))
                 {
-                    Console.WriteLine("Couldn't send message");
+                    CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                 }
 
                 int msgcnt = 0;
@@ -1926,7 +2295,7 @@ namespace TrionicCANLib
             CANMessage response = new CANMessage();
             ulong data = 0;
             // first send 
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
             //Console.WriteLine("Writing " + address.ToString("X8") + " len: " + memdata.Length.ToString("X2"));
             ulong cmd = 0x0000000000003406; // 0x34 = upload data to ECU
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
@@ -2020,7 +2389,7 @@ namespace TrionicCANLib
 
         private void SendKeepAlive()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 2);
             ulong cmd = 0x0000000000003E01; // always 2 bytes
             msg.setData(cmd);
             msg.elmExpectedResponses = 1;
@@ -2028,7 +2397,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -2116,7 +2485,7 @@ namespace TrionicCANLib
             byte[] retData = new byte[length];
             if (!canUsbDevice.isOpen()) return retData;
 
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
             //Console.WriteLine("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
             ulong cmd = 0x0000000000002106; // always 2 bytes
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
@@ -2268,7 +2637,7 @@ namespace TrionicCANLib
             byte[] retData = new byte[length];
             if (!canUsbDevice.isOpen()) return retData;
 
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
             //optimize reading speed for ELM
             if (length <= 3)
                 msg.elmExpectedResponses = 1;
@@ -2442,7 +2811,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             // wait for a 0x58 or a 0x7F message
             CANMessage response = new CANMessage();
@@ -2573,14 +2942,14 @@ namespace TrionicCANLib
             //        0 Bit 0 DTCSupportedByCalibration
             ulong cmd = 0x000000001281A903; // 7E0 03 A9 81 12 00 00 00 00
 
-            CANMessage msg = new CANMessage(0x7E0, 0, 4);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 4);
             msg.setData(cmd);
             msg.elmExpectedResponses = 15;
             m_canListener.setupWaitMessage(0x7E8);
             canUsbDevice.SetupCANFilter("7E8", "DFF"); // Mask will allow 7E8 and 5E8
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
 
             CANMessage response = new CANMessage();
@@ -2645,12 +3014,12 @@ namespace TrionicCANLib
 
             ulong cmd = 0x000000001281A903; // 245 03 A9 81 12 00 00 00 00
 
-            CANMessage msg = new CANMessage(0x245, 0, 8);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x245, 0, 8);
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x545);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
 
             CANMessage response = new CANMessage();
@@ -2703,7 +3072,7 @@ namespace TrionicCANLib
 
         private void SendDeviceControlMessageWithCode(byte command, string secretcode /*ulong code*/)
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
             ulong cmd = 0x000000000000AE07;
             ulong lcommand = command;
             cmd |= (lcommand * 0x10000);
@@ -2723,16 +3092,16 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
         }
 
-        private bool readDataByPacketID(byte command, uint responseID)
+        private bool ReadDataByPacketIdentifier(byte command, uint responseID)
         {
             //SendCommandNoResponse(0x7E0, 0x000000006201AA03);
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);
             ulong cmd = 0x000000000001AA03;
             ulong lcommand = command;
             cmd |= (lcommand * 0x1000000);
@@ -2740,7 +3109,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(responseID);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -2750,13 +3119,13 @@ namespace TrionicCANLib
         private int GetProgrammingStateNormal()
         {
             Console.WriteLine("Get programming state");
-            CANMessage msg = new CANMessage(0x7E0, 0, 2);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 2);
             ulong cmd = 0x000000000000A201; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -2818,7 +3187,7 @@ namespace TrionicCANLib
                 GetDiagnosticDataIdentifier();
 
                 CastInfoEvent("Request 0xAA", ActivityType.ConvertingFile);
-                readDataByPacketID(0x62, 0x5E8);
+                ReadDataByPacketIdentifier(0x62, 0x5E8);
                 //SendCommandNoResponse(0x7E0, 0x000000006201AA03);
                 for (int tel = 0; tel < 10; tel++)
                 {
@@ -2830,7 +3199,7 @@ namespace TrionicCANLib
                 //RequestECUInfo(0xA0);
                 CastInfoEvent("Request 0xAA", ActivityType.ConvertingFile);
                 //SendCommandNoResponse(0x7E0, 0x000000000201AA03);
-                readDataByPacketID(0x02, 0x5E8);
+                ReadDataByPacketIdentifier(0x02, 0x5E8);
                 BroadcastKeepAlive();
                 Thread.Sleep(500);
                 RequestECUInfo(0x90); // read VIN again
@@ -3025,7 +3394,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3061,7 +3430,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x645);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             int waitMsgCount = 0;
             while (waitMsgCount < 10)
@@ -3129,7 +3498,7 @@ namespace TrionicCANLib
                         SendCommandNoResponse(0x7E0, 0x00000000F301AA03);
                         Thread.Sleep(200);
                         RequestECUInfo(0x29);
-                        _oilQualityRead = GetOilQualityPercentage();
+                        _oilQualityRead = GetOilQuality();
                         CastInfoEvent("Oil quality indicator: " + _oilQualityRead.ToString("F2") + " %", ActivityType.ConvertingFile);
                         RequestECUInfo(0x2A);
                         Thread.Sleep(1000);
@@ -3144,7 +3513,7 @@ namespace TrionicCANLib
 
         private void SendDeviceControlMessage(byte command)
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);
             ulong cmd = 0x000000000000AE02;
             ulong lcommand = command;
             cmd |= (lcommand * 0x10000);
@@ -3152,7 +3521,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3163,7 +3532,7 @@ namespace TrionicCANLib
             //0000004006F12C04
             //0000004106F22C04
             //0000004206F32C04
-            CANMessage msg = new CANMessage(0x7E0, 0, 5);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 5);
             ulong cmd = 0x0000000006002C04;
             ulong lid = id;
             ulong ltype = type;
@@ -3173,7 +3542,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3231,7 +3600,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
 
             ulong rxdata = m_canListener.waitMessage(1000).getData();
@@ -3284,7 +3653,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3306,7 +3675,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x645);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3328,7 +3697,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3348,7 +3717,7 @@ namespace TrionicCANLib
             msg.setData(cmd);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
         }
 
@@ -3362,7 +3731,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3380,7 +3749,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3400,247 +3769,12 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x311);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
             //07E8 00000084019A5A04
             //0645 00000008039A5A04
-        }
-
-        /// <summary>
-        /// Sets the speed limit in a T8 ECU
-        /// </summary>
-        /// <param name="speedlimit">speed limit in km/h</param>
-        /// <returns></returns>
-        public bool SetSpeedLimiter(int speedlimit)
-        {
-            bool retval = false;
-            // writeDataByIdentifier
-            //0000008C0A023B04
-            speedlimit *= 10;
-            CANMessage msg = new CANMessage(0x7E0, 0, 5);//<GS-18052011> ELM327 support requires the length byte
-            ulong cmd = 0x0000000000023B04; //0000008C0A023B04 example  0A8C = 2700
-            byte b1 = Convert.ToByte(speedlimit / 256);
-            byte b2 = Convert.ToByte(speedlimit - (int)b1 * 256);
-            cmd = AddByteToCommand(cmd, b1, 3);
-            cmd = AddByteToCommand(cmd, b2, 4);
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                Console.WriteLine("Couldn't send message");
-            }
-            CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
-            ulong rxdata = ECMresponse.getData();
-            // response should be 0000000000027B02
-            if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x02)
-            {
-                RequestSecurityAccess(0);
-                SendDeviceControlMessage(0x16);
-                retval = true;
-            }
-            // Negative Response 0x7F Service <nrsi> <service> <returncode>
-            // Bug: this is never handled because its sent with id=0x7E8
-            else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
-            {
-                string info = TranslateErrorCode(getCanData(rxdata, 3));
-                CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
-            }
-            return retval;
-        }
-
-        /// <summary>
-        /// Sets the Oil quality indication (used for service interval calculation)
-        /// </summary>
-        /// <param name="percentage"></param>
-        /// <returns></returns>
-        public bool SetOilQuality(float percentage)
-        {
-            bool retval = false;
-            // writeDataByIdentifier
-            //000D340000253B06
-            percentage *= 256;
-            int iper = Convert.ToInt32(percentage);
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
-            ulong cmd = 0x0000000000253B06; //000D340000253B06 example  0000340D = 52,05078125 percent
-            byte b1 = Convert.ToByte(iper / 256);
-            byte b2 = Convert.ToByte(iper - (int)b1 * 256);
-            cmd = AddByteToCommand(cmd, b1, 5);
-            cmd = AddByteToCommand(cmd, b2, 6);
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                Console.WriteLine("Couldn't send message");
-            }
-            CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
-            ulong rxdata = ECMresponse.getData();
-            // response should be 0000000000025B02
-            if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x25)
-            {
-                RequestSecurityAccess(0);
-                SendDeviceControlMessage(0x16);
-                retval = true;
-            }
-            return retval;
-        }
-
-        /// <summary>
-        /// Sets the RPM limit in a T8 ECU
-        /// </summary>
-        /// <param name="rpmlimit"></param>
-        /// <returns></returns>
-        public bool SetRPMLimiter(int rpmlimit)
-        {
-            bool retval = false;
-            //0000000618293B04
-            CANMessage msg = new CANMessage(0x7E0, 0, 5);//<GS-18052011> ELM327 support requires the length byte
-            ulong cmd = 0x0000000000293B04; //0000000618293B04 example  1806 = 6150
-            byte b1 = Convert.ToByte(rpmlimit / 256);
-            byte b2 = Convert.ToByte(rpmlimit - (int)b1 * 256);
-            cmd = AddByteToCommand(cmd, b1, 3);
-            cmd = AddByteToCommand(cmd, b2, 4);
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                Console.WriteLine("Couldn't send message");
-            }
-            CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
-            ulong rxdata = ECMresponse.getData();
-            // response should be 0000000000297B02
-            if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x29)
-            {
-                RequestSecurityAccess(0);
-                SendDeviceControlMessage(0x16);
-                retval = true;
-            }
-            else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x29)
-            {
-                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
-            }
-            return retval;
-        }
-
-        public int GetRPMLimiter()
-        {
-            int retval = 0;
-            byte[] data = RequestECUInfo(0x29);
-            if (data.Length >= 2)
-            {
-                retval = Convert.ToInt32(data[0]) * 256;
-                retval += Convert.ToInt32(data[1]);
-            }
-            return retval;
-        }
-
-        public void SetVIN(string vin)
-        {
-            // 62 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
-            CANMessage msg62 = new CANMessage(0x7E0, 0, 4); //<GS-18052011> ELM327 support requires the length byte
-            msg62.setData(0x000000006201AA03);
-            m_canListener.setupWaitMessage(0x5E8);
-            CastInfoEvent("Wait for response 5E8 62 00 00", ActivityType.ConvertingFile);
-            if (!canUsbDevice.sendMessage(msg62))
-            {
-                Console.WriteLine("Couldn't send message");
-            }
-            CANMessage response62 = new CANMessage();
-            response62 = m_canListener.waitMessage(1000);
-            Console.WriteLine("---" + response62.getData().ToString("X16"));
-            //05E8	62	00	00	02	A7	01	7F	01
-            if (response62.getCanData(0) == 0x62)
-            {
-                if (response62.getCanData(1) == 0x00)
-                {
-                    if (response62.getCanData(2) == 0x00)
-                    {
-                        CastInfoEvent("Got response 5E8 62 00 00", ActivityType.ConvertingFile);
-                    }
-                }
-            }
-
-            if (GetManufacturersEnableCounter() == 0x00)
-                CastInfoEvent("GetManufacturersEnableCounter == 0x00", ActivityType.ConvertingFile);
-
-            CastInfoEvent("ECM EOL Parameter Settings-part1", ActivityType.ConvertingFile);
-            // 02 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
-            CANMessage msg = new CANMessage(0x7E0, 0, 4); //<GS-18052011> ELM327 support requires the length byte
-            msg.setData(0x000000000201AA03);
-            m_canListener.setupWaitMessage(0x5E8);
-            CastInfoEvent("Wait for response 5E8 02 02", ActivityType.ConvertingFile);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                Console.WriteLine("Couldn't send message");
-            }
-            CANMessage response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
-            Console.WriteLine("---" + response.getData().ToString("X16"));
-            //05E8	02	02	A0	42	80	A0	00	00
-            if (response.getCanData(0) == 0x02)
-            {
-                if (response.getCanData(1) == 0x02)
-                {
-                    CastInfoEvent("Got response 5E8 02 02", ActivityType.ConvertingFile);
-                }
-            }
-
-            if (ProgramVIN(vin))
-                CastInfoEvent("ProgramVIN true", ActivityType.ConvertingFile);
-
-            Thread.Sleep(200);
-
-            //RequestSecurityAccess(2000);
-            //CastInfoEvent("End programming?", ActivityType.ConvertingFile);
-            //SendCommandNoResponse(0x7E0, 0x0000000000012702); // 01 SPSrequestSeed + $27 SecurityAccess
-
-            //CastInfoEvent("Unidentified, security access again?", ActivityType.ConvertingFile);
-            //SendCommandNoResponse(0x7E0, 0x000000EFA4022704); // EFA4 securitykey + 02 SPSsendKey + $27 SecurityAccess
-
-            RequestSecurityAccess(0);
-            SendDeviceControlMessage(0x16);
-
-            //SendCommandNoResponse(0x7E0, 0x0000000000901A02);
-            string newVIN = GetVehicleVIN();
-            CastInfoEvent("New VIN: " + newVIN, ActivityType.ConvertingFile);
-        }
-
-        public bool SetE85Percentage(float percentage)
-        {
-            bool retval = false;
-            percentage *= 256;
-            int iper = Convert.ToInt32(percentage);
-            CANMessage msg = new CANMessage(0x7E0, 0, 5);//<GS-18052011> ELM327 support requires the length byte
-            ulong cmd = 0x000000000018AE04; // <ControlByte 5-1> <CPID Number 0x18> <Device Control 0xAE service>
-            byte b1 = Convert.ToByte(iper / 256);
-            cmd = AddByteToCommand(cmd, b1, 4);
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                Console.WriteLine("Couldn't send message");
-            }
-            CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
-            ulong rxdata = ECMresponse.getData();
-            // response should be 000000000018EE02
-            if (getCanData(rxdata, 1) == 0xEE && getCanData(rxdata, 2) == 0x18) // <EE positive response service id> <cpid>
-            {
-                RequestSecurityAccess(0);
-                SendDeviceControlMessage(0x16);
-                retval = true;
-            }
-            // Negative Response 0x7F Service <nrsi> <service> <returncode>
-            // Bug: this is never handled because negative response its sent with id=0x7E8
-            else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0xAE)
-            {
-                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
-            }
-            return retval;
         }
 
         private bool UploadBootloaderRead()
@@ -4566,14 +4700,14 @@ namespace TrionicCANLib
 
         private bool SendrequestDownload(bool recoveryMode)
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
             //06 34 01 00 00 00 00 00
             ulong cmd = 0x0000000000013406;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                Console.WriteLine("Couldn't send message");
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             bool eraseDone = false;
             int eraseCount = 0;
@@ -4715,224 +4849,6 @@ namespace TrionicCANLib
                 return false;
             }
             return true;
-        }
-
-        public bool GetPI01(out bool cab, out bool sai, out bool highoutput)
-        {
-            cab = false;
-            sai = false;
-            highoutput = false;
-            byte[] data = RequestECUInfo(0x01);
-            Console.WriteLine("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return false;
-            if (data.Length >= 2)
-            {
-                // -----C--
-                cab = BitTools.GetBit(data[0], 2);
-
-                // on = ---10---
-                // off= ---01---
-                sai = !BitTools.GetBit(data[1], 3) && BitTools.GetBit(data[1], 4) ? true : false; 
-
-                // high= -01-----
-                // low = -10-----
-                highoutput = BitTools.GetBit(data[1], 5) && !BitTools.GetBit(data[1], 6) ? true : false;
-            }
-            return true;
-        }
-
-        public bool SetPI01(bool cab, bool sai, bool highoutput)
-        {
-            bool retval = false;
-            byte[] data = RequestECUInfo(0x01);
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);//<GS-18052011> ELM327 support requires the length byte
-            //06 3B 01 48 2A 00 00 00
-            ulong cmd = 0x0000000000013B06;
-
-            // -----C--
-            data[0] = BitTools.SetBit(data[0], 2, cab);
-
-            // on = ---10---
-            // off= ---01---
-            data[1] = BitTools.SetBit(data[1], 3, !sai); 
-            data[1] = BitTools.SetBit(data[1], 4, sai); 
-
-            // high= -01-----
-            // low = -10-----
-            data[1] = BitTools.SetBit(data[1], 5, highoutput);
-            data[1] = BitTools.SetBit(data[1], 6, !highoutput);
-            
-            cmd = AddByteToCommand(cmd, data[0], 3);
-            cmd = AddByteToCommand(cmd, data[1], 4);
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                Console.WriteLine("Couldn't send message");
-            }
-            CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
-            ulong rxdata = ECMresponse.getData();
-            // response should be 0000000000017B02
-            if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x01)
-            {
-                //7e0  02 27 FD 00 00 00 00 00 request sequrity access FD
-                //7e8  04 67 FD 00 00 00 00 00
-                RequestSecurityAccess(0); 
-              
-                //7e0  07 AE 16 00 00 00 00 00
-                //7e8  02 EE 16 00 00 00 00 00
-                SendDeviceControlMessage(0x16);
-
-                retval = true;
-            }
-            else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
-            {
-                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
-            }
-            return retval;
-        }
-
-        public string GetPI02()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0x02);
-            Console.WriteLine("02data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
-        }
-
-        public string GetPI03()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0x03);
-            Console.WriteLine("03data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
-        }
-
-        public string GetPI04()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0x04);
-            Console.WriteLine("04data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
-        }
-
-
-        public string GetPI07()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0x07);
-            Console.WriteLine("07data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
-        }
-
-        public string GetPI2E()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0x2E);
-            Console.WriteLine("2Edata: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data.Length >= 5)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
-        }
-
-        public string GetPIB9()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0xB9);
-            Console.WriteLine("B9data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
-        }
-
-        public string GetPI24()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0x24);
-            Console.WriteLine("24data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
-        }
-
-        public string GetPIA0()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0xA0);
-            Console.WriteLine("A0data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data.Length >= 5)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
-        }
-
-        public string GetPI96()
-        {
-            string retval = string.Empty;
-            byte[] data = RequestECUInfo(0x96);
-            Console.WriteLine("96data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data.Length >= 11)
-            {
-                for (int i = 0; i < data.Length; i++)
-                {
-                    retval += "0x" + data[i].ToString("X2") + " ";
-                }
-            }
-            return retval;
         }
     }
 }

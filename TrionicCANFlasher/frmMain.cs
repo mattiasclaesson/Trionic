@@ -201,7 +201,7 @@ namespace TrionicCANFlasher
             cbEnableLogging.Enabled = enable;
             cbOnlyPBus.Enabled = enable;
             cbDisableConnectionCheck.Enabled = enable;
-            btnCabSAIHo.Enabled = enable;
+            btnEditParameters.Enabled = enable;
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
@@ -231,7 +231,7 @@ namespace TrionicCANFlasher
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
-                btnCabSAIHo.Enabled = false;
+                btnEditParameters.Enabled = false;
             }
         }
 
@@ -371,15 +371,14 @@ namespace TrionicCANFlasher
                     AddLogItem("Supplier ID     : " + trionic8.RequestECUInfo(0x92, ""));
                     AddLogItem("Speed limiter   : " + trionic8.GetTopSpeed() + " km/h");
                     AddLogItem("Rpm limiter     : " + trionic8.GetRPMLimiter() + " rpm");   //0x29
-                    AddLogItem("Oil quality     : " + trionic8.GetOilQualityPercentage().ToString("F2") + " %");
+                    AddLogItem("Oil quality     : " + trionic8.GetOilQuality().ToString("F2") + " %");
                     AddLogItem("SAAB partnumber : " + trionic8.GetSaabPartnumber());
                     AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
                     AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
                     AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromID(0xCC));
-                    bool cab, sai, highoutput;
-                    trionic8.GetPI01(out cab, out sai, out highoutput);
-                    AddLogItem("PI 0x01         : Cab:" + cab + " SAI:" + sai + " HighOutput:" + highoutput);
-                    AddLogItem("PI 0x02         : " + trionic8.GetPI02());
+                    bool convertible, sai, highoutput;
+                    trionic8.GetPI01(out convertible, out sai, out highoutput);
+                    AddLogItem("PI 0x01         : Cab:" + convertible + " SAI:" + sai + " HighOutput:" + highoutput);
                     AddLogItem("PI 0x03         : " + trionic8.GetPI03());
                     AddLogItem("PI 0x04         : " + trionic8.GetPI04());
                     AddLogItem("PI 0x07         : " + trionic8.GetPI07());
@@ -424,7 +423,7 @@ namespace TrionicCANFlasher
                     AddLogItem("Engine type     : " + trionic8.RequestECUInfo(0x0C, ""));
                     AddLogItem("Supplier ID     : " + trionic8.RequestECUInfo(0x92, ""));
                     AddLogItem("Speed limiter   : " + trionic8.GetTopSpeed() + " km/h");
-                    AddLogItem("Oil quality     : " + trionic8.GetOilQualityPercentage().ToString("F2") + " %");
+                    AddLogItem("Oil quality     : " + trionic8.GetOilQuality().ToString("F2") + " %");
                     AddLogItem("SAAB partnumber : " + trionic8.GetSaabPartnumber());
                     AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
                     AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
@@ -977,7 +976,7 @@ namespace TrionicCANFlasher
                     int speed;
                     if (int.TryParse(tbParameter.Text, out speed))
                     {
-                        if (trionic8.SetSpeedLimiter(speed))
+                        if (trionic8.SetTopSpeed(speed))
                         {
                             AddLogItem("Set SpeedLimiter successfull");
                         }
@@ -1062,7 +1061,7 @@ namespace TrionicCANFlasher
             Process.Start("TrionicCanFlasher.pdf");
         }
 
-        private void btnCabSAIHo_Click(object sender, EventArgs e)
+        private void btnEditParameters_Click(object sender, EventArgs e)
         {
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
@@ -1074,20 +1073,58 @@ namespace TrionicCANFlasher
                 if (trionic8.openDevice(true))
                 {
                     PiSelection pi = new PiSelection();
-                    bool cab, sai, highoutput;
-                    trionic8.GetPI01(out cab, out sai, out highoutput);
-                    pi.Cab = cab;
+                    bool convertible, sai, highoutput;
+                    trionic8.GetPI01(out convertible, out sai, out highoutput);
+                    pi.Convertible = convertible;
                     pi.SAI = sai;
                     pi.Highoutput = highoutput;
-                    pi.ShowDialog();
-                    if (trionic8.SetPI01(pi.Cab, pi.SAI, pi.Highoutput))
+
+                    int rpm = trionic8.GetRPMLimiter();
+                    pi.RPMLimit = rpm;
+
+                    string vin = trionic8.GetVehicleVIN();
+                    pi.VIN = vin;
+
+                    int topspeed = trionic8.GetTopSpeed();
+                    pi.TopSpeed = topspeed;
+
+                    float e85 = trionic8.GetE85Percentage();
+                    pi.E85 = e85;
+
+                    if (pi.ShowDialog() == DialogResult.OK)
                     {
-                        AddLogItem("Set fields successfull");
-                        AddLogItem("Cab:" + pi.Cab + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
-                    }
-                    else
-                    {
-                        AddLogItem("Set fields failed");
+                        if (!pi.Convertible.Equals(convertible) || !pi.SAI.Equals(sai) || !pi.Highoutput.Equals(highoutput))
+                        {
+                            if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput))
+                            {
+                                AddLogItem("Set fields successfull");
+                                AddLogItem("Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed");
+                            }
+                        }
+
+                        if (!pi.RPMLimit.Equals(rpm))
+                        {
+                            trionic8.SetRPMLimiter(pi.RPMLimit);
+                        }
+
+                        if (!pi.VIN.Equals(vin))
+                        {
+                            trionic8.SetVIN(pi.VIN);
+                        }
+
+                        if (!pi.TopSpeed.Equals(topspeed))
+                        {
+                            trionic8.SetTopSpeed(pi.TopSpeed);
+                        }
+
+                        if (!pi.E85.Equals(e85))
+                        {
+                            trionic8.SetE85Percentage(pi.E85);
+                        }
                     }
                 }
                 trionic8.Cleanup();

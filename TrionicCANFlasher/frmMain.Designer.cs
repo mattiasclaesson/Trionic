@@ -57,7 +57,7 @@
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
             this.documentation = new System.Windows.Forms.LinkLabel();
             this.cbELM327Kline = new System.Windows.Forms.CheckBox();
-            this.btnCabSAIHo = new System.Windows.Forms.Button();
+            this.btnEditParameters = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -378,23 +378,23 @@
             this.cbELM327Kline.Text = "ELM327 K-Line";
             this.cbELM327Kline.UseVisualStyleBackColor = true;
             // 
-            // btnCabSAIHo
+            // btnEditParameters
             // 
-            this.btnCabSAIHo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCabSAIHo.Location = new System.Drawing.Point(678, 67);
-            this.btnCabSAIHo.Name = "btnCabSAIHo";
-            this.btnCabSAIHo.Size = new System.Drawing.Size(107, 50);
-            this.btnCabSAIHo.TabIndex = 63;
-            this.btnCabSAIHo.Text = "Set Cab SAI HO";
-            this.btnCabSAIHo.UseVisualStyleBackColor = true;
-            this.btnCabSAIHo.Click += new System.EventHandler(this.btnCabSAIHo_Click);
+            this.btnEditParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnEditParameters.Location = new System.Drawing.Point(678, 67);
+            this.btnEditParameters.Name = "btnEditParameters";
+            this.btnEditParameters.Size = new System.Drawing.Size(107, 50);
+            this.btnEditParameters.TabIndex = 63;
+            this.btnEditParameters.Text = "Edit Parameters";
+            this.btnEditParameters.UseVisualStyleBackColor = true;
+            this.btnEditParameters.Click += new System.EventHandler(this.btnEditParameters_Click);
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
-            this.Controls.Add(this.btnCabSAIHo);
+            this.Controls.Add(this.btnEditParameters);
             this.Controls.Add(this.cbELM327Kline);
             this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
@@ -465,7 +465,7 @@
         private System.Windows.Forms.ComboBox cbxComSpeed;
         private System.Windows.Forms.LinkLabel documentation;
         private System.Windows.Forms.CheckBox cbELM327Kline;
-        private System.Windows.Forms.Button btnCabSAIHo;
+        private System.Windows.Forms.Button btnEditParameters;
     }
 }
 
