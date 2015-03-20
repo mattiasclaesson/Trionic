@@ -4850,5 +4850,399 @@ namespace TrionicCANLib
             }
             return true;
         }
+
+        public void ReadFlashME96(object sender, DoWorkEventArgs workEvent)
+        {
+            string filename = (string)workEvent.Argument;
+
+            _stallKeepAlive = true;
+            bool success = false;
+            int retryCount = 0;
+            int initial = 0x1C2000;
+            int startAddress = 0x1C2000;
+            int lastAddress = 0x1F0000;
+            int range = lastAddress - startAddress;
+            int blockSize = 0x80; // defined in bootloader... keep it that way!
+            int bufpnt = startAddress;
+            byte[] buf = new byte[0x200000];
+            // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
+            for (int i = 0; i < buf.Length; i++)
+            {
+                buf[i] = 0xFF;
+            }
+            SendKeepAlive();
+            sw.Reset();
+            sw.Start();
+            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
+            StartSession1081();
+            StartSession10();
+            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
+            SendShutup();
+            //SendA2();
+            //SendA5();
+            //SendA503();
+            Thread.Sleep(50);
+            SendKeepAlive();
+            _securityLevel = AccessLevel.AccessLevel01;
+            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
+            if (!RequestSecurityAccessME96(0))
+                return;
+            Thread.Sleep(50);
+
+            CastInfoEvent("Downloading FLASH", ActivityType.DownloadingFlash);
+
+            _stallKeepAlive = true;
+            int saved_progress = 0;
+            success = false;
+            //for (int i = 0; i < buf.Length/blockSize; i++)
+            while (bufpnt < lastAddress)
+            {
+                if (!canUsbDevice.isOpen())
+                {
+                    _stallKeepAlive = false;
+                    workEvent.Result = false;
+                    return;
+                }
+
+                byte[] readbuf = sendReadCommandME96(startAddress, blockSize, out success);
+                Thread.Sleep(1);
+                if (success)
+                {
+
+                    if (readbuf.Length == blockSize)
+                    {
+                        for (int j = 0; j < blockSize; j++)
+                        {
+                            buf[bufpnt++] = readbuf[j];
+                        }
+                    }
+                    int percentage = (int)((float)100*(bufpnt-initial) / (float)range);
+                    if (percentage > saved_progress)
+                    {
+                        CastProgressReadEvent(percentage);
+                        saved_progress = percentage;
+                    }
+                    retryCount = 0;
+                    startAddress += blockSize;
+                }
+                else
+                {
+                    CastInfoEvent("Frame dropped, retrying", ActivityType.DownloadingFlash);
+                    retryCount++;
+                    if (retryCount == maxRetries)
+                    {
+                        CastInfoEvent("Failed to download SRAM content", ActivityType.ConvertingFile);
+                        _stallKeepAlive = false;
+                        workEvent.Result = false;
+                        return;
+                    }
+                }
+                SendKeepAlive();
+            }
+            _stallKeepAlive = false;
+
+            if (buf != null)
+            {
+                try
+                {
+                    File.WriteAllBytes(filename, buf);
+                    CastInfoEvent("Download done", ActivityType.FinishedDownloadingFlash);
+                    workEvent.Result = true;
+                }
+                catch (Exception e)
+                {
+                    CastInfoEvent("Could not write file... " + e.Message, ActivityType.ConvertingFile);
+                    workEvent.Result = false;
+                }
+            }
+            else
+            {
+                workEvent.Result = false;
+            }
+            return;
+        }
+
+        //KWP2000 can read more than 6 bytes at a time.. but for now we are happy with this
+        private byte[] sendReadCommandME96(int address, int length, out bool success)
+        {
+
+            success = false;
+            byte[] retData = new byte[length];
+            if (!canUsbDevice.isOpen()) return retData;
+
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            //optimize reading speed for ELM
+            if (length <= 3)
+                msg.elmExpectedResponses = 1;
+            //Console.WriteLine("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
+            ulong cmd = 0x0000000000002307; // always 2 bytes
+            ulong addressHigh = (uint)address & 0x0000000000FF0000;
+            addressHigh /= 0x10000;
+            ulong addressMiddle = (uint)address & 0x000000000000FF00;
+            addressMiddle /= 0x100;
+            ulong addressLow = (uint)address & 0x00000000000000FF;
+            ulong len = (ulong)length;
+
+
+            cmd |= (addressLow * 0x10000000000);
+            cmd |= (addressMiddle * 0x100000000);
+            cmd |= (addressHigh * 0x1000000);
+            cmd |= (len * 0x1000000000000);
+            //Console.WriteLine("send: " + cmd.ToString("X16"));
+            /*cmd |= (ulong)(byte)(address & 0x000000FF) << 4 * 8;
+            cmd |= (ulong)(byte)((address & 0x0000FF00) >> 8) << 3 * 8;
+            cmd |= (ulong)(byte)((address & 0x00FF0000) >> 2 * 8) << 2 * 8;
+            cmd |= (ulong)(byte)((address & 0xFF000000) >> 3 * 8) << 8;*/
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                AddToCanLog("Couldn't send message");
+
+            }
+            // wait for max two messages to get rid of the alive ack message
+            CANMessage response = new CANMessage();
+            ulong data = 0;
+            response = new CANMessage();
+            response = m_canListener.waitMessage(1000);
+            data = response.getData();
+
+            if (getCanData(data, 0) == 0x7E)
+            {
+                AddToCanLog("Got 0x7E message as response to 0x23, readMemoryByAddress command");
+                success = false;
+                return retData;
+            }
+            else if (response.getData() == 0x00000000)
+            {
+                AddToCanLog("Get blank response message to 0x23, readMemoryByAddress");
+                success = false;
+                return retData;
+            }
+            else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23 && getCanData(data, 3) == 0x31)
+            {
+                // reason was 0x31 RequestOutOfRange
+                // memory address is either: invalid, restricted, secure + ECU locked
+                // memory size: is greater than max
+                AddToCanLog("RequestOutOfRange. No security access granted");
+                RequestSecurityAccess(0);
+                success = false;
+                return retData;
+            }
+            else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23)
+            {
+                AddToCanLog("readMemoryByAddress " + TranslateErrorCode(getCanData(data, 3)));
+                success = false;
+                return retData;
+            }
+            /*else if (getCanData(data, 0) != 0x10)
+            {
+                AddToCanTrace("Incorrect response message to 0x23, readMemoryByAddress. Byte 0 was " + getCanData(data, 0).ToString("X2"));
+                success = false;
+                return retData;
+            }
+            else if (getCanData(data, 1) != len + 4)
+            {
+                AddToCanTrace("Incorrect length data message to 0x23, readMemoryByAddress.  Byte 1 was " + getCanData(data, 1).ToString("X2"));
+                success = false;
+                return retData;
+            }*/
+            else if (getCanData(data, 2) != 0x63 && getCanData(data, 1) != 0x63)
+            {
+                if (data == 0x0000000000007E01)
+                {
+                    // was a response to a KA.
+                }
+                AddToCanLog("Incorrect response to 0x23, readMemoryByAddress.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
+                success = false;
+                return retData;
+            }
+            //TODO: Check whether we need more than 2 bytes of data and wait for that many records after sending an ACK
+            int rx_cnt = 0;
+            byte frameIndex = 0x21;
+            if (length > 3)
+            {
+                retData[rx_cnt++] = getCanData(data, 6);
+                retData[rx_cnt++] = getCanData(data, 7);
+                // in that case, we need more records from the ECU
+                // Thread.Sleep(1);
+                SendAckMessageT8(); // send ack to request more bytes
+                //Thread.Sleep(1);
+                // now we wait for the correct number of records to be received
+                int m_nrFrameToReceive = (length / 7);
+                if (len % 7 > 0)
+                {
+                    m_nrFrameToReceive++;
+                }
+                AddToCanLog("Number of frames: " + m_nrFrameToReceive.ToString());
+                while (m_nrFrameToReceive > 0)
+                {
+                    // response = new CANMessage();
+                    //response.setData(0);
+                    //response.setID(0);
+                    // m_canListener.setupWaitMessage(0x7E8);
+                    response = m_canListener.waitMessage(1000);
+                    data = response.getData();
+                    AddToCanLog("frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
+                    if (frameIndex != getCanData(data, 0))
+                    {
+                        // sequence broken
+                        AddToCanLog("Received invalid sequenced frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
+                        //m_canListener.dumpQueue();
+                        success = false;
+                        return retData;
+                    }
+                    else if (data == 0x0000000000000000)
+                    {
+                        AddToCanLog("Received blank message while waiting for data");
+                        success = false;
+                        return retData;
+                    }
+                    frameIndex++;
+                    if (frameIndex == 0x30)
+                    {
+                        // reset index
+                        frameIndex = 0x20;
+                    }
+                    // additional check for sequencing of frames
+                    m_nrFrameToReceive--;
+                    AddToCanLog("frames left: " + m_nrFrameToReceive.ToString());
+                    // add the bytes to the receive buffer
+                    //string checkLine = string.Empty;
+                    for (uint fi = 1; fi < 8; fi++)
+                    {
+                        //checkLine += getCanData(data, fi).ToString("X2");
+                        if (rx_cnt < retData.Length) // prevent overrun
+                        {
+                            retData[rx_cnt++] = getCanData(data, fi);
+                        }
+                    }
+                    //AddToCanLog("frame(2): " + checkLine);
+                    //Thread.Sleep(1);
+
+                }
+
+            }
+            else
+            {
+                if (retData.Length > rx_cnt) retData[rx_cnt++] = getCanData(data, 5);
+                if (retData.Length > rx_cnt) retData[rx_cnt++] = getCanData(data, 6);
+                if (retData.Length > rx_cnt) retData[rx_cnt++] = getCanData(data, 7);
+                AddToCanLog("received data: " + retData[0].ToString("X2"));
+            }
+            /*string line = address.ToString("X8") + " ";
+            foreach (byte b in retData)
+            {
+                line += b.ToString("X2") + " ";
+            }
+            AddToCanTrace(line);*/
+            success = true;
+
+            return retData;
+        }
+
+
+        private bool RequestSecurityAccessME96(int millisecondsToWaitWithResponse)
+        {
+            int secondsToWait = millisecondsToWaitWithResponse / 1000;
+            ulong cmd = 0x0000000000FD2702; // request security access
+            if (_securityLevel == AccessLevel.AccessLevel01)
+            {
+                cmd = 0x0000000000012702; // request security access
+            }
+            else if (_securityLevel == AccessLevel.AccessLevelFB)
+            {
+                cmd = 0x0000000000FB2702; // request security access
+            }
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            CastInfoEvent("Requesting security access", ActivityType.ConvertingFile);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+            }
+            CANMessage response = new CANMessage();
+            response = m_canListener.waitMessage(1000);
+            //ulong data = response.getData();
+            Console.WriteLine("---" + response.getData().ToString("X16"));
+            if (response.getCanData(1) == 0x67)
+            {
+                if (response.getCanData(2) == 0xFD || response.getCanData(2) == 0xFB || response.getCanData(2) == 0x01)
+                {
+                    CastInfoEvent("Got seed value from ECU", ActivityType.ConvertingFile);
+
+                    while (secondsToWait > 0)
+                    {
+                        CastInfoEvent("Waiting for " + secondsToWait.ToString() + " seconds...", ActivityType.UploadingBootloader);
+                        Thread.Sleep(1000);
+                        SendKeepAlive();
+                        secondsToWait--;
+                    }
+
+                    byte[] seed = new byte[2];
+                    seed[0] = response.getCanData(3);
+                    seed[1] = response.getCanData(4);
+                    if (seed[0] == 0x00 && seed[1] == 0x00)
+                    {
+                        return true; // security access was already granted
+                    }
+                    else
+                    {
+                        SeedToKey s2k = new SeedToKey();
+                        byte[] key = s2k.calculateKeyForME96(seed);
+                        CastInfoEvent("Security access : Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")", ActivityType.ConvertingFile);
+                        AddToCanLog("Security access : Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")");
+
+                        ulong keydata = 0x0000000000FE2704;
+                        if (_securityLevel == AccessLevel.AccessLevel01)
+                        {
+                            keydata = 0x0000000000022704;
+                        }
+                        else if (_securityLevel == AccessLevel.AccessLevelFB)
+                        {
+                            keydata = 0x0000000000FC2704;
+                        }
+                        ulong key1 = key[1];
+                        key1 *= 0x100000000;
+                        keydata ^= key1;
+                        ulong key2 = key[0];
+                        key2 *= 0x1000000;
+                        keydata ^= key2;
+                        msg = new CANMessage(0x7E0, 0, 5);
+                        msg.setData(keydata);
+                        m_canListener.setupWaitMessage(0x7E8);
+                        if (!canUsbDevice.sendMessage(msg))
+                        {
+                            CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                        }
+                        response = new CANMessage();
+                        response = m_canListener.waitMessage(1000);
+                        Console.WriteLine("---" + response.getData().ToString("X16"));
+                        // is it ok or not
+                        if (response.getCanData(1) == 0x67 && (response.getCanData(2) == 0xFE || response.getCanData(2) == 0xFC || response.getCanData(2) == 0x02))
+                        {
+                            CastInfoEvent("Security access granted", ActivityType.ConvertingFile);
+                            return true;
+                        }
+                        else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
+                        {
+                            CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
+                        }
+                    }
+
+                }
+                else if (response.getCanData(2) == 0xFE || response.getCanData(2) == 0x02)
+                {
+                    CastInfoEvent("Security access granted", ActivityType.ConvertingFile);
+                    return true;
+                }
+            }
+            else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
+            {
+                CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
+            }
+            return false;
+        }
     }
 }
