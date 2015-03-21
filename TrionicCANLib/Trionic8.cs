@@ -5062,7 +5062,7 @@ namespace TrionicCANLib
             byte frameIndex = 0x21;
             if (length > 3)
             {
-                retData[rx_cnt++] = getCanData(data, 6);
+                //retData[rx_cnt++] = getCanData(data, 6);
                 retData[rx_cnt++] = getCanData(data, 7);
                 // in that case, we need more records from the ECU
                 // Thread.Sleep(1);
