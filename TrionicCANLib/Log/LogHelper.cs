@@ -2,23 +2,22 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Configuration;
-using log4net;
 using System.IO;
-using log4net.Config;
 using TrionicCANLib.Properties;
 using System.Threading;
 using System.Collections;
 using System.Diagnostics;
+using NLog;
 
 namespace TrionicCANLib.Log
 {
     internal class LogHelper
     {
         static Thread logThread;
-        static ILog canLog;
-        static ILog deviceLog;
-        static ILog flasherLog;
-        static ILog kwpLog;
+        static Logger canLog;
+        static Logger deviceLog;
+        static Logger flasherLog;
+        static Logger kwpLog;
         static LogQueue<LogEntry> logQueue;
         static bool isRunning = false;
 
@@ -37,14 +36,14 @@ namespace TrionicCANLib.Log
                 var logItem = logQueue.Dequeue();
                 if (logItem != null)
                 {
-                    if (!isRunning)
-                    {
-                        lock (logThread)
-                        {
-                            XmlConfigurator.Configure(new MemoryStream(Resources.log4net_config));
-                            isRunning = true;
-                        }
-                    }
+                    //if (!isRunning)
+                    //{
+                        //lock (logThread)
+                        //{
+                        //    XmlConfigurator.Configure(new MemoryStream(Resources.log4net_config));
+                        //    isRunning = true;
+                        //}
+                    //}
                     if (logItem.type == LogType.Can)
                     {
                         GetCanLog().Info(logItem);
@@ -66,28 +65,28 @@ namespace TrionicCANLib.Log
             }
         }
 
-        private static ILog GetCanLog()
+        private static Logger GetCanLog()
         {
             if (canLog == null)
                 canLog = LogManager.GetLogger("CanLog");
             return canLog;
         }
 
-        private static ILog GetDeviceLog()
+        private static Logger GetDeviceLog()
         {
             if (deviceLog == null)
                 deviceLog = LogManager.GetLogger("DeviceLog");
             return deviceLog;
         }
 
-        private static ILog GetFlasherLog()
+        private static Logger GetFlasherLog()
         {
             if (flasherLog == null)
                 flasherLog = LogManager.GetLogger("FlasherLog");
             return flasherLog;
         }
 
-        private static ILog GetKwpLog()
+        private static Logger GetKwpLog()
         {
             if (kwpLog == null)
                 kwpLog = LogManager.GetLogger("KwpLog");

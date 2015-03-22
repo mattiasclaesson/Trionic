@@ -3,24 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Configuration;
-using log4net;
 using System.IO;
-using log4net.Config;
 using TrionicCANLib.Properties;
 using System.Threading;
+using NLog;
 
 namespace TrionicCANFlasher
 {
     internal class LogHelper
     {
         static Thread logThread;
-        static ILog uiLog = LogManager.GetLogger("UILog");
+        static Logger uiLog = LogManager.GetLogger("UILog");
         static TrionicCANLib.Log.LogQueue<LogEntry> logQueue;
         static bool isRunning = false;
 
         static LogHelper()
         {
-            XmlConfigurator.Configure(new MemoryStream(TrionicCANFlasher.Properties.Resources.log4net_config));
+            //XmlConfigurator.Configure(new MemoryStream(TrionicCANFlasher.Properties.Resources.log4net_config));
             logQueue = new TrionicCANLib.Log.LogQueue<LogEntry>();
             logThread = new Thread(LogMain);
             logThread.Priority = ThreadPriority.BelowNormal;
@@ -32,14 +31,14 @@ namespace TrionicCANFlasher
             while (true)
             {
                 var logItem = logQueue.Dequeue();
-                if (!isRunning)
-                {
-                    lock (logThread)
-                    {
-                        XmlConfigurator.Configure(new MemoryStream(TrionicCANFlasher.Properties.Resources.log4net_config));
-                        isRunning = true;
-                    }
-                }
+                //if (!isRunning)
+                //{
+                //    lock (logThread)
+                //{
+                //        XmlConfigurator.Configure(new MemoryStream(TrionicCANFlasher.Properties.Resources.log4net_config));
+                //        isRunning = true;
+                //    }
+                //}
                 
                 if (logItem != null)
                 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using TrionicCANLib.Log;
+using NLog;
 
 namespace TrionicCANLib.CAN
 {

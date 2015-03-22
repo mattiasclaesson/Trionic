@@ -68,9 +68,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\LibUsbDotNet.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Libs\log4net.dll</HintPath>
+    <Reference Include="NLog">
+      <HintPath>..\Libs\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -139,6 +138,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Log\log4net.config.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
