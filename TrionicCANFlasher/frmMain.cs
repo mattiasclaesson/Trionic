@@ -125,26 +125,11 @@ namespace TrionicCANFlasher
                                 dtstart = DateTime.Now;
                                 AddLogItem("Update FLASH content");
                                 Application.DoEvents();
-                                DoWorkEventArgs args = new DoWorkEventArgs(ofd.FileName);
-                                trionic8.WriteFlash(this, args);
-                                while (args.Result == null)
-                                {
-                                    System.Windows.Forms.Application.DoEvents();
-                                    Thread.Sleep(10);
-                                }
-                                if ((bool)args.Result == true)
-                                {
-                                    AddLogItem("Operation done");
-                                }
-                                else
-                                {
-                                    AddLogItem("Operation failed");
-                                }
-                                TimeSpan ts = DateTime.Now - dtstart;
-                                AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-                                trionic8.Cleanup();
-                                EnableUserInput(true);
-                                AddLogItem("Connection terminated");
+                                BackgroundWorker bgWorker;
+                                bgWorker = new BackgroundWorker();
+                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlash);
+                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                bgWorker.RunWorkerAsync(ofd.FileName);
 
                             }
                             else
@@ -159,6 +144,23 @@ namespace TrionicCANFlasher
                 }
             }
             LogHelper.Flush();
+        }
+
+        void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if ((bool)e.Result)
+            {
+                AddLogItem("Operation done");
+            }
+            else
+            {
+                AddLogItem("Operation failed");
+            }
+            TimeSpan ts = DateTime.Now - dtstart;
+            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+            trionic8.Cleanup();
+            EnableUserInput(true);
+            AddLogItem("Connection terminated");
         }
 
         bool checkFileSize(string fileName)
@@ -304,21 +306,11 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    DoWorkEventArgs args = new DoWorkEventArgs(sfd.FileName);
-                                    trionic8.ReadFlash(this, args);
-                                    if ((bool)args.Result == true)
-                                    {
-                                        AddLogItem("Operation done");
-                                    }
-                                    else
-                                    {
-                                        AddLogItem("Operation failed");
-                                    }
-                                    TimeSpan ts = DateTime.Now - dtstart;
-                                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-                                    trionic8.Cleanup();
-                                    EnableUserInput(true);
-                                    AddLogItem("Connection terminated");
+                                    BackgroundWorker bgWorker;
+                                    bgWorker = new BackgroundWorker();
+                                    bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlash);
+                                    bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                    bgWorker.RunWorkerAsync(sfd.FileName);
                                 }
                                 else
                                 {
@@ -598,26 +590,11 @@ namespace TrionicCANFlasher
                             dtstart = DateTime.Now;
                             AddLogItem("Recovering ECU");
                             Application.DoEvents();
-                            DoWorkEventArgs args = new DoWorkEventArgs(ofd.FileName);
-                            trionic8.RecoverECU(this, args);
-                            while (args.Result == null)
-                            {
-                                System.Windows.Forms.Application.DoEvents();
-                                Thread.Sleep(10);
-                            }
-                            if ((bool)args.Result == true)
-                            {
-                                AddLogItem("Operation done");
-                            }
-                            else
-                            {
-                                AddLogItem("Operation failed");
-                            }
-                            TimeSpan ts = DateTime.Now - dtstart;
-                            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-                            trionic8.Cleanup();
-                            EnableUserInput(true);
-                            AddLogItem("Connection terminated");
+                            BackgroundWorker bgWorker;
+                            bgWorker = new BackgroundWorker();
+                            bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU);
+                            bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                            bgWorker.RunWorkerAsync(ofd.FileName);
                         }
                         else
                         {
