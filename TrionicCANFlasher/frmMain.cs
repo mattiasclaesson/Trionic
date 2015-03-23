@@ -10,6 +10,7 @@ using System.Diagnostics;
 using Microsoft.Win32;
 using TrionicCANLib;
 using System.Drawing;
+using NLog;
 
 namespace TrionicCANFlasher
 {
@@ -273,7 +274,7 @@ namespace TrionicCANFlasher
                             {
                                 SetGenericOptions(trionic7);
                                 trionic7.ELM327Kline = cbELM327Kline.Checked;
-                                trionic7.UseFlasherOnDevice = true;
+                                trionic7.UseFlasherOnDevice = false;
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);
@@ -699,9 +700,9 @@ namespace TrionicCANFlasher
 
             EnableUserInput(true);
 
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (!cbEnableLogging.Checked)
             {
-                cbEnableLogging.Checked = true;
+                LogManager.DisableLogging();
             }
         }
 
@@ -1222,6 +1223,18 @@ namespace TrionicCANFlasher
                 }
             }
             LogHelper.Flush();
+        }
+
+        private void cbEnableLogging_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbEnableLogging.Checked)
+            {
+                LogManager.EnableLogging();
+            }
+            else
+            {
+                LogManager.DisableLogging();
+            }
         }
     }
 }

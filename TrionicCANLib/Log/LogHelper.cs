@@ -152,7 +152,7 @@ namespace TrionicCANLib.Log
 
             public override string ToString()
             {
-                return string.Format("{0:yyyy-MM-dd HH:mm:ss.fff} - {1}", time, msg);
+                return msg;//string.Format("{0:yyyy-MM-dd HH:mm:ss.fff} - {1}", time, msg);
                 //return string.Format("{0} - {1}",ts,msg);
             }
         }

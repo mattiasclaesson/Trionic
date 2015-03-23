@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using NLog;
 
 namespace TrionicCANLib.CAN
 {
@@ -25,6 +26,7 @@ namespace TrionicCANLib.CAN
         Thread m_readThread;
         Object m_synchObject = new Object();
         bool m_endThread = false;
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         private int m_forcedBaudrate = 38400;
 
@@ -87,14 +89,14 @@ namespace TrionicCANLib.CAN
             int readResult = 0;
             Lawicel.CANUSB.CANMsg r_canMsg = new Lawicel.CANUSB.CANMsg();
             CANMessage canMessage = new CANMessage();
-            AddToDeviceTrace("readMessages started");
+            logger.Debug("readMessages started");
             while (true)
             {
                 lock (m_synchObject)
                 {
                     if (m_endThread)
                     {
-                        AddToDeviceTrace("readMessages thread ended");
+                        logger.Debug("readMessages thread ended");
                         return;
                     }
                 }
@@ -110,7 +112,7 @@ namespace TrionicCANLib.CAN
                         canMessage.setData(r_canMsg.data);
                         lock (m_listeners)
                         {
-                            AddToCanTrace(string.Format("RX: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
+                            logger.Trace(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
                             foreach (ICANListener listener in m_listeners)
                             {
                                 listener.handleMessage(canMessage);
@@ -146,7 +148,7 @@ namespace TrionicCANLib.CAN
 
             if (!UseOnlyPBus)
             {
-                AddToDeviceTrace("Lawicel.CANUSB.canusb_Open()");
+                logger.Debug("Lawicel.CANUSB.canusb_Open()");
                 if (TrionicECU == ECU.TRIONIC7)
                 {
                     m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
@@ -168,7 +170,7 @@ namespace TrionicCANLib.CAN
                 {
                     if (waitAnyMessage(1000, out msg) != 0)
                     {
-                        AddToDeviceTrace("I bus connected");
+                        logger.Debug("I bus connected");
                         if (m_readThread.ThreadState == ThreadState.Unstarted)
                             m_readThread.Start();
                         return OpenResult.OK;
@@ -188,7 +190,7 @@ namespace TrionicCANLib.CAN
 
             //I bus wasn't connected.
             //Check if P bus is connected
-            AddToDeviceTrace("Lawicel.CANUSB.canusb_Open()");
+            logger.Debug("Lawicel.CANUSB.canusb_Open()");
             m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
             Lawicel.CANUSB.CAN_BAUD_500K,
             Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
@@ -200,12 +202,12 @@ namespace TrionicCANLib.CAN
             }
             if(DisableCanConnectionCheck || boxIsThere())
             {
-                AddToDeviceTrace("P bus connected");
+                logger.Debug("P bus connected");
                 if (m_readThread.ThreadState == ThreadState.Unstarted)
                     m_readThread.Start();
                 return OpenResult.OK;
             }
-            AddToDeviceTrace("Box not there");
+            logger.Debug("Box not there");
             close();
             return OpenResult.OpenError;
         }
@@ -221,12 +223,12 @@ namespace TrionicCANLib.CAN
             int res = 0;
             try
             {
-                AddToDeviceTrace("Lawicel.CANUSB.canusb_Close()");
+                logger.Debug("Lawicel.CANUSB.canusb_Close()");
                 res = Lawicel.CANUSB.canusb_Close(m_deviceHandle);
             }
             catch(DllNotFoundException e)
             {
-                AddToDeviceTrace("Dll exception" + e);
+                logger.Debug("Dll exception" + e);
                 return CloseResult.CloseError;
             }
 
@@ -266,39 +268,15 @@ namespace TrionicCANLib.CAN
             msg.flags = a_message.getFlags();
             msg.data = a_message.getData();
             int writeResult;
-            AddToCanTrace("TX: " + msg.id.ToString("X4") + " " + msg.data.ToString("X16"));
             writeResult = Lawicel.CANUSB.canusb_Write(m_deviceHandle, ref msg);
             if (writeResult == Lawicel.CANUSB.ERROR_CANUSB_OK)
             {
-                AddToCanTrace("Message sent successfully");
+                logger.Trace("tx: " + msg.id.ToString("X3") + " " + msg.data.ToString("X16"));
                 return true;
             }
             else
             {
-                switch (writeResult)
-                {
-                    case Lawicel.CANUSB.ERROR_CANUSB_COMMAND_SUBSYSTEM:
-                        AddToCanTrace("Message failed to send: ERROR_CANUSB_COMMAND_SUBSYSTEM");
-                        break;
-                    case Lawicel.CANUSB.ERROR_CANUSB_INVALID_PARAM:
-                        AddToCanTrace("Message failed to send: ERROR_CANUSB_INVALID_PARAM");
-                        break;
-                    case Lawicel.CANUSB.ERROR_CANUSB_NO_MESSAGE:
-                        AddToCanTrace("Message failed to send: ERROR_CANUSB_NO_MESSAGE");
-                        break;
-                    case Lawicel.CANUSB.ERROR_CANUSB_NOT_OPEN:
-                        AddToCanTrace("Message failed to send: ERROR_CANUSB_NOT_OPEN");
-                        break;
-                    case Lawicel.CANUSB.ERROR_CANUSB_OPEN_SUBSYSTEM:
-                        AddToCanTrace("Message failed to send: ERROR_CANUSB_OPEN_SUBSYSTEM");
-                        break;
-                    case Lawicel.CANUSB.ERROR_CANUSB_TX_FIFO_FULL:
-                        AddToCanTrace("Message failed to send: ERROR_CANUSB_TX_FIFO_FULL");
-                        break;
-                    default:
-                        AddToCanTrace("Message failed to send: " + writeResult.ToString());
-                        break;
-                }
+                logger.Trace("tx: " + msg.id.ToString("X3") + " " + msg.data.ToString("X16") + " failed" + writeResult);
                 return false;
             }
         }
@@ -323,7 +301,7 @@ namespace TrionicCANLib.CAN
                 if (readResult == Lawicel.CANUSB.ERROR_CANUSB_OK)
                 {
                     Thread.Sleep(1);
-                    AddToCanTrace("rx: 0x" + r_canMsg.id.ToString("X4") + r_canMsg.data.ToString("X16"));
+                    logger.Trace("rx: 0x" + r_canMsg.id.ToString("X3") + r_canMsg.data.ToString("X16"));
                     if (r_canMsg.id == 0x00)
                     {
                         nrOfWait++;
@@ -416,16 +394,16 @@ namespace TrionicCANLib.CAN
             Lawicel.CANUSB.CANMsg msg = new Lawicel.CANUSB.CANMsg();
             if (waitAnyMessage(2000, out msg) != 0)
             {
-                Console.WriteLine("A message was seen");
+                logger.Debug("A message was seen");
                 return true;
             }
             if (sendSessionRequest())
             {
-                Console.WriteLine("Session request success");
+                logger.Debug("Session request success");
 
                 return true;
             }
-            Console.WriteLine("Box not there");
+            logger.Debug("Box not there");
 
             return false;
         }
@@ -437,7 +415,7 @@ namespace TrionicCANLib.CAN
         /// <returns></returns>
         private bool sendSessionRequest()
         {
-            Console.WriteLine("Sending session request");
+            logger.Debug("Sending session request");
             // 0x220 is for T7
             // 0x7E0 is for T8
             CANMessage msg1 = new CANMessage(0x220, 0, 8);
@@ -446,7 +424,7 @@ namespace TrionicCANLib.CAN
 
             if (!sendMessage(msg1))
             {
-                Console.WriteLine("Unable to send session request");
+                logger.Debug("Unable to send session request");
                 return false;
             }
             if (waitForMessage(0x238, 1000, out msg) == 0x238)
@@ -456,11 +434,11 @@ namespace TrionicCANLib.CAN
                 //applications on higher level. Otherwise there will be no reply when the
                 //higher level application tries to start a session.
                 Thread.Sleep(10000);
-                Console.WriteLine("sendSessionRequest: TRUE");
+                logger.Debug("sendSessionRequest: TRUE");
 
                 return true;
             }
-            Console.WriteLine("sendSessionRequest: FALSE");
+            logger.Debug("sendSessionRequest: FALSE");
             return false;
         }
     }

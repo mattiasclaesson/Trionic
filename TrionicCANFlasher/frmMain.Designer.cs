@@ -94,6 +94,7 @@
             this.cbEnableLogging.TabIndex = 24;
             this.cbEnableLogging.Text = "Enable logging";
             this.cbEnableLogging.UseVisualStyleBackColor = true;
+            this.cbEnableLogging.CheckedChanged += new System.EventHandler(this.cbEnableLogging_CheckedChanged);
             // 
             // progressBar1
             // 
