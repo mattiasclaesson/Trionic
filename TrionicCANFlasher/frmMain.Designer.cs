@@ -58,6 +58,7 @@
             this.documentation = new System.Windows.Forms.LinkLabel();
             this.cbELM327Kline = new System.Windows.Forms.CheckBox();
             this.btnEditParameters = new System.Windows.Forms.Button();
+            this.btnReadECUcalibration = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -389,11 +390,24 @@
             this.btnEditParameters.UseVisualStyleBackColor = true;
             this.btnEditParameters.Click += new System.EventHandler(this.btnEditParameters_Click);
             // 
+            // btnReadECUcalibration
+            // 
+            this.btnReadECUcalibration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnReadECUcalibration.Location = new System.Drawing.Point(678, 124);
+            this.btnReadECUcalibration.Name = "btnReadECUcalibration";
+            this.btnReadECUcalibration.Size = new System.Drawing.Size(107, 50);
+            this.btnReadECUcalibration.TabIndex = 64;
+            this.btnReadECUcalibration.Text = "Read ECU calibration";
+            this.btnReadECUcalibration.UseVisualStyleBackColor = true;
+            this.btnReadECUcalibration.Click += new System.EventHandler(this.btnReadECUcalibration_Click);
+
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.Controls.Add(this.btnReadECUcalibration);
             this.Controls.Add(this.btnEditParameters);
             this.Controls.Add(this.cbELM327Kline);
             this.Controls.Add(this.documentation);
@@ -466,6 +480,7 @@
         private System.Windows.Forms.LinkLabel documentation;
         private System.Windows.Forms.CheckBox cbELM327Kline;
         private System.Windows.Forms.Button btnEditParameters;
+        private System.Windows.Forms.Button btnReadECUcalibration;
     }
 }
 

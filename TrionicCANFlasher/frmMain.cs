@@ -202,6 +202,8 @@ namespace TrionicCANFlasher
             cbOnlyPBus.Enabled = enable;
             cbDisableConnectionCheck.Enabled = enable;
             btnEditParameters.Enabled = enable;
+            btnReadECUcalibration.Enabled = enable;
+
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
@@ -232,6 +234,13 @@ namespace TrionicCANFlasher
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
                 btnEditParameters.Enabled = false;
+                btnReadECUcalibration.Enabled = false;
+            }
+
+            // Always disable
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            {
+                btnReadECUcalibration.Enabled = false;
             }
 
             // Always disable
@@ -333,7 +342,7 @@ namespace TrionicCANFlasher
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
                                     DoWorkEventArgs args = new DoWorkEventArgs(sfd.FileName);
-                                    trionic8.ReadFlashME96(this, args);
+                                    trionic8.ReadFlashME96(0, 0x200000, this, args);
                                     if ((bool)args.Result == true)
                                     {
                                         AddLogItem("Operation done");
@@ -1180,6 +1189,60 @@ namespace TrionicCANFlasher
                 trionic8.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
+            }
+            LogHelper.Flush();
+        }
+
+        private void btnReadECUcalibration_Click(object sender, EventArgs e)
+        {
+            using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Bin files|*.bin" })
+            {
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    if (sfd.FileName != string.Empty)
+                    {
+                        if (Path.GetFileName(sfd.FileName) != string.Empty)
+                        {
+                            if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+                            {
+                                SetGenericOptions(trionic8);
+
+                                EnableUserInput(false);
+                                AddLogItem("Opening connection");
+                                trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                                if (trionic8.openDevice(false))
+                                {
+                                    Thread.Sleep(1000);
+                                    dtstart = DateTime.Now;
+                                    AddLogItem("Acquiring FLASH content");
+                                    Application.DoEvents();
+                                    DoWorkEventArgs args = new DoWorkEventArgs(sfd.FileName);
+                                    trionic8.ReadFlashME96(0x1B0000, 0x1F0000, this, args);
+                                    if ((bool)args.Result == true)
+                                    {
+                                        AddLogItem("Operation done");
+                                    }
+                                    else
+                                    {
+                                        AddLogItem("Operation failed");
+                                    }
+                                    TimeSpan ts = DateTime.Now - dtstart;
+                                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                                    trionic8.Cleanup();
+                                    EnableUserInput(true);
+                                    AddLogItem("Connection terminated");
+                                }
+                                else
+                                {
+                                    AddLogItem("Unable to connect to Trionic 8 ECU");
+                                    trionic8.Cleanup();
+                                    EnableUserInput(true);
+                                    AddLogItem("Connection terminated");
+                                }
+                            }
+                        }
+                    }
+                }
             }
             LogHelper.Flush();
         }

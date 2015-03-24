@@ -4851,17 +4851,15 @@ namespace TrionicCANLib
             return true;
         }
 
-        public void ReadFlashME96(object sender, DoWorkEventArgs workEvent)
+        public void ReadFlashME96(int start, int end, object sender, DoWorkEventArgs workEvent)
         {
             string filename = (string)workEvent.Argument;
 
             _stallKeepAlive = true;
             bool success = false;
             int retryCount = 0;
-            int initial = 0x1C2000;
-            int startAddress = 0x1C2000;
-            int lastAddress = 0x1F0000;
-            int range = lastAddress - startAddress;
+            int startAddress = start;
+            int range = end - start;
             int blockSize = 0x80; // defined in bootloader... keep it that way!
             int bufpnt = startAddress;
             byte[] buf = new byte[0x200000];
@@ -4878,9 +4876,6 @@ namespace TrionicCANLib
             StartSession10();
             CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
             SendShutup();
-            //SendA2();
-            //SendA5();
-            //SendA503();
             Thread.Sleep(50);
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
@@ -4894,8 +4889,7 @@ namespace TrionicCANLib
             _stallKeepAlive = true;
             int saved_progress = 0;
             success = false;
-            //for (int i = 0; i < buf.Length/blockSize; i++)
-            while (bufpnt < lastAddress)
+            while (bufpnt < end)
             {
                 if (!canUsbDevice.isOpen())
                 {
@@ -4916,7 +4910,7 @@ namespace TrionicCANLib
                             buf[bufpnt++] = readbuf[j];
                         }
                     }
-                    int percentage = (int)((float)100*(bufpnt-initial) / (float)range);
+                    int percentage = (int)((float)100*(bufpnt-start) / (float)range);
                     if (percentage > saved_progress)
                     {
                         CastProgressReadEvent(percentage);
@@ -5062,7 +5056,6 @@ namespace TrionicCANLib
             byte frameIndex = 0x21;
             if (length > 3)
             {
-                //retData[rx_cnt++] = getCanData(data, 6);
                 retData[rx_cnt++] = getCanData(data, 7);
                 // in that case, we need more records from the ECU
                 // Thread.Sleep(1);
