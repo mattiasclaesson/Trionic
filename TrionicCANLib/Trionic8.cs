@@ -4844,9 +4844,12 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        public void ReadFlashME96(int start, int end, object sender, DoWorkEventArgs workEvent)
+        public void ReadFlashME96(object sender, DoWorkEventArgs workEvent)
         {
-            string filename = (string)workEvent.Argument;
+            Me96ReadArgs args = (Me96ReadArgs)workEvent.Argument;
+            string filename = args.FileName;
+            int start = args.start;
+            int end = args.end;
 
             _stallKeepAlive = true;
             bool success = false;

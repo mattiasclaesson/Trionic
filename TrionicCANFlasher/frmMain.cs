@@ -341,21 +341,12 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    DoWorkEventArgs args = new DoWorkEventArgs(sfd.FileName);
-                                    trionic8.ReadFlashME96(0, 0x200000, this, args);
-                                    if ((bool)args.Result == true)
-                                    {
-                                        AddLogItem("Operation done");
-                                    }
-                                    else
-                                    {
-                                        AddLogItem("Operation failed");
-                                    }
-                                    TimeSpan ts = DateTime.Now - dtstart;
-                                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-                                    trionic8.Cleanup();
-                                    EnableUserInput(true);
-                                    AddLogItem("Connection terminated");
+                                    Me96ReadArgs args = new Me96ReadArgs() { FileName = sfd.FileName, start = 0, end = 0x200000 };
+                                    BackgroundWorker bgWorker;
+                                    bgWorker = new BackgroundWorker();
+                                    bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
+                                    bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                    bgWorker.RunWorkerAsync(args);
                                 }
                                 else
                                 {
@@ -1196,21 +1187,12 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    DoWorkEventArgs args = new DoWorkEventArgs(sfd.FileName);
-                                    trionic8.ReadFlashME96(0x1B0000, 0x1F0000, this, args);
-                                    if ((bool)args.Result == true)
-                                    {
-                                        AddLogItem("Operation done");
-                                    }
-                                    else
-                                    {
-                                        AddLogItem("Operation failed");
-                                    }
-                                    TimeSpan ts = DateTime.Now - dtstart;
-                                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-                                    trionic8.Cleanup();
-                                    EnableUserInput(true);
-                                    AddLogItem("Connection terminated");
+                                    var args = new Me96ReadArgs() { FileName = sfd.FileName, start = 0x1B0000, end = 0x1F0000 };
+                                    BackgroundWorker bgWorker;
+                                    bgWorker = new BackgroundWorker();
+                                    bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
+                                    bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                    bgWorker.RunWorkerAsync(args);
                                 }
                                 else
                                 {
