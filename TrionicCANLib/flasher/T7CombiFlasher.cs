@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Combi;
+using NLog;
 
 namespace TrionicCANLib.Flasher
 {
@@ -13,6 +14,8 @@ namespace TrionicCANLib.Flasher
 
         // events
         public override event IFlasher.StatusChanged onStatusChanged;
+
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         //---------------------------------------------------------------------------------------------
         /**
@@ -109,7 +112,7 @@ namespace TrionicCANLib.Flasher
 
             catch (Exception e)
             {
-                AddToFlasherTrace("Read error: " + e.Message);
+                logger.Debug("Read error: " + e.Message);
                 m_flashStatus = FlashStatus.ReadError;
             }
         }
@@ -140,7 +143,7 @@ namespace TrionicCANLib.Flasher
 
             catch (Exception e)
             {
-                AddToFlasherTrace("Write error: " + e.Message);
+                logger.Debug("Write error: " + e.Message);
                 m_flashStatus = FlashStatus.WriteError;
             }
         }
@@ -161,7 +164,7 @@ namespace TrionicCANLib.Flasher
 
             catch (Exception e)
             {
-                AddToFlasherTrace("Session error: " + e.Message);
+                logger.Debug("Session error: " + e.Message);
                 return false;
             }
         }
@@ -172,7 +175,7 @@ namespace TrionicCANLib.Flasher
         */
         public void endSession()
         {
-            AddToFlasherTrace("End communication session");
+            logger.Debug("End communication session");
             combi.CAN_DisconnectECU(false);
         }
     };

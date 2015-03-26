@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TrionicCANLib.CAN;
-using TrionicCANLib.Log;
+using NLog;
 
 namespace TrionicCANLib.KWP
 {
@@ -70,6 +70,7 @@ namespace TrionicCANLib.KWP
         private ICANDevice m_canDevice;
         KWPCANListener m_kwpCanListener = new KWPCANListener();
         const int timeoutPeriod = 1000; // if timeout <GS-11022010> changed from 1000 to 250 to not intefere with the keepalive timer
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         private bool m_EnableLog = false;
 
@@ -190,15 +191,6 @@ namespace TrionicCANLib.KWP
             }
             return retVal;
         }
-        private void AddToCanTrace(string line)
-        {
-            Console.WriteLine("KWPCANDevice: " + line);
-            if (m_EnableLog)
-            {
-                LogHelper.LogKwp(line);
-            }
-        }
-
 
         /// <summary>
         /// Start a KWP session.
@@ -211,24 +203,24 @@ namespace TrionicCANLib.KWP
         {
             CANMessage msg = new CANMessage(0x220, 0, 7);
             msg.setData(0x000040021100813F);
-            AddToCanTrace("Sending 0x000040021100813F message");
+            logger.Debug("Sending 0x000040021100813F message");
 
             m_kwpCanListener.setupWaitMessage(0x238);
             
             if (!m_canDevice.sendMessage(msg))
             {
-                AddToCanTrace("Unable to send 0x000040021100813F message");
+                logger.Debug("Unable to send 0x000040021100813F message");
                 return false;
             }
             Console.WriteLine("Init msg sent");
             if (m_kwpCanListener.waitMessage(timeoutPeriod).getID() == 0x238)
             {
-                AddToCanTrace("Successfully sent 0x000040021100813F message and received reply 0x238");
+                logger.Debug("Successfully sent 0x000040021100813F message and received reply 0x238");
                 return true;
             }
             else
             {
-                AddToCanTrace("Didn't receive 0x238 message as reply on 0x000040021100813F message");
+                logger.Debug("Didn't receive 0x238 message as reply on 0x000040021100813F message");
                 return false;
             }
         }
@@ -294,7 +286,7 @@ namespace TrionicCANLib.KWP
                     }
                     else
                     {
-                        AddToCanTrace("1response.getID == " + response.getID());
+                        logger.Debug("1response.getID == " + response.getID());
                         r_reply = new KWPReply();
                         return RequestResult.Timeout;
                     }
@@ -305,7 +297,7 @@ namespace TrionicCANLib.KWP
             }
             else
             {
-                AddToCanTrace("2response.getID == " + response.getID());
+                logger.Debug("2response.getID == " + response.getID());
                 r_reply = new KWPReply();
                 return RequestResult.Timeout;
             }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using TrionicCANLib.KWP;
 using System.Threading;
+using NLog;
 
 namespace TrionicCANLib.Flasher
 {
@@ -14,8 +15,9 @@ namespace TrionicCANLib.Flasher
     /// </summary>
     public class T7Flasher : IFlasher
     {
-
         public override event IFlasher.StatusChanged onStatusChanged;
+
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// This method returns the number of bytes that has been read or written so far.
@@ -140,7 +142,7 @@ namespace TrionicCANLib.Flasher
         {
             while (true)
             {
-                AddToFlasherTrace("Running T7Flasher");
+                logger.Debug("Running T7Flasher");
                 m_nrOfRetries = 0;
                 m_nrOfBytesRead = 0;
                 m_resetEvent.WaitOne(-1, true);
@@ -155,24 +157,24 @@ namespace TrionicCANLib.Flasher
                 NotifyStatusChanged(this, new StatusEventArgs("Starting session..."));
                 
                 m_kwpHandler.startSession();
-                AddToFlasherTrace("Session started");
+                logger.Debug("Session started");
                 NotifyStatusChanged(this, new StatusEventArgs("Session started, requesting security access to ECU"));
                 if (!gotSequrityAccess)
                 {
-                    AddToFlasherTrace("No security access");
+                    logger.Debug("No security access");
 
                     for (int nrOfSequrityTries = 0; nrOfSequrityTries < 5; nrOfSequrityTries++)
                     {
 
                         if (!KWPHandler.getInstance().requestSequrityAccess(true))
                         {
-                            AddToFlasherTrace("No security access granted");
+                            logger.Debug("No security access granted");
                             
                         }
                         else
                         {
                             gotSequrityAccess = true;
-                            AddToFlasherTrace("Security access granted");
+                            logger.Debug("Security access granted");
 
                             break;
                         }
@@ -181,7 +183,7 @@ namespace TrionicCANLib.Flasher
                 if (!gotSequrityAccess)
                 {
                     SetFlashStatus(FlashStatus.NoSequrityAccess);
-                    AddToFlasherTrace("No security access granted after 5 retries");
+                    logger.Debug("No security access granted after 5 retries");
                     NotifyStatusChanged(this, new StatusEventArgs("Failed to get security access after 5 retries"));
                 }
                 //Here it would make sense to stop if we didn't ge security access but
@@ -207,7 +209,7 @@ namespace TrionicCANLib.Flasher
                 if (m_endThread)
                     return;
                 NotifyStatusChanged(this, new StatusEventArgs("Flasing procedure completed"));
-                AddToFlasherTrace("T7Flasher completed");
+                logger.Debug("T7Flasher completed");
                 SetFlashStatus(FlashStatus.Completed);
             }
         }
@@ -217,16 +219,16 @@ namespace TrionicCANLib.Flasher
         {
             const int nrOfBytes = 64;
             byte[] data;
-            AddToFlasherTrace("Reading flash content to file: " + m_fileName);
+            logger.Debug("Reading flash content to file: " + m_fileName);
             NotifyStatusChanged(this, new StatusEventArgs("Reading data from ECU..."));
 
 
             if (File.Exists(m_fileName))
                 File.Delete(m_fileName);
             FileStream fileStream = File.Create(m_fileName, 1024);
-            AddToFlasherTrace("File created");
+            logger.Debug("File created");
             SetFlashStatus(FlashStatus.Reading);
-            AddToFlasherTrace("Flash status is reading");
+            logger.Debug("Flash status is reading");
 
             for (int i = 0; i < 512 * 1024 / nrOfBytes; i++)
             {
@@ -251,10 +253,10 @@ namespace TrionicCANLib.Flasher
                 m_nrOfBytesRead += nrOfBytes;
             }
             fileStream.Close();
-            AddToFlasherTrace("Closed file");
+            logger.Debug("Closed file");
 
             m_kwpHandler.sendDataTransferExitRequest();
-            AddToFlasherTrace("Done reading");
+            logger.Debug("Done reading");
         }
 
         private void ReadMemoryCommand()
@@ -344,7 +346,7 @@ namespace TrionicCANLib.Flasher
 
         private void WriteCommand()
         {
-            AddToFlasherTrace("Write command seen");
+            logger.Debug("Write command seen");
             const int nrOfBytes = 128;
             int i = 0;
             byte[] data = new byte[nrOfBytes];
@@ -356,12 +358,12 @@ namespace TrionicCANLib.Flasher
             if (!File.Exists(m_fileName))
             {
                 SetFlashStatus(FlashStatus.NoSuchFile);
-                AddToFlasherTrace("No such file found: " + m_fileName);
+                logger.Debug("No such file found: " + m_fileName);
                 NotifyStatusChanged(this, new StatusEventArgs("Failed to find file to flash..."));
 
                 return;
             }
-            AddToFlasherTrace("Start erasing");
+            logger.Debug("Start erasing");
             NotifyStatusChanged(this, new StatusEventArgs("Erasing flash..."));
 
             SetFlashStatus(FlashStatus.Eraseing);
@@ -369,26 +371,26 @@ namespace TrionicCANLib.Flasher
             {
                 NotifyStatusChanged(this, new StatusEventArgs("Failed to erase flash..."));
                 SetFlashStatus(FlashStatus.EraseError);
-                AddToFlasherTrace("Erase error occured");
+                logger.Debug("Erase error occured");
                 // break;
             }
-            AddToFlasherTrace("Opening file for reading");
+            logger.Debug("Opening file for reading");
 
             FileStream fs = new FileStream(m_fileName, FileMode.Open, FileAccess.Read);
 
             SetFlashStatus(FlashStatus.Writing);
-            AddToFlasherTrace("Set flash status to writing");
+            logger.Debug("Set flash status to writing");
             NotifyStatusChanged(this, new StatusEventArgs("Writing flash... 0x00000-0x7B000"));
 
             //Write 0x0-0x7B000
-            AddToFlasherTrace("0x0-0x7B000");
+            logger.Debug("0x0-0x7B000");
             Thread.Sleep(100);
             if (m_kwpHandler.sendWriteRequest(0x0, 0x7B000) != KWPResult.OK)
             {
                 NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
 
                 SetFlashStatus(FlashStatus.WriteError);
-                AddToFlasherTrace("Write error occured");
+                logger.Debug("Write error occured");
 
                 return;
             }
@@ -396,12 +398,12 @@ namespace TrionicCANLib.Flasher
             {
                 fs.Read(data, 0, nrOfBytes);
                 m_nrOfBytesRead = i * nrOfBytes;
-                AddToFlasherTrace("sendWriteDataRequest " + m_nrOfBytesRead);
+                logger.Debug("sendWriteDataRequest " + m_nrOfBytesRead);
                 if (m_kwpHandler.sendWriteDataRequest(data) != KWPResult.OK)
                 {
                     NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
                     SetFlashStatus(FlashStatus.WriteError);
-                    AddToFlasherTrace("Write error occured " + m_nrOfBytesRead);
+                    logger.Debug("Write error occured " + m_nrOfBytesRead);
 
                     continue;
                 }
@@ -409,26 +411,26 @@ namespace TrionicCANLib.Flasher
                 {
                     if (m_command == FlashCommand.StopCommand)
                     {
-                        AddToFlasherTrace("Stop command seen");
+                        logger.Debug("Stop command seen");
                         continue;
                     }
                     if (m_endThread)
                     {
-                        AddToFlasherTrace("Thread ended");
+                        logger.Debug("Thread ended");
                         return;
                     }
                 }
             }
 
             //Write 0x7FE00-0x7FFFF
-            AddToFlasherTrace("Write 0x7FE00-0x7FFFF");
+            logger.Debug("Write 0x7FE00-0x7FFFF");
             NotifyStatusChanged(this, new StatusEventArgs("Writing flash... 0x7FE00-0x7FFFF"));
 
             if (m_kwpHandler.sendWriteRequest(0x7FE00, 0x200) != KWPResult.OK)
             {
                 NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
                 SetFlashStatus(FlashStatus.WriteError);
-                AddToFlasherTrace("Write error occured");
+                logger.Debug("Write error occured");
                 return;
             }
             fs.Seek(0x7FE00, System.IO.SeekOrigin.Begin);
@@ -436,25 +438,25 @@ namespace TrionicCANLib.Flasher
             {
                 fs.Read(data, 0, nrOfBytes);
                 m_nrOfBytesRead = i * nrOfBytes;
-                AddToFlasherTrace("sendWriteDataRequest " + m_nrOfBytesRead.ToString());
+                logger.Debug("sendWriteDataRequest " + m_nrOfBytesRead.ToString());
 
                 if (m_kwpHandler.sendWriteDataRequest(data) != KWPResult.OK)
                 {
                     NotifyStatusChanged(this, new StatusEventArgs("Failed to write data to flash..."));
                     SetFlashStatus(FlashStatus.WriteError);
-                    AddToFlasherTrace("Write error occured " + m_nrOfBytesRead);
+                    logger.Debug("Write error occured " + m_nrOfBytesRead);
                     continue;
                 }
                 lock (m_synchObject)
                 {
                     if (m_command == FlashCommand.StopCommand)
                     {
-                        AddToFlasherTrace("Stop command seen");
+                        logger.Debug("Stop command seen");
                         continue;
                     }
                     if (m_endThread)
                     {
-                        AddToFlasherTrace("Thread ended");
+                        logger.Debug("Thread ended");
                         return;
                     }
                 }

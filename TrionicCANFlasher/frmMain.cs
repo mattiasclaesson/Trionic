@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Win32;
 using TrionicCANLib;
+using TrionicCANLib.API;
 using System.Drawing;
 using NLog;
 
@@ -24,6 +25,7 @@ namespace TrionicCANFlasher
         DateTime dtstart;
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         public frmMain()
         {
@@ -74,10 +76,7 @@ namespace TrionicCANFlasher
             listBoxLog.Items.Add(uiItem);
             while (listBoxLog.Items.Count > 100) listBoxLog.Items.RemoveAt(0);
             listBoxLog.SelectedIndex = listBoxLog.Items.Count - 1;
-            if (cbEnableLogging.Checked)
-            {
-                LogHelper.Log(item);
-            }
+            logger.Trace(item);
             Application.DoEvents();
         }
 
@@ -144,7 +143,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -180,6 +179,14 @@ namespace TrionicCANFlasher
                 if (fi.Length != 0x100000)
                 {
                     AddLogItem("Not a trionic 8 file");
+                    return false;
+                }
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+            {
+                if (fi.Length != 0x200000)
+                {
+                    AddLogItem("Not a Motronic ME9.6 file");
                     return false;
                 }
             }
@@ -362,7 +369,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void btnGetEcuInfo_Click(object sender, EventArgs e)
@@ -487,7 +494,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void btnReadSRAM_Click(object sender, EventArgs e)
@@ -569,7 +576,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void btnRecoverECU_Click(object sender, EventArgs e)
@@ -607,7 +614,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void btnExit_Click(object sender, EventArgs e)
@@ -699,11 +706,6 @@ namespace TrionicCANFlasher
             trionic8.onCanInfo += trionicCan_onCanInfo;
 
             EnableUserInput(true);
-
-            if (!cbEnableLogging.Checked)
-            {
-                LogManager.DisableLogging();
-            }
         }
 
         private void SerialPortInformation()
@@ -906,7 +908,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void btnSetECUVIN_Click(object sender, EventArgs e)
@@ -936,7 +938,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void btnSetE85_Click(object sender, EventArgs e)
@@ -996,7 +998,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void btnSetSpeed_Click(object sender, EventArgs e)
@@ -1028,7 +1030,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void updateStatusInBox(ITrionic.CanInfoEventArgs e)
@@ -1067,7 +1069,7 @@ namespace TrionicCANFlasher
             string text = percentage.ToString("F0") + "%";
             if (cbEnableLogging.Checked)
             {
-                LogHelper.Log("progress: " + text);
+                logger.Trace("progress: " + text);
             }
             if (label1.Text != text)
             {
@@ -1168,7 +1170,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void btnReadECUcalibration_Click(object sender, EventArgs e)
@@ -1222,7 +1224,7 @@ namespace TrionicCANFlasher
                     }
                 }
             }
-            LogHelper.Flush();
+            LogManager.Flush();
         }
 
         private void cbEnableLogging_CheckedChanged(object sender, EventArgs e)

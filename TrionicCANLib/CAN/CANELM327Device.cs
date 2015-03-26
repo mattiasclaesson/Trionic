@@ -7,6 +7,7 @@ using Microsoft.Win32;
 using System.Text;
 using System.Collections;
 using System.Diagnostics;
+using NLog;
 
 namespace TrionicCANLib.CAN
 {
@@ -30,6 +31,7 @@ namespace TrionicCANLib.CAN
         private Semaphore sendDataSempahore = new Semaphore(1, 1);
         private bool request0Responses = false;
         private long lastSentTimestamp = 0;
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         object lockObj = new object();
 
@@ -134,7 +136,7 @@ namespace TrionicCANLib.CAN
                         }
                         catch (Exception e)
                         {
-                            AddToDeviceTrace("CANELM372Device ReadExisting()" + e.Message);
+                            logger.Debug("CANELM372Device ReadExisting()" + e.Message);
                         }
                         //AddToSerialTrace("RAW RX: " + rawString.Replace("\r",m_cr_sequence));
                         string rxString = rawString.Replace("\n", "").Replace(">", "");// remove prompt characters... we don't need that stuff
@@ -159,7 +161,7 @@ namespace TrionicCANLib.CAN
                                 else if (rxMessage.StartsWith("?")) { isStopped = false; }
                                 else if (rxMessage.StartsWith("NO DATA"))
                                 {
-                                    AddToDeviceTrace("NO DATA");
+                                    logger.Debug("NO DATA");
                                     Console.WriteLine("NO DATA");
                                 }
                                 else if (rxMessage.Length == 19) // is it a valid line
@@ -177,7 +179,7 @@ namespace TrionicCANLib.CAN
 
                                             lock (m_listeners)
                                             {
-                                                AddToCanTrace(string.Format("RX: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
+                                                logger.Trace(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
                                                 foreach (ICANListener listener in m_listeners)
                                                 {
                                                     listener.handleMessage(canMessage);
@@ -193,13 +195,13 @@ namespace TrionicCANLib.CAN
                                  //disable whitespace logging
                                 if (rxMessage.Length > 0)
                                 {
-                                    AddToDeviceTrace("SERRX: " + rxMessage);
+                                    logger.Debug("SERRX: " + rxMessage);
                                 }
                             }
                         }
                         if (rawString.Contains(">") && !isStopped)
                         {
-                            AddToDeviceTrace("SERIAL READY");
+                            logger.Debug("SERIAL READY");
                             sendDataSempahore.WaitOne(0);
                             sendDataSempahore.Release();
                             interfaceBusy = false;
@@ -269,7 +271,7 @@ namespace TrionicCANLib.CAN
                 {
                     lastSentTimestamp = Environment.TickCount;
                     WriteToSerialWithTrace(sendString);
-                    AddToCanTrace(string.Format("TX: {0} {1}", a_message.getID().ToString("X3"), sendString));
+                    logger.Trace(string.Format("TX: {0} {1}", a_message.getID().ToString("X3"), sendString));
                 }
                 return true; // remove after implementation
             }
@@ -325,7 +327,7 @@ namespace TrionicCANLib.CAN
             if (m_forcedComport != string.Empty)
             {
                 // only check this comport
-                AddToDeviceTrace("OPEN: Opening com: " + m_forcedComport);
+                logger.Debug("OPEN: Opening com: " + m_forcedComport);
 
                 if (m_serialPort.IsOpen)
                     m_serialPort.Close();
@@ -340,7 +342,7 @@ namespace TrionicCANLib.CAN
                 }
                 catch (UnauthorizedAccessException e)
                 {
-                    AddToDeviceTrace("OPEN: exception" + e);
+                    logger.Debug("OPEN: exception" + e);
                     return OpenResult.OpenError;
                 }
 
@@ -358,7 +360,7 @@ namespace TrionicCANLib.CAN
                     WriteToSerialWithTrace(String.Format("ATBRD{0}\r", divider.ToString("X2")));
 
                     m_forcedBaudrate = 4000000 / divider;
-                    AddToDeviceTrace("OPEN: Trying baud rate: " + m_forcedBaudrate);
+                    logger.Debug("OPEN: Trying baud rate: " + m_forcedBaudrate);
                     Thread.Sleep(50);
                     string ok = m_serialPort.ReadExisting();
 
@@ -370,7 +372,7 @@ namespace TrionicCANLib.CAN
                     }
                     catch (UnauthorizedAccessException e)
                     {
-                        AddToDeviceTrace("OPEN: exception" + e);
+                        logger.Debug("OPEN: exception" + e);
                         return OpenResult.OpenError;
                     }
 
@@ -379,7 +381,7 @@ namespace TrionicCANLib.CAN
                     while (!gotVersion && tries-- > 0)
                     {
                         string elmVersion = m_serialPort.ReadExisting();
-                        AddToDeviceTrace("OPEN: elmVersion:" + elmVersion);
+                        logger.Debug("OPEN: elmVersion:" + elmVersion);
                         if (elmVersion.Length > 5)
                         {
                             gotVersion = true;
@@ -393,7 +395,7 @@ namespace TrionicCANLib.CAN
                     ok = WriteToSerialAndWait("\r");
                     if (ok == null)
                         return OpenResult.OpenError;
-                    AddToDeviceTrace("ok:" + ok);
+                    logger.Debug("ok:" + ok);
                 }
 
                 #endregion
@@ -404,18 +406,18 @@ namespace TrionicCANLib.CAN
                 //TestCommunication();
 
                 string answer = WriteToSerialAndWait("ATI\r");    //Print version
-                AddToDeviceTrace("OPEN: Version ELM: " + answer);
+                logger.Debug("OPEN: Version ELM: " + answer);
 
                 answer = WriteToSerialAndWait("ATSP6\r");   //Set protocol type ISO 15765-4 CAN (11 bit ID, 500kb/s)
 
-                AddToDeviceTrace("OPEN: Protocol select response: " + answer);
+                logger.Debug("OPEN: Protocol select response: " + answer);
                 if (answer.StartsWith("OK"))
                 {
                     m_deviceIsOpen = true;
 
                     answer = WriteToSerialAndWait("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
 
-                    AddToDeviceTrace("OPEN: ATH1 response: " + answer);
+                    logger.Debug("OPEN: ATH1 response: " + answer);
 
                     string command = "ATSH" + _ECUAddress.ToString("X3"); // Set header
                     answer = WriteToSerialAndWait(command + "\r");
@@ -429,7 +431,7 @@ namespace TrionicCANLib.CAN
                     //WriteToSerialAndWait("AT PPS\r"); //display all programmed parameters                    
                     answer = WriteToSerialAndWait("ATAT2\r");  //aggresive timing adoption, should reduce time wasted for not coming response
                     answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (custom generated PCI byte - SingleFrame, FirstFrame, ConsecutiveFrame, FlowControl)
-                    AddToDeviceTrace("OPEN: ATCAF0 response:" + answer);
+                    logger.Debug("OPEN: ATCAF0 response:" + answer);
                     answer = WriteToSerialAndWait("0102030405060708 0\r", 1,">"); //check if device supports 8bytes + response count
                     supports8ByteResponse = (answer != null);
 
@@ -457,7 +459,7 @@ namespace TrionicCANLib.CAN
             {
                 foreach (var speed in speeds)
                 {
-                    AddToDeviceTrace("DETECT: Try speed:" + speed);
+                    logger.Debug("DETECT: Try speed:" + speed);
                     //if (m_serialPort.IsOpen)
                     m_serialPort.Close();
                     m_serialPort.BaudRate = speed;
@@ -472,7 +474,7 @@ namespace TrionicCANLib.CAN
                         WriteToSerialWithTrace("ATI\r"); //need to send 2 times for some reason...
                         Thread.Sleep(50);
                         string reply = m_serialPort.ReadExisting();
-                        AddToDeviceTrace("DETECT: Result:" + reply);
+                        logger.Debug("DETECT: Result:" + reply);
                         bool success = !string.IsNullOrEmpty(reply) && reply.Contains("ELM327");
                         if (success)
                         {
@@ -491,13 +493,13 @@ namespace TrionicCANLib.CAN
                         }
                         else
                         {
-                            AddToDeviceTrace("DETECT: Failed");
+                            logger.Debug("DETECT: Failed");
                             m_serialPort.Close();
                         }
                     }
                     catch (Exception x)
                     {
-                        AddToDeviceTrace("CANELM372Device DetectInitialPortSpeedAndReset" + x.Message);
+                        logger.Debug("CANELM372Device DetectInitialPortSpeedAndReset" + x.Message);
                         m_serialPort.Close();
                     }
                 }
@@ -545,13 +547,13 @@ namespace TrionicCANLib.CAN
         protected void WriteToSerialWithTrace(string line)
         {
             m_serialPort.Write(line);
-            AddToDeviceTrace("SERTX: " + line);
+            logger.Debug("SERTX: " + line);
         }
 
         protected string ReadFromSerialToWithTrace(string readTo)
         {
             string answer = m_serialPort.ReadTo(readTo);
-            AddToDeviceTrace("SERRX: " + answer + readTo);
+            logger.Debug("SERRX: " + answer + readTo);
             return answer;
         }
 
@@ -576,11 +578,11 @@ namespace TrionicCANLib.CAN
                 catch (TimeoutException)
                 {
                     tries--;
-                    AddToDeviceTrace("SERTIMOUT: left tries " + tries);
+                    logger.Debug("SERTIMOUT: left tries " + tries);
                 }
                 catch (Exception x)
                 {
-                    AddToDeviceTrace("Exception" + x);
+                    logger.Debug("Exception" + x);
                 }
             }
 
@@ -679,7 +681,7 @@ namespace TrionicCANLib.CAN
                 Console.Write(".");
             }
             start = Environment.TickCount - start;
-            AddToDeviceTrace(string.Format("Got {0} responses in {1} ms", 1000, start));
+            logger.Debug(string.Format("Got {0} responses in {1} ms", 1000, start));
             Console.WriteLine(string.Format("Got {0} responses in {1} ms", 1000, start));
         }
 
@@ -688,11 +690,11 @@ namespace TrionicCANLib.CAN
             var start = Environment.TickCount;
             for (int i = 0; i < 10000; i++)
             {
-                AddToDeviceTrace("Checking performance " + i);
+                logger.Debug("Checking performance " + i);
             }
             var end = Environment.TickCount;
 
-            AddToDeviceTrace(string.Format("Could write {0}/sec", 10 / (end - start)));
+            logger.Debug(string.Format("Could write {0}/sec", 10 / (end - start)));
 
         }
 

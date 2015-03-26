@@ -4,6 +4,7 @@ using System.Text;
 using System.IO.Ports;
 using System.Threading;
 using Microsoft.Win32;
+using NLog;
 
 namespace TrionicCANLib.CAN
 {
@@ -14,6 +15,7 @@ namespace TrionicCANLib.CAN
         Thread m_readThread;
         Object m_synchObject = new Object();
         bool m_endThread = false;
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         private const char ESC = '\x1B';
 
@@ -99,7 +101,7 @@ namespace TrionicCANLib.CAN
 
                             lock (m_listeners)
                             {
-                                AddToCanTrace("RX: " + canMessage.getID().ToString("X3") + " " + canMessage.getLength().ToString("X1") + " " + canMessage.getData().ToString("X16"));
+                                logger.Trace("rx: " + canMessage.getID().ToString("X3") + " " + canMessage.getLength().ToString("X1") + " " + canMessage.getData().ToString("X16"));
                                 //Console.WriteLine("MSG: " + rxMessage);
                                 foreach (ICANListener listener in m_listeners)
                                 {
@@ -168,7 +170,7 @@ namespace TrionicCANLib.CAN
             sendString += "\r";
             if (m_serialPort.IsOpen)
             {
-                AddToCanTrace("TX: " + a_message.getID().ToString("X3") + " " + a_message.getLength().ToString("X1") + " " + a_message.getData().ToString("X16"));
+                logger.Trace("tx: " + a_message.getID().ToString("X3") + " " + a_message.getLength().ToString("X1") + " " + a_message.getData().ToString("X16"));
                 m_serialPort.Write(sendString);
                 //Console.WriteLine("TX: " + sendString);
             }

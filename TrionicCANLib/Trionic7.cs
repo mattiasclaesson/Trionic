@@ -6,16 +6,17 @@ using System.Threading;
 using TrionicCANLib.CAN;
 using TrionicCANLib.KWP;
 using TrionicCANLib.Flasher;
-using TrionicCANLib.Log;
 using CommonSuite;
+using NLog;
 
-namespace TrionicCANLib
+namespace TrionicCANLib.API
 {
     public class Trionic7 : ITrionic
     {   
         private IKWPDevice kwpDevice;
         private KWPHandler kwpHandler;
         private IFlasher flash;
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         private bool m_UseFlasherOnDevice = false;
 
@@ -130,7 +131,7 @@ namespace TrionicCANLib
                     flash = lpc.createFlasher();
                     flash.EnableFlasherLog = m_EnableLog;
 
-                    AddToFlasherLog("T7CombiFlasher object created");
+                    logger.Debug("T7CombiFlasher object created");
                     CastInfoEvent("CombiAdapter ready", ActivityType.ConvertingFile);
                 }
                 else
@@ -177,44 +178,44 @@ namespace TrionicCANLib
 
         private bool CheckFlashStatus()
         {
-            AddToFlasherLog("Start CheckFlashStatus");
+            logger.Debug("Start CheckFlashStatus");
             T7Flasher.FlashStatus stat = flash.getStatus();
-            AddToFlasherLog("Status retrieved");
+            logger.Debug("Status retrieved");
             switch (stat)
             {
                 case T7Flasher.FlashStatus.Completed:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.Completed");
+                    logger.Debug("Status = T7Flasher.FlashStatus.Completed");
                     break;
                 case T7Flasher.FlashStatus.DoinNuthin:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.DoinNuthin");
+                    logger.Debug("Status = T7Flasher.FlashStatus.DoinNuthin");
                     break;
                 case T7Flasher.FlashStatus.EraseError:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.EraseError");
+                    logger.Debug("Status = T7Flasher.FlashStatus.EraseError");
                     break;
                 case T7Flasher.FlashStatus.Eraseing:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.Eraseing");
+                    logger.Debug("Status = T7Flasher.FlashStatus.Eraseing");
                     break;
                 case T7Flasher.FlashStatus.NoSequrityAccess:
-                    AddToFlasherLog("Status = TrionicFlasher.FlashStatus.NoSequrityAccess");
+                    logger.Debug("Status = TrionicFlasher.FlashStatus.NoSequrityAccess");
                     flash.stopFlasher();
                     break;
                 case T7Flasher.FlashStatus.NoSuchFile:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.NoSuchFile");
+                    logger.Debug("Status = T7Flasher.FlashStatus.NoSuchFile");
                     break;
                 case T7Flasher.FlashStatus.ReadError:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.ReadError");
+                    logger.Debug("Status = T7Flasher.FlashStatus.ReadError");
                     break;
                 case T7Flasher.FlashStatus.Reading:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.Reading");
+                    logger.Debug("Status = T7Flasher.FlashStatus.Reading");
                     break;
                 case T7Flasher.FlashStatus.WriteError:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.WriteError");
+                    logger.Debug("Status = T7Flasher.FlashStatus.WriteError");
                     break;
                 case T7Flasher.FlashStatus.Writing:
-                    AddToFlasherLog("Status = T7Flasher.FlashStatus.Writing");
+                    logger.Debug("Status = T7Flasher.FlashStatus.Writing");
                     break;
                 default:
-                    AddToFlasherLog("Status = " + stat);
+                    logger.Debug("Status = " + stat);
                     break;
             }
             bool retval;
@@ -252,7 +253,7 @@ namespace TrionicCANLib
                         lpc.disconnect();
                         canUsbDevice.close();
                         canUsbDevice = null;
-                        AddToFlasherLog("Closed LPCCANDevice in Trionic7");
+                        logger.Debug("Closed LPCCANDevice in Trionic7");
                     }
                     else
                     {
@@ -263,18 +264,10 @@ namespace TrionicCANLib
             }
             catch (Exception e)
             {
-                AddToFlasherLog(e.Message);
+                logger.Debug(e.Message);
             }
 
-            TrionicCANLib.Log.LogHelper.Flush();
-        }
-
-        private void AddToFlasherLog(string line)
-        {
-            if (m_EnableLog)
-            {
-                LogHelper.LogFlasher(line);
-            }
+            LogManager.Flush();
         }
 
         public void GetECUInfo()
@@ -321,12 +314,12 @@ namespace TrionicCANLib
             if (!tmrReadProcessChecker.Enabled)
             {
                 // check reading status periodically
-                AddToFlasherLog("Starting FLASH procedure, checking FLASHing process status");
+                logger.Debug("Starting FLASH procedure, checking FLASHing process status");
                 if (CheckFlashStatus())
                 {
                     tmrWriteProcessChecker.Enabled = true;
                     CastInfoEvent("FLASHing: " + a_fileName, ActivityType.ConvertingFile);
-                    AddToFlasherLog("Calling flash.writeFlash with filename: " + a_fileName);
+                    logger.Debug("Calling flash.writeFlash with filename: " + a_fileName);
                     flash.writeFlash(a_fileName);
                 }
             }
@@ -361,35 +354,35 @@ namespace TrionicCANLib
                 switch (stat)
                 {
                     case T7Flasher.FlashStatus.Completed:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: Completed FLASHing procedure");
+                        logger.Debug("tmrWriteProcessChecker_Tick: Completed FLASHing procedure");
                         break;
                     case T7Flasher.FlashStatus.DoinNuthin:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: DoinNuthin");
+                        logger.Debug("tmrWriteProcessChecker_Tick: DoinNuthin");
                         break;
                     case T7Flasher.FlashStatus.EraseError:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: EraseError");
+                        logger.Debug("tmrWriteProcessChecker_Tick: EraseError");
                         break;
                     case T7Flasher.FlashStatus.Eraseing:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: Eraseing");
+                        logger.Debug("tmrWriteProcessChecker_Tick: Eraseing");
                         break;
                     case T7Flasher.FlashStatus.NoSequrityAccess:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: NoSecurityAccess");
+                        logger.Debug("tmrWriteProcessChecker_Tick: NoSecurityAccess");
                         break;
                     case T7Flasher.FlashStatus.NoSuchFile:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: NoSuchFile");
+                        logger.Debug("tmrWriteProcessChecker_Tick: NoSuchFile");
                         break;
                     case T7Flasher.FlashStatus.ReadError:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: ReadError");
+                        logger.Debug("tmrWriteProcessChecker_Tick: ReadError");
                         break;
                     case T7Flasher.FlashStatus.Reading:
                         break;
                     case T7Flasher.FlashStatus.WriteError:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: WriteError");
+                        logger.Debug("tmrWriteProcessChecker_Tick: WriteError");
                         break;
                     case T7Flasher.FlashStatus.Writing:
                         break;
                     default:
-                        AddToFlasherLog("tmrWriteProcessChecker_Tick: " + stat);
+                        logger.Debug("tmrWriteProcessChecker_Tick: " + stat);
                         break;
                 }
 
@@ -508,14 +501,14 @@ namespace TrionicCANLib
                             }
                             if (!KWPHandler.getInstance().sendRequestDataByOffset(out data))
                             {
-                                AddToFlasherLog("Failed to read data. sendRequestDataByOffset: " + curaddress.ToString("X8"));
+                                logger.Debug("Failed to read data. sendRequestDataByOffset: " + curaddress.ToString("X8"));
                                 CastInfoEvent("Failed to read data. sendRequestDataByOffset: " + curaddress.ToString("X8"), ActivityType.FinishedDownloadingFlash);
                                 return false;
                             }
                         }
                         else
                         {
-                            AddToFlasherLog("Failed to read data. sendReadRequest: " + curaddress.ToString("X8"));
+                            logger.Debug("Failed to read data. sendReadRequest: " + curaddress.ToString("X8"));
                             CastInfoEvent("Failed to read data. sendReadRequest: " + curaddress.ToString("X8"), ActivityType.FinishedDownloadingFlash);
                             return false;
                         }
@@ -530,7 +523,7 @@ namespace TrionicCANLib
             }
             catch (Exception E)
             {
-                AddToFlasherLog("Failed to read memory: " + E.Message);
+                logger.Debug("Failed to read memory: " + E.Message);
             }
             return false;
         }
@@ -557,21 +550,21 @@ namespace TrionicCANLib
 
                     m_nrOfRetries = 0;
                     int addresstoread = (int)sh.Start_address + (readcount * m_nrBytes);
-                    AddToFlasherLog("Reading 64 bytes from address: " + addresstoread.ToString("X6"));
+                    logger.Debug("Reading 64 bytes from address: " + addresstoread.ToString("X6"));
 
                     while (!KWPHandler.getInstance().sendReadRequest((uint)(addresstoread), 64) && m_nrOfRetries < 20)
                     {
                         m_nrOfRetries++;
                     }
-                    AddToFlasherLog("Send command in " + m_nrOfRetries.ToString() + " retries");
+                    logger.Debug("Send command in " + m_nrOfRetries.ToString() + " retries");
                     m_nrOfRetries = 0;
                     Thread.Sleep(1);
                     while (!KWPHandler.getInstance().sendRequestDataByOffset(out data) && m_nrOfRetries < 20)
                     {
                         m_nrOfRetries++;
                     }
-                    AddToFlasherLog("Read data in " + m_nrOfRetries.ToString() + " retries");
-                    AddToFlasherLog("Read " + data.Length.ToString() + " bytes from CAN interface");
+                    logger.Debug("Read data in " + m_nrOfRetries.ToString() + " retries");
+                    logger.Debug("Read " + data.Length.ToString() + " bytes from CAN interface");
                     foreach (byte b in data)
                     {
                         // Console.Write(b.ToString("X2") + " ");
@@ -581,11 +574,11 @@ namespace TrionicCANLib
                         }
                     }
                 }
-                //AddToFlasherLog("Reading done");
+                //logger.Debug("Reading done");
             }
             catch (Exception E)
             {
-                AddToFlasherLog("Failed to read memory: " + E.Message);
+                logger.Debug("Failed to read memory: " + E.Message);
             }
             return completedata;
         }
@@ -617,7 +610,7 @@ namespace TrionicCANLib
             }
             catch (Exception E)
             {
-                AddToFlasherLog("Failed to read memory: " + E.Message);
+                logger.Debug("Failed to read memory: " + E.Message);
             }
             return data;
         }
@@ -639,7 +632,7 @@ namespace TrionicCANLib
             }
             catch (Exception E)
             {
-                AddToFlasherLog("Failed to read SymbolNumber: " + E.Message);
+                logger.Debug("Failed to read SymbolNumber: " + E.Message);
             }
             return data;
         }
@@ -668,14 +661,14 @@ namespace TrionicCANLib
                     {
                         m_nrOfRetries++;
                     }
-                    AddToFlasherLog("Send command in " + m_nrOfRetries.ToString() + " retries");
+                    logger.Debug("Send command in " + m_nrOfRetries.ToString() + " retries");
                     m_nrOfRetries = 0;
                     while (!KWPHandler.getInstance().sendRequestDataByOffset(out data) && m_nrOfRetries < 20)
                     {
                         m_nrOfRetries++;
                     }
-                    AddToFlasherLog("Read data in " + m_nrOfRetries.ToString() + " retries");
-                    AddToFlasherLog("Read " + data.Length.ToString() + " bytes from CAN interface");
+                    logger.Debug("Read data in " + m_nrOfRetries.ToString() + " retries");
+                    logger.Debug("Read " + data.Length.ToString() + " bytes from CAN interface");
                     foreach (byte b in data)
                     {
                         //Console.Write(b.ToString("X2") + " ");
@@ -688,7 +681,7 @@ namespace TrionicCANLib
             }
             catch (Exception E)
             {
-                AddToFlasherLog("Failed to read memory: " + E.Message);
+                logger.Debug("Failed to read memory: " + E.Message);
             }
             return completedata;
         }
@@ -701,7 +694,7 @@ namespace TrionicCANLib
 
         public void WriteMapToSRAM(string symbolname, byte[] completedata, bool showProgress, uint sramAddress, int symbolindex)
         {
-            AddToFlasherLog("Writing " + symbolindex.ToString() + " " + symbolname + " SRAM: " + sramAddress.ToString("X8"));
+            logger.Debug("Writing " + symbolindex.ToString() + " " + symbolname + " SRAM: " + sramAddress.ToString("X8"));
             // if data length > 64 then split the messages
             const uint m_nrBytes = 64;
             uint m_nrOfWrites = 0;
@@ -731,7 +724,7 @@ namespace TrionicCANLib
                 }
                 if (!KWPHandler.getInstance().writeSymbolRequestAddress(addresstowrite, dataToSend))
                 {
-                    AddToFlasherLog("Failed to write data to the ECU");
+                    logger.Debug("Failed to write data to the ECU");
                 }
             }
         }

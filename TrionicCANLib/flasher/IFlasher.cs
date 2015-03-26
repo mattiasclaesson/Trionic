@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TrionicCANLib.Log;
 
 namespace TrionicCANLib.Flasher
 {
@@ -87,20 +86,6 @@ namespace TrionicCANLib.Flasher
         {
             get { return m_EnableFlasherLog; }
             set { m_EnableFlasherLog = value; }
-        }
-
-        //-------------------------------------------------------------------------
-        /**
-            Adds a line to log file.
-            @param      line        line to add
-        */
-        protected void AddToFlasherTrace(string line)
-        {
-            Console.WriteLine(line);
-            if (this.m_EnableFlasherLog)
-            {
-                LogHelper.LogFlasher(line);
-            }
         }
 
         //-------------------------------------------------------------------------

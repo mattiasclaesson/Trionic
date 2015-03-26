@@ -7,15 +7,16 @@ using System.IO;
 using System.Diagnostics;
 using System.ComponentModel;
 using TrionicCANLib.CAN;
-using TrionicCANLib.Log;
 using System.Windows.Forms;
 using System.Collections;
+using NLog;
 
-namespace TrionicCANLib
+namespace TrionicCANLib.API
 {
     public class Trionic8 : ITrionic
     {
         AccessLevel _securityLevel = AccessLevel.AccessLevelFD; // by default 0xFD
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         public AccessLevel SecurityLevel
         {
@@ -49,7 +50,7 @@ namespace TrionicCANLib
                 // send keep alive
                 if (!_stallKeepAlive)
                 {
-                    AddToCanLog("Send KA based on timer");
+                    logger.Debug("Send KA based on timer");
                     SendKeepAlive();
                 }
             }
@@ -449,7 +450,7 @@ namespace TrionicCANLib
             {
                 tmr.Stop();
                 MM_EndPeriod(1);
-                AddToCanLog("Cleanup called in Trionic8");
+                logger.Debug("Cleanup called in Trionic8");
                 //m_canDevice.removeListener(m_canListener);
                 if (m_canListener != null)
                 {
@@ -463,7 +464,7 @@ namespace TrionicCANLib
                         lpc.disconnect();
                         canUsbDevice.close();
                         canUsbDevice = null;
-                        AddToCanLog("Closed LPCCANDevice in Trionic8");
+                        logger.Debug("Closed LPCCANDevice in Trionic8");
                     }
                     else
                     {
@@ -474,10 +475,10 @@ namespace TrionicCANLib
             }
             catch (Exception e)
             {
-                AddToCanLog(e.Message);
+                logger.Debug(e.Message);
             }
 
-            TrionicCANLib.Log.LogHelper.Flush();
+            LogManager.Flush();
         }
 
         public string RequestECUInfo(uint _pid, string description)
@@ -1445,7 +1446,7 @@ namespace TrionicCANLib
             msg.setData(cmd);
             if (!canUsbDevice.sendMessage(msg))
             {
-                AddToCanLog("Couldn't send message");
+                logger.Debug("Couldn't send message");
             }
         }
 
@@ -1735,7 +1736,7 @@ namespace TrionicCANLib
                             if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
                             if (!canUsbDevice.sendMessage(msg))
                             {
-                                AddToCanLog("Couldn't send message");
+                                logger.Debug("Couldn't send message");
                             }
                             Thread.Sleep(1);
                         }
@@ -2227,7 +2228,7 @@ namespace TrionicCANLib
                             if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
                             if (!canUsbDevice.sendMessage(msg))
                             {
-                                AddToCanLog("Couldn't send message");
+                                logger.Debug("Couldn't send message");
                             }
                             Thread.Sleep(1);
                         }
@@ -2315,7 +2316,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                AddToCanLog("Couldn't send message");
+                logger.Debug("Couldn't send message");
             }
 
 
@@ -2326,7 +2327,7 @@ namespace TrionicCANLib
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x74)
             {
                 CastInfoEvent("Unable to write to ECUs memory", ActivityType.ConvertingFile);
-                AddToCanLog("Unable to write data to ECUs memory");
+                logger.Debug("Unable to write data to ECUs memory");
                 //_stallKeepAlive = false;
                 //return false;
             }
@@ -2344,7 +2345,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                AddToCanLog("Couldn't send message");
+                logger.Debug("Couldn't send message");
             }
             // wait for response, should be 30 00 00 00 00 00 00 00
             data = 0;
@@ -2372,7 +2373,7 @@ namespace TrionicCANLib
                     iFrameNumber++;
                     if (!canUsbDevice.sendMessage(msg))
                     {
-                        AddToCanLog("Couldn't send message");
+                        logger.Debug("Couldn't send message");
                     }
                     Thread.Sleep(1);
                     // send the data with 7 bytes at a time
@@ -2403,14 +2404,6 @@ namespace TrionicCANLib
             response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             //Console.WriteLine("received KA: " + response.getCanData(1).ToString("X2"));
-        }
-
-        private void AddToCanLog(string line)
-        {
-            if (m_EnableLog)
-            {
-                LogHelper.LogCan(line);
-            }
         }
 
         public byte[] getSRAMSnapshot()
@@ -2510,7 +2503,7 @@ namespace TrionicCANLib
             msg.elmExpectedResponses = 19; //in 19 messages there are 0x82 = 130 bytes of data, bootloader requests 0x80 =128 each time
             if (!canUsbDevice.sendMessage(msg))
             {
-                AddToCanLog("Couldn't send message");
+                logger.Debug("Couldn't send message");
 
             }
             // wait for max two messages to get rid of the alive ack message
@@ -2522,20 +2515,20 @@ namespace TrionicCANLib
 
             if (getCanData(data, 0) == 0x7E)
             {
-                AddToCanLog("Got 0x7E message as response to 0x21, ReadDataByLocalIdentifier command");
+                logger.Debug("Got 0x7E message as response to 0x21, ReadDataByLocalIdentifier command");
                 success = false;
                 return retData;
             }
             else if (response.getData() == 0x00000000)
             {
-                AddToCanLog("Get blank response message to 0x21, ReadDataByLocalIdentifier");
+                logger.Debug("Get blank response message to 0x21, ReadDataByLocalIdentifier");
                 success = false;
                 return retData;
             }
             else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23)
             {
                 // reason was 0x31
-                AddToCanLog("No security access granted");
+                logger.Debug("No security access granted");
                 RequestSecurityAccess(0);
                 success = false;
                 return retData;
@@ -2546,7 +2539,7 @@ namespace TrionicCANLib
                 {
                     // was a response to a KA.
                 }
-                AddToCanLog("Incorrect response to 0x23, sendReadDataByLocalIdentifier.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
+                logger.Debug("Incorrect response to 0x23, sendReadDataByLocalIdentifier.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
                 success = false;
                 return retData;
             }
@@ -2579,14 +2572,14 @@ namespace TrionicCANLib
                     if (frameIndex != getCanData(data, 0))
                     {
                         // sequence broken
-                        AddToCanLog("Received invalid sequenced frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
+                        logger.Debug("Received invalid sequenced frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
                         m_canListener.dumpQueue();
                         success = false;
                         return retData;
                     }
                     else if (data == 0x0000000000000000)
                     {
-                        AddToCanLog("Received blank message while waiting for data");
+                        logger.Debug("Received blank message while waiting for data");
                         success = false;
                         return retData;
                     }
@@ -2664,7 +2657,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                AddToCanLog("Couldn't send message");
+                logger.Debug("Couldn't send message");
 
             }
             // wait for max two messages to get rid of the alive ack message
@@ -2676,13 +2669,13 @@ namespace TrionicCANLib
 
             if (getCanData(data, 0) == 0x7E)
             {
-                AddToCanLog("Got 0x7E message as response to 0x23, readMemoryByAddress command");
+                logger.Debug("Got 0x7E message as response to 0x23, readMemoryByAddress command");
                 success = false;
                 return retData;
             }
             else if (response.getData() == 0x00000000)
             {
-                AddToCanLog("Get blank response message to 0x23, readMemoryByAddress");
+                logger.Debug("Get blank response message to 0x23, readMemoryByAddress");
                 success = false;
                 return retData;
             }
@@ -2691,14 +2684,14 @@ namespace TrionicCANLib
                 // reason was 0x31 RequestOutOfRange
                 // memory address is either: invalid, restricted, secure + ECU locked
                 // memory size: is greater than max
-                AddToCanLog("No security access granted");
+                logger.Debug("No security access granted");
                 RequestSecurityAccess(0);
                 success = false;
                 return retData;
             }
             else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23)
             {
-                AddToCanLog("readMemoryByAddress " + TranslateErrorCode(getCanData(data, 3)));
+                logger.Debug("readMemoryByAddress " + TranslateErrorCode(getCanData(data, 3)));
                 success = false;
                 return retData;
             }
@@ -2720,7 +2713,7 @@ namespace TrionicCANLib
                 {
                     // was a response to a KA.
                 }
-                AddToCanLog("Incorrect response to 0x23, readMemoryByAddress.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
+                logger.Debug("Incorrect response to 0x23, readMemoryByAddress.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
                 success = false;
                 return retData;
             }
@@ -2751,14 +2744,14 @@ namespace TrionicCANLib
                     if (frameIndex != getCanData(data, 0))
                     {
                         // sequence broken
-                        AddToCanLog("Received invalid sequenced frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
+                        logger.Debug("Received invalid sequenced frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
                         m_canListener.dumpQueue();
                         success = false;
                         return retData;
                     }
                     else if (data == 0x0000000000000000)
                     {
-                        AddToCanLog("Received blank message while waiting for data");
+                        logger.Debug("Received blank message while waiting for data");
                         success = false;
                         return retData;
                     }
@@ -2979,7 +2972,7 @@ namespace TrionicCANLib
                     else
                     {
                         string dtcDescription = GetDtcDescription(responseDTC);
-                        AddToCanLog(dtcDescription);
+                        logger.Debug(dtcDescription);
                         list.Add(dtcDescription);
                     }
 
@@ -3819,7 +3812,7 @@ namespace TrionicCANLib
 
                             if (!canUsbDevice.sendMessage(msg))
                             {
-                                AddToCanLog("Couldn't send message");
+                                logger.Debug("Couldn't send message");
                             }
                             Application.DoEvents();
                             if (m_sleepTime > 0)
@@ -3853,7 +3846,7 @@ namespace TrionicCANLib
                     iFrameNumber++;
                     if (!canUsbDevice.sendMessage(msg))
                     {
-                        AddToCanLog("Couldn't send message");
+                        logger.Debug("Couldn't send message");
                     }
                     if (m_sleepTime > 0)
                         Thread.Sleep(m_sleepTime);
@@ -3919,7 +3912,7 @@ namespace TrionicCANLib
 
                             if (!canUsbDevice.sendMessage(msg))
                             {
-                                AddToCanLog("Couldn't send message");
+                                logger.Debug("Couldn't send message");
                             }
                             Thread.Sleep(m_sleepTime);
                         }
@@ -3952,7 +3945,7 @@ namespace TrionicCANLib
                     if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
                     if (!canUsbDevice.sendMessage(msg))
                     {
-                        AddToCanLog("Couldn't send message");
+                        logger.Debug("Couldn't send message");
                     }
                     if (m_sleepTime > 0)
                         Thread.Sleep(m_sleepTime);
@@ -4017,7 +4010,7 @@ namespace TrionicCANLib
                             msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
                             if (!canUsbDevice.sendMessage(msg))
                             {
-                                AddToCanLog("Couldn't send message");
+                                logger.Debug("Couldn't send message");
                             }
                             Application.DoEvents();
                             if (m_sleepTime > 0)
@@ -4053,7 +4046,7 @@ namespace TrionicCANLib
                     if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
                     if (!canUsbDevice.sendMessage(msg))
                     {
-                        AddToCanLog("Couldn't send message");
+                        logger.Debug("Couldn't send message");
                     }
                     if (m_sleepTime > 0)
                         Thread.Sleep(m_sleepTime);
@@ -4227,7 +4220,7 @@ namespace TrionicCANLib
                             m_canListener.ClearQueue();
                         if (!canUsbDevice.sendMessage(msg))
                         {
-                            AddToCanLog("Couldn't send message");
+                            logger.Debug("Couldn't send message");
                         }
                         if (m_sleepTime > 0)
                             Thread.Sleep(m_sleepTime);
@@ -4386,7 +4379,7 @@ namespace TrionicCANLib
 
                         if (!canUsbDevice.sendMessage(msg))
                         {
-                            AddToCanLog("Couldn't send message");
+                            logger.Debug("Couldn't send message");
                         }
                         if (m_sleepTime > 0)
                             Thread.Sleep(m_sleepTime);
@@ -4799,7 +4792,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(waitforResponseID);
             if (!canUsbDevice.sendMessage(msg))
             {
-                AddToCanLog("Couldn't send message");
+                logger.Debug("Couldn't send message");
             }
 
             CANMessage response = new CANMessage();
@@ -4836,7 +4829,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(waitforResponseID);
             if (!canUsbDevice.sendMessage(msg))
             {
-                AddToCanLog("Couldn't send message");
+                logger.Debug("Couldn't send message");
             }
 
             CANMessage response = new CANMessage();
@@ -4991,7 +4984,7 @@ namespace TrionicCANLib
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
-                AddToCanLog("Couldn't send message");
+                logger.Debug("Couldn't send message");
 
             }
             // wait for max two messages to get rid of the alive ack message
@@ -5003,13 +4996,13 @@ namespace TrionicCANLib
 
             if (getCanData(data, 0) == 0x7E)
             {
-                AddToCanLog("Got 0x7E message as response to 0x23, readMemoryByAddress command");
+                logger.Debug("Got 0x7E message as response to 0x23, readMemoryByAddress command");
                 success = false;
                 return retData;
             }
             else if (response.getData() == 0x00000000)
             {
-                AddToCanLog("Get blank response message to 0x23, readMemoryByAddress");
+                logger.Debug("Get blank response message to 0x23, readMemoryByAddress");
                 success = false;
                 return retData;
             }
@@ -5018,14 +5011,14 @@ namespace TrionicCANLib
                 // reason was 0x31 RequestOutOfRange
                 // memory address is either: invalid, restricted, secure + ECU locked
                 // memory size: is greater than max
-                AddToCanLog("RequestOutOfRange. No security access granted");
+                logger.Debug("RequestOutOfRange. No security access granted");
                 RequestSecurityAccess(0);
                 success = false;
                 return retData;
             }
             else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x23)
             {
-                AddToCanLog("readMemoryByAddress " + TranslateErrorCode(getCanData(data, 3)));
+                logger.Debug("readMemoryByAddress " + TranslateErrorCode(getCanData(data, 3)));
                 success = false;
                 return retData;
             }
@@ -5047,7 +5040,7 @@ namespace TrionicCANLib
                 {
                     // was a response to a KA.
                 }
-                AddToCanLog("Incorrect response to 0x23, readMemoryByAddress.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
+                logger.Debug("Incorrect response to 0x23, readMemoryByAddress.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
                 success = false;
                 return retData;
             }
@@ -5067,7 +5060,7 @@ namespace TrionicCANLib
                 {
                     m_nrFrameToReceive++;
                 }
-                AddToCanLog("Number of frames: " + m_nrFrameToReceive.ToString());
+                logger.Debug("Number of frames: " + m_nrFrameToReceive.ToString());
                 while (m_nrFrameToReceive > 0)
                 {
                     // response = new CANMessage();
@@ -5076,18 +5069,18 @@ namespace TrionicCANLib
                     // m_canListener.setupWaitMessage(0x7E8);
                     response = m_canListener.waitMessage(1000);
                     data = response.getData();
-                    AddToCanLog("frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
+                    logger.Debug("frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
                     if (frameIndex != getCanData(data, 0))
                     {
                         // sequence broken
-                        AddToCanLog("Received invalid sequenced frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
+                        logger.Debug("Received invalid sequenced frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
                         //m_canListener.dumpQueue();
                         success = false;
                         return retData;
                     }
                     else if (data == 0x0000000000000000)
                     {
-                        AddToCanLog("Received blank message while waiting for data");
+                        logger.Debug("Received blank message while waiting for data");
                         success = false;
                         return retData;
                     }
@@ -5099,7 +5092,7 @@ namespace TrionicCANLib
                     }
                     // additional check for sequencing of frames
                     m_nrFrameToReceive--;
-                    AddToCanLog("frames left: " + m_nrFrameToReceive.ToString());
+                    logger.Debug("frames left: " + m_nrFrameToReceive.ToString());
                     // add the bytes to the receive buffer
                     //string checkLine = string.Empty;
                     for (uint fi = 1; fi < 8; fi++)
@@ -5110,7 +5103,7 @@ namespace TrionicCANLib
                             retData[rx_cnt++] = getCanData(data, fi);
                         }
                     }
-                    //AddToCanLog("frame(2): " + checkLine);
+                    //logger.Debug("frame(2): " + checkLine);
                     //Thread.Sleep(1);
 
                 }
@@ -5121,7 +5114,7 @@ namespace TrionicCANLib
                 if (retData.Length > rx_cnt) retData[rx_cnt++] = getCanData(data, 5);
                 if (retData.Length > rx_cnt) retData[rx_cnt++] = getCanData(data, 6);
                 if (retData.Length > rx_cnt) retData[rx_cnt++] = getCanData(data, 7);
-                AddToCanLog("received data: " + retData[0].ToString("X2"));
+                logger.Debug("received data: " + retData[0].ToString("X2"));
             }
             /*string line = address.ToString("X8") + " ";
             foreach (byte b in retData)
@@ -5185,7 +5178,7 @@ namespace TrionicCANLib
                         SeedToKey s2k = new SeedToKey();
                         byte[] key = s2k.calculateKeyForME96(seed);
                         CastInfoEvent("Security access : Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")", ActivityType.ConvertingFile);
-                        AddToCanLog("Security access : Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")");
+                        logger.Debug("Security access : Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")");
 
                         ulong keydata = 0x0000000000FE2704;
                         if (_securityLevel == AccessLevel.AccessLevel01)

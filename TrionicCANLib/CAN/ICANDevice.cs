@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using TrionicCANLib.Log;
-using NLog;
 
 namespace TrionicCANLib.CAN
 {
@@ -205,26 +203,6 @@ namespace TrionicCANLib.CAN
         protected bool acceptMessageId(uint msgId)
         {
             return m_AcceptedMessageIds == null ? true : m_AcceptedMessageIds.Contains(msgId);
-        }
-
-        protected void AddToCanTrace(string line)
-        {
-            if (this.EnableCanLog)
-            {
-                LogHelper.LogCan(line);
-            }
-        }
-
-        protected void AddToDeviceTrace(string line)
-        {
-            if (this.EnableCanLog)
-            {
-                line = line.Replace("\n", "");
-                line = line.Replace("\r", "");
-                line = line.Replace("\t", "");
-                LogHelper.LogDevice(line);
-                //LogHelper.LogDebug(line);
-            }
         }
 
         abstract public int ForcedBaudrate

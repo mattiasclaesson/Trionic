@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using TrionicCANLib.CAN;
 
-namespace TrionicCANLib
+namespace TrionicCANLib.API
 {
     abstract public class ITrionic
     {

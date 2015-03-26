@@ -99,20 +99,14 @@
     <Compile Include="CAN\CANListener.cs" />
     <Compile Include="CAN\CANMessage.cs" />
     <Compile Include="CAN\CANUSBDevice.cs" />
-    <Compile Include="CAN\CANUSBDirectDevice.cs" />
-    <Compile Include="CAN\EasySyncUSBDevice.cs" />
-    <Compile Include="CAN\EasySync_canusb.cs" />
     <Compile Include="CAN\ICANDevice.cs" />
     <Compile Include="CAN\ICANListener.cs" />
     <Compile Include="CAN\Just4TrionicDevice.cs" />
     <Compile Include="CAN\LPCCANDevice.cs" />
-    <Compile Include="CAN\MictronicsCanDevice.cs" />
     <Compile Include="Trionic7.cs" />
     <Compile Include="flasher\IFlasher.cs" />
     <Compile Include="flasher\T7CombiFlasher.cs" />
     <Compile Include="flasher\T7Flasher.cs" />
-    <Compile Include="Log\LogHelper.cs" />
-    <Compile Include="Log\LogQueue.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -134,14 +128,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Log\log4net.config.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

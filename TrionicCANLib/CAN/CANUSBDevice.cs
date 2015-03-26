@@ -202,6 +202,7 @@ namespace TrionicCANLib.CAN
             }
             if(DisableCanConnectionCheck || boxIsThere())
             {
+                Flush();
                 logger.Debug("P bus connected");
                 if (m_readThread.ThreadState == ThreadState.Unstarted)
                     m_readThread.Start();

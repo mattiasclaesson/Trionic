@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Threading;
-using TrionicCANLib.Log;
+using NLog;
 
 namespace TrionicCANLib.KWP
 {
@@ -35,6 +35,7 @@ namespace TrionicCANLib.KWP
         private Mutex m_requestMutex = new Mutex();
         private TimerCallback timerDelegate;
         private System.Threading.Timer stateTimer;
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Constructor.
@@ -151,26 +152,10 @@ namespace TrionicCANLib.KWP
                 return false;
         }
 
-        private void LogEntry(string entry)
-        {
-            LogHelper.LogKwp(entry);
-        }
-
-        private void LogDataString(string entry)
-        {
-            if (m_logginEnabled)
-            {
-                if (entry != "")
-                {
-                    LogEntry(entry);
-                }
-            }
-        }
-
         // This function work well to reset the T7 ECU, but doing so in car will cause limphome of throttlebody. 
         public bool ResetECU()
         {
-            LogDataString("ResetECU");
+            logger.Trace("ResetECU");
             KWPReply reply = new KWPReply();
             KWPResult result;
             byte[] data = new byte[1];
@@ -192,7 +177,7 @@ namespace TrionicCANLib.KWP
 
         public bool ReadFreezeFrameData(uint frameNumber)
         {
-            LogDataString("ReadFreezeFrameData");
+            logger.Trace("ReadFreezeFrameData");
             KWPReply reply = new KWPReply();
             KWPResult result;
             byte[] data = new byte[1];
@@ -209,7 +194,7 @@ namespace TrionicCANLib.KWP
         public bool ReadDTCCodes(out List<string> list)
         {
             list = new List<string>();
-            LogDataString("ReadDTCCodes");
+            logger.Trace("ReadDTCCodes");
             KWPReply reply = new KWPReply();
             KWPResult result;
             byte[] data = new byte[2];
@@ -285,7 +270,7 @@ namespace TrionicCANLib.KWP
 
         public bool ClearDTCCode(int dtccode)
         {
-            LogDataString("ClearDTCCode: " + dtccode.ToString("X4"));
+            logger.Trace("ClearDTCCode: " + dtccode.ToString("X4"));
             KWPReply reply = new KWPReply();
             KWPResult result;
             byte[] data = new byte[1];
@@ -301,7 +286,7 @@ namespace TrionicCANLib.KWP
 
         public bool ClearDTCCodes()
         {
-            LogDataString("ClearDTCCodes");
+            logger.Trace("ClearDTCCodes");
             KWPReply reply = new KWPReply();
             KWPResult result;
             byte[] data = new byte[1];
@@ -323,7 +308,7 @@ namespace TrionicCANLib.KWP
         /// <returns>true if sequrity access was granted, otherwise false</returns>
         private bool requestSequrityAccessLevel(uint a_method)
         {
-            LogDataString("requestSequrityAccessLevel: " + a_method.ToString());
+            logger.Trace("requestSequrityAccessLevel: " + a_method.ToString());
             KWPReply reply = new KWPReply();
             KWPResult result;
             byte[] seed = new byte[2];
@@ -375,7 +360,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult getVIN(out string r_vin)
         {
-            LogDataString("getVIN");
+            logger.Trace("getVIN");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -504,7 +489,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult getImmo(out string r_immo)
         {
-            LogDataString("getImmo");
+            logger.Trace("getImmo");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -523,7 +508,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult getSymbolTableOffset(out UInt16 r_offset)
         {
-            LogDataString("getSymbolTableOffset");
+            logger.Trace("getSymbolTableOffset");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -542,7 +527,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult getSwPartNumber(out string r_swPartNo)
         {
-            LogDataString("getSwPartNumber");
+            logger.Trace("getSwPartNumber");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -558,7 +543,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult getSwVersion(out string r_swVersion)
         {
-            LogDataString("getSwVersion");
+            logger.Trace("getSwVersion");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -577,7 +562,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult getSwVersionFromDR51(out string r_swVersion)
         {
-            LogDataString("getSwVersionFromDR51");
+            logger.Trace("getSwVersionFromDR51");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -596,7 +581,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult getEngineType(out string r_swVersion)
         {
-            LogDataString("getEngineType");
+            logger.Trace("getEngineType");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -619,7 +604,7 @@ namespace TrionicCANLib.KWP
             6 stop address (low byte)
             */
             Int32 StopAddress = StartAddress + Length;
-            LogDataString("sendEraseRequest");
+            logger.Trace("sendEraseRequest");
 
             KWPReply reply = new KWPReply();
             KWPReply reply2 = new KWPReply();
@@ -667,7 +652,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult sendEraseRequest()
         {
-            LogDataString("sendEraseRequest");
+            logger.Trace("sendEraseRequest");
 
             KWPReply reply = new KWPReply();
             KWPReply reply2 = new KWPReply();
@@ -727,7 +712,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult sendWriteRequest(uint a_address, uint a_length)
         {
-            LogDataString("sendWriteRequest");
+            logger.Trace("sendWriteRequest");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -763,7 +748,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult sendWriteDataRequest(byte[] a_data)
         {
-            LogDataString("sendWriteDataRequest");
+            logger.Trace("sendWriteDataRequest");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -787,7 +772,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult sendDataTransferRequest(out byte[] a_data)
         {
-            LogDataString("sendDataTransferRequest");
+            logger.Trace("sendDataTransferRequest");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -812,7 +797,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult sendUnknownRequest()
         {
-            LogDataString("sendUnknownRequest");
+            logger.Trace("sendUnknownRequest");
             //Console.WriteLine("sendUnknownRequest");
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -836,7 +821,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         public KWPResult sendReadSymbolMapRequest()
         {
-            LogDataString("sendReadSymbolMapRequest");
+            logger.Trace("sendReadSymbolMapRequest");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -862,7 +847,7 @@ namespace TrionicCANLib.KWP
         /// <returns>true on success, otherwise false</returns>
         public bool sendReadRequest(uint a_address, uint a_length)
         {
-            LogDataString("sendReadRequest");
+            logger.Trace("sendReadRequest");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -890,7 +875,7 @@ namespace TrionicCANLib.KWP
         /// <returns></returns>
         public bool setSymbolRequest(uint a_symbolNumber)
         {
-            LogDataString("setSymbolRequest");
+            logger.Trace("setSymbolRequest");
 
             KWPReply reply = new KWPReply();
             KWPResult result = KWPResult.Timeout;
@@ -912,7 +897,7 @@ namespace TrionicCANLib.KWP
                 if (reply.getLength() != 2)
                 {
                     result = KWPResult.Timeout;
-                    LogDataString("Got wrong response on sendRequest in setSymbolRequest, len = " + reply.getLength().ToString("D2"));
+                    logger.Trace("Got wrong response on sendRequest in setSymbolRequest, len = " + reply.getLength().ToString("D2"));
                     Console.WriteLine("Got wrong response on sendRequest in setSymbolRequest, len = " + reply.getLength().ToString("D2"));
                 }
             }
@@ -922,7 +907,7 @@ namespace TrionicCANLib.KWP
             }
             else
             {
-                LogDataString("setSymbolRequest timed out");
+                logger.Trace("setSymbolRequest timed out");
                 Console.WriteLine("setSymbolRequest timed out");
                 return false;
             }
@@ -937,7 +922,7 @@ namespace TrionicCANLib.KWP
         /// <returns></returns>
         public bool writeSymbolRequestAddress(uint a_address, byte[] a_data)
         {
-            LogDataString("writeSymbolRequest: " + a_address.ToString("X8") + "len: " + a_data.Length.ToString("X4"));
+            logger.Trace("writeSymbolRequest: " + a_address.ToString("X8") + "len: " + a_data.Length.ToString("X4"));
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -990,7 +975,7 @@ namespace TrionicCANLib.KWP
         /// <returns></returns>
         public bool writeSymbolRequest(uint a_symbolNumber, byte[] a_data)
         {
-            LogDataString("writeSymbolRequest: " + a_symbolNumber.ToString());
+            logger.Trace("writeSymbolRequest: " + a_symbolNumber.ToString());
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -1044,7 +1029,7 @@ namespace TrionicCANLib.KWP
         /// <returns></returns>
         public bool writeSymbolRequestTest(uint a_symbolNumber, byte[] a_data, int idx)
         {
-            LogDataString("writeSymbolRequest: " + a_symbolNumber.ToString());
+            logger.Trace("writeSymbolRequest: " + a_symbolNumber.ToString());
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -1095,7 +1080,7 @@ namespace TrionicCANLib.KWP
         /// <returns>true on success, otherwise false.</returns>
         public bool sendDataTransferExitRequest()
         {
-            LogDataString("sendDataTransferExitRequest");
+            logger.Trace("sendDataTransferExitRequest");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -1114,7 +1099,7 @@ namespace TrionicCANLib.KWP
         /// <returns></returns>
         public bool sendRequestDataByOffset(out byte[] r_data)
         {
-            LogDataString("sendRequestDataByOffset");
+            logger.Trace("sendRequestDataByOffset");
 
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -1149,7 +1134,7 @@ namespace TrionicCANLib.KWP
         /// <returns>KWPResult</returns>
         private KWPResult sendRequest(KWPRequest a_request, out KWPReply a_reply)
         {
-            LogDataString("sendRequest");
+            logger.Trace("sendRequest");
 
             KWPReply reply = new KWPReply();
             RequestResult result;
@@ -1166,22 +1151,22 @@ namespace TrionicCANLib.KWP
 
             m_requestMutex.WaitOne();
 
-            LogDataString(a_request.ToString());
+            logger.Trace(a_request.ToString());
             for (int retry = 0; retry < 3; retry++)
             {
                 result = m_kwpDevice.sendRequest(a_request, out reply);
                 a_reply = reply;
                 if (result == RequestResult.NoError)
                 {
-                    LogDataString(reply.ToString());
-                    LogDataString(""); // empty line
+                    logger.Trace(reply.ToString());
+                    logger.Trace(""); // empty line
 
                     m_requestMutex.ReleaseMutex();
                     return KWPResult.OK;
                 }
                 else
                 {
-                    LogDataString("Error in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
+                    logger.Trace("Error in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
                     Console.WriteLine("Error in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
                 }
             }
@@ -1199,7 +1184,7 @@ namespace TrionicCANLib.KWP
         {
             int _maxSendRetries = 3;
             KWPResult _kwpResult = KWPResult.Timeout;
-            LogDataString("sendRequest");
+            logger.Trace("sendRequest");
 
             KWPReply reply = new KWPReply();
             RequestResult result;
@@ -1219,7 +1204,7 @@ namespace TrionicCANLib.KWP
             result = RequestResult.Unknown; // <GS-11022010>
             while (_retryCount < _maxSendRetries && result != RequestResult.NoError)
             {
-                LogDataString(a_request.ToString());
+                logger.Trace(a_request.ToString());
                 result = m_kwpDevice.sendRequest(a_request, out reply);
                 if ((int)reply.getLength() != expectedLength)
                 {
@@ -1230,15 +1215,15 @@ namespace TrionicCANLib.KWP
                 {
              
                     a_reply = reply;
-                    LogDataString(reply.ToString());
-                    LogDataString(""); // empty line
+                    logger.Trace(reply.ToString());
+                    logger.Trace(""); // empty line
                     m_requestMutex.ReleaseMutex();
                     //return KWPResult.OK;
                     _kwpResult = KWPResult.OK;
                 }
                 else
                 {
-                    LogDataString("Error in KWPHandler::sendRequest" + result.ToString() + " " + reply.ToString());
+                    logger.Trace("Error in KWPHandler::sendRequest" + result.ToString() + " " + reply.ToString());
                     m_requestMutex.ReleaseMutex();
                     //return KWPResult.Timeout;
                     _kwpResult = KWPResult.Timeout;
