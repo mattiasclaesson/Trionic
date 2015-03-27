@@ -212,7 +212,7 @@ namespace TrionicCANLib.KWP
                 logger.Debug("Unable to send 0x000040021100813F message");
                 return false;
             }
-            Console.WriteLine("Init msg sent");
+            logger.Debug("Init msg sent");
             if (m_kwpCanListener.waitMessage(timeoutPeriod).getID() == 0x238)
             {
                 logger.Debug("Successfully sent 0x000040021100813F message and received reply 0x238");

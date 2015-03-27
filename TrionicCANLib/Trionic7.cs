@@ -144,21 +144,21 @@ namespace TrionicCANLib.API
                 if (kwpHandler.openDevice())
                 {
                     CastInfoEvent("Canbus channel opened", ActivityType.ConvertingFile);
+
+                    if (kwpHandler.startSession())
+                    {
+                        CastInfoEvent("Session started", ActivityType.ConvertingFile);
+                    }
+                    else
+                    {
+                        CastInfoEvent("Unable to start session", ActivityType.ConvertingFile);
+                        kwpHandler.closeDevice();
+                        opened = false;
+                    }
                 }
                 else
                 {
                     CastInfoEvent("Unable to open canbus channel", ActivityType.ConvertingFile);
-                    kwpHandler.closeDevice();
-                    opened = false;
-                }
-
-                if (kwpHandler.startSession())
-                {
-                    CastInfoEvent("Session started", ActivityType.ConvertingFile);
-                }
-                else
-                {
-                    CastInfoEvent("Unable to start session", ActivityType.ConvertingFile);
                     kwpHandler.closeDevice();
                     opened = false;
                 }
@@ -234,10 +234,11 @@ namespace TrionicCANLib.API
             try
             {
                 MM_EndPeriod(1);
-                Console.WriteLine("Cleanup called in Trionic7");
+                logger.Debug("Cleanup called in Trionic7");
                 if (flash != null)
                 {
                     flash.onStatusChanged -= flash_onStatusChanged;
+                    flash.stopFlasher();
                     flash = null;
                 }
                 if (kwpHandler != null)
