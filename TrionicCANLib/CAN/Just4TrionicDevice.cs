@@ -5,6 +5,7 @@ using System.IO.Ports;
 using System.Threading;
 using Microsoft.Win32;
 using NLog;
+using TrionicCANLib.API;
 
 namespace TrionicCANLib.CAN
 {

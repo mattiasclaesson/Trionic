@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TrionicCANLib
+namespace TrionicCANLib.API
 {
     public enum ActivityType : int
     {

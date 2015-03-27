@@ -7,6 +7,7 @@ using System.IO;
 using System.Diagnostics;
 using System.ComponentModel;
 using TrionicCANLib.CAN;
+using TrionicCANLib.API;
 using System.Windows.Forms;
 using System.Collections;
 using NLog;
@@ -17,6 +18,14 @@ namespace TrionicCANLib.API
     {
         AccessLevel _securityLevel = AccessLevel.AccessLevelFD; // by default 0xFD
         private Logger logger = LogManager.GetCurrentClassLogger();
+
+        private ECU m_ECU = ECU.TRIONIC8;
+
+        public ECU ECU
+        {
+            get { return m_ECU; }
+            set { m_ECU = value; }
+        }
 
         public AccessLevel SecurityLevel
         {
@@ -294,7 +303,16 @@ namespace TrionicCANLib.API
                     else
                     {
                         SeedToKey s2k = new SeedToKey();
-                        byte[] key = s2k.calculateKey(seed, _securityLevel);
+
+                        byte[] key = new byte[2];
+                        if (m_ECU == ECU.TRIONIC8)
+                        {
+                            key = s2k.calculateKey(seed, _securityLevel);
+                        }
+                        else if (m_ECU == ECU.MOTRONIC96)
+                        {
+                            key = s2k.calculateKeyForME96(seed);
+                        }
                         CastInfoEvent("Security access : Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")", ActivityType.ConvertingFile);
 
                         ulong keydata = 0x0000000000FE2704;
@@ -448,6 +466,7 @@ namespace TrionicCANLib.API
         {
             try
             {
+                m_ECU = ECU.TRIONIC8;
                 tmr.Stop();
                 MM_EndPeriod(1);
                 logger.Debug("Cleanup called in Trionic8");
@@ -2908,6 +2927,25 @@ namespace TrionicCANLib.API
             return "DTC: " + firstDtcChar + secondDtcNum.ToString("d") + thirdDtcNum.ToString("X") + forthDtcNum.ToString("X") + fifthDtcNum.ToString("X") + " StatusByte: " + statusByte.ToString("X2");
         }
 
+        private bool addDTC(CANMessage response)
+        {
+            // Read until response: EndOfDTCReport
+            if (response.getCanData(1) == 0 && response.getCanData(2) == 0 && response.getCanData(3) == 0)
+            {
+                listDTC.Add("No more errors!");
+                return false;
+            }
+            else
+            {
+                string dtcDescription = GetDtcDescription(response);
+                logger.Debug(dtcDescription);
+                listDTC.Add(dtcDescription);
+                return true;
+            }
+        }
+
+        List<string> listDTC;
+
         public string[] ReadDTC()
         {
             // test code
@@ -2920,7 +2958,7 @@ namespace TrionicCANLib.API
             // send message to read DTC
             StartSession10();
 
-            List<string> list = new List<string>();
+            listDTC = new List<string>();
 
             // ReadDiagnosticInformation $A9 Service
             //  readStatusOfDTCByStatusMask $81 Request
@@ -2938,7 +2976,7 @@ namespace TrionicCANLib.API
             CANMessage msg = new CANMessage(0x7E0, 0, 4);
             msg.setData(cmd);
             msg.elmExpectedResponses = 15;
-            m_canListener.setupWaitMessage(0x7E8);
+            m_canListener.setupWaitMessage(0x7E8,0x5e8);
             canUsbDevice.SetupCANFilter("7E8", "DFF"); // Mask will allow 7E8 and 5E8
             if (!canUsbDevice.sendMessage(msg))
             {
@@ -2949,10 +2987,27 @@ namespace TrionicCANLib.API
             ulong data = 0;
             // Wait for response 
             // 7E8 03 7F A9 78 00 00 00 00
+            // or the first DTC
+            // 5E8 81 07 03 00 7F 00 00 00
             response = m_canListener.waitMessage(1000);
             data = response.getData();
 
-            if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78) // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
+            if (response.getID() == 0x5E8 && response.getCanData(0) == 0x81)
+            {
+                // Now wait for all DTCs
+                m_canListener.setupWaitMessage(0x5E8);
+
+                bool more_errors = addDTC(response);
+
+                while (more_errors)
+                {
+                    CANMessage responseDTC = new CANMessage();
+                    responseDTC = m_canListener.waitMessage(1000);
+                    more_errors = addDTC(responseDTC);
+                }
+            }
+            // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
+            else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78) 
             {
                 // Now wait for all DTCs
                 m_canListener.setupWaitMessage(0x5E8);
@@ -2962,20 +3017,7 @@ namespace TrionicCANLib.API
                 {
                     CANMessage responseDTC = new CANMessage();
                     responseDTC = m_canListener.waitMessage(1000);
-
-                    // Read until response: EndOfDTCReport
-                    if (responseDTC.getCanData(1) == 0 && responseDTC.getCanData(2) == 0 && responseDTC.getCanData(3) == 0)
-                    {
-                        more_errors = false;
-                        list.Add("No more errors!");
-                    }
-                    else
-                    {
-                        string dtcDescription = GetDtcDescription(responseDTC);
-                        logger.Debug(dtcDescription);
-                        list.Add(dtcDescription);
-                    }
-
+                    more_errors = addDTC(responseDTC);
                 }
             }
             else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9)
@@ -2986,7 +3028,7 @@ namespace TrionicCANLib.API
 
             Send0120();
 
-            return list.ToArray();
+            return listDTC.ToArray();
         }
 
         // MattiasC, this one is probably not working, need a car to test
@@ -4876,7 +4918,7 @@ namespace TrionicCANLib.API
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
             CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            if (!RequestSecurityAccessME96(0))
+            if (!RequestSecurityAccess(0))
                 return;
             Thread.Sleep(50);
 
@@ -5128,110 +5170,6 @@ namespace TrionicCANLib.API
             success = true;
 
             return retData;
-        }
-
-
-        private bool RequestSecurityAccessME96(int millisecondsToWaitWithResponse)
-        {
-            int secondsToWait = millisecondsToWaitWithResponse / 1000;
-            ulong cmd = 0x0000000000FD2702; // request security access
-            if (_securityLevel == AccessLevel.AccessLevel01)
-            {
-                cmd = 0x0000000000012702; // request security access
-            }
-            else if (_securityLevel == AccessLevel.AccessLevelFB)
-            {
-                cmd = 0x0000000000FB2702; // request security access
-            }
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            CastInfoEvent("Requesting security access", ActivityType.ConvertingFile);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
-            }
-            CANMessage response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
-            //ulong data = response.getData();
-            Console.WriteLine("---" + response.getData().ToString("X16"));
-            if (response.getCanData(1) == 0x67)
-            {
-                if (response.getCanData(2) == 0xFD || response.getCanData(2) == 0xFB || response.getCanData(2) == 0x01)
-                {
-                    CastInfoEvent("Got seed value from ECU", ActivityType.ConvertingFile);
-
-                    while (secondsToWait > 0)
-                    {
-                        CastInfoEvent("Waiting for " + secondsToWait.ToString() + " seconds...", ActivityType.UploadingBootloader);
-                        Thread.Sleep(1000);
-                        SendKeepAlive();
-                        secondsToWait--;
-                    }
-
-                    byte[] seed = new byte[2];
-                    seed[0] = response.getCanData(3);
-                    seed[1] = response.getCanData(4);
-                    if (seed[0] == 0x00 && seed[1] == 0x00)
-                    {
-                        return true; // security access was already granted
-                    }
-                    else
-                    {
-                        SeedToKey s2k = new SeedToKey();
-                        byte[] key = s2k.calculateKeyForME96(seed);
-                        CastInfoEvent("Security access : Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")", ActivityType.ConvertingFile);
-                        logger.Debug("Security access : Key (" + key[0].ToString("X2") + key[1].ToString("X2") + ") calculated from seed (" + seed[0].ToString("X2") + seed[1].ToString("X2") + ")");
-
-                        ulong keydata = 0x0000000000FE2704;
-                        if (_securityLevel == AccessLevel.AccessLevel01)
-                        {
-                            keydata = 0x0000000000022704;
-                        }
-                        else if (_securityLevel == AccessLevel.AccessLevelFB)
-                        {
-                            keydata = 0x0000000000FC2704;
-                        }
-                        ulong key1 = key[1];
-                        key1 *= 0x100000000;
-                        keydata ^= key1;
-                        ulong key2 = key[0];
-                        key2 *= 0x1000000;
-                        keydata ^= key2;
-                        msg = new CANMessage(0x7E0, 0, 5);
-                        msg.setData(keydata);
-                        m_canListener.setupWaitMessage(0x7E8);
-                        if (!canUsbDevice.sendMessage(msg))
-                        {
-                            CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
-                        }
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
-                        Console.WriteLine("---" + response.getData().ToString("X16"));
-                        // is it ok or not
-                        if (response.getCanData(1) == 0x67 && (response.getCanData(2) == 0xFE || response.getCanData(2) == 0xFC || response.getCanData(2) == 0x02))
-                        {
-                            CastInfoEvent("Security access granted", ActivityType.ConvertingFile);
-                            return true;
-                        }
-                        else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
-                        {
-                            CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
-                        }
-                    }
-
-                }
-                else if (response.getCanData(2) == 0xFE || response.getCanData(2) == 0x02)
-                {
-                    CastInfoEvent("Security access granted", ActivityType.ConvertingFile);
-                    return true;
-                }
-            }
-            else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x27)
-            {
-                CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
-            }
-            return false;
         }
     }
 }

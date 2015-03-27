@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using TrionicCANLib.API;
 
 namespace TrionicCANLib.CAN
 {

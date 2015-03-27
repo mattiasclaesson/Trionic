@@ -258,12 +258,10 @@ namespace TrionicCANFlasher
             {
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
-                btnSetSpeed.Enabled = false;
                 btnEditParameters.Enabled = false;
                 btnFlashECU.Enabled = false;
                 btnSetE85.Enabled = false;
                 btnReadSRAM.Enabled = false;
-                btnReadDTC.Enabled = false;
             }
         }
 
@@ -298,8 +296,10 @@ namespace TrionicCANFlasher
                                 else
                                 {
                                     AddLogItem("Unable to connect to Trionic 7 ECU");
+                                    trionic7.Cleanup();
+                                    AddLogItem("Connection closed");
+                                    EnableUserInput(true);
                                 }
-                                EnableUserInput(true);
                             }
                             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                             {
@@ -335,6 +335,7 @@ namespace TrionicCANFlasher
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
                                 trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                                trionic8.ECU = ECU.MOTRONIC96;
                                 if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);
@@ -630,7 +631,9 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("DisableCanCheck", cbDisableConnectionCheck.Checked);
             SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem.ToString());
             SaveRegistrySetting("ELM327Kline", cbELM327Kline.Checked);
+
             trionic8.Cleanup();
+            trionic7.Cleanup();
             Environment.Exit(0);
         }
 
@@ -671,6 +674,7 @@ namespace TrionicCANFlasher
         private void frmMain_Load(object sender, EventArgs e)
         {
             Text = "TrionicCANFlasher v" + System.Windows.Forms.Application.ProductVersion;
+            logger.Trace(Text);
         }
 
         private void frmMain_Shown(object sender, EventArgs e)
@@ -899,6 +903,26 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+            {
+                SetGenericOptions(trionic8);
+
+                EnableUserInput(false);
+                AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                if (trionic8.openDevice(false))
+                {
+                    string[] codes = trionic8.ReadDTC();
+                    foreach (string a in codes)
+                    {
+                        AddLogItem(a);
+                    }
+                }
+
+                trionic8.Cleanup();
+                AddLogItem("Connection closed");
+                EnableUserInput(true);
+            }
             LogManager.Flush();
         }
 
@@ -1021,6 +1045,34 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+            {
+                SetGenericOptions(trionic8);
+
+                EnableUserInput(false);
+                AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                trionic8.ECU = ECU.MOTRONIC96;
+                if (trionic8.openDevice(true))
+                {
+                    int speed;
+                    if (int.TryParse(tbParameter.Text, out speed))
+                    {
+                        if (trionic8.SetTopSpeed(speed))
+                        {
+                            AddLogItem("Set SpeedLimiter successfull");
+                        }
+                        else
+                        {
+                            AddLogItem("Set SpeedLimiter failed");
+                        }
+                    }
+                }
+
+                trionic8.Cleanup();
+                AddLogItem("Connection closed");
+                EnableUserInput(true);
+            }
             LogManager.Flush();
         }
 
@@ -1034,6 +1086,7 @@ namespace TrionicCANFlasher
                     TimeSpan ts = DateTime.Now - dtstart;
                     AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
                     trionic7.Cleanup();
+                    AddLogItem("Connection closed");
                     EnableUserInput(true);
                 }
             }
@@ -1181,6 +1234,7 @@ namespace TrionicCANFlasher
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
                                 trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                                trionic8.ECU = ECU.MOTRONIC96;
                                 if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);

@@ -13,6 +13,7 @@ namespace TrionicCANLib.CAN
     class CANListener : ICANListener
     {
         private uint m_waitMsgID = 0;
+        private uint m_additionalWaitMsgID = 0;
 
         public override bool messagePending()
         {
@@ -25,6 +26,12 @@ namespace TrionicCANLib.CAN
         public void setupWaitMessage(uint can_id)
         {
             this.m_waitMsgID = can_id;
+        }
+
+        public void setupWaitMessage(uint can_id, uint additional_can_id)
+        {
+            this.m_waitMsgID = can_id;
+            m_additionalWaitMsgID = additional_can_id;
         }
 
         //---------------------------------------------------------------------
@@ -52,7 +59,7 @@ namespace TrionicCANLib.CAN
                     // first upto (_queue.Length - 1)
                     for (int idx = _readMessageIndex; idx < _queue.Length; idx++)
                     {
-                        if (_queue[idx].getID() == this.m_waitMsgID)
+                        if (_queue[idx].getID() == this.m_waitMsgID || _queue[idx].getID() == this.m_additionalWaitMsgID)
                         {
                             retMsg = _queue[idx];
                             _readMessageIndex = idx + 1;
@@ -64,7 +71,7 @@ namespace TrionicCANLib.CAN
                     }
                     for (int idx = 0; idx < _receiveMessageIndex; idx++)
                     {
-                        if (_queue[idx].getID() == this.m_waitMsgID)
+                        if (_queue[idx].getID() == this.m_waitMsgID || _queue[idx].getID() == this.m_additionalWaitMsgID)
                         {
                             retMsg = _queue[idx];
                             _readMessageIndex = idx + 1;
@@ -78,7 +85,7 @@ namespace TrionicCANLib.CAN
                 {
                     for (int idx = _readMessageIndex; idx < _receiveMessageIndex; idx++)
                     {
-                        if (_queue[idx].getID() == this.m_waitMsgID)
+                        if (_queue[idx].getID() == this.m_waitMsgID || _queue[idx].getID() == this.m_additionalWaitMsgID)
                         {
                             retMsg = _queue[idx];
                             _readMessageIndex = idx + 1;

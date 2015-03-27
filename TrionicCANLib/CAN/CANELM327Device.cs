@@ -8,6 +8,7 @@ using System.Text;
 using System.Collections;
 using System.Diagnostics;
 using NLog;
+using TrionicCANLib.API;
 
 namespace TrionicCANLib.CAN
 {
