@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using NLog;
+using TrionicCANLib.API;
 
 namespace TrionicCANLib.CAN
 {
@@ -144,7 +145,6 @@ namespace TrionicCANLib.CAN
                 close();
             }
             Thread.Sleep(200);
-            m_readThread = new Thread(readMessages) { Name = "CANUSBDevice.m_readThread" };
 
             if (!UseOnlyPBus)
             {
@@ -171,6 +171,7 @@ namespace TrionicCANLib.CAN
                     if (waitAnyMessage(1000, out msg) != 0)
                     {
                         logger.Debug("I bus connected");
+                        m_readThread = new Thread(readMessages) { Name = "CANUSBDevice.m_readThread" };
                         if (m_readThread.ThreadState == ThreadState.Unstarted)
                             m_readThread.Start();
                         return OpenResult.OK;
@@ -203,6 +204,7 @@ namespace TrionicCANLib.CAN
             if(DisableCanConnectionCheck || boxIsThere())
             {
                 logger.Debug("P bus connected");
+                m_readThread = new Thread(readMessages) { Name = "CANUSBDevice.m_readThread" };
                 if (m_readThread.ThreadState == ThreadState.Unstarted)
                     m_readThread.Start();
                 return OpenResult.OK;
