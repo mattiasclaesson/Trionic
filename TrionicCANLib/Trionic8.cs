@@ -4886,6 +4886,11 @@ namespace TrionicCANLib.API
             return true;
         }
 
+
+        ///////////////////////////////////////////////////////////////////////////
+        /// Flash and read methods specifically for Motronic ME9.6 with GMLAN
+        ///
+
         public void ReadFlashME96(object sender, DoWorkEventArgs workEvent)
         {
             Me96ReadArgs args = (Me96ReadArgs)workEvent.Argument;
@@ -5170,6 +5175,274 @@ namespace TrionicCANLib.API
             success = true;
 
             return retData;
+        }
+
+        public void WriteFlashME96(object sender, DoWorkEventArgs workEvent)
+        {
+            string filename = (string)workEvent.Argument;
+
+            if (!canUsbDevice.isOpen()) return;
+            _needRecovery = false;
+
+            _stallKeepAlive = true;
+
+            SendKeepAlive();
+            sw.Reset();
+            sw.Start();
+            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
+            StartSession10();
+            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
+            SendShutup();
+            SendA2();
+            SendA5();
+            SendA503();
+            Thread.Sleep(50);
+            SendKeepAlive();
+
+            // verified upto here
+
+            _securityLevel = AccessLevel.AccessLevel01;
+            //CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
+            if (!RequestSecurityAccess(0))   // was 2000 milli-seconds
+            {
+                CastInfoEvent("Failed to get security access", ActivityType.UploadingFlash);
+                _stallKeepAlive = false;
+                workEvent.Result = false;
+                return;
+            }
+            Thread.Sleep(50);
+
+            CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
+            if (SendrequestDownloadME96(false))
+            {
+                _needRecovery = true;
+                SendShutup();
+                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
+                bool success = ProgramFlashME96(filename);
+
+                if (success)
+                    CastInfoEvent("FLASH upload completed", ActivityType.ConvertingFile);
+                else
+                    CastInfoEvent("FLASH upload failed", ActivityType.ConvertingFile);
+
+                sw.Stop();
+                _needRecovery = false;
+
+                // what else to do?
+                Send0120();
+                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+            }
+            else
+            {
+                sw.Stop();
+                _needRecovery = false;
+                _stallKeepAlive = false;
+                CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
+                Send0120();
+                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+                workEvent.Result = false;
+                return;
+
+            }
+            _stallKeepAlive = false;
+            workEvent.Result = true;
+        }
+
+        private bool SendrequestDownloadME96(bool recoveryMode)
+        {
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            //05 34 00 01 E0 00 00 00
+            ulong cmd = 0x000000E001003406;
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+            }
+            bool eraseDone = false;
+            int eraseCount = 0;
+            int waitCount = 0;
+            while (!eraseDone)
+            {
+                m_canListener.setupWaitMessage(0x7E8); // TEST ELM327 31082011
+                CANMessage response = new CANMessage();
+                response = m_canListener.waitMessage(500); // 1 seconds!
+                ulong data = response.getData();
+                if (data == 0)
+                {
+                    m_canListener.setupWaitMessage(0x311); // TEST ELM327 31082011
+                    response = new CANMessage();
+                    response = m_canListener.waitMessage(500); // 1 seconds!
+                    data = response.getData();
+                }
+                // response will be 03 7F 34 78 00 00 00 00 a couple of times while erasing
+                if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x78)
+                {
+                    if (recoveryMode) BroadcastKeepAlive();
+                    else SendKeepAlive();
+                    eraseCount++;
+                    string info = "Erasing FLASH";
+                    for (int i = 0; i < eraseCount; i++) info += ".";
+                    CastInfoEvent(info, ActivityType.ErasingFlash);
+                }
+                else if (getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x74)
+                {
+                    if (recoveryMode) BroadcastKeepAlive();
+                    else SendKeepAlive();
+                    eraseDone = true;
+                    return true;
+                }
+                else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x11)
+                {
+                    CastInfoEvent("Erase cannot be performed", ActivityType.ErasingFlash);
+                    return false;
+                }
+                else
+                {
+                    Console.WriteLine("Rx: " + data.ToString("X16"));
+                    if (canUsbDevice is CANELM327Device)
+                    {
+                        if (recoveryMode) BroadcastKeepAlive();
+                        else SendKeepAlive();
+                    }
+                }
+                waitCount++;
+                if (waitCount > 35)
+                {
+                    if (canUsbDevice is CANELM327Device)
+                    {
+                        CastInfoEvent("Erase completed", ActivityType.ErasingFlash);
+                        // ELM327 seem to be unable to wait long enough for this response
+                        // Instead we assume its finnished ok after 35 seconds
+                        return true;
+                    }
+                    else
+                    {
+                        CastInfoEvent("Erase timed out after 35 seconds", ActivityType.ErasingFlash);
+                        return false;
+                    }
+                }
+                Thread.Sleep(m_sleepTime);
+
+            }
+            return true;
+        }
+
+        private bool ProgramFlashME96(string filename)
+        {
+            int startAddress = 0x1C2000;
+            int start = startAddress;
+            int end = 0x1F0000;
+            int range = end - start;
+            int blockSize = 0x80; // defined in bootloader... keep it that way!
+            int bufpnt = startAddress;
+            int saved_progress = 0;
+            byte[] filebytes = File.ReadAllBytes(filename);
+
+            while (bufpnt < end)
+            {
+                int percentage = (int)((float)100 * (bufpnt - start) / (float)range);
+                if (percentage > saved_progress)
+                {
+                    CastProgressWriteEvent(percentage);
+                    saved_progress = percentage;
+                }
+
+                byte[] data2Send = new byte[blockSize];
+                for (int j = 0; j < blockSize; j++)
+                {
+                    data2Send[bufpnt] = filebytes[j];
+                    bufpnt++;
+                }
+                int length = blockSize;
+                //if (blockNumber == 0xF50) length = 0xE6;
+                //TODO check last length...and detect differently
+
+                sw.Reset();
+                sw.Start();
+                if (SendTransferDataME96(length, startAddress, 0x7E8))
+                {
+                    canUsbDevice.RequestDeviceReady();
+                    // calculate number of frames
+                    int numberOfFrames = (int)data2Send.Length / 7; // remnants?
+                    if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
+                    byte iFrameNumber = 0x21;
+                    int txpnt = 0;
+                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                    for (int frame = 0; frame < numberOfFrames; frame++)
+                    {
+                        var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
+                        msg.setData(cmd);
+                        txpnt += 7;
+                        iFrameNumber++;
+                        if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                        msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
+
+                        if (frame == numberOfFrames - 1)
+                            m_canListener.ClearQueue();
+
+                        if (!canUsbDevice.sendMessage(msg))
+                        {
+                            logger.Debug("Couldn't send message");
+                        }
+                        if (m_sleepTime > 0)
+                            Thread.Sleep(m_sleepTime);
+                    }
+                    Application.DoEvents();
+
+                    // now wait for 01 76 00 00 00 00 00 00 
+                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    {
+                        CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
+                        _stallKeepAlive = false;
+                        return false;
+                    }
+                    canUsbDevice.RequestDeviceReady();
+                    SendKeepAlive();
+                }
+                sw.Stop();
+
+                startAddress += blockSize;
+            }
+            return true;
+        }
+
+        private bool SendTransferDataME96(int length, int address, uint waitforResponseID)
+        {
+            CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
+            ulong cmd = 0x0000000000360010; // 0x36 = transferData
+            ulong addressHigh = (uint)address & 0x0000000000FF0000;
+            addressHigh /= 0x10000;
+            ulong addressMiddle = (uint)address & 0x000000000000FF00;
+            addressMiddle /= 0x100;
+            ulong addressLow = (uint)address & 0x00000000000000FF;
+            ulong len = (ulong)length;
+
+            cmd |= (addressLow * 0x100000000000000);
+            cmd |= (addressMiddle * 0x1000000000000);
+            cmd |= (addressHigh * 0x10000000000);
+            cmd |= (len * 0x100);
+            Console.WriteLine("send: " + cmd.ToString("X16"));
+
+            msg.setData(cmd);
+            msg.elmExpectedResponses = 1;
+            m_canListener.setupWaitMessage(waitforResponseID);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                logger.Debug("Couldn't send message");
+            }
+
+            CANMessage response = new CANMessage();
+            response = new CANMessage();
+            response = m_canListener.waitMessage(1000);
+            ulong data = response.getData();
+            Console.WriteLine("Received in SendTransferData: " + data.ToString("X16"));
+            if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

@@ -140,6 +140,35 @@ namespace TrionicCANFlasher
                                 AddLogItem("Connection terminated");
                             }
                         }
+                        else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+                        {
+                            SetGenericOptions(trionic8);
+
+                            EnableUserInput(false);
+                            AddLogItem("Opening connection");
+                            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                            trionic8.ECU = ECU.MOTRONIC96;
+                            if (trionic8.openDevice(false))
+                            {
+                                Thread.Sleep(1000);
+                                dtstart = DateTime.Now;
+                                AddLogItem("Update FLASH content");
+                                Application.DoEvents();
+                                BackgroundWorker bgWorker;
+                                bgWorker = new BackgroundWorker();
+                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashME96);
+                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                bgWorker.RunWorkerAsync(ofd.FileName);
+
+                            }
+                            else
+                            {
+                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                trionic8.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
+                            }
+                        }
                     }
                 }
             }
@@ -1241,7 +1270,7 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    var args = new Me96ReadArgs() { FileName = sfd.FileName, start = 0x1B0000, end = 0x1F0000 };
+                                    var args = new Me96ReadArgs() { FileName = sfd.FileName, start = 0x1B0000, end = 0x1F0000 }; // Read more than only the calibration that start at 1c2000
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
