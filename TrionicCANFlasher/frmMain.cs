@@ -308,7 +308,7 @@ namespace TrionicCANFlasher
                             {
                                 SetGenericOptions(trionic7);
                                 trionic7.ELM327Kline = cbELM327Kline.Checked;
-                                trionic7.UseFlasherOnDevice = false;
+                                trionic7.UseFlasherOnDevice = true;
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);

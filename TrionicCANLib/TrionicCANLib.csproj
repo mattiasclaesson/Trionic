@@ -54,19 +54,19 @@
   <ItemGroup>
     <Reference Include="canusbdrv_net, Version=2.0.0.1, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\canusbdrv_net.dll</HintPath>
+      <HintPath>..\Libs\canusbdrv_net.dll</HintPath>
     </Reference>
     <Reference Include="combilib-net, Version=1.0.4093.28460, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\combilib-net.dll</HintPath>
+      <HintPath>..\Libs\combilib-net.dll</HintPath>
     </Reference>
-    <Reference Include="ftd2xx_net, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL">
+    <Reference Include="FTD2XX_NET, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\ftd2xx_net.dll</HintPath>
+      <HintPath>..\Libs\FTD2XX_NET.dll</HintPath>
     </Reference>
     <Reference Include="LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\LibUsbDotNet.dll</HintPath>
+      <HintPath>..\Libs\LibUsbDotNet.dll</HintPath>
     </Reference>
     <Reference Include="NLog">
       <HintPath>..\Libs\NLog.dll</HintPath>
