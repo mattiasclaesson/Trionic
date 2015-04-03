@@ -62,6 +62,10 @@ namespace TrionicCANLib.API
             {
                 canUsbDevice = new LPCCANDevice();
             }
+            else if (adapterType == CANBusAdapter.KVASER)
+            {
+                canUsbDevice = new KvaserCANDevice();
+            }
 
             if (canUsbDevice != null)
             {

@@ -371,7 +371,7 @@ namespace TrionicCANLib.KWP
                     }
                     catch (Exception x)
                     {
-                        //AddToDeviceTrace("ELM372Device DetectInitialPortSpeedAndReset" + x.Message);
+                        //logger.Debug("ELM372Device DetectInitialPortSpeedAndReset" + x.Message);
                         m_serialPort.Close();
                     }
                 }
@@ -382,7 +382,7 @@ namespace TrionicCANLib.KWP
         protected void WriteToSerialWithTrace(string line)
         {
             m_serialPort.Write(line);
-            //AddToDeviceTrace("SERTX: " + line);
+            //logger.Debug("SERTX: " + line);
         }
 
         /// <summary>

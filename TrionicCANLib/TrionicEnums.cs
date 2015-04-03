@@ -30,7 +30,8 @@ namespace TrionicCANLib.API
         LAWICEL,
         COMBI,
         ELM327,
-        JUST4TRIONIC
+        JUST4TRIONIC,
+        KVASER
     };
 
     public enum ECU : int

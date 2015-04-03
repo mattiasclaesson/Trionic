@@ -52,6 +52,10 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="canlibCLSNET, Version=8.8.823.1, Culture=neutral, PublicKeyToken=bb7f2cd46200de24, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\canlibCLSNET.dll</HintPath>
+    </Reference>
     <Reference Include="canusbdrv_net, Version=2.0.0.1, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\canusbdrv_net.dll</HintPath>
@@ -88,6 +92,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CAN\KvaserCANDevice.cs" />
     <Compile Include="ITrionic.cs" />
     <Compile Include="Me96ReadArgs.cs" />
     <Compile Include="SymbolHelper.cs" />

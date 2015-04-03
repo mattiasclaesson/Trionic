@@ -111,6 +111,22 @@ namespace TrionicCANLib.CAN
         }
 
         /// <summary>
+        /// Set a byte array as data of a CANMessage
+        /// </summary>
+        /// <param name="a_bytes">The bytes to set</param>
+        /// <param name="a_length">Length of data</param>
+        public void setCanData(byte[] a_bytes, byte a_length)
+        {
+            setData(0L);
+            
+            m_length = a_length;
+            for (uint i = 0; i < m_length; i++)
+            {
+                setCanData(a_bytes[i], i);
+            }
+        }
+
+        /// <summary>
         /// Get a byte of the data contained in a CANMessage
         /// </summary>
         /// <param name="a_index"></param>
@@ -132,6 +148,16 @@ namespace TrionicCANLib.CAN
             _data |= (ulong)((ulong)((m_data & 0x000000000000FF00)) << (5 * 8));
             _data |= (ulong)((ulong)((m_data & 0x00000000000000FF)) << (7 * 8));
             return _data;
+        }
+
+        public byte[] getDataAsByteArray()
+        {
+            byte[] msg = new byte[m_length];
+            for (uint i = 0; i < m_length; i++)
+            {
+                msg[i] = getCanData(i);
+            }
+            return msg;
         }
 
         public CANMessage Clone()
