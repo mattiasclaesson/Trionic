@@ -45,12 +45,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_4CDEAFCBEB56453B95C75FF390EB2878"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_67C8A3B4B33DC993F775EB8B685F49F7"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
@@ -118,12 +112,6 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1CD663634790325E7A026BEAFF7B9EB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_BAFCC793B41C6A448DEA42B07F4E19EE"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -149,6 +137,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_67C8A3B4B33DC993F775EB8B685F49F7"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_1CD663634790325E7A026BEAFF7B9EB4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -322,26 +316,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4CDEAFCBEB56453B95C75FF390EB2878"
-            {
-            "SourcePath" = "8:..\\TrionicCANFlasher\\TrionicCanFlasher.pdf"
-            "TargetName" = "8:TrionicCanFlasher.pdf"
-            "Tag" = "8:"
-            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_67C8A3B4B33DC993F775EB8B685F49F7"
@@ -576,7 +550,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
         "ProductCode" = "8:{EC0747E9-B503-4A6C-AD74-A3EF7481BEDF}"
-        "PackageCode" = "8:{62E43362-4F58-4B09-AFCC-9E53F9C1621D}"
+        "PackageCode" = "8:{806863C4-65B4-4173-B23D-41D1BD51F91A}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -1145,6 +1119,34 @@
             "ProjectOutputGroupRegister" = "3:1"
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{AD7871BE-0280-47D4-9492-2181BB1C789B}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_A58031994FEB42E8B07F4857AEBF3935"
+            {
+            "SourcePath" = "8:"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:ContentFiles"
             "OutputProjectGuid" = "8:{AD7871BE-0280-47D4-9492-2181BB1C789B}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
