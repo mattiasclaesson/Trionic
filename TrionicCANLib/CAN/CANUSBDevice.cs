@@ -146,6 +146,10 @@ namespace TrionicCANLib.CAN
             }
             Thread.Sleep(200);
 
+            System.Text.StringBuilder adapter = new System.Text.StringBuilder();
+            int num = Lawicel.CANUSB.canusb_getFirstAdapter(adapter, 10);
+            logger.Debug("Lawicel.CANUSB.canusb_getFirstAdapter() name=" + adapter + " number=" + num);
+
             if (!UseOnlyPBus)
             {
                 logger.Debug("Lawicel.CANUSB.canusb_Open()");
@@ -210,7 +214,7 @@ namespace TrionicCANLib.CAN
                 return OpenResult.OK;
             }
             logger.Debug("Box not there");
-            close();
+            //close();
             return OpenResult.OpenError;
         }
 
@@ -225,8 +229,11 @@ namespace TrionicCANLib.CAN
             int res = 0;
             try
             {
-                logger.Debug("Lawicel.CANUSB.canusb_Close()");
-                res = Lawicel.CANUSB.canusb_Close(m_deviceHandle);
+                if (m_deviceHandle != 0)
+                {
+                    logger.Debug("Lawicel.CANUSB.canusb_Close()");
+                    res = Lawicel.CANUSB.canusb_Close(m_deviceHandle);
+                }
             }
             catch(DllNotFoundException e)
             {

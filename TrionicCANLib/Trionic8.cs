@@ -88,7 +88,6 @@ namespace TrionicCANLib.API
             {
                 canUsbDevice = new KvaserCANDevice();
             }
-            canUsbDevice.EnableCanLog = m_EnableLog;
             canUsbDevice.UseOnlyPBus = m_OnlyPBus;
             canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
             canUsbDevice.TrionicECU = ECU.TRIONIC8;
@@ -485,15 +484,9 @@ namespace TrionicCANLib.API
                     {
                         LPCCANDevice lpc = (LPCCANDevice)canUsbDevice;
                         lpc.disconnect();
-                        canUsbDevice.close();
-                        canUsbDevice = null;
-                        logger.Debug("Closed LPCCANDevice in Trionic8");
                     }
-                    else
-                    {
-                        canUsbDevice.close();
-                        canUsbDevice = null;
-                    }
+                    canUsbDevice.close();
+                    canUsbDevice = null;
                 }
             }
             catch (Exception e)

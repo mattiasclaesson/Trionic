@@ -668,7 +668,6 @@ namespace TrionicCANFlasher
 
         private void SetGenericOptions(ITrionic trionic)
         {
-            trionic.EnableLog = cbEnableLogging.Checked;
             trionic.OnlyPBus = cbOnlyPBus.Checked;
             trionic.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
             

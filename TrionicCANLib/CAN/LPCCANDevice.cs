@@ -26,7 +26,7 @@ public class LPCCANDevice : ICANDevice
 
     private caCombiAdapter combi;                   ///< adapter object
     private CANMessage in_msg = new CANMessage();   ///< incoming message
-    //private Logger logger = LogManager.GetCurrentClassLogger();
+    private Logger logger = LogManager.GetCurrentClassLogger();
 
     //---------------------------------------------------------------------------------------------
     /**
@@ -69,7 +69,7 @@ public class LPCCANDevice : ICANDevice
 
         catch (Exception e)
         {
-            ////logger.Debug("Failed to connect to adapter: " + e.Message);
+            logger.Debug("Failed to connect to adapter: " + e.Message);
             return false;
         }
     }
@@ -124,31 +124,31 @@ public class LPCCANDevice : ICANDevice
         try
         {
             // connect to adapter
-            //logger.Debug("Connecting LPCCanDevice");
+            logger.Debug("Connecting LPCCanDevice");
             connect();
-            //logger.Debug("Connected LPCCanDevice");
+            logger.Debug("Connected LPCCanDevice");
 
             // try listening on I-bus first
             if (!UseOnlyPBus && try_bitrate(47619, !DisableCanConnectionCheck))
             {
                 // got traffic
-                //logger.Debug("I-bus connected");
+                logger.Debug("I-bus connected");
 
                 return OpenResult.OK;
             }
 
-            //logger.Debug("Trying P-bus connection");
+            logger.Debug("Trying P-bus connection");
 
             // try P-bus next
             if (!try_bitrate(500000, !DisableCanConnectionCheck))
             {
                 // give up
-                //logger.Debug("Failed to open canchannel");
+                logger.Debug("Failed to open canchannel");
                 combi.Close();
                 return OpenResult.OpenError;
             }
 
-            //logger.Debug("Canchannel opened");
+            logger.Debug("Canchannel opened");
             if (read_thread != null) //logger.Debug("Threadstate: " + read_thread.ThreadState);
             // start reader thread
             try
@@ -157,7 +157,7 @@ public class LPCCANDevice : ICANDevice
             }
             catch (Exception tE)
             {
-                //logger.Debug("Failed to abort thread: " + tE.Message);
+                logger.Debug("Failed to abort thread: " + tE.Message);
             }
             term_requested = false;
             read_thread = new Thread(read_messages); // move here to ensure a new thread is started
@@ -168,7 +168,7 @@ public class LPCCANDevice : ICANDevice
 
         catch (Exception E)
         {
-            //logger.Debug("Failed to open LPCCanDevice: " + E.Message);
+            logger.Debug("Failed to open LPCCanDevice: " + E.Message);
             // cleanup
             close();
 
@@ -206,7 +206,7 @@ public class LPCCANDevice : ICANDevice
             }
             
             // close connection
-            //logger.Debug("Disconnected from LPCCANDevice");
+            logger.Debug("Disconnected from LPCCANDevice");
             disconnect();
             return CloseResult.OK;
         }
@@ -292,7 +292,7 @@ public class LPCCANDevice : ICANDevice
         Debug.Assert(combi != null);
         if (!combi.IsOpen())
         {
-            //logger.Debug("Failed to create flasher: not connected to adapter");
+            logger.Debug("Failed to create flasher: not connected to adapter");
             return null;
         }
 
@@ -319,12 +319,12 @@ public class LPCCANDevice : ICANDevice
             frame.is_remote = 0;
 
             combi.CAN_SendMessage(ref frame);
-            //logger.Trace("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16"));
+            logger.Trace("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16"));
             return true;
         }
         catch (Exception e)
         {
-            //logger.Trace("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16") + " failed" + e.Message);
+            logger.Trace("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16") + " failed" + e.Message);
             return false;
         }
     }
@@ -420,7 +420,7 @@ public class LPCCANDevice : ICANDevice
                 if (term_requested)
                 {
                     // exit
-                    //logger.Debug("Reader thread ended");
+                    logger.Debug("Reader thread ended");
                     return;
                 }
             }
@@ -428,7 +428,7 @@ public class LPCCANDevice : ICANDevice
             // receive messages
             if (combi.CAN_GetMessage(ref frame, 1000))
             {
-                //logger.Trace("rx: " + frame.id.ToString("X3") + " " + frame.data.ToString("X16"));
+                logger.Trace("rx: " + frame.id.ToString("X3") + " " + frame.data.ToString("X16"));
                 if (acceptMessageId(frame.id))
                 {
                     // convert message

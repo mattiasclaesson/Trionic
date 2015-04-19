@@ -106,14 +106,6 @@ namespace TrionicCANLib.CAN
             set { m_OnlyPBus = value; }
         }
 
-        private bool m_EnableCanLog = false;
-
-        public bool EnableCanLog
-        {
-            get { return m_EnableCanLog; }
-            set { m_EnableCanLog = value; }
-        }
-
         private bool _DisableCanConnectionCheck = false;
 
         public bool DisableCanConnectionCheck

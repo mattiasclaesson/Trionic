@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NLog;
 
 namespace CommonSuite
 {
     public class SymbolHelper
     {
         private int _bitMask = 0x00000;
+
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         public int BitMask
         {
@@ -156,6 +159,7 @@ namespace CommonSuite
                 }
                 catch (Exception cE)
                 {
+                    logger.Error(cE);
                 }
             }
         }

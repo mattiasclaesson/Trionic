@@ -28,21 +28,6 @@ namespace TrionicCANLib.API
         [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
         public static extern uint MM_EndPeriod(uint uMilliseconds);
 
-        protected bool m_EnableLog = false;
-
-        public bool EnableLog
-        {
-            get { return m_EnableLog; }
-            set
-            {
-                m_EnableLog = value;
-                if (canUsbDevice != null)
-                {
-                    canUsbDevice.EnableCanLog = m_EnableLog;
-                }
-            }
-        }
-
         protected int m_sleepTime = (int)SleepTime.Default;
 
         public SleepTime Sleeptime

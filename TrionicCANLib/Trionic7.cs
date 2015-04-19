@@ -69,7 +69,6 @@ namespace TrionicCANLib.API
 
             if (canUsbDevice != null)
             {
-                canUsbDevice.EnableCanLog = m_EnableLog;
                 canUsbDevice.UseOnlyPBus = m_OnlyPBus;
                 canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
                 canUsbDevice.TrionicECU = ECU.TRIONIC7;
@@ -80,12 +79,12 @@ namespace TrionicCANLib.API
 
             if (adapterType == CANBusAdapter.ELM327 && m_ELM327Kline)
             {
-                kwpDevice = new ELM327Device() { EnableLog = m_EnableLog, ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
+                kwpDevice = new ELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
                 setFlasher();
             }
             else if (adapterType != CANBusAdapter.COMBI || !m_UseFlasherOnDevice)
             {
-                kwpDevice = new KWPCANDevice() { EnableLog = m_EnableLog };
+                kwpDevice = new KWPCANDevice();
                 kwpDevice.setCANDevice(canUsbDevice);
                 setFlasher();
             }
@@ -95,12 +94,10 @@ namespace TrionicCANLib.API
         {
             KWPHandler.setKWPDevice(kwpDevice);
             kwpHandler = KWPHandler.getInstance();
-            kwpHandler.EnableLog = m_EnableLog;
 
             T7Flasher.setKWPHandler(kwpHandler);
             flash = T7Flasher.getInstance();
             flash.onStatusChanged += flash_onStatusChanged;
-            flash.EnableFlasherLog = m_EnableLog;
         }
 
         void flash_onStatusChanged(object sender, IFlasher.StatusEventArgs e)
@@ -133,8 +130,6 @@ namespace TrionicCANLib.API
                 {
                     // get flasher object
                     flash = lpc.createFlasher();
-                    flash.EnableFlasherLog = m_EnableLog;
-
                     logger.Debug("T7CombiFlasher object created");
                     CastInfoEvent("CombiAdapter ready", ActivityType.ConvertingFile);
                 }

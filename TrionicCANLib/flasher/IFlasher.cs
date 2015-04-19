@@ -64,9 +64,6 @@ namespace TrionicCANLib.Flasher
         protected FlashCommand m_command;               ///< command
         protected Object m_synchObject = new Object();  ///< state lock
 
-        // configuration
-        private bool m_EnableFlasherLog = false;            ///< CAN logging flag
-
         //-------------------------------------------------------------------------
         /**
             Default constructor.
@@ -76,16 +73,6 @@ namespace TrionicCANLib.Flasher
             // clear state
             this.m_flashStatus = FlashStatus.DoinNuthin;
             this.m_command = FlashCommand.NoCommand;
-        }
-
-        //-------------------------------------------------------------------------
-        /**
-            Sets logging on/off.
-        */
-        public bool EnableFlasherLog
-        {
-            get { return m_EnableFlasherLog; }
-            set { m_EnableFlasherLog = value; }
         }
 
         //-------------------------------------------------------------------------
