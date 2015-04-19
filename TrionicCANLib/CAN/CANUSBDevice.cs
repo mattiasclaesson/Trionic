@@ -76,7 +76,7 @@ namespace TrionicCANLib.CAN
             return 0F;
         }
 
-        public override void Flush()
+        public void Flush()
         {
             Lawicel.CANUSB.canusb_Flush(m_deviceHandle, 0x01);
         }

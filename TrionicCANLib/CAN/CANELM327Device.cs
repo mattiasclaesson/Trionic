@@ -521,7 +521,7 @@ namespace TrionicCANLib.CAN
             SetupCANFilter(AcceptOnlyMessageIds[0].ToString("X3"), filter.ToString("X3"));
         }
 
-        public override void Flush()
+        public void Flush()
         {
             if (m_deviceIsOpen)
             {

@@ -138,8 +138,6 @@ namespace TrionicCANLib.CAN
         /// <returns>OpenResult</returns>
         abstract public OpenResult open();
 
-        abstract public void Flush();
-
         /// <summary>
         /// This method closes the device for reading and writing.
         /// </summary>

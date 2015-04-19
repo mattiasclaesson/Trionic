@@ -356,7 +356,7 @@ namespace TrionicCANLib.CAN
             return null;
         }
 
-        public override void Flush()
+        public void Flush()
         {
             if (m_deviceIsOpen)
             {

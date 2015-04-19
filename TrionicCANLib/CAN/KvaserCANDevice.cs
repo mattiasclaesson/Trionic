@@ -70,10 +70,6 @@ namespace TrionicCANLib.CAN
             return 0F;
         }
 
-        public override void Flush()
-        {
-        }
-
         /// <summary>
         /// readMessages is the "run" method of this class. It reads all incomming messages
         /// and publishes them to registered ICANListeners.

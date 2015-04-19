@@ -220,15 +220,6 @@ public class LPCCANDevice : ICANDevice
 
     //---------------------------------------------------------------------------------------------
     /**
-        Flushes communications queue.
-    */
-    public override void Flush()
-    {
-        // empty
-    }
-
-    //---------------------------------------------------------------------------------------------
-    /**
 	    Checks if ADC low-pass filter is active.
 
 	    @param		channel		A/D channel number [0...4]
