@@ -162,6 +162,9 @@ namespace TrionicCANLib.CAN
         abstract public float GetThermoValue();
         abstract public float GetADCValue(uint channel);
 
+        static public string[] GetAdapterNames(){return new string[0];}
+        abstract public void SetSelectedAdapter(string adapter);
+
         /// <summary>
         /// This method adds a ICANListener. Any number of ICANListeners can be added (well,
         /// it's limited to processor speed and memory).

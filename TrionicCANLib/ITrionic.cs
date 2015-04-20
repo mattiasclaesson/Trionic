@@ -98,6 +98,36 @@ namespace TrionicCANLib.API
             return canUsbDevice.GetThermoValue();
         }
 
+        public static string[] GetAdapterNames(CANBusAdapter adapterType)
+        {
+            if (adapterType == CANBusAdapter.LAWICEL)
+            {
+                return CANUSBDevice.GetAdapterNames();
+            }
+            else if (adapterType == CANBusAdapter.ELM327)
+            {
+                return CANELM327Device.GetAdapterNames();
+            }
+            else if (adapterType == CANBusAdapter.JUST4TRIONIC)
+            {
+                return Just4TrionicDevice.GetAdapterNames();
+            }
+            //else if (adapterType == CANBusAdapter.COMBI)
+            //{
+            //    return LPCCANDevice.GetAdapterNames();
+            //}
+            else if (adapterType == CANBusAdapter.KVASER)
+            {
+                return KvaserCANDevice.GetAdapterNames();
+            }
+            return new string[0];
+        }
+
+        public void SetSelectedAdapter(string adapter)
+        {
+            canUsbDevice.SetSelectedAdapter(adapter);
+        }
+
         protected void CastProgressWriteEvent(int percentage)
         {
             if (onWriteProgress != null)

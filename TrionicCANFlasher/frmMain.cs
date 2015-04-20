@@ -720,6 +720,8 @@ namespace TrionicCANFlasher
             CheckRegistryFTDI();
             Application.DoEvents();
 
+            GetAdapterInformation();
+
             trionic7.onReadProgress += trionicCan_onReadProgress;
             trionic7.onWriteProgress += trionicCan_onWriteProgress;
             trionic7.onCanInfo += trionicCan_onCanInfo;
@@ -744,6 +746,26 @@ namespace TrionicCANFlasher
             catch (Exception e)
             {
                 AddLogItem(e.Message);
+            }
+        }
+
+        private void GetAdapterInformation()
+        {
+            if (cbxAdapterType.SelectedIndex != -1)
+            {
+                string[] adapters = ITrionic.GetAdapterNames((CANBusAdapter)cbxAdapterType.SelectedIndex);
+                comboBox1.Items.Clear();
+                foreach (string adapter in adapters)
+                    comboBox1.Items.Add(adapter);
+                try
+                {
+                    if (adapters.Length > 0)
+                        comboBox1.SelectedIndex = 0;
+                }
+                catch (Exception e)
+                {
+                    AddLogItem(e.Message);
+                }
             }
         }
 
@@ -886,6 +908,7 @@ namespace TrionicCANFlasher
         private void cbxAdapterType_SelectedIndexChanged(object sender, EventArgs e)
         {
             EnableUserInput(true);
+            GetAdapterInformation();
         }
 
         private void btnReadDTC_Click(object sender, EventArgs e)

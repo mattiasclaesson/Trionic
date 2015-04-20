@@ -27,7 +27,7 @@ namespace TrionicCANLib.CAN
         Thread m_readThread;
         Object m_synchObject = new Object();
         bool m_endThread = false;
-        private Logger logger = LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         private int m_forcedBaudrate = 38400;
 
@@ -55,6 +55,35 @@ namespace TrionicCANLib.CAN
             {
                 m_forcedComport = value;
             }
+        }
+
+        public static new string[] GetAdapterNames()
+        {
+            
+            System.Text.StringBuilder adapter = new System.Text.StringBuilder(10);
+            int number = Lawicel.CANUSB.canusb_getFirstAdapter(adapter, 10);
+            logger.Debug("Lawicel.CANUSB.canusb_getFirstAdapter() name=" + adapter + " number=" + number);
+            string[] names = new string[number];
+            if(number > 0)
+            {
+                names[0] = adapter.ToString();
+            }
+
+            for (int i = 1; i < number; i++ )
+            {
+                System.Text.StringBuilder next = new System.Text.StringBuilder(10);
+                int num2 = Lawicel.CANUSB.canusb_getNextAdapter(next, 10);
+                logger.Debug("Lawicel.CANUSB.canusb_getNextAdapter() name=" + next + " number=" + num2);
+                names[i] = next.ToString();
+            }
+            return names;
+        }
+
+        private string SelectedAdapter = string.Empty;
+
+        public override void SetSelectedAdapter(string adapter)
+        {
+            SelectedAdapter = adapter;
         }
 
         /// <summary>
@@ -146,16 +175,12 @@ namespace TrionicCANLib.CAN
             }
             Thread.Sleep(200);
 
-            System.Text.StringBuilder adapter = new System.Text.StringBuilder();
-            int num = Lawicel.CANUSB.canusb_getFirstAdapter(adapter, 10);
-            logger.Debug("Lawicel.CANUSB.canusb_getFirstAdapter() name=" + adapter + " number=" + num);
-
             if (!UseOnlyPBus)
             {
                 logger.Debug("Lawicel.CANUSB.canusb_Open()");
                 if (TrionicECU == ECU.TRIONIC7)
                 {
-                    m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
+                    m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
                         CAN_BAUD_BTR_47K, // T7 i-bus
                         Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
                         Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
@@ -163,7 +188,7 @@ namespace TrionicCANLib.CAN
                 }
                 else if (TrionicECU == ECU.TRIONIC8)
                 {
-                    m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
+                    m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
                         CAN_BAUD_BTR_33K, // GMLAN
                         Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
                         Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
@@ -181,22 +206,15 @@ namespace TrionicCANLib.CAN
                         return OpenResult.OK;
                     }
                 }
-                if (m_deviceHandle != 0)
-                {
-                    close();
-                }
                 Thread.Sleep(200);
             }
-            if (m_deviceHandle != 0)
-            {
-                close();
-            }
+            close();
             m_endThread = false;
 
             //I bus wasn't connected.
             //Check if P bus is connected
             logger.Debug("Lawicel.CANUSB.canusb_Open()");
-            m_deviceHandle = Lawicel.CANUSB.canusb_Open(IntPtr.Zero,
+            m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
             Lawicel.CANUSB.CAN_BAUD_500K,
             Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
             Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
@@ -214,7 +232,7 @@ namespace TrionicCANLib.CAN
                 return OpenResult.OK;
             }
             logger.Debug("Box not there");
-            //close();
+            close();
             return OpenResult.OpenError;
         }
 

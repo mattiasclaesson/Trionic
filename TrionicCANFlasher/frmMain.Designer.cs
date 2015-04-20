@@ -59,6 +59,7 @@
             this.cbELM327Kline = new System.Windows.Forms.CheckBox();
             this.btnEditParameters = new System.Windows.Forms.Button();
             this.btnReadECUcalibration = new System.Windows.Forms.Button();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -135,7 +136,7 @@
             this.listBoxLog.Font = new System.Drawing.Font("Courier New", 8.25F);
             this.listBoxLog.FormattingEnabled = true;
             this.listBoxLog.ItemHeight = 14;
-            this.listBoxLog.Location = new System.Drawing.Point(12, 11);
+            this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
             this.listBoxLog.Size = new System.Drawing.Size(544, 312);
             this.listBoxLog.TabIndex = 20;
@@ -402,13 +403,22 @@
             this.btnReadECUcalibration.Text = "Read ECU calibration";
             this.btnReadECUcalibration.UseVisualStyleBackColor = true;
             this.btnReadECUcalibration.Click += new System.EventHandler(this.btnReadECUcalibration_Click);
-
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Location = new System.Drawing.Point(612, 247);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(144, 21);
+            this.comboBox1.TabIndex = 65;
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.btnReadECUcalibration);
             this.Controls.Add(this.btnEditParameters);
             this.Controls.Add(this.cbELM327Kline);
@@ -483,6 +493,7 @@
         private System.Windows.Forms.CheckBox cbELM327Kline;
         private System.Windows.Forms.Button btnEditParameters;
         private System.Windows.Forms.Button btnReadECUcalibration;
+        private System.Windows.Forms.ComboBox comboBox1;
     }
 }
 

@@ -13,7 +13,7 @@ namespace TrionicCANLib.CAN
     /// 
     public class KvaserCANDevice : ICANDevice
     {
-        private Logger logger = LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         int handleWrite;
         int handleRead;
 
@@ -68,6 +68,44 @@ namespace TrionicCANLib.CAN
         public override float GetThermoValue()
         {
             return 0F;
+        }
+
+        public static new string[] GetAdapterNames()
+        {
+            Canlib.canInitializeLibrary();
+
+            //List available channels
+            int nrOfChannels;
+            Canlib.canGetNumberOfChannels(out nrOfChannels);
+            string[] names = new string[nrOfChannels];
+            object o = new object();
+            for (int i = 0; i < nrOfChannels; i++)
+            {
+                Canlib.canGetChannelData(i, Canlib.canCHANNELDATA_CHANNEL_NAME, out o);
+                names[i] = o.ToString();
+                logger.Debug(string.Format("canlibCLSNET.Canlib.canGetChannelData({0}, canlibCLSNET.Canlib.canCHANNELDATA_CHANNEL_NAME, {1})", i, o));
+            }
+            return names;
+        }
+
+        public override void SetSelectedAdapter(string adapter)
+        {
+            int nrOfChannels;
+            Canlib.canGetNumberOfChannels(out nrOfChannels);
+            object o = new object();
+            for (int i = 0; i < nrOfChannels; i++)
+            {
+                Canlib.canGetChannelData(i, Canlib.canCHANNELDATA_CHANNEL_NAME, out o);
+                if(adapter.Equals(o.ToString()))
+                {
+                    ChannelNumber = i;
+                    logger.Debug(string.Format("canlibCLSNET.Canlib.canGetChannelData({0}, canlibCLSNET.Canlib.canCHANNELDATA_CHANNEL_NAME, {1})", i, o));
+                    return;
+                }
+            }
+
+            // Default to channel 0
+            ChannelNumber = 0;
         }
 
         /// <summary>
@@ -139,20 +177,20 @@ namespace TrionicCANLib.CAN
             Canlib.canInitializeLibrary();
 
             //List available channels
-            int nrOfChannels;
-            Canlib.canGetNumberOfChannels(out nrOfChannels);
-            object o = new object();
-            for (int i = 0; i < nrOfChannels; i++)
-            {
-                Canlib.canGetChannelData(i, Canlib.canCHANNELDATA_CHANNEL_NAME, out o);
-                logger.Debug(string.Format("canlibCLSNET.Canlib.canGetChannelData({0}, canlibCLSNET.Canlib.canCHANNELDATA_CHANNEL_NAME, {1})", i, o));
+            //int nrOfChannels;
+            //Canlib.canGetNumberOfChannels(out nrOfChannels);
+            //object o = new object();
+            //for (int i = 0; i < nrOfChannels; i++)
+            //{
+            //    Canlib.canGetChannelData(i, Canlib.canCHANNELDATA_CHANNEL_NAME, out o);
+            //    logger.Debug(string.Format("canlibCLSNET.Canlib.canGetChannelData({0}, canlibCLSNET.Canlib.canCHANNELDATA_CHANNEL_NAME, {1})", i, o));
 
-                if (i == 0)
-                {
-                    logger.Debug(string.Format("Selected channel: {0} name: {1})", i, o));
-                    ChannelNumber = i;
-                }
-            }
+                //if (i == 0)
+                //{
+                //    logger.Debug(string.Format("Selected channel: {0} name: {1})", i, o));
+                //    ChannelNumber = i;
+                //}
+            //}
 
             //Check if bus is connected
             if (isOpen())

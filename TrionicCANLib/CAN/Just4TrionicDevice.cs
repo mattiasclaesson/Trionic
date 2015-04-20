@@ -49,6 +49,15 @@ namespace TrionicCANLib.CAN
             }
         }
 
+        public static new string[] GetAdapterNames()
+        {
+            return new string[0];
+        }
+
+        public override void SetSelectedAdapter(string adapter)
+        {
+        }
+
         public Just4TrionicDevice()
         {
           

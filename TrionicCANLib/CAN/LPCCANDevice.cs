@@ -113,6 +113,10 @@ public class LPCCANDevice : ICANDevice
         }
     }
 
+    public override void SetSelectedAdapter(string adapter)
+    {
+    }
+
     //---------------------------------------------------------------------------------------------
     /**
         Connects to the adapter and activates CAN bus. 
