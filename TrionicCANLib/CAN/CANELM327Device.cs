@@ -60,7 +60,7 @@ namespace TrionicCANLib.CAN
             }
             set
             {
-                m_forcedComport = value;
+                //m_forcedComport = value;
             }
         }
 
@@ -79,11 +79,12 @@ namespace TrionicCANLib.CAN
 
         public static new string[] GetAdapterNames()
         {
-            return new string[0];
+            return SerialPort.GetPortNames();
         }
 
         public override void SetSelectedAdapter(string adapter)
         {
+            m_forcedComport = adapter;
         }
 
         public CANELM327Device()

@@ -79,7 +79,7 @@ namespace TrionicCANLib.CAN
             return names;
         }
 
-        private string SelectedAdapter = string.Empty;
+        private string SelectedAdapter = null;
 
         public override void SetSelectedAdapter(string adapter)
         {

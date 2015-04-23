@@ -674,7 +674,7 @@ namespace TrionicCANFlasher
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
-                trionic.ForcedComport = cbxComPort.SelectedItem.ToString();
+                trionic.ForcedComport = comboBox1.SelectedItem.ToString();//cbxComPort.SelectedItem.ToString();
                 //set selected com speed
                 switch (cbxComSpeed.SelectedIndex)
                 {
@@ -697,6 +697,7 @@ namespace TrionicCANFlasher
             }
 
             trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
+            trionic.SetSelectedAdapter(comboBox1.SelectedItem.ToString());
         }
 
         private void frmMain_Load(object sender, EventArgs e)
