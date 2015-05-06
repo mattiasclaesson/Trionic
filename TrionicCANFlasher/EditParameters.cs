@@ -6,12 +6,13 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using TrionicCANLib.API;
 
 namespace TrionicCANFlasher
 {
-    public partial class PiSelection : Form
+    public partial class EditParameters : Form
     {
-        public PiSelection()
+        public EditParameters()
         {
             InitializeComponent();
         }
@@ -105,6 +106,40 @@ namespace TrionicCANFlasher
                 tbE85.Text = value.ToString();
             }
         } 
+
+        public void setECU(ECU ecu) 
+        {
+            if(ecu == ECU.TRIONIC8)
+            {
+                tbVIN.Show();
+                cbCab.Show();
+                cbSAI.Show();
+                cbOutput.Show();
+                tbRPMLimit.Show();
+                tbTopSpeed.Show();
+                tbE85.Show();
+            }
+            else if(ecu == ECU.MOTRONIC96)
+            {
+                tbVIN.Hide();
+                cbCab.Hide();
+                cbSAI.Hide();
+                cbOutput.Hide();
+                tbRPMLimit.Hide();
+                tbTopSpeed.Show();
+                tbE85.Hide();
+            }
+            else if(ecu == ECU.TRIONIC7)
+            {
+                tbVIN.Hide();
+                cbCab.Hide();
+                cbSAI.Hide();
+                cbOutput.Hide();
+                tbRPMLimit.Hide();
+                tbTopSpeed.Hide();
+                tbE85.Show();
+            }
+        }
 
         private void writeToECU_Click(object sender, EventArgs e)
         {

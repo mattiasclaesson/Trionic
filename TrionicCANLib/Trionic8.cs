@@ -74,11 +74,11 @@ namespace TrionicCANLib.API
             else if (adapterType == CANBusAdapter.ELM327)
             {
                 Sleeptime = SleepTime.ELM327;
-                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
+                canUsbDevice = new CANELM327Device() { ForcedBaudrate = m_forcedBaudrate };
             }
             else if (adapterType == CANBusAdapter.JUST4TRIONIC)
             {
-                canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
+                canUsbDevice = new Just4TrionicDevice() { ForcedBaudrate = m_forcedBaudrate };
             }
             else if (adapterType == CANBusAdapter.COMBI)
             {
@@ -99,6 +99,11 @@ namespace TrionicCANLib.API
             }
             canUsbDevice.addListener(m_canListener);
             canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x645, 0x7E0, 0x7E8, 0x311, 0x5E8 };
+        }
+
+        override public void SetSelectedAdapter(string adapter)
+        {
+            canUsbDevice.SetSelectedAdapter(adapter);
         }
 
         void canUsbDevice_onReceivedAdditionalInformation(object sender, ICANDevice.InformationEventArgs e)

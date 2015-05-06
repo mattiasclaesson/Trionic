@@ -205,12 +205,6 @@ namespace TrionicCANLib.CAN
             set;
         }
 
-        abstract public string ForcedComport
-        {
-            get;
-            set;
-        }
-
         protected List<ICANListener> m_listeners = new List<ICANListener>();
 
         #region ELM327 specific

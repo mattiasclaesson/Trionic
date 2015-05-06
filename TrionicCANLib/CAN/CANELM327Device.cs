@@ -37,6 +37,8 @@ namespace TrionicCANLib.CAN
         object lockObj = new object();
 
         private int m_forcedBaudrate = 38400;
+        private string m_forcedComport = string.Empty;
+        private int m_baseBaudrate = 38400;
 
         public override int ForcedBaudrate
         {
@@ -47,33 +49,6 @@ namespace TrionicCANLib.CAN
             set
             {
                 m_forcedBaudrate = value;
-            }
-        }
-
-        private string m_forcedComport = string.Empty;
-
-        public override string ForcedComport
-        {
-            get
-            {
-                return m_forcedComport;
-            }
-            set
-            {
-                //m_forcedComport = value;
-            }
-        }
-
-        private int m_baseBaudrate = 38400;
-        public int BaseBaudrate
-        {
-            get
-            {
-                return m_baseBaudrate;
-            }
-            set
-            {
-                m_baseBaudrate = value;
             }
         }
 
@@ -321,9 +296,9 @@ namespace TrionicCANLib.CAN
 
             var detectedRate = DetectInitialPortSpeedAndReset();
             if (detectedRate != 0)
-                BaseBaudrate = detectedRate;
+                m_baseBaudrate = detectedRate;
 
-            m_serialPort.BaudRate = BaseBaudrate;
+            m_serialPort.BaudRate = m_baseBaudrate;
             m_serialPort.Handshake = Handshake.None;
             m_serialPort.ReadTimeout = 100;
             m_serialPort.WriteTimeout = 1000;
@@ -346,7 +321,7 @@ namespace TrionicCANLib.CAN
 
                 try
                 {
-                    m_serialPort.BaudRate = BaseBaudrate;
+                    m_serialPort.BaudRate = m_baseBaudrate;
                     m_serialPort.Open();
                     //Reset all //do not reset, might get other baudrate 
                     //WriteToSerialAndWait("ATZ\r", 1);
@@ -362,7 +337,7 @@ namespace TrionicCANLib.CAN
                 WriteToSerialAndWait("ATS0\r");     //disable whitespace, should speed up the transmission by eliminating 8 whitespaces for every 19 chars received                
 
                 #region setBaudRate
-                if (m_forcedBaudrate != BaseBaudrate && m_forcedBaudrate != 0)
+                if (m_forcedBaudrate != m_baseBaudrate && m_forcedBaudrate != 0)
                 {
                     WriteToSerialAndWait("ATBRT28\r"); //Set baudrate timeout 200 ms
 

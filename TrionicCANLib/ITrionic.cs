@@ -49,8 +49,6 @@ namespace TrionicCANLib.API
             }
         }
 
-        public int BaseBaudrate { get; set; }
-
         public bool isOpen()
         {
             if (canUsbDevice != null)
@@ -58,14 +56,6 @@ namespace TrionicCANLib.API
                 return canUsbDevice.isOpen();
             }
             return false;
-        }
-
-        protected string m_forcedComport = string.Empty;
-
-        public string ForcedComport
-        {
-            get { return m_forcedComport; }
-            set { m_forcedComport = value; }
         }
 
         protected bool m_OnlyPBus = false;
@@ -106,16 +96,13 @@ namespace TrionicCANLib.API
             }
             else if (adapterType == CANBusAdapter.ELM327)
             {
+
                 return CANELM327Device.GetAdapterNames();
             }
             else if (adapterType == CANBusAdapter.JUST4TRIONIC)
             {
                 return Just4TrionicDevice.GetAdapterNames();
             }
-            //else if (adapterType == CANBusAdapter.COMBI)
-            //{
-            //    return LPCCANDevice.GetAdapterNames();
-            //}
             else if (adapterType == CANBusAdapter.KVASER)
             {
                 return KvaserCANDevice.GetAdapterNames();
@@ -123,10 +110,7 @@ namespace TrionicCANLib.API
             return new string[0];
         }
 
-        public void SetSelectedAdapter(string adapter)
-        {
-            canUsbDevice.SetSelectedAdapter(adapter);
-        }
+        abstract public void SetSelectedAdapter(string adapter);
 
         protected void CastProgressWriteEvent(int percentage)
         {

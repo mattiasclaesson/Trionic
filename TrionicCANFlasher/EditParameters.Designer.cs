@@ -1,6 +1,6 @@
 ﻿namespace TrionicCANFlasher
 {
-    partial class PiSelection
+    partial class EditParameters
     {
         /// <summary>
         /// Required designer variable.
@@ -181,7 +181,7 @@
             this.closeButton.UseVisualStyleBackColor = true;
             this.closeButton.Click += new System.EventHandler(this.closeButton_Click);
             // 
-            // PiSelection
+            // EditParameters
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -189,8 +189,8 @@
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnWriteToECU);
-            this.Name = "PiSelection";
-            this.Text = "ProgramInformation";
+            this.Name = "EditParameters";
+            this.Text = "Edit Parameters";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);

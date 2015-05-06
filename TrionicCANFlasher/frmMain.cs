@@ -243,16 +243,25 @@ namespace TrionicCANFlasher
             btnEditParameters.Enabled = enable;
             btnReadECUcalibration.Enabled = enable;
 
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL)
+            {
+                cbAdapter.Enabled = enable;
+            }
+            else
+            {
+                cbAdapter.Enabled = false;
+            }
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
-                cbxComPort.Enabled = enable;
                 cbxComSpeed.Enabled = enable;
             }
             else
             {
-                cbxComPort.Enabled = false;
                 cbxComSpeed.Enabled = false;
             }
 
@@ -272,7 +281,7 @@ namespace TrionicCANFlasher
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
-                btnEditParameters.Enabled = false;
+                //btnEditParameters.Enabled = false;
                 btnReadECUcalibration.Enabled = false;
             }
 
@@ -287,7 +296,7 @@ namespace TrionicCANFlasher
             {
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
-                btnEditParameters.Enabled = false;
+                //btnEditParameters.Enabled = false;
                 btnFlashECU.Enabled = false;
                 btnSetE85.Enabled = false;
                 btnReadSRAM.Enabled = false;
@@ -648,11 +657,11 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("AdapterType", cbxAdapterType.SelectedItem.ToString());
             try
             {
-                SaveRegistrySetting("Comport", cbxComPort.SelectedItem.ToString());
+                SaveRegistrySetting("Adapter", cbAdapter.SelectedItem.ToString());
             }
             catch (Exception ex)
             {
-                AddLogItem(ex.Message);
+                SaveRegistrySetting("Adapter", String.Empty);
             }
             SaveRegistrySetting("ECU", cbxEcuType.SelectedItem.ToString());
             SaveRegistrySetting("EnableLogging", cbEnableLogging.Checked);
@@ -674,7 +683,6 @@ namespace TrionicCANFlasher
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
-                trionic.ForcedComport = comboBox1.SelectedItem.ToString();//cbxComPort.SelectedItem.ToString();
                 //set selected com speed
                 switch (cbxComSpeed.SelectedIndex)
                 {
@@ -697,7 +705,7 @@ namespace TrionicCANFlasher
             }
 
             trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
-            trionic.SetSelectedAdapter(comboBox1.SelectedItem.ToString());
+            trionic.SetSelectedAdapter(cbAdapter.SelectedItem.ToString());
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -709,8 +717,6 @@ namespace TrionicCANFlasher
         private void frmMain_Shown(object sender, EventArgs e)
         {
             Application.DoEvents();
-
-            SerialPortInformation();
 
             cbxAdapterType.SelectedIndex = 0;
             cbxEcuType.SelectedIndex = 0;
@@ -734,50 +740,24 @@ namespace TrionicCANFlasher
             EnableUserInput(true);
         }
 
-        private void SerialPortInformation()
-        {
-            string[] ports = SerialPort.GetPortNames();
-            foreach (string port in ports)
-                cbxComPort.Items.Add(FilterString(port));
-            try
-            {
-                if (ports.Length > 0)
-                    cbxComPort.SelectedIndex = 0;
-            }
-            catch (Exception e)
-            {
-                AddLogItem(e.Message);
-            }
-        }
-
         private void GetAdapterInformation()
         {
             if (cbxAdapterType.SelectedIndex != -1)
             {
                 string[] adapters = ITrionic.GetAdapterNames((CANBusAdapter)cbxAdapterType.SelectedIndex);
-                comboBox1.Items.Clear();
+                cbAdapter.Items.Clear();
                 foreach (string adapter in adapters)
-                    comboBox1.Items.Add(adapter);
+                    cbAdapter.Items.Add(adapter);
                 try
                 {
                     if (adapters.Length > 0)
-                        comboBox1.SelectedIndex = 0;
+                        cbAdapter.SelectedIndex = 0;
                 }
                 catch (Exception e)
                 {
                     AddLogItem(e.Message);
                 }
             }
-        }
-
-        private static string FilterString(string port)
-        {
-            string retval = string.Empty;
-            foreach (char c in port)
-            {
-                if (c >= 0x30 && c <= 'Z') retval += c;
-            }
-            return retval.Trim();
         }
 
         private void LoadRegistrySettings()
@@ -793,9 +773,9 @@ namespace TrionicCANFlasher
                     {
                         try
                         {
-                            if (a == "Comport")
+                            if (a == "Adapter")
                             {
-                                cbxComPort.SelectedItem = Settings.GetValue(a).ToString();
+                                cbAdapter.SelectedItem = Settings.GetValue(a).ToString();
                             }
                             else if (a == "AdapterType")
                             {
@@ -853,7 +833,7 @@ namespace TrionicCANFlasher
                                     if (NameKey != null)
                                     {
                                         String PortName = NameKey.GetValue("PortName").ToString();
-                                        if (cbxComPort.SelectedItem != null && cbxComPort.SelectedItem.Equals(PortName))
+                                        if (cbAdapter.SelectedItem != null && cbAdapter.SelectedItem.Equals(PortName))
                                         {
                                             String Latency = NameKey.GetValue("LatencyTimer").ToString();
                                             AddLogItem(String.Format("ELM327 FTDI setting for {0} LatencyTimer {1}ms.", PortName, Latency));
@@ -1198,7 +1178,35 @@ namespace TrionicCANFlasher
 
         private void btnEditParameters_Click(object sender, EventArgs e)
         {
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                SetGenericOptions(trionic7);
+                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                trionic7.UseFlasherOnDevice = false;
+
+                EnableUserInput(false);
+                AddLogItem("Opening connection");
+                if (trionic7.openDevice())
+                {
+                    EditParameters pi = new EditParameters();
+                    pi.setECU(ECU.TRIONIC7);
+                    float e85 = trionic7.GetE85Percentage();
+                    pi.E85 = e85;
+
+                    if (pi.ShowDialog() == DialogResult.OK)
+                    {
+                        if (!pi.E85.Equals(e85))
+                        {
+                            trionic7.SetE85Percentage((int)pi.E85);
+                        }
+                    }
+                }
+
+                trionic7.Cleanup();
+                AddLogItem("Connection closed");
+                EnableUserInput(true);
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
                 SetGenericOptions(trionic8);
 
@@ -1207,7 +1215,8 @@ namespace TrionicCANFlasher
                 trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
                 if (trionic8.openDevice(true))
                 {
-                    PiSelection pi = new PiSelection();
+                    EditParameters pi = new EditParameters();
+                    pi.setECU(ECU.TRIONIC8);
                     bool convertible, sai, highoutput;
                     trionic8.GetPI01(out convertible, out sai, out highoutput);
                     pi.Convertible = convertible;
@@ -1262,6 +1271,35 @@ namespace TrionicCANFlasher
                         }
                     }
                 }
+                trionic8.Cleanup();
+                AddLogItem("Connection closed");
+                EnableUserInput(true);
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+            {
+                SetGenericOptions(trionic8);
+
+                EnableUserInput(false);
+                AddLogItem("Opening connection");
+                trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                trionic8.ECU = ECU.MOTRONIC96;
+                if (trionic8.openDevice(true))
+                {
+                    EditParameters pi = new EditParameters();
+                    pi.setECU(ECU.MOTRONIC96);
+
+                    int topspeed = trionic8.GetTopSpeed();
+                    pi.TopSpeed = topspeed;
+
+                    if (pi.ShowDialog() == DialogResult.OK)
+                    {
+                        if (!pi.TopSpeed.Equals(topspeed))
+                        {
+                            trionic8.SetTopSpeed(pi.TopSpeed);
+                        }
+                    }
+                }
+
                 trionic8.Cleanup();
                 AddLogItem("Connection closed");
                 EnableUserInput(true);

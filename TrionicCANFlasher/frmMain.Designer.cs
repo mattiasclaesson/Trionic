@@ -42,7 +42,6 @@
             this.cbxAdapterType = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.cbxComPort = new System.Windows.Forms.ComboBox();
             this.btnReadDTC = new System.Windows.Forms.Button();
             this.btnSetECUVIN = new System.Windows.Forms.Button();
             this.tbParameter = new System.Windows.Forms.TextBox();
@@ -59,7 +58,7 @@
             this.cbELM327Kline = new System.Windows.Forms.CheckBox();
             this.btnEditParameters = new System.Windows.Forms.Button();
             this.btnReadECUcalibration = new System.Windows.Forms.Button();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.cbAdapter = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -207,19 +206,9 @@
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(793, 250);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(49, 13);
+            this.label5.Size = new System.Drawing.Size(44, 13);
             this.label5.TabIndex = 36;
-            this.label5.Text = "Com port";
-            // 
-            // cbxComPort
-            // 
-            this.cbxComPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbxComPort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbxComPort.FormattingEnabled = true;
-            this.cbxComPort.Location = new System.Drawing.Point(866, 247);
-            this.cbxComPort.Name = "cbxComPort";
-            this.cbxComPort.Size = new System.Drawing.Size(150, 21);
-            this.cbxComPort.TabIndex = 35;
+            this.label5.Text = "Adapter";
             // 
             // btnReadDTC
             // 
@@ -404,21 +393,21 @@
             this.btnReadECUcalibration.UseVisualStyleBackColor = true;
             this.btnReadECUcalibration.Click += new System.EventHandler(this.btnReadECUcalibration_Click);
             // 
-            // comboBox1
+            // cbAdapter
             // 
-            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(612, 247);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(144, 21);
-            this.comboBox1.TabIndex = 65;
+            this.cbAdapter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbAdapter.FormattingEnabled = true;
+            this.cbAdapter.Location = new System.Drawing.Point(866, 247);
+            this.cbAdapter.Name = "cbAdapter";
+            this.cbAdapter.Size = new System.Drawing.Size(150, 21);
+            this.cbAdapter.TabIndex = 65;
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
-            this.Controls.Add(this.comboBox1);
+            this.Controls.Add(this.cbAdapter);
             this.Controls.Add(this.btnReadECUcalibration);
             this.Controls.Add(this.btnEditParameters);
             this.Controls.Add(this.cbELM327Kline);
@@ -437,7 +426,6 @@
             this.Controls.Add(this.btnSetECUVIN);
             this.Controls.Add(this.btnReadDTC);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.cbxComPort);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.cbxAdapterType);
             this.Controls.Add(this.btnRecoverECU);
@@ -476,7 +464,6 @@
         private System.Windows.Forms.ComboBox cbxAdapterType;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.ComboBox cbxComPort;
         private System.Windows.Forms.Button btnReadDTC;
         private System.Windows.Forms.Button btnSetECUVIN;
         private System.Windows.Forms.TextBox tbParameter;
@@ -493,7 +480,7 @@
         private System.Windows.Forms.CheckBox cbELM327Kline;
         private System.Windows.Forms.Button btnEditParameters;
         private System.Windows.Forms.Button btnReadECUcalibration;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.ComboBox cbAdapter;
     }
 }
 

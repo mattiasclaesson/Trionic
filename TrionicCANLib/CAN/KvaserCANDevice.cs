@@ -42,20 +42,6 @@ namespace TrionicCANLib.CAN
             }
         }
 
-        private string m_forcedComport = string.Empty;
-
-        public override string ForcedComport
-        {
-            get
-            {
-                return m_forcedComport;
-            }
-            set
-            {
-                m_forcedComport = value;
-            }
-        }
-
         public int ChannelNumber { get; set; }
 
         // not supported by kvaser

@@ -21,7 +21,6 @@ namespace TrionicCANLib.CAN
         private const char ESC = '\x1B';
 
         private int m_forcedBaudrate = 115200;
-        //private int m_forcedBaudrate = 921600;
 
         public override int ForcedBaudrate
         {
@@ -35,27 +34,16 @@ namespace TrionicCANLib.CAN
             }
         }
 
-        private string m_forcedComport = string.Empty;
-
-        public override string ForcedComport
-        {
-            get
-            {
-                return m_forcedComport;
-            }
-            set
-            {
-                m_forcedComport = value;
-            }
-        }
-
         public static new string[] GetAdapterNames()
         {
-            return new string[0];
+            return SerialPort.GetPortNames();
         }
+
+        private string m_forcedComport = string.Empty;
 
         public override void SetSelectedAdapter(string adapter)
         {
+            m_forcedComport = adapter;
         }
 
         public Just4TrionicDevice()

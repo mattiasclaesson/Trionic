@@ -34,6 +34,7 @@ namespace TrionicCANLib.API
             set { m_ELM327Kline = value; }
         }
 
+
         private readonly System.Timers.Timer tmrReadProcessChecker = new System.Timers.Timer(1000);
         private readonly System.Timers.Timer tmrWriteProcessChecker = new System.Timers.Timer(1000);
 
@@ -52,11 +53,11 @@ namespace TrionicCANLib.API
             else if (adapterType == CANBusAdapter.ELM327 && !m_ELM327Kline)
             {
                 Sleeptime = SleepTime.ELM327;
-                canUsbDevice = new CANELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate, BaseBaudrate = BaseBaudrate };
+                canUsbDevice = new CANELM327Device() { ForcedBaudrate = m_forcedBaudrate };
             }
             else if (adapterType == CANBusAdapter.JUST4TRIONIC)
             {
-                canUsbDevice = new Just4TrionicDevice() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
+                canUsbDevice = new Just4TrionicDevice() { ForcedBaudrate = m_forcedBaudrate };
             }
             else if (adapterType == CANBusAdapter.COMBI)
             {
@@ -79,7 +80,7 @@ namespace TrionicCANLib.API
 
             if (adapterType == CANBusAdapter.ELM327 && m_ELM327Kline)
             {
-                kwpDevice = new ELM327Device() { ForcedComport = m_forcedComport, ForcedBaudrate = m_forcedBaudrate };
+                kwpDevice = new ELM327Device() { ForcedBaudrate = m_forcedBaudrate };
                 setFlasher();
             }
             else if (adapterType != CANBusAdapter.COMBI || !m_UseFlasherOnDevice)
@@ -98,6 +99,18 @@ namespace TrionicCANLib.API
             T7Flasher.setKWPHandler(kwpHandler);
             flash = T7Flasher.getInstance();
             flash.onStatusChanged += flash_onStatusChanged;
+        }
+
+        override public void SetSelectedAdapter(string adapter)
+        {
+            if (m_ELM327Kline)
+            {
+                kwpDevice.ForcedComport = adapter;
+            }
+            else
+            {
+                canUsbDevice.SetSelectedAdapter(adapter);
+            }
         }
 
         void flash_onStatusChanged(object sender, IFlasher.StatusEventArgs e)
