@@ -44,13 +44,15 @@
             this.tbVIN = new System.Windows.Forms.TextBox();
             this.tbRPMLimit = new System.Windows.Forms.TextBox();
             this.closeButton = new System.Windows.Forms.Button();
+            this.tbOilQuality = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // cbCab
             // 
             this.cbCab.AutoSize = true;
-            this.cbCab.Location = new System.Drawing.Point(114, 122);
+            this.cbCab.Location = new System.Drawing.Point(114, 161);
             this.cbCab.Name = "cbCab";
             this.cbCab.Size = new System.Drawing.Size(79, 17);
             this.cbCab.TabIndex = 0;
@@ -60,7 +62,7 @@
             // cbSAI
             // 
             this.cbSAI.AutoSize = true;
-            this.cbSAI.Location = new System.Drawing.Point(114, 145);
+            this.cbSAI.Location = new System.Drawing.Point(114, 184);
             this.cbSAI.Name = "cbSAI";
             this.cbSAI.Size = new System.Drawing.Size(43, 17);
             this.cbSAI.TabIndex = 1;
@@ -70,7 +72,7 @@
             // cbOutput
             // 
             this.cbOutput.AutoSize = true;
-            this.cbOutput.Location = new System.Drawing.Point(114, 169);
+            this.cbOutput.Location = new System.Drawing.Point(114, 208);
             this.cbOutput.Name = "cbOutput";
             this.cbOutput.Size = new System.Drawing.Size(81, 17);
             this.cbOutput.TabIndex = 2;
@@ -79,7 +81,7 @@
             // 
             // btnWriteToECU
             // 
-            this.btnWriteToECU.Location = new System.Drawing.Point(88, 216);
+            this.btnWriteToECU.Location = new System.Drawing.Point(88, 255);
             this.btnWriteToECU.Name = "btnWriteToECU";
             this.btnWriteToECU.Size = new System.Drawing.Size(121, 23);
             this.btnWriteToECU.TabIndex = 3;
@@ -89,6 +91,8 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.tbOilQuality);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.tbE85);
             this.groupBox1.Controls.Add(this.label3);
@@ -102,7 +106,7 @@
             this.groupBox1.Controls.Add(this.cbOutput);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(278, 198);
+            this.groupBox1.Size = new System.Drawing.Size(278, 237);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Fields";
@@ -173,7 +177,7 @@
             // 
             // closeButton
             // 
-            this.closeButton.Location = new System.Drawing.Point(215, 216);
+            this.closeButton.Location = new System.Drawing.Point(215, 255);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(75, 23);
             this.closeButton.TabIndex = 5;
@@ -181,11 +185,27 @@
             this.closeButton.UseVisualStyleBackColor = true;
             this.closeButton.Click += new System.EventHandler(this.closeButton_Click);
             // 
+            // tbOilQuality
+            // 
+            this.tbOilQuality.Location = new System.Drawing.Point(114, 122);
+            this.tbOilQuality.Name = "tbOilQuality";
+            this.tbOilQuality.Size = new System.Drawing.Size(144, 20);
+            this.tbOilQuality.TabIndex = 12;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(15, 125);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(62, 13);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Oil Quality%";
+            // 
             // EditParameters
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(302, 247);
+            this.ClientSize = new System.Drawing.Size(302, 290);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnWriteToECU);
@@ -213,5 +233,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox tbE85;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbOilQuality;
     }
 }

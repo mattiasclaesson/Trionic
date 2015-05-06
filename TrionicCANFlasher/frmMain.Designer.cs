@@ -230,6 +230,7 @@
             this.btnSetECUVIN.TabIndex = 46;
             this.btnSetECUVIN.Text = "Set ECU VIN";
             this.btnSetECUVIN.UseVisualStyleBackColor = true;
+            this.btnSetECUVIN.Visible = false;
             this.btnSetECUVIN.Click += new System.EventHandler(this.btnSetECUVIN_Click);
             // 
             // tbParameter
@@ -239,6 +240,7 @@
             this.tbParameter.Name = "tbParameter";
             this.tbParameter.Size = new System.Drawing.Size(143, 20);
             this.tbParameter.TabIndex = 47;
+            this.tbParameter.Visible = false;
             // 
             // label3
             // 
@@ -249,6 +251,7 @@
             this.label3.Size = new System.Drawing.Size(74, 13);
             this.label3.TabIndex = 48;
             this.label3.Text = "Set Parameter";
+            this.label3.Visible = false;
             // 
             // btnSetE85
             // 
@@ -259,6 +262,7 @@
             this.btnSetE85.TabIndex = 52;
             this.btnSetE85.Text = "Set E85 percent";
             this.btnSetE85.UseVisualStyleBackColor = true;
+            this.btnSetE85.Visible = false;
             this.btnSetE85.Click += new System.EventHandler(this.btnSetE85_Click);
             // 
             // btnSetSpeed
@@ -270,6 +274,7 @@
             this.btnSetSpeed.TabIndex = 53;
             this.btnSetSpeed.Text = "Set speed limiter";
             this.btnSetSpeed.UseVisualStyleBackColor = true;
+            this.btnSetSpeed.Visible = false;
             this.btnSetSpeed.Click += new System.EventHandler(this.btnSetSpeed_Click);
             // 
             // label2

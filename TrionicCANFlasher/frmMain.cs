@@ -281,7 +281,6 @@ namespace TrionicCANFlasher
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
                 btnSetSpeed.Enabled = false;
-                //btnEditParameters.Enabled = false;
                 btnReadECUcalibration.Enabled = false;
             }
 
@@ -296,7 +295,6 @@ namespace TrionicCANFlasher
             {
                 btnRecoverECU.Enabled = false;
                 btnSetECUVIN.Enabled = false;
-                //btnEditParameters.Enabled = false;
                 btnFlashECU.Enabled = false;
                 btnSetE85.Enabled = false;
                 btnReadSRAM.Enabled = false;
@@ -1197,7 +1195,14 @@ namespace TrionicCANFlasher
                     {
                         if (!pi.E85.Equals(e85))
                         {
-                            trionic7.SetE85Percentage((int)pi.E85);
+                            if(trionic7.SetE85Percentage((int)pi.E85))
+                            {
+                                AddLogItem("Set fields successfull, E85Percentage:" + pi.E85);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed, E85Percentage:" + pi.E85);
+                            }
                         }
                     }
                 }
@@ -1235,39 +1240,81 @@ namespace TrionicCANFlasher
                     float e85 = trionic8.GetE85Percentage();
                     pi.E85 = e85;
 
+                    float oil = trionic8.GetOilQuality();
+                    pi.Oil = oil;
+
                     if (pi.ShowDialog() == DialogResult.OK)
                     {
                         if (!pi.Convertible.Equals(convertible) || !pi.SAI.Equals(sai) || !pi.Highoutput.Equals(highoutput))
                         {
                             if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput))
                             {
-                                AddLogItem("Set fields successfull");
-                                AddLogItem("Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
+                                AddLogItem("Set fields successfull, Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
                             }
                             else
                             {
-                                AddLogItem("Set fields failed");
+                                AddLogItem("Set fields failed, Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
                             }
                         }
 
                         if (!pi.RPMLimit.Equals(rpm))
                         {
-                            trionic8.SetRPMLimiter(pi.RPMLimit);
+                            if(trionic8.SetRPMLimiter(pi.RPMLimit))
+                            {
+                                AddLogItem("Set fields successfull, RPMLimit:" + pi.RPMLimit);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed, RPMLimit:" + pi.RPMLimit);
+                            }
                         }
 
                         if (!pi.VIN.Equals(vin))
                         {
-                            trionic8.SetVIN(pi.VIN);
+                            if(trionic8.SetVIN(pi.VIN))
+                            {
+                                AddLogItem("Set fields successfull, VIN:" + pi.VIN);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed, VIN:" + pi.VIN);
+                            }
                         }
 
                         if (!pi.TopSpeed.Equals(topspeed))
                         {
-                            trionic8.SetTopSpeed(pi.TopSpeed);
+                            if(trionic8.SetTopSpeed(pi.TopSpeed))
+                            {
+                                AddLogItem("Set fields successfull, TopSpeed:" + pi.TopSpeed);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed, TopSpeed:" + pi.TopSpeed);
+                            }
                         }
 
                         if (!pi.E85.Equals(e85))
                         {
-                            trionic8.SetE85Percentage(pi.E85);
+                            if(trionic8.SetE85Percentage(pi.E85))
+                            {
+                                AddLogItem("Set fields successfull, E85Percentage:" + pi.E85);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed, E85Percentage:" + pi.E85);
+                            }
+                        }
+
+                        if (!pi.Oil.Equals(oil))
+                        {
+                            if(trionic8.SetOilQuality(pi.Oil))
+                            {
+                                AddLogItem("Set fields successfull, OilQuality:" + pi.Oil);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed, OilQuality:" + pi.Oil);
+                            }
                         }
                     }
                 }
@@ -1295,7 +1342,14 @@ namespace TrionicCANFlasher
                     {
                         if (!pi.TopSpeed.Equals(topspeed))
                         {
-                            trionic8.SetTopSpeed(pi.TopSpeed);
+                            if(trionic8.SetTopSpeed(pi.TopSpeed))
+                            {
+                                AddLogItem("Set fields successfull, TopSpeed:" + pi.TopSpeed);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed, TopSpeed:" + pi.TopSpeed);
+                            }
                         }
                     }
                 }

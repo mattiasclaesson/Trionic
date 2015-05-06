@@ -1144,8 +1144,9 @@ namespace TrionicCANLib.API
             return retval;
         }
 
-        public void SetVIN(string vin)
+        public bool SetVIN(string vin)
         {
+            bool retval = false;
             // 62 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
             CANMessage msg62 = new CANMessage(0x7E0, 0, 4);
             msg62.setData(0x000000006201AA03);
@@ -1195,24 +1196,15 @@ namespace TrionicCANLib.API
                 }
             }
 
-            if (ProgramVIN(vin))
-                CastInfoEvent("ProgramVIN true", ActivityType.ConvertingFile);
-
+            retval = ProgramVIN(vin);
+            
             Thread.Sleep(200);
 
-            //RequestSecurityAccess(2000);
-            //CastInfoEvent("End programming?", ActivityType.ConvertingFile);
-            //SendCommandNoResponse(0x7E0, 0x0000000000012702); // 01 SPSrequestSeed + $27 SecurityAccess
-
-            //CastInfoEvent("Unidentified, security access again?", ActivityType.ConvertingFile);
-            //SendCommandNoResponse(0x7E0, 0x000000EFA4022704); // EFA4 securitykey + 02 SPSsendKey + $27 SecurityAccess
-
+            // Persist 
             RequestSecurityAccess(0);
             SendDeviceControlMessage(0x16);
 
-            //SendCommandNoResponse(0x7E0, 0x0000000000901A02);
-            string newVIN = GetVehicleVIN();
-            CastInfoEvent("New VIN: " + newVIN, ActivityType.ConvertingFile);
+            return retval;
         }
 
         // Output level - Low, High

@@ -105,6 +105,20 @@ namespace TrionicCANFlasher
             {
                 tbE85.Text = value.ToString();
             }
+        }
+
+        public float Oil
+        {
+            get
+            {
+                float oil;
+                float.TryParse(tbOilQuality.Text, out oil);
+                return oil;
+            }
+            set
+            {
+                tbOilQuality.Text = value.ToString();
+            }
         } 
 
         public void setECU(ECU ecu) 
@@ -118,6 +132,7 @@ namespace TrionicCANFlasher
                 tbRPMLimit.Show();
                 tbTopSpeed.Show();
                 tbE85.Show();
+                tbOilQuality.Show();
             }
             else if(ecu == ECU.MOTRONIC96)
             {
@@ -128,6 +143,7 @@ namespace TrionicCANFlasher
                 tbRPMLimit.Hide();
                 tbTopSpeed.Show();
                 tbE85.Hide();
+                tbOilQuality.Hide();
             }
             else if(ecu == ECU.TRIONIC7)
             {
@@ -138,6 +154,7 @@ namespace TrionicCANFlasher
                 tbRPMLimit.Hide();
                 tbTopSpeed.Hide();
                 tbE85.Show();
+                tbOilQuality.Hide();
             }
         }
 
