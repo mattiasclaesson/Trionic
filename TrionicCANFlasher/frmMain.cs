@@ -92,7 +92,7 @@ namespace TrionicCANFlasher
                         {
                             SetGenericOptions(trionic7);
                             trionic7.ELM327Kline = cbELM327Kline.Checked;
-                            trionic7.UseFlasherOnDevice = true;
+                            trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
 
                             AddLogItem("Opening connection");
                             EnableUserInput(false);
@@ -275,6 +275,16 @@ namespace TrionicCANFlasher
                 cbELM327Kline.Enabled = false;
             }
 
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.COMBI &&
+                cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                cbUseFlasherOnDevice.Enabled = enable;
+            }
+            else
+            {
+                cbUseFlasherOnDevice.Enabled = false;
+            }
+
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
@@ -315,7 +325,7 @@ namespace TrionicCANFlasher
                             {
                                 SetGenericOptions(trionic7);
                                 trionic7.ELM327Kline = cbELM327Kline.Checked;
-                                trionic7.UseFlasherOnDevice = true;
+                                trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);
@@ -406,7 +416,7 @@ namespace TrionicCANFlasher
             {
                 SetGenericOptions(trionic7);
                 trionic7.ELM327Kline = cbELM327Kline.Checked;
-                trionic7.UseFlasherOnDevice = false;
+                trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
 
                 AddLogItem("Opening connection");
                 EnableUserInput(false);

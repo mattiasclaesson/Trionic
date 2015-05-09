@@ -59,6 +59,7 @@
             this.btnEditParameters = new System.Windows.Forms.Button();
             this.btnReadECUcalibration = new System.Windows.Forms.Button();
             this.cbAdapter = new System.Windows.Forms.ComboBox();
+            this.cbUseFlasherOnDevice = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -407,11 +408,25 @@
             this.cbAdapter.Size = new System.Drawing.Size(150, 21);
             this.cbAdapter.TabIndex = 65;
             // 
+            // cbUseFlasherOnDevice
+            // 
+            this.cbUseFlasherOnDevice.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbUseFlasherOnDevice.AutoSize = true;
+            this.cbUseFlasherOnDevice.Checked = true;
+            this.cbUseFlasherOnDevice.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(724, 301);
+            this.cbUseFlasherOnDevice.Name = "cbUseFlasherOnDevice";
+            this.cbUseFlasherOnDevice.Size = new System.Drawing.Size(129, 17);
+            this.cbUseFlasherOnDevice.TabIndex = 66;
+            this.cbUseFlasherOnDevice.Text = "Use flasher on device";
+            this.cbUseFlasherOnDevice.UseVisualStyleBackColor = true;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.Controls.Add(this.cbUseFlasherOnDevice);
             this.Controls.Add(this.cbAdapter);
             this.Controls.Add(this.btnReadECUcalibration);
             this.Controls.Add(this.btnEditParameters);
@@ -486,6 +501,7 @@
         private System.Windows.Forms.Button btnEditParameters;
         private System.Windows.Forms.Button btnReadECUcalibration;
         private System.Windows.Forms.ComboBox cbAdapter;
+        private System.Windows.Forms.CheckBox cbUseFlasherOnDevice;
     }
 }
 
