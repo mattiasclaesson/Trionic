@@ -1,4 +1,4 @@
 @echo off
-set TrionicCANFlasher.version=0.1.6.0
-set TrionicCANLib.version=0.1.6.0
-set SetupCANFlash.version=0.1.6
+set TrionicCANFlasher.version=0.1.7.0
+set TrionicCANLib.version=0.1.7.0
+set SetupCANFlash.version=0.1.7
