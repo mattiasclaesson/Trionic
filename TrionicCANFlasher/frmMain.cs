@@ -703,7 +703,10 @@ namespace TrionicCANFlasher
             }
 
             trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
-            trionic.SetSelectedAdapter(cbAdapter.SelectedItem.ToString());
+            if (cbAdapter.SelectedItem != null)
+            {
+                trionic.SetSelectedAdapter(cbAdapter.SelectedItem.ToString());
+            }
         }
 
         private void frmMain_Load(object sender, EventArgs e)
