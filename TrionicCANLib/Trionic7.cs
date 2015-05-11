@@ -340,6 +340,7 @@ namespace TrionicCANLib.API
 
         private void tmrReadProcessChecker_Tick(object sender, EventArgs e)
         {
+            logger.Debug("tmrReadProcessChecker_Tick");
             if (flash != null)
             {
                 float numberkb = (float)flash.getNrOfBytesRead() / 1024F;
@@ -357,6 +358,7 @@ namespace TrionicCANLib.API
 
         private void tmrWriteProcessChecker_Tick(object sender, EventArgs e)
         {
+            logger.Debug("tmrWriteProcessChecker_Tick");
             if (flash != null)
             {
                 float numberkb = (float)flash.getNrOfBytesRead() / 1024F;
