@@ -82,6 +82,13 @@ namespace TrionicCANFlasher
 
         private void btnFlashEcu_Click(object sender, EventArgs e)
         {
+            DialogResult result = MessageBox.Show("Attach a charger. Now turn on and off key to wakeup ECU.",
+                "Critical Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+            if (result == DialogResult.Cancel)
+            {
+                return;
+            }
+
             using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Bin files|*.bin", Multiselect = false })
             {
                 if (ofd.ShowDialog() == DialogResult.OK)
@@ -727,8 +734,6 @@ namespace TrionicCANFlasher
 
         private void frmMain_Shown(object sender, EventArgs e)
         {
-            Application.DoEvents();
-
             cbxAdapterType.SelectedIndex = 0;
             cbxEcuType.SelectedIndex = 0;
             cbxComSpeed.SelectedIndex = 0;
