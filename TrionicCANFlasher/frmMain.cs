@@ -416,7 +416,7 @@ namespace TrionicCANFlasher
             {
                 SetGenericOptions(trionic7);
                 trionic7.ELM327Kline = cbELM327Kline.Checked;
-                trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
+                trionic7.UseFlasherOnDevice = false;
 
                 AddLogItem("Opening connection");
                 EnableUserInput(false);
@@ -1149,6 +1149,7 @@ namespace TrionicCANFlasher
 
         private void updateProgress(int percentage)
         {
+            logger.Trace("updateProgress" + percentage);
             if (progressBar1.Value != percentage)
             {
                 progressBar1.Value = percentage;
