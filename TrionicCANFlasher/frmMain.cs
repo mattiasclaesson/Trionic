@@ -889,16 +889,19 @@ namespace TrionicCANFlasher
 
         void trionicCan_onWriteProgress(object sender, ITrionic.WriteProgressEventArgs e)
         {
+            logger.Trace("trionicCan_onWriteProgress" + e.Percentage);
             UpdateProgressStatus(e.Percentage);
         }
 
         void trionicCan_onCanInfo(object sender, ITrionic.CanInfoEventArgs e)
         {
+            logger.Trace("trionicCan_onCanInfo");
             UpdateFlashStatus(e);
         }
 
         void trionicCan_onReadProgress(object sender, ITrionic.ReadProgressEventArgs e)
         {
+            logger.Trace("trionicCan_onReadProgress");
             UpdateProgressStatus(e.Percentage);
         }
 
@@ -1144,6 +1147,7 @@ namespace TrionicCANFlasher
         {
             try
             {
+                logger.Trace("UpdateFlashStatus");
                 Invoke(m_DelegateUpdateStatus, e);
             }
             catch (Exception ex)
@@ -1175,11 +1179,12 @@ namespace TrionicCANFlasher
         {
             try
             {
+                logger.Trace("UpdateProgressStatus " + percentage);
                 Invoke(m_DelegateProgressStatus, percentage);
             }
             catch (Exception e)
             {
-                AddLogItem(e.Message);
+                logger.Trace(e.Message);
             }
         }
 

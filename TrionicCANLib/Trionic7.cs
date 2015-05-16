@@ -366,40 +366,7 @@ namespace TrionicCANLib.API
                 CastProgressWriteEvent(percentage);
 
                 T7Flasher.FlashStatus stat = flash.getStatus();
-                switch (stat)
-                {
-                    case T7Flasher.FlashStatus.Completed:
-                        logger.Debug("tmrWriteProcessChecker_Tick: Completed FLASHing procedure");
-                        break;
-                    case T7Flasher.FlashStatus.DoinNuthin:
-                        logger.Debug("tmrWriteProcessChecker_Tick: DoinNuthin");
-                        break;
-                    case T7Flasher.FlashStatus.EraseError:
-                        logger.Debug("tmrWriteProcessChecker_Tick: EraseError");
-                        break;
-                    case T7Flasher.FlashStatus.Eraseing:
-                        logger.Debug("tmrWriteProcessChecker_Tick: Eraseing");
-                        break;
-                    case T7Flasher.FlashStatus.NoSequrityAccess:
-                        logger.Debug("tmrWriteProcessChecker_Tick: NoSecurityAccess");
-                        break;
-                    case T7Flasher.FlashStatus.NoSuchFile:
-                        logger.Debug("tmrWriteProcessChecker_Tick: NoSuchFile");
-                        break;
-                    case T7Flasher.FlashStatus.ReadError:
-                        logger.Debug("tmrWriteProcessChecker_Tick: ReadError");
-                        break;
-                    case T7Flasher.FlashStatus.Reading:
-                        break;
-                    case T7Flasher.FlashStatus.WriteError:
-                        logger.Debug("tmrWriteProcessChecker_Tick: WriteError");
-                        break;
-                    case T7Flasher.FlashStatus.Writing:
-                        break;
-                    default:
-                        logger.Debug("tmrWriteProcessChecker_Tick: " + stat);
-                        break;
-                }
+                logger.Debug("tmrWriteProcessChecker_Tick: " + stat.ToString());
 
                 if (stat == T7Flasher.FlashStatus.Completed)
                 {
