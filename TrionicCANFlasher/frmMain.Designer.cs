@@ -401,6 +401,7 @@
             // 
             // cbAdapter
             // 
+            this.cbAdapter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbAdapter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbAdapter.FormattingEnabled = true;
             this.cbAdapter.Location = new System.Drawing.Point(866, 247);
