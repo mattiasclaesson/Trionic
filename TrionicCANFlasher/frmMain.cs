@@ -734,16 +734,10 @@ namespace TrionicCANFlasher
 
         private void frmMain_Shown(object sender, EventArgs e)
         {
-            cbxAdapterType.SelectedIndex = 0;
-            cbxEcuType.SelectedIndex = 0;
-            cbxComSpeed.SelectedIndex = 0;
-
             // get additional info from registry if available
             LoadRegistrySettings();
             CheckRegistryFTDI();
             Application.DoEvents();
-
-            GetAdapterInformation();
 
             trionic7.onReadProgress += trionicCan_onReadProgress;
             trionic7.onWriteProgress += trionicCan_onWriteProgress;
