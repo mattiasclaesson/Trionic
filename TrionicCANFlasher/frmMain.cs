@@ -730,14 +730,10 @@ namespace TrionicCANFlasher
         {
             Text = "TrionicCANFlasher v" + System.Windows.Forms.Application.ProductVersion;
             logger.Trace(Text);
-        }
 
-        private void frmMain_Shown(object sender, EventArgs e)
-        {
             // get additional info from registry if available
             LoadRegistrySettings();
             CheckRegistryFTDI();
-            Application.DoEvents();
 
             trionic7.onReadProgress += trionicCan_onReadProgress;
             trionic7.onWriteProgress += trionicCan_onWriteProgress;
@@ -754,6 +750,7 @@ namespace TrionicCANFlasher
         {
             if (cbxAdapterType.SelectedIndex != -1)
             {
+                logger.Debug("ITrionic.GetAdapterNames " + cbxAdapterType.SelectedIndex);
                 string[] adapters = ITrionic.GetAdapterNames((CANBusAdapter)cbxAdapterType.SelectedIndex);
                 cbAdapter.Items.Clear();
                 foreach (string adapter in adapters)
