@@ -162,22 +162,6 @@ namespace TrionicCANLib.CAN
         {
             Canlib.canInitializeLibrary();
 
-            //List available channels
-            //int nrOfChannels;
-            //Canlib.canGetNumberOfChannels(out nrOfChannels);
-            //object o = new object();
-            //for (int i = 0; i < nrOfChannels; i++)
-            //{
-            //    Canlib.canGetChannelData(i, Canlib.canCHANNELDATA_CHANNEL_NAME, out o);
-            //    logger.Debug(string.Format("canlibCLSNET.Canlib.canGetChannelData({0}, canlibCLSNET.Canlib.canCHANNELDATA_CHANNEL_NAME, {1})", i, o));
-
-                //if (i == 0)
-                //{
-                //    logger.Debug(string.Format("Selected channel: {0} name: {1})", i, o));
-                //    ChannelNumber = i;
-                //}
-            //}
-
             //Check if bus is connected
             if (isOpen())
             {
