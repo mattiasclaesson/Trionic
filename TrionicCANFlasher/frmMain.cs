@@ -136,6 +136,8 @@ namespace TrionicCANFlasher
                                 bgWorker = new BackgroundWorker();
                                 bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlash);
                                 bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                bgWorker.WorkerReportsProgress = true;
+                                bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                 bgWorker.RunWorkerAsync(ofd.FileName);
 
                             }
@@ -165,6 +167,8 @@ namespace TrionicCANFlasher
                                 bgWorker = new BackgroundWorker();
                                 bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashME96);
                                 bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                bgWorker.WorkerReportsProgress = true;
+                                bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                 bgWorker.RunWorkerAsync(ofd.FileName);
 
                             }
@@ -197,6 +201,11 @@ namespace TrionicCANFlasher
             trionic8.Cleanup();
             EnableUserInput(true);
             AddLogItem("Connection terminated");
+        }
+
+        void bgWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            updateProgress(e.ProgressPercentage);     
         }
 
         bool checkFileSize(string fileName)
@@ -371,6 +380,8 @@ namespace TrionicCANFlasher
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlash);
                                     bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                    bgWorker.WorkerReportsProgress = true;
+                                    bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                     bgWorker.RunWorkerAsync(sfd.FileName);
                                 }
                                 else
@@ -400,6 +411,8 @@ namespace TrionicCANFlasher
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
                                     bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                    bgWorker.WorkerReportsProgress = true;
+                                    bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                     bgWorker.RunWorkerAsync(args);
                                 }
                                 else
@@ -647,6 +660,8 @@ namespace TrionicCANFlasher
                             bgWorker = new BackgroundWorker();
                             bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU);
                             bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                            bgWorker.WorkerReportsProgress = true;
+                            bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                             bgWorker.RunWorkerAsync(ofd.FileName);
                         }
                         else
@@ -730,6 +745,7 @@ namespace TrionicCANFlasher
         {
             Text = "TrionicCANFlasher v" + System.Windows.Forms.Application.ProductVersion;
             logger.Trace(Text);
+            logger.Trace(".dot net CLR " + System.Environment.Version);
 
             // get additional info from registry if available
             LoadRegistrySettings();
@@ -1405,6 +1421,8 @@ namespace TrionicCANFlasher
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
                                     bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                    bgWorker.WorkerReportsProgress = true;
+                                    bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                     bgWorker.RunWorkerAsync(args);
                                 }
                                 else
