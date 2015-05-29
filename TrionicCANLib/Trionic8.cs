@@ -4108,6 +4108,7 @@ namespace TrionicCANLib.API
 
         public void RecoverECU(object sender, DoWorkEventArgs workEvent)
         {
+            BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
             string diagDataID = GetDiagnosticDataIdentifier0101();
             Console.WriteLine("DataID: " + diagDataID);
@@ -4278,6 +4279,7 @@ namespace TrionicCANLib.API
 
         public void WriteFlash(object sender, DoWorkEventArgs workEvent)
         {
+            BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
 
             if (!canUsbDevice.isOpen()) return;
@@ -4440,6 +4442,7 @@ namespace TrionicCANLib.API
 
         public void ReadFlash(object sender, DoWorkEventArgs workEvent)
         {
+            BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
 
             _stallKeepAlive = true;
@@ -4534,7 +4537,7 @@ namespace TrionicCANLib.API
                     int percentage = (int)((bufpnt * 100) / (float)lastAddress);
                     if (percentage > saved_progress)
                     {
-                        CastProgressReadEvent(percentage);
+                        bw.ReportProgress(percentage);
                         saved_progress = percentage;
                     }
                     startAddress += blockSize;
@@ -4887,6 +4890,7 @@ namespace TrionicCANLib.API
 
         public void ReadFlashME96(object sender, DoWorkEventArgs workEvent)
         {
+            BackgroundWorker bw = sender as BackgroundWorker;
             Me96ReadArgs args = (Me96ReadArgs)workEvent.Argument;
             string filename = args.FileName;
             int start = args.start;
@@ -4951,6 +4955,7 @@ namespace TrionicCANLib.API
                     if (percentage > saved_progress)
                     {
                         CastProgressReadEvent(percentage);
+                        bw.ReportProgress(percentage);
                         saved_progress = percentage;
                     }
                     retryCount = 0;
@@ -5173,6 +5178,7 @@ namespace TrionicCANLib.API
 
         public void WriteFlashME96(object sender, DoWorkEventArgs workEvent)
         {
+            BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
 
             if (!canUsbDevice.isOpen()) return;
