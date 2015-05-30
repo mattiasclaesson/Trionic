@@ -3101,7 +3101,7 @@ namespace TrionicCANLib.API
 
         private void SendDeviceControlMessageWithCode(byte command, string secretcode /*ulong code*/)
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            CANMessage msg = new CANMessage(0x7E0, 0, 8);
             ulong cmd = 0x000000000000AE07;
             ulong lcommand = command;
             cmd |= (lcommand * 0x10000);
@@ -3130,7 +3130,7 @@ namespace TrionicCANLib.API
         private bool ReadDataByPacketIdentifier(byte command, uint responseID)
         {
             //SendCommandNoResponse(0x7E0, 0x000000006201AA03);
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);
+            CANMessage msg = new CANMessage(0x7E0, 0, 4);
             ulong cmd = 0x000000000001AA03;
             ulong lcommand = command;
             cmd |= (lcommand * 0x1000000);
@@ -5006,7 +5006,7 @@ namespace TrionicCANLib.API
             byte[] retData = new byte[length];
             if (!canUsbDevice.isOpen()) return retData;
 
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            CANMessage msg = new CANMessage(0x7E0, 0, 8);
             //optimize reading speed for ELM
             if (length <= 3)
                 msg.elmExpectedResponses = 1;
@@ -5023,7 +5023,7 @@ namespace TrionicCANLib.API
             cmd |= (addressLow * 0x10000000000);
             cmd |= (addressMiddle * 0x100000000);
             cmd |= (addressHigh * 0x1000000);
-            cmd |= (len * 0x1000000000000);
+            cmd |= (len * 0x100000000000000);
             //Console.WriteLine("send: " + cmd.ToString("X16"));
             /*cmd |= (ulong)(byte)(address & 0x000000FF) << 4 * 8;
             cmd |= (ulong)(byte)((address & 0x0000FF00) >> 8) << 3 * 8;
