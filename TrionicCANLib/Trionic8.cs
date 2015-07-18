@@ -4789,7 +4789,7 @@ namespace TrionicCANLib.API
                     }
                 }
                 waitCount++;
-                if (waitCount > 35)
+                if (waitCount > 45)
                 {
                     if (canUsbDevice is CANELM327Device)
                     {
@@ -4800,7 +4800,7 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
-                        CastInfoEvent("Erase timed out after 35 seconds", ActivityType.ErasingFlash);
+                        CastInfoEvent("Erase timed out after 45 seconds", ActivityType.ErasingFlash);
                         return false;
                     }
                 }
@@ -5252,7 +5252,7 @@ namespace TrionicCANLib.API
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
             //05 34 00 01 E0 00 00 00
-            ulong cmd = 0x000000E001003406;
+            ulong cmd = 0x000000E001003405;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
@@ -5411,7 +5411,7 @@ namespace TrionicCANLib.API
         private bool SendTransferDataME96(int length, int address, uint waitforResponseID)
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
-            ulong cmd = 0x0000000000360010; // 0x36 = transferData
+            ulong cmd = 0x000000000036FD10; // 0x36 = transferData
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
             addressHigh /= 0x10000;
             ulong addressMiddle = (uint)address & 0x000000000000FF00;

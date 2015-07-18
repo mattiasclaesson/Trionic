@@ -188,7 +188,7 @@ namespace TrionicCANFlasher
 
         void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if ((bool)e.Result)
+            if (e.Result != null && (bool)e.Result)
             {
                 AddLogItem("Operation done");
             }
@@ -196,6 +196,7 @@ namespace TrionicCANFlasher
             {
                 AddLogItem("Operation failed");
             }
+         
             TimeSpan ts = DateTime.Now - dtstart;
             AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
             trionic8.Cleanup();
