@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using TrionicCANLib.CAN;
 using TrionicCANLib.API;
+using TrionicCANLib;
 using System.Windows.Forms;
 using System.Collections;
 using NLog;
@@ -4582,6 +4583,7 @@ namespace TrionicCANLib.API
                 try
                 {
                     File.WriteAllBytes(filename, buf);
+                    Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
                     CastInfoEvent("Download done", ActivityType.FinishedDownloadingFlash);
                     workEvent.Result = true;
                 }
@@ -4982,6 +4984,7 @@ namespace TrionicCANLib.API
                 try
                 {
                     File.WriteAllBytes(filename, buf);
+                    Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
                     CastInfoEvent("Download done", ActivityType.FinishedDownloadingFlash);
                     workEvent.Result = true;
                 }

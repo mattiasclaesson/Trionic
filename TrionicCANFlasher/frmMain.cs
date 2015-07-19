@@ -609,7 +609,6 @@ namespace TrionicCANFlasher
                             try
                             {
                                 File.WriteAllBytes(sfd.FileName, total);
-                                Md5Tools.WriteMd5HashFile(sfd.FileName, total);
                                 AddLogItem("Snapshot done");
                             }
                             catch (Exception ex)

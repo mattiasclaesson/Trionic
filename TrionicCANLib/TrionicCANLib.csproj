@@ -94,6 +94,7 @@
   <ItemGroup>
     <Compile Include="CAN\KvaserCANDevice.cs" />
     <Compile Include="ITrionic.cs" />
+    <Compile Include="Md5Tools.cs" />
     <Compile Include="Me96ReadArgs.cs" />
     <Compile Include="SymbolHelper.cs" />
     <Compile Include="BitTools.cs" />

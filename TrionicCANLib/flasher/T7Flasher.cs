@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using TrionicCANLib.KWP;
 using System.Threading;
 using NLog;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace TrionicCANLib.Flasher
 {
@@ -222,38 +224,42 @@ namespace TrionicCANLib.Flasher
             logger.Debug("Reading flash content to file: " + m_fileName);
             NotifyStatusChanged(this, new StatusEventArgs("Reading data from ECU..."));
 
-
-            if (File.Exists(m_fileName))
-                File.Delete(m_fileName);
-            FileStream fileStream = File.Create(m_fileName, 1024);
-            logger.Debug("File created");
-            SetFlashStatus(FlashStatus.Reading);
-            logger.Debug("Flash status is reading");
-
-            for (int i = 0; i < 512 * 1024 / nrOfBytes; i++)
+            using (MD5 md5Hash = MD5.Create())
             {
-                lock (m_synchObject)
-                {
-                    if (m_command == FlashCommand.StopCommand)
-                        continue;
-                    if (m_endThread)
-                        return;
-                }
+                if (File.Exists(m_fileName))
+                    File.Delete(m_fileName);
+                FileStream fileStream = File.Create(m_fileName, 1024);
+                logger.Debug("File created");
+                SetFlashStatus(FlashStatus.Reading);
+                logger.Debug("Flash status is reading");
 
-                while (!m_kwpHandler.sendReadRequest((uint)(nrOfBytes * i), (uint)nrOfBytes))
+                for (int i = 0; i < 512 * 1024 / nrOfBytes; i++)
                 {
-                    m_nrOfRetries++;
-                }
+                    lock (m_synchObject)
+                    {
+                        if (m_command == FlashCommand.StopCommand)
+                            continue;
+                        if (m_endThread)
+                            return;
+                    }
 
-                while (!m_kwpHandler.sendRequestDataByOffset(out data))
-                {
-                    m_nrOfRetries++;
+                    while (!m_kwpHandler.sendReadRequest((uint)(nrOfBytes * i), (uint)nrOfBytes))
+                    {
+                        m_nrOfRetries++;
+                    }
+
+                    while (!m_kwpHandler.sendRequestDataByOffset(out data))
+                    {
+                        m_nrOfRetries++;
+                    }
+                    fileStream.Write(data, 0, nrOfBytes);
+                    md5Hash.TransformBlock(data, 0, nrOfBytes, data, 0);
+                    m_nrOfBytesRead += nrOfBytes;
                 }
-                fileStream.Write(data, 0, nrOfBytes);
-                m_nrOfBytesRead += nrOfBytes;
+                fileStream.Close();
+                logger.Debug("Closed file");
+                Md5Tools.WriteMd5Hash(md5Hash, m_fileName);
             }
-            fileStream.Close();
-            logger.Debug("Closed file");
 
             m_kwpHandler.sendDataTransferExitRequest();
             logger.Debug("Done reading");
