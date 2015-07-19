@@ -30,7 +30,6 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.btnReadECU = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
             this.cbEnableLogging = new System.Windows.Forms.CheckBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.btnExit = new System.Windows.Forms.Button();
@@ -68,16 +67,6 @@
             this.btnReadECU.UseVisualStyleBackColor = true;
             this.btnReadECU.Click += new System.EventHandler(this.btnReadECU_Click);
             // 
-            // label1
-            // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(528, 341);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(0, 13);
-            this.label1.TabIndex = 25;
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
             // cbEnableLogging
             // 
             this.cbEnableLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -98,7 +87,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBar1.Location = new System.Drawing.Point(12, 357);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(657, 23);
+            this.progressBar1.Size = new System.Drawing.Size(648, 23);
             this.progressBar1.TabIndex = 23;
             // 
             // btnExit
@@ -133,7 +122,7 @@
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(657, 312);
+            this.listBoxLog.Size = new System.Drawing.Size(648, 340);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
@@ -374,7 +363,6 @@
             this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.cbxComSpeed);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.cbDisableConnectionCheck);
             this.Controls.Add(this.cbOnlyPBus);
             this.Controls.Add(this.cbxEcuType);
@@ -407,7 +395,6 @@
         #endregion
 
         private System.Windows.Forms.Button btnReadECU;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox cbEnableLogging;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button btnExit;

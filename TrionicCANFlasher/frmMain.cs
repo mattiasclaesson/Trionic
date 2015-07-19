@@ -251,7 +251,6 @@ namespace TrionicCANFlasher
             btnReadDTC.Enabled = enable;
             cbxAdapterType.Enabled = enable;
             cbxEcuType.Enabled = enable;
-            label1.Enabled = enable;
             cbEnableLogging.Enabled = enable;
             cbOnlyPBus.Enabled = enable;
             cbDisableConnectionCheck.Enabled = enable;
@@ -610,6 +609,7 @@ namespace TrionicCANFlasher
                             try
                             {
                                 File.WriteAllBytes(sfd.FileName, total);
+                                Md5Tools.WriteMd5HashFile(sfd.FileName, total);
                                 AddLogItem("Snapshot done");
                             }
                             catch (Exception ex)
@@ -1065,15 +1065,9 @@ namespace TrionicCANFlasher
             {
                 progressBar1.Value = percentage;
             }
-            string text = percentage.ToString("F0") + "%";
             if (cbEnableLogging.Checked)
             {
-                logger.Trace("progress: " + text);
-            }
-            if (label1.Text != text)
-            {
-                label1.Text = text;
-                Application.DoEvents();
+                logger.Trace("progress: " + percentage.ToString("F0") + "%");
             }
         }
 
