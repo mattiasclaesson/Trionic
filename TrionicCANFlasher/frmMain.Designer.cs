@@ -43,11 +43,6 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.btnReadDTC = new System.Windows.Forms.Button();
-            this.btnSetECUVIN = new System.Windows.Forms.Button();
-            this.tbParameter = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.btnSetE85 = new System.Windows.Forms.Button();
-            this.btnSetSpeed = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.cbxEcuType = new System.Windows.Forms.ComboBox();
             this.cbOnlyPBus = new System.Windows.Forms.CheckBox();
@@ -65,7 +60,7 @@
             // btnReadECU
             // 
             this.btnReadECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnReadECU.Location = new System.Drawing.Point(909, 11);
+            this.btnReadECU.Location = new System.Drawing.Point(906, 11);
             this.btnReadECU.Name = "btnReadECU";
             this.btnReadECU.Size = new System.Drawing.Size(107, 50);
             this.btnReadECU.TabIndex = 29;
@@ -77,7 +72,7 @@
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(531, 341);
+            this.label1.Location = new System.Drawing.Point(528, 341);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(0, 13);
             this.label1.TabIndex = 25;
@@ -89,7 +84,7 @@
             this.cbEnableLogging.AutoSize = true;
             this.cbEnableLogging.Checked = true;
             this.cbEnableLogging.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbEnableLogging.Location = new System.Drawing.Point(866, 301);
+            this.cbEnableLogging.Location = new System.Drawing.Point(863, 301);
             this.cbEnableLogging.Name = "cbEnableLogging";
             this.cbEnableLogging.Size = new System.Drawing.Size(96, 17);
             this.cbEnableLogging.TabIndex = 24;
@@ -103,13 +98,13 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBar1.Location = new System.Drawing.Point(12, 357);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(544, 23);
+            this.progressBar1.Size = new System.Drawing.Size(657, 23);
             this.progressBar1.TabIndex = 23;
             // 
             // btnExit
             // 
             this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExit.Location = new System.Drawing.Point(909, 123);
+            this.btnExit.Location = new System.Drawing.Point(906, 123);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(107, 50);
             this.btnExit.TabIndex = 22;
@@ -120,7 +115,7 @@
             // btnFlashECU
             // 
             this.btnFlashECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFlashECU.Location = new System.Drawing.Point(791, 11);
+            this.btnFlashECU.Location = new System.Drawing.Point(788, 11);
             this.btnFlashECU.Name = "btnFlashECU";
             this.btnFlashECU.Size = new System.Drawing.Size(112, 50);
             this.btnFlashECU.TabIndex = 21;
@@ -138,13 +133,13 @@
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(544, 312);
+            this.listBoxLog.Size = new System.Drawing.Size(657, 312);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
             // 
             this.btnGetECUInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnGetECUInfo.Location = new System.Drawing.Point(791, 67);
+            this.btnGetECUInfo.Location = new System.Drawing.Point(788, 67);
             this.btnGetECUInfo.Name = "btnGetECUInfo";
             this.btnGetECUInfo.Size = new System.Drawing.Size(112, 50);
             this.btnGetECUInfo.TabIndex = 30;
@@ -155,7 +150,7 @@
             // btnReadSRAM
             // 
             this.btnReadSRAM.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnReadSRAM.Location = new System.Drawing.Point(909, 67);
+            this.btnReadSRAM.Location = new System.Drawing.Point(906, 67);
             this.btnReadSRAM.Name = "btnReadSRAM";
             this.btnReadSRAM.Size = new System.Drawing.Size(107, 50);
             this.btnReadSRAM.TabIndex = 31;
@@ -166,7 +161,7 @@
             // btnRecoverECU
             // 
             this.btnRecoverECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRecoverECU.Location = new System.Drawing.Point(791, 123);
+            this.btnRecoverECU.Location = new System.Drawing.Point(788, 123);
             this.btnRecoverECU.Name = "btnRecoverECU";
             this.btnRecoverECU.Size = new System.Drawing.Size(112, 50);
             this.btnRecoverECU.TabIndex = 32;
@@ -185,7 +180,7 @@
             "ELM327 v1.3 or higher",
             "Just4Trionic",
             "Kvaser"});
-            this.cbxAdapterType.Location = new System.Drawing.Point(866, 220);
+            this.cbxAdapterType.Location = new System.Drawing.Point(863, 220);
             this.cbxAdapterType.Name = "cbxAdapterType";
             this.cbxAdapterType.Size = new System.Drawing.Size(150, 21);
             this.cbxAdapterType.TabIndex = 33;
@@ -195,7 +190,7 @@
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(793, 223);
+            this.label4.Location = new System.Drawing.Point(790, 223);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(67, 13);
             this.label4.TabIndex = 34;
@@ -205,7 +200,7 @@
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(793, 250);
+            this.label5.Location = new System.Drawing.Point(790, 250);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(44, 13);
             this.label5.TabIndex = 36;
@@ -214,7 +209,7 @@
             // btnReadDTC
             // 
             this.btnReadDTC.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnReadDTC.Location = new System.Drawing.Point(678, 12);
+            this.btnReadDTC.Location = new System.Drawing.Point(675, 12);
             this.btnReadDTC.Name = "btnReadDTC";
             this.btnReadDTC.Size = new System.Drawing.Size(107, 50);
             this.btnReadDTC.TabIndex = 39;
@@ -222,67 +217,11 @@
             this.btnReadDTC.UseVisualStyleBackColor = true;
             this.btnReadDTC.Click += new System.EventHandler(this.btnReadDTC_Click);
             // 
-            // btnSetECUVIN
-            // 
-            this.btnSetECUVIN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSetECUVIN.Location = new System.Drawing.Point(565, 67);
-            this.btnSetECUVIN.Name = "btnSetECUVIN";
-            this.btnSetECUVIN.Size = new System.Drawing.Size(107, 50);
-            this.btnSetECUVIN.TabIndex = 46;
-            this.btnSetECUVIN.Text = "Set ECU VIN";
-            this.btnSetECUVIN.UseVisualStyleBackColor = true;
-            this.btnSetECUVIN.Visible = false;
-            this.btnSetECUVIN.Click += new System.EventHandler(this.btnSetECUVIN_Click);
-            // 
-            // tbParameter
-            // 
-            this.tbParameter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbParameter.Location = new System.Drawing.Point(642, 194);
-            this.tbParameter.Name = "tbParameter";
-            this.tbParameter.Size = new System.Drawing.Size(143, 20);
-            this.tbParameter.TabIndex = 47;
-            this.tbParameter.Visible = false;
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(562, 197);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(74, 13);
-            this.label3.TabIndex = 48;
-            this.label3.Text = "Set Parameter";
-            this.label3.Visible = false;
-            // 
-            // btnSetE85
-            // 
-            this.btnSetE85.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSetE85.Location = new System.Drawing.Point(565, 12);
-            this.btnSetE85.Name = "btnSetE85";
-            this.btnSetE85.Size = new System.Drawing.Size(107, 50);
-            this.btnSetE85.TabIndex = 52;
-            this.btnSetE85.Text = "Set E85 percent";
-            this.btnSetE85.UseVisualStyleBackColor = true;
-            this.btnSetE85.Visible = false;
-            this.btnSetE85.Click += new System.EventHandler(this.btnSetE85_Click);
-            // 
-            // btnSetSpeed
-            // 
-            this.btnSetSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSetSpeed.Location = new System.Drawing.Point(565, 124);
-            this.btnSetSpeed.Name = "btnSetSpeed";
-            this.btnSetSpeed.Size = new System.Drawing.Size(107, 50);
-            this.btnSetSpeed.TabIndex = 53;
-            this.btnSetSpeed.Text = "Set speed limiter";
-            this.btnSetSpeed.UseVisualStyleBackColor = true;
-            this.btnSetSpeed.Visible = false;
-            this.btnSetSpeed.Click += new System.EventHandler(this.btnSetSpeed_Click);
-            // 
             // label2
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(793, 196);
+            this.label2.Location = new System.Drawing.Point(790, 196);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(56, 13);
             this.label2.TabIndex = 55;
@@ -297,7 +236,7 @@
             "Trionic 7",
             "Trionic 8",
             "Motronic 9.6"});
-            this.cbxEcuType.Location = new System.Drawing.Point(866, 193);
+            this.cbxEcuType.Location = new System.Drawing.Point(863, 193);
             this.cbxEcuType.Name = "cbxEcuType";
             this.cbxEcuType.Size = new System.Drawing.Size(150, 21);
             this.cbxEcuType.TabIndex = 56;
@@ -309,7 +248,7 @@
             this.cbOnlyPBus.AutoSize = true;
             this.cbOnlyPBus.Checked = true;
             this.cbOnlyPBus.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbOnlyPBus.Location = new System.Drawing.Point(866, 324);
+            this.cbOnlyPBus.Location = new System.Drawing.Point(863, 324);
             this.cbOnlyPBus.Name = "cbOnlyPBus";
             this.cbOnlyPBus.Size = new System.Drawing.Size(134, 17);
             this.cbOnlyPBus.TabIndex = 57;
@@ -322,7 +261,7 @@
             this.cbDisableConnectionCheck.AutoSize = true;
             this.cbDisableConnectionCheck.Checked = true;
             this.cbDisableConnectionCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbDisableConnectionCheck.Location = new System.Drawing.Point(866, 347);
+            this.cbDisableConnectionCheck.Location = new System.Drawing.Point(863, 347);
             this.cbDisableConnectionCheck.Name = "cbDisableConnectionCheck";
             this.cbDisableConnectionCheck.Size = new System.Drawing.Size(150, 17);
             this.cbDisableConnectionCheck.TabIndex = 58;
@@ -333,7 +272,7 @@
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(793, 277);
+            this.label6.Location = new System.Drawing.Point(790, 277);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(60, 13);
             this.label6.TabIndex = 60;
@@ -349,7 +288,7 @@
             "230400",
             "1Mbit",
             "2Mbit"});
-            this.cbxComSpeed.Location = new System.Drawing.Point(866, 274);
+            this.cbxComSpeed.Location = new System.Drawing.Point(863, 274);
             this.cbxComSpeed.Name = "cbxComSpeed";
             this.cbxComSpeed.Size = new System.Drawing.Size(150, 21);
             this.cbxComSpeed.TabIndex = 59;
@@ -358,7 +297,7 @@
             // 
             this.documentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.documentation.AutoSize = true;
-            this.documentation.Location = new System.Drawing.Point(675, 370);
+            this.documentation.Location = new System.Drawing.Point(718, 325);
             this.documentation.Name = "documentation";
             this.documentation.Size = new System.Drawing.Size(103, 13);
             this.documentation.TabIndex = 61;
@@ -370,7 +309,7 @@
             // 
             this.cbELM327Kline.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbELM327Kline.AutoSize = true;
-            this.cbELM327Kline.Location = new System.Drawing.Point(866, 370);
+            this.cbELM327Kline.Location = new System.Drawing.Point(863, 370);
             this.cbELM327Kline.Name = "cbELM327Kline";
             this.cbELM327Kline.Size = new System.Drawing.Size(99, 17);
             this.cbELM327Kline.TabIndex = 62;
@@ -380,7 +319,7 @@
             // btnEditParameters
             // 
             this.btnEditParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEditParameters.Location = new System.Drawing.Point(678, 67);
+            this.btnEditParameters.Location = new System.Drawing.Point(675, 67);
             this.btnEditParameters.Name = "btnEditParameters";
             this.btnEditParameters.Size = new System.Drawing.Size(107, 50);
             this.btnEditParameters.TabIndex = 63;
@@ -391,7 +330,7 @@
             // btnReadECUcalibration
             // 
             this.btnReadECUcalibration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnReadECUcalibration.Location = new System.Drawing.Point(678, 124);
+            this.btnReadECUcalibration.Location = new System.Drawing.Point(675, 124);
             this.btnReadECUcalibration.Name = "btnReadECUcalibration";
             this.btnReadECUcalibration.Size = new System.Drawing.Size(107, 50);
             this.btnReadECUcalibration.TabIndex = 64;
@@ -404,7 +343,7 @@
             this.cbAdapter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbAdapter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbAdapter.FormattingEnabled = true;
-            this.cbAdapter.Location = new System.Drawing.Point(866, 247);
+            this.cbAdapter.Location = new System.Drawing.Point(863, 247);
             this.cbAdapter.Name = "cbAdapter";
             this.cbAdapter.Size = new System.Drawing.Size(150, 21);
             this.cbAdapter.TabIndex = 65;
@@ -415,7 +354,7 @@
             this.cbUseFlasherOnDevice.AutoSize = true;
             this.cbUseFlasherOnDevice.Checked = true;
             this.cbUseFlasherOnDevice.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(724, 301);
+            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(721, 301);
             this.cbUseFlasherOnDevice.Name = "cbUseFlasherOnDevice";
             this.cbUseFlasherOnDevice.Size = new System.Drawing.Size(129, 17);
             this.cbUseFlasherOnDevice.TabIndex = 66;
@@ -426,7 +365,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1026, 392);
+            this.ClientSize = new System.Drawing.Size(1023, 392);
             this.Controls.Add(this.cbUseFlasherOnDevice);
             this.Controls.Add(this.cbAdapter);
             this.Controls.Add(this.btnReadECUcalibration);
@@ -440,11 +379,6 @@
             this.Controls.Add(this.cbOnlyPBus);
             this.Controls.Add(this.cbxEcuType);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.btnSetSpeed);
-            this.Controls.Add(this.btnSetE85);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.tbParameter);
-            this.Controls.Add(this.btnSetECUVIN);
             this.Controls.Add(this.btnReadDTC);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
@@ -464,6 +398,7 @@
             this.Text = "Trionic CAN flasher";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
+            this.Shown += new System.EventHandler(this.frmMain_Shown);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -485,11 +420,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btnReadDTC;
-        private System.Windows.Forms.Button btnSetECUVIN;
-        private System.Windows.Forms.TextBox tbParameter;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button btnSetE85;
-        private System.Windows.Forms.Button btnSetSpeed;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cbxEcuType;
         private System.Windows.Forms.CheckBox cbOnlyPBus;

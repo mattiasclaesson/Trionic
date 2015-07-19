@@ -12,6 +12,7 @@ using TrionicCANLib;
 using TrionicCANLib.API;
 using System.Drawing;
 using NLog;
+using CommonSuite;
 
 namespace TrionicCANFlasher
 {
@@ -26,6 +27,7 @@ namespace TrionicCANFlasher
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
         private Logger logger = LogManager.GetCurrentClassLogger();
+        msiupdater m_msiUpdater;
 
         public frmMain()
         {
@@ -247,13 +249,9 @@ namespace TrionicCANFlasher
             btnReadSRAM.Enabled = enable;
             btnRecoverECU.Enabled = enable;
             btnReadDTC.Enabled = enable;
-            btnSetECUVIN.Enabled = enable;
-            btnSetE85.Enabled = enable;
-            btnSetSpeed.Enabled = enable;
             cbxAdapterType.Enabled = enable;
             cbxEcuType.Enabled = enable;
             label1.Enabled = enable;
-            tbParameter.Enabled = enable;
             cbEnableLogging.Enabled = enable;
             cbOnlyPBus.Enabled = enable;
             cbDisableConnectionCheck.Enabled = enable;
@@ -306,8 +304,6 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 btnRecoverECU.Enabled = false;
-                btnSetECUVIN.Enabled = false;
-                btnSetSpeed.Enabled = false;
                 btnReadECUcalibration.Enabled = false;
             }
 
@@ -321,9 +317,7 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
             {
                 btnRecoverECU.Enabled = false;
-                btnSetECUVIN.Enabled = false;
                 btnFlashECU.Enabled = false;
-                btnSetE85.Enabled = false;
                 btnReadSRAM.Enabled = false;
             }
         }
@@ -763,6 +757,56 @@ namespace TrionicCANFlasher
             EnableUserInput(true);
         }
 
+        private void frmMain_Shown(object sender, EventArgs e)
+        {
+            try
+            {
+                m_msiUpdater = new msiupdater(new Version(System.Windows.Forms.Application.ProductVersion));
+                m_msiUpdater.Apppath = System.Windows.Forms.Application.UserAppDataPath;
+                m_msiUpdater.onDataPump += new msiupdater.DataPump(m_msiUpdater_onDataPump);
+                m_msiUpdater.onUpdateProgressChanged += new msiupdater.UpdateProgressChanged(m_msiUpdater_onUpdateProgressChanged);
+                m_msiUpdater.CheckForUpdates("http://develop.trionictuning.com/TrionicCANFlasher/", "canflasher", "TrionicCANFlash.msi");
+            }
+            catch (Exception E)
+            {
+                AddLogItem(E.Message);
+            }
+        }
+
+        void m_msiUpdater_onUpdateProgressChanged(msiupdater.MSIUpdateProgressEventArgs e)
+        {
+
+        }
+
+        void m_msiUpdater_onDataPump(msiupdater.MSIUpdaterEventArgs e)
+        {
+            if (e.UpdateAvailable)
+            {
+                frmUpdateAvailable frmUpdate = new frmUpdateAvailable();
+                frmUpdate.SetVersionNumber(e.Version.ToString());
+                if (m_msiUpdater != null)
+                {
+                    m_msiUpdater.Blockauto_updates = false;
+                }
+                if (frmUpdate.ShowDialog() == DialogResult.OK)
+                {
+                    if (m_msiUpdater != null)
+                    {
+                        m_msiUpdater.ExecuteUpdate(e.Version);
+                        System.Windows.Forms.Application.Exit();
+                    }
+                }
+                else
+                {
+                    // user choose "NO", don't bug him again!
+                    if (m_msiUpdater != null)
+                    {
+                        m_msiUpdater.Blockauto_updates = false;
+                    }
+                }
+            }
+        }
+
         private void GetAdapterInformation()
         {
             if (cbxAdapterType.SelectedIndex != -1)
@@ -975,156 +1019,6 @@ namespace TrionicCANFlasher
                     foreach (string a in codes)
                     {
                         AddLogItem(a);
-                    }
-                }
-
-                trionic8.Cleanup();
-                AddLogItem("Connection closed");
-                EnableUserInput(true);
-            }
-            LogManager.Flush();
-        }
-
-        private void btnSetECUVIN_Click(object sender, EventArgs e)
-        {
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                SetGenericOptions(trionic8);
-
-                EnableUserInput(false);
-                AddLogItem("Opening connection");
-                trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
-                if (trionic8.openDevice(true))
-                {
-                    string vin = tbParameter.Text;
-                    if (vin.Length == 17)
-                    {
-                        AddLogItem("setECUparameterVIN:");
-                        trionic8.SetVIN(vin);
-                    }
-                    else
-                    {
-                        AddLogItem("Error expected VIN length 17");
-                    }
-                }
-
-                trionic8.Cleanup();
-                AddLogItem("Connection closed");
-                EnableUserInput(true);
-            }
-            LogManager.Flush();
-        }
-
-        private void btnSetE85_Click(object sender, EventArgs e)
-        {
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                SetGenericOptions(trionic7);
-                trionic7.ELM327Kline = cbELM327Kline.Checked;
-                trionic7.UseFlasherOnDevice = false;
-
-                EnableUserInput(false);
-                AddLogItem("Opening connection");
-                if (trionic7.openDevice())
-                {
-                    int e85;
-                    if (int.TryParse(tbParameter.Text, out e85))
-                    {
-                        if (trionic7.SetE85Percentage(e85))
-                        {
-                            AddLogItem("Set E85% successfull");
-                        }
-                        else
-                        {
-                            AddLogItem("Set E85% failed");
-                        }
-                    }
-                }
-
-                trionic7.Cleanup();
-                AddLogItem("Connection closed");
-                EnableUserInput(true);
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                SetGenericOptions(trionic8);
-
-                EnableUserInput(false);
-                AddLogItem("Opening connection");
-                trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
-                if (trionic8.openDevice(true))
-                {
-                    float e85;
-                    if (float.TryParse(tbParameter.Text, out e85))
-                    {
-                        if (trionic8.SetE85Percentage(e85))
-                        {
-                            AddLogItem("Set E85% successfull");
-                        }
-                        else
-                        {
-                            AddLogItem("Set E85% failed");
-                        }
-                    }
-                }
-
-                trionic8.Cleanup();
-                AddLogItem("Connection closed");
-                EnableUserInput(true);
-            }
-            LogManager.Flush();
-        }
-
-        private void btnSetSpeed_Click(object sender, EventArgs e)
-        {
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                SetGenericOptions(trionic8);
-
-                EnableUserInput(false);
-                AddLogItem("Opening connection");
-                trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
-                if (trionic8.openDevice(true))
-                {
-                    int speed;
-                    if (int.TryParse(tbParameter.Text, out speed))
-                    {
-                        if (trionic8.SetTopSpeed(speed))
-                        {
-                            AddLogItem("Set SpeedLimiter successfull");
-                        }
-                        else
-                        {
-                            AddLogItem("Set SpeedLimiter failed");
-                        }
-                    }
-                }
-
-                trionic8.Cleanup();
-                AddLogItem("Connection closed");
-                EnableUserInput(true);
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
-            {
-                SetGenericOptions(trionic8);
-
-                EnableUserInput(false);
-                AddLogItem("Opening connection");
-                trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                trionic8.ECU = ECU.MOTRONIC96;
-                if (trionic8.openDevice(true))
-                {
-                    int speed;
-                    if (int.TryParse(tbParameter.Text, out speed))
-                    {
-                        if (trionic8.SetTopSpeed(speed))
-                        {
-                            AddLogItem("Set SpeedLimiter successfull");
-                        }
-                        else
-                        {
-                            AddLogItem("Set SpeedLimiter failed");
-                        }
                     }
                 }
 
