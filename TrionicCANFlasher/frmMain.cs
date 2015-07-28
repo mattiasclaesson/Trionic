@@ -488,8 +488,9 @@ namespace TrionicCANFlasher
                     AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
                     AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromID(0xCC));
                     bool convertible, sai, highoutput;
-                    trionic8.GetPI01(out convertible, out sai, out highoutput);
-                    AddLogItem("PI 0x01         : Cab:" + convertible + " SAI:" + sai + " HighOutput:" + highoutput);
+                    string rawPI01;
+                    trionic8.GetPI01(out convertible, out sai, out highoutput, out rawPI01);
+                    AddLogItem("PI 0x01         : Cab:" + convertible + " SAI:" + sai + " HighOutput:" + highoutput + " rawValues: " + rawPI01);
                     AddLogItem("PI 0x03         : " + trionic8.GetPI03());
                     AddLogItem("PI 0x04         : " + trionic8.GetPI04());
                     AddLogItem("PI 0x07         : " + trionic8.GetPI07());
@@ -1142,7 +1143,8 @@ namespace TrionicCANFlasher
                     EditParameters pi = new EditParameters();
                     pi.setECU(ECU.TRIONIC8);
                     bool convertible, sai, highoutput;
-                    trionic8.GetPI01(out convertible, out sai, out highoutput);
+                    string raw;
+                    trionic8.GetPI01(out convertible, out sai, out highoutput, out raw);
                     pi.Convertible = convertible;
                     pi.SAI = sai;
                     pi.Highoutput = highoutput;

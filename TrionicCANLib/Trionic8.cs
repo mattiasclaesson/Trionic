@@ -1215,13 +1215,15 @@ namespace TrionicCANLib.API
         // Clutch start - true, false
         // Tank type - AWD
         // Fuel type 
-        public bool GetPI01(out bool convertible, out bool sai, out bool highoutput)
+        public bool GetPI01(out bool convertible, out bool sai, out bool highoutput, out string raw)
         {
             convertible = false;
             sai = false;
             highoutput = false;
+            raw = string.Empty;
             byte[] data = RequestECUInfo(0x01);
             Console.WriteLine("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+
             if (data[0] == 0x00 && data[1] == 0x00) return false;
             if (data.Length >= 2)
             {
@@ -1235,7 +1237,13 @@ namespace TrionicCANLib.API
                 // high= -01-----
                 // low = -10-----
                 highoutput = BitTools.GetBit(data[1], 5) && !BitTools.GetBit(data[1], 6) ? true : false;
+
+                for (int i = 0; i < data.Length; i++)
+                {
+                    raw += "0x" + data[i].ToString("X2") + " ";
+                }
             }
+
             return true;
         }
 
