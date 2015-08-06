@@ -258,7 +258,6 @@ namespace TrionicCANFlasher
             btnReadECUcalibration.Enabled = enable;
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL)
             {
@@ -269,8 +268,7 @@ namespace TrionicCANFlasher
                 cbAdapter.Enabled = false;
             }
 
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
             {
                 cbxComSpeed.Enabled = enable;
             }
@@ -705,8 +703,7 @@ namespace TrionicCANFlasher
             trionic.OnlyPBus = cbOnlyPBus.Checked;
             trionic.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
             
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
             {
                 //set selected com speed
                 switch (cbxComSpeed.SelectedIndex)
@@ -727,6 +724,10 @@ namespace TrionicCANFlasher
                         trionic.ForcedBaudrate = 0; //default , no speed will be changed
                         break;
                 }
+            }
+            else if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
+            {
+                trionic.ForcedBaudrate = 115200;
             }
 
             trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
