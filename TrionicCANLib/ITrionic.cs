@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using TrionicCANLib.CAN;
+using NLog;
 
 namespace TrionicCANLib.API
 {
     abstract public class ITrionic
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         protected ICANDevice canUsbDevice;
 
         public delegate void WriteProgress(object sender, WriteProgressEventArgs e);
@@ -90,22 +92,28 @@ namespace TrionicCANLib.API
 
         public static string[] GetAdapterNames(CANBusAdapter adapterType)
         {
-            if (adapterType == CANBusAdapter.LAWICEL)
+            try
             {
-                return CANUSBDevice.GetAdapterNames();
+                if (adapterType == CANBusAdapter.LAWICEL)
+                {
+                    return CANUSBDevice.GetAdapterNames();
+                }
+                else if (adapterType == CANBusAdapter.ELM327)
+                {
+                    return CANELM327Device.GetAdapterNames();
+                }
+                else if (adapterType == CANBusAdapter.JUST4TRIONIC)
+                {
+                    return Just4TrionicDevice.GetAdapterNames();
+                }
+                else if (adapterType == CANBusAdapter.KVASER)
+                {
+                    return KvaserCANDevice.GetAdapterNames();
+                }
             }
-            else if (adapterType == CANBusAdapter.ELM327)
+            catch(Exception ex)
             {
-
-                return CANELM327Device.GetAdapterNames();
-            }
-            else if (adapterType == CANBusAdapter.JUST4TRIONIC)
-            {
-                return Just4TrionicDevice.GetAdapterNames();
-            }
-            else if (adapterType == CANBusAdapter.KVASER)
-            {
-                return KvaserCANDevice.GetAdapterNames();
+                logger.Debug("Failed to get adapternames", ex);
             }
             else if (adapterType == CANBusAdapter.MXWIFI)
             {
