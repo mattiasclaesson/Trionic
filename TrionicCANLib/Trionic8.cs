@@ -4803,7 +4803,7 @@ namespace TrionicCANLib.API
                     }
                 }
                 waitCount++;
-                if (waitCount > 45)
+                if (waitCount > 72)
                 {
                     if (canUsbDevice is CANELM327Device)
                     {
