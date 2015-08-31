@@ -93,6 +93,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EnumHelper.cs" />
     <Compile Include="CAN\CANMXWiFiDevice.cs" />
     <Compile Include="CAN\KvaserCANDevice.cs" />
     <Compile Include="ITrionic.cs" />

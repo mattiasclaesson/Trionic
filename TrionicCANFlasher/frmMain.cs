@@ -684,7 +684,7 @@ namespace TrionicCANFlasher
             {
                 SaveRegistrySetting("Adapter", cbAdapter.SelectedItem.ToString());
             }
-            catch (Exception ex)
+            catch
             {
                 SaveRegistrySetting("Adapter", String.Empty);
             }

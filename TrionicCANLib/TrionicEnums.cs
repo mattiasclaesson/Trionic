@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ComponentModel;
 
 namespace TrionicCANLib.API
 {
@@ -24,14 +25,20 @@ namespace TrionicCANLib.API
         DownloadingFooter,
         FinishedDownloadingFooter
     }
-
+    
     public enum CANBusAdapter : int
     {
+        [Description("Lawicel CANUSB")]
         LAWICEL,
+        [Description("CombiAdapter")]
         COMBI,
+        [Description("ELM327 v1.3 or higher")]
         ELM327,
+        [Description("Just4Trionic")]
         JUST4TRIONIC,
+        [Description("Kvaser")]
         KVASER,
+        [Description("OBDLink MX WiFi")]
         MXWIFI
     };
 
