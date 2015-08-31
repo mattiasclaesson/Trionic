@@ -47,12 +47,22 @@ namespace TrionicCANLib.CAN
         {
             
             System.Text.StringBuilder adapter = new System.Text.StringBuilder(10);
-            int number = Lawicel.CANUSB.canusb_getFirstAdapter(adapter, 10);
+            List<string> names = new List<string>();
+            int number;
+            try
+            {
+                number = Lawicel.CANUSB.canusb_getFirstAdapter(adapter, 10);
+            }
+            catch (Exception e)
+            {
+                logger.Debug("Trouble with Lawicel CANUSB. Check drivers are installed: " + e);
+                return names.ToArray();
+            }
             logger.Debug("Lawicel.CANUSB.canusb_getFirstAdapter() name=" + adapter + " number=" + number);
-            string[] names = new string[number];
+            //string[] names = new string[number];
             if(number > 0)
             {
-                names[0] = adapter.ToString();
+                names.Add(adapter.ToString());
             }
 
             for (int i = 1; i < number; i++ )
@@ -60,9 +70,9 @@ namespace TrionicCANLib.CAN
                 System.Text.StringBuilder next = new System.Text.StringBuilder(10);
                 int num2 = Lawicel.CANUSB.canusb_getNextAdapter(next, 10);
                 logger.Debug("Lawicel.CANUSB.canusb_getNextAdapter() name=" + next + " number=" + num2);
-                names[i] = next.ToString();
+                names.Add(next.ToString());
             }
-            return names;
+            return names.ToArray();
         }
 
         private string SelectedAdapter = null;
