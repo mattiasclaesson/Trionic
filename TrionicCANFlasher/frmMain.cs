@@ -259,7 +259,8 @@ namespace TrionicCANFlasher
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL)
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.MXWIFI)
             {
                 cbAdapter.Enabled = enable;
             }
@@ -268,7 +269,8 @@ namespace TrionicCANFlasher
                 cbAdapter.Enabled = false;
             }
 
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.MXWIFI)
             {
                 cbxComSpeed.Enabled = enable;
             }
@@ -702,32 +704,38 @@ namespace TrionicCANFlasher
         {
             trionic.OnlyPBus = cbOnlyPBus.Checked;
             trionic.DisableCanConnectionCheck = cbDisableConnectionCheck.Checked;
-            
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
+
+            switch (cbxAdapterType.SelectedIndex)
             {
-                //set selected com speed
-                switch (cbxComSpeed.SelectedIndex)
-                {
-                    case (int)ComSpeed.S2Mbit:
-                        trionic.ForcedBaudrate = 2000000;
-                        break;
-                    case (int)ComSpeed.S1Mbit:
-                        trionic.ForcedBaudrate = 1000000;
-                        break;
-                    case (int)ComSpeed.S230400:
-                        trionic.ForcedBaudrate = 230400;
-                        break;
-                    case (int)ComSpeed.S115200:
-                        trionic.ForcedBaudrate = 115200;
-                        break;
-                    default:
-                        trionic.ForcedBaudrate = 0; //default , no speed will be changed
-                        break;
-                }
-            }
-            else if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
-            {
-                trionic.ForcedBaudrate = 115200;
+                case (int)CANBusAdapter.JUST4TRIONIC:
+                    trionic.ForcedBaudrate = 115200;
+                    break;
+                case (int)CANBusAdapter.ELM327:
+                    //set selected com speed
+                    switch (cbxComSpeed.SelectedIndex)
+                    {
+                        case (int)ComSpeed.S2Mbit:
+                            trionic.ForcedBaudrate = 2000000;
+                            break;
+                        case (int)ComSpeed.S1Mbit:
+                            trionic.ForcedBaudrate = 1000000;
+                            break;
+                        case (int)ComSpeed.S230400:
+                            trionic.ForcedBaudrate = 230400;
+                            break;
+                        case (int)ComSpeed.S115200:
+                            trionic.ForcedBaudrate = 115200;
+                            break;
+                        default:
+                            trionic.ForcedBaudrate = 0; //default , no speed will be changed
+                            break;
+                    }
+                    break;
+                case (int)CANBusAdapter.MXWIFI:
+                    trionic.ForcedBaudrate = Convert.ToInt32(cbxComSpeed.Text);
+                    break;
+                default:
+                    break;
             }
 
             trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
@@ -960,6 +968,40 @@ namespace TrionicCANFlasher
 
         private void cbxAdapterType_SelectedIndexChanged(object sender, EventArgs e)
         {
+
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.MXWIFI)
+            {
+                label5.Text = "IP Address";
+                label6.Text = "Port";
+                cbxComSpeed.BeginUpdate();
+                cbxComSpeed.DropDownStyle = ComboBoxStyle.Simple;
+                cbxComSpeed.Items.Clear();
+                cbxComSpeed.Items.Insert(0, "35000");
+                cbxComSpeed.SelectedIndex = 0;
+                cbxComSpeed.EndUpdate();
+
+            }
+            else
+            {
+                label5.Text = "Adapter";
+                label6.Text = "Com Speed";
+                int currentIndex = cbxComSpeed.SelectedIndex;
+                cbxComSpeed.BeginUpdate();
+                cbxComSpeed.DropDownStyle = ComboBoxStyle.DropDownList;
+                cbxComSpeed.Items.Clear();
+                cbxComSpeed.Items.Insert((int)ComSpeed.S115200, "115200");
+                cbxComSpeed.Items.Insert((int)ComSpeed.S230400, "230400");
+                cbxComSpeed.Items.Insert((int)ComSpeed.S1Mbit, "1Mbit");
+                cbxComSpeed.Items.Insert((int)ComSpeed.S2Mbit, "2Mbit");
+                cbxComSpeed.SelectedIndex = currentIndex;
+                cbxComSpeed.EndUpdate();
+            }
+
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
+            {
+                cbxComSpeed.SelectedIndex = (int)ComSpeed.S115200;
+            }
+
             EnableUserInput(true);
             GetAdapterInformation();
         }
@@ -1342,5 +1384,6 @@ namespace TrionicCANFlasher
                 LogManager.DisableLogging();
             }
         }
+
     }
 }

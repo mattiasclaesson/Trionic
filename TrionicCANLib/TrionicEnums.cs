@@ -31,7 +31,8 @@ namespace TrionicCANLib.API
         COMBI,
         ELM327,
         JUST4TRIONIC,
-        KVASER
+        KVASER,
+        MXWIFI
     };
 
     public enum ECU : int

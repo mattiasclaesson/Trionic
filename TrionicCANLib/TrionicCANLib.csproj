@@ -93,6 +93,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CAN\CANMXWiFiDevice.cs" />
     <Compile Include="CAN\KvaserCANDevice.cs" />
     <Compile Include="ITrionic.cs" />
     <Compile Include="Md5Tools.cs" />
@@ -110,6 +111,8 @@
     <Compile Include="CAN\ICANListener.cs" />
     <Compile Include="CAN\Just4TrionicDevice.cs" />
     <Compile Include="CAN\LPCCANDevice.cs" />
+    <Compile Include="TelnetClient\ScriptableCommunicator.cs" />
+    <Compile Include="TelnetClient\TelnetSocket.cs" />
     <Compile Include="Trionic7.cs" />
     <Compile Include="flasher\IFlasher.cs" />
     <Compile Include="flasher\T7CombiFlasher.cs" />
