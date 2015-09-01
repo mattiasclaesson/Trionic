@@ -9,6 +9,7 @@ mkdir C:\users\mattias\Dropbox\public\TrionicCANFlasher\%SetupCANFlash.version%
 xcopy SetupCANFlash\version.bat C:\users\mattias\Dropbox\public\TrionicCANFlasher\%SetupCANFlash.version%\
 xcopy SetupCANFlash\Release\TrionicCANFlash.msi C:\users\mattias\Dropbox\public\TrionicCANFlasher\%SetupCANFlash.version%\
 xcopy SetupCANFlash\Release\TrionicCANFlash.md5 C:\users\mattias\Dropbox\public\TrionicCANFlasher\%SetupCANFlash.version%\
+xcopy SetupCANFlash\Release\setup.exe C:\users\mattias\Dropbox\public\TrionicCANFlasher\%SetupCANFlash.version%\
 
 echo ^<?xml version="1.0" encoding="utf-8"?^>  > C:\users\mattias\Dropbox\public\TrionicCANFlasher\version.xml
 echo ^<canflasher version="%SetupCANFlash.version%"/^> >> C:\users\mattias\Dropbox\public\TrionicCANFlasher\version.xml
