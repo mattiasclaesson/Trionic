@@ -3038,6 +3038,58 @@ namespace TrionicCANLib.API
             return listDTC.ToArray();
         }
 
+        public bool ClearDTCCodes()
+        {
+            bool retval = false;
+            StartSession10();
+
+            // ClearDiagnosticInformation ($04) Service
+            ulong cmd = 0x0000000000000401; // 7E0 01 04 00 00 00 00 00 00
+
+            CANMessage msg = new CANMessage(0x7E0, 0, 2);
+            msg.setData(cmd);
+            msg.elmExpectedResponses = 15;
+            m_canListener.setupWaitMessage(0x7E8);
+            canUsbDevice.SetupCANFilter("7E8", "000");
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+            }
+
+            CANMessage response = new CANMessage();
+            ulong data = 0;
+            // Wait for response 
+            // 7E8 01 44 00 00 00 00 00 00
+            response = m_canListener.waitMessage(1000);
+            data = response.getData();
+
+            // Positive Response
+            if (response.getID() == 0x7E8 && response.getCanData(1) == 0x44)
+            {
+                retval = true;
+            }
+            // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
+            else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x04 && response.getCanData(3) == 0x78)
+            {
+                // Wait one more second
+                m_canListener.setupWaitMessage(0x7E8);
+                m_canListener.waitMessage(1000);
+                if (response.getID() == 0x7E8 && response.getCanData(1) == 0x44)
+                {
+                    retval = true;
+                }
+            }
+            // Other errors
+            else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x04)
+            {
+                string info = TranslateErrorCode(response.getCanData(3));
+                CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+            }
+
+            Send0120();
+            return retval;
+        }
+
         // MattiasC, this one is probably not working, need a car to test
         // look at readDTCCodes() how it was improved.
         public string[] readDTCCodesCIM()
