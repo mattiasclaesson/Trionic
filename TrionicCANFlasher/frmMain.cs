@@ -100,7 +100,7 @@ namespace TrionicCANFlasher
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
                             SetGenericOptions(trionic7);
-                            trionic7.ELM327Kline = cbELM327Kline.Checked;
+                            //trionic7.ELM327Kline = cbELM327Kline.Checked;
                             trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
 
                             AddLogItem("Opening connection");
@@ -334,7 +334,7 @@ namespace TrionicCANFlasher
                             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetGenericOptions(trionic7);
-                                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                                 trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
 
                                 AddLogItem("Opening connection");
@@ -429,7 +429,7 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
-                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                 trionic7.UseFlasherOnDevice = false;
 
                 AddLogItem("Opening connection");
@@ -559,7 +559,7 @@ namespace TrionicCANFlasher
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
                         SetGenericOptions(trionic7);
-                        trionic7.ELM327Kline = cbELM327Kline.Checked;
+                        //trionic7.ELM327Kline = cbELM327Kline.Checked;
                         trionic7.UseFlasherOnDevice = false;
 
                         AddLogItem("Opening connection");
@@ -1011,7 +1011,7 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
-                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                 trionic7.UseFlasherOnDevice = false;
 
                 EnableUserInput(false);
@@ -1144,7 +1144,7 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
-                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                 trionic7.UseFlasherOnDevice = false;
 
                 EnableUserInput(false);
