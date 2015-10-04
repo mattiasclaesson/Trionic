@@ -305,6 +305,7 @@
             this.cbELM327Kline.TabIndex = 62;
             this.cbELM327Kline.Text = "ELM327 K-Line";
             this.cbELM327Kline.UseVisualStyleBackColor = true;
+            this.cbELM327Kline.Visible = false;
             // 
             // btnEditParameters
             // 
