@@ -54,6 +54,7 @@
             this.btnReadECUcalibration = new System.Windows.Forms.Button();
             this.cbAdapter = new System.Windows.Forms.ComboBox();
             this.cbUseFlasherOnDevice = new System.Windows.Forms.CheckBox();
+            this.linkLabelLogging = new System.Windows.Forms.LinkLabel();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -352,11 +353,24 @@
             this.cbUseFlasherOnDevice.Text = "Use flasher on device";
             this.cbUseFlasherOnDevice.UseVisualStyleBackColor = true;
             // 
+            // linkLabelLogging
+            // 
+            this.linkLabelLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.linkLabelLogging.AutoSize = true;
+            this.linkLabelLogging.Location = new System.Drawing.Point(718, 347);
+            this.linkLabelLogging.Name = "linkLabelLogging";
+            this.linkLabelLogging.Size = new System.Drawing.Size(113, 13);
+            this.linkLabelLogging.TabIndex = 67;
+            this.linkLabelLogging.TabStop = true;
+            this.linkLabelLogging.Text = "Open logging directory";
+            this.linkLabelLogging.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelLogging_LinkClicked);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1023, 392);
+            this.Controls.Add(this.linkLabelLogging);
             this.Controls.Add(this.cbUseFlasherOnDevice);
             this.Controls.Add(this.cbAdapter);
             this.Controls.Add(this.btnReadECUcalibration);
@@ -421,6 +435,7 @@
         private System.Windows.Forms.Button btnReadECUcalibration;
         private System.Windows.Forms.ComboBox cbAdapter;
         private System.Windows.Forms.CheckBox cbUseFlasherOnDevice;
+        private System.Windows.Forms.LinkLabel linkLabelLogging;
     }
 }
 

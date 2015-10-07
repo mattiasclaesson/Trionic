@@ -1391,5 +1391,11 @@ namespace TrionicCANFlasher
             }
         }
 
+        private void linkLabelLogging_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/MattiasC/TrionicCANFlasher";
+            Process.Start(path);
+        }
+
     }
 }
