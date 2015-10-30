@@ -15,7 +15,7 @@ namespace TrionicCANLib.CAN
         Thread m_readThread;
         Object m_synchObject = new Object();
         bool m_endThread = false;
-        private Logger logger = LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         private int m_forcedBaudrate = 115200;
 
@@ -62,14 +62,14 @@ namespace TrionicCANLib.CAN
             CANMessage canMessage = new CANMessage();
             string rxMessage = string.Empty;
             
-            Console.WriteLine("readMessages started");
+            logger.Trace("readMessages started");
             while (true)
             {
                 lock (m_synchObject)
                 {
                     if (m_endThread)
                     {
-                        Console.WriteLine("readMessages ended");
+                        logger.Trace("readMessages ended");
                         return;
                     }
                 }
@@ -97,7 +97,7 @@ namespace TrionicCANLib.CAN
                             lock (m_listeners)
                             {
                                 logger.Trace(String.Format("rx: {0:X3} {1:X1} {2:X16}", canMessage.getID(), canMessage.getLength(), canMessage.getData()));
-                                //Console.WriteLine("MSG: " + rxMessage);
+                                //logger.Trace("MSG: " + rxMessage);
                                 foreach (ICANListener listener in m_listeners)
                                 {
                                     listener.handleMessage(canMessage);
@@ -108,7 +108,7 @@ namespace TrionicCANLib.CAN
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("MSG: " + rxMessage);
+                    logger.Trace("MSG: " + rxMessage);
                 }
             }
         }
@@ -134,7 +134,7 @@ namespace TrionicCANLib.CAN
             {
                 logger.Trace(String.Format("tx: {0:X3} {1:X1} {2:X16}", a_message.getID(), a_message.getLength(), a_message.getData()));
                 m_serialPort.Write(sendString);
-                //Console.WriteLine("TX: " + sendString);
+                //logger.Trace("TX: " + sendString);
             }
 
             // bitrate = 38400bps -> 3840 bytes per second
@@ -175,7 +175,7 @@ namespace TrionicCANLib.CAN
             if (port != null)
             {
                 // only check this comport
-                Console.WriteLine("Opening com: " + port);
+                logger.Trace("Opening com: " + port);
 
                 if (m_serialPort.IsOpen)
                     m_serialPort.Close();
@@ -207,12 +207,12 @@ namespace TrionicCANLib.CAN
                     try
                     {
                         m_serialPort.ReadLine();
-                        Console.WriteLine("Connected to CAN at 47,619 speed");
+                        logger.Trace("Connected to CAN at 47,619 speed");
                         CastInformationEvent("Connected to CAN I-BUS using " + port);
 
                         if (m_readThread != null)
                         {
-                            Console.WriteLine(m_readThread.ThreadState.ToString());
+                            logger.Trace(m_readThread.ThreadState.ToString());
                         }
                         m_readThread = new Thread(readMessages) { Name = "Just4TrionicDevice.m_readThread" };
                         m_endThread = false; // reset for next tries :)
@@ -234,7 +234,7 @@ namespace TrionicCANLib.CAN
                     }
                     catch (Exception)
                     {
-                        Console.WriteLine("Unable to connect to the I-BUS");
+                        logger.Trace("Unable to connect to the I-BUS");
                     }
                 }
 
@@ -245,12 +245,12 @@ namespace TrionicCANLib.CAN
                 try
                 {
                     m_serialPort.ReadLine();
-                    Console.WriteLine("Connected to CAN at 500 kbits speed");
+                    logger.Trace("Connected to CAN at 500 kbits speed");
                     CastInformationEvent("Connected to CAN P-BUS using " + port);
 
                     if (m_readThread != null)
                     {
-                        Console.WriteLine(m_readThread.ThreadState.ToString());
+                        logger.Trace(m_readThread.ThreadState.ToString());
                     }
 
                     m_readThread = new Thread(readMessages) { Name = "Just4TrionicDevice.m_readThread" };
@@ -273,7 +273,7 @@ namespace TrionicCANLib.CAN
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("Unable to connect to the P-BUS"); 
+                    logger.Trace("Unable to connect to the P-BUS"); 
                 }
 
                 CastInformationEvent("Oh dear :-( Just4Trionic cannot connect to a CAN bus.");

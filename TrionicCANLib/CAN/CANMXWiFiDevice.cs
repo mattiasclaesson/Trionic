@@ -27,7 +27,7 @@ namespace TrionicCANLib.CAN
         private bool interfaceBusy;
 
         private long lastSentTimestamp = 0;
-        private readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         readonly object lockObj = new object();
 
@@ -90,8 +90,8 @@ namespace TrionicCANLib.CAN
             foreach (NetworkInterface Interface in Interfaces)
             {
                 if (Interface.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
-                Console.WriteLine(Interface.Description);
-                Console.WriteLine(Interface.Name);
+                logger.Trace(Interface.Description);
+                logger.Trace(Interface.Name);
                 UnicastIPAddressInformationCollection addresses = Interface.GetIPProperties().UnicastAddresses;
                 foreach (UnicastIPAddressInformation address in addresses)
                 {
@@ -154,14 +154,14 @@ namespace TrionicCANLib.CAN
         {
             CANMessage canMessage = new CANMessage();
 
-            Console.WriteLine("readMessages started");
+            logger.Trace("readMessages started");
             while (true)
             {
                 lock (m_synchObject)
                 {
                     if (m_endThread)
                     {
-                        Console.WriteLine("readMessages ended");
+                        logger.Trace("readMessages ended");
                         return;
                     }
                 }
@@ -209,7 +209,7 @@ namespace TrionicCANLib.CAN
                                 }
                                 catch (Exception)
                                 {
-                                    //Console.WriteLine("MSG: " + rxMessage);
+                                    //logger.Trace("MSG: " + rxMessage);
                                 }
                             }
                             //disable whitespace logging

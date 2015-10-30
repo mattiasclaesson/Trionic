@@ -4,12 +4,13 @@ using System.Text;
 using System.IO.Ports;
 using System.Threading;
 using TrionicCANLib.CAN;
+using NLog;
 
 namespace TrionicCANLib.KWP
 {
     class ELM327Device : IKWPDevice
     {
-
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         bool m_deviceIsOpen = false;
         SerialPort m_serialPort = new SerialPort();
 
@@ -279,7 +280,7 @@ namespace TrionicCANLib.KWP
                                 {
                                     string elmVersion = m_serialPort.ReadExisting();
                                     //AddToSerialTrace("elmVersion:" + elmVersion);
-                                    Console.WriteLine("elmVersion: " + elmVersion);
+                                    logger.Trace("elmVersion: " + elmVersion);
                                     if (elmVersion.Length > 5)
                                     {
                                         gotVersion = true;

@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using System.Diagnostics;
+using NLog;
 
 namespace TrionicCANLib.CAN
 {
@@ -12,6 +13,7 @@ namespace TrionicCANLib.CAN
     /// </summary>
     class CANListener : ICANListener
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         private uint m_waitMsgID = 0;
         private uint m_additionalWaitMsgID = 0;
 
@@ -114,19 +116,19 @@ namespace TrionicCANLib.CAN
             {
                 if (_receiveMessageIndex == idx && _readMessageIndex == idx)
                 {
-                    Console.WriteLine(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + " RX RD");
+                    logger.Trace(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + " RX RD");
                 }
                 else if (_receiveMessageIndex == idx)
                 {
-                    Console.WriteLine(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + " RX");
+                    logger.Trace(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + " RX");
                 }
                 else if (_readMessageIndex == idx)
                 {
-                    Console.WriteLine(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + "    RD");
+                    logger.Trace(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + "    RD");
                 }
                 else
                 {
-                    Console.WriteLine(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16"));
+                    logger.Trace(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16"));
 
                 }
             }
@@ -179,7 +181,7 @@ namespace TrionicCANLib.CAN
             }
             if (size > 1)
             {
-                Console.WriteLine("Buffering: " + size.ToString() + " messages");
+                logger.Trace("Buffering: " + size.ToString() + " messages");
                 //dumpQueue();
             }
         }

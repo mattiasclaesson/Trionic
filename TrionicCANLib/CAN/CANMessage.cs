@@ -15,23 +15,27 @@ namespace TrionicCANLib.CAN
         /// m_id is the CAN id
         /// </summary>
         private uint m_id;			// 11/29 bit Identifier
+        
         /// <summary>
         /// m_timestamp is the time stamp for the message set by the CAN device
         /// </summary>
         private uint m_timestamp;   // Hardware Timestamp (0-9999mS)
+        
         /// <summary>
         /// m_flags is flags set by the CAN device (vendor dependent)
         /// </summary>
         private byte m_flags;		// Message Flags
+        
         /// <summary>
         /// m_length is the number of bytes in the message
         /// </summary>
         private byte m_length;		// Number of data bytes 0-8.
+        
         /// <summary>
         /// m_data is the data contained in the CAN message.
         /// Data is ordered in reverse orded compared to the CAN message. If the message should
         /// contain [0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88] m_data should have the 
-        /// value 0x887766554432211.
+        /// value 0x8877665544332211.
         /// </summary>
         private ulong m_data;		// Data Bytes 0..7
 
