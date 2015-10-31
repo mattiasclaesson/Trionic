@@ -63,13 +63,12 @@ namespace TrionicCANFlasher
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine(e.ToString());
+            logger.Trace(e.ToString());
         }
 
         void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine(e.ToString());
-            //throw new NotImplementedException();
+            logger.Trace(e.ToString());
         }
 
         private void AddLogItem(string item)
@@ -100,7 +99,7 @@ namespace TrionicCANFlasher
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
                             SetGenericOptions(trionic7);
-                            trionic7.ELM327Kline = cbELM327Kline.Checked;
+                            //trionic7.ELM327Kline = cbELM327Kline.Checked;
                             trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
 
                             AddLogItem("Opening connection");
@@ -279,15 +278,15 @@ namespace TrionicCANFlasher
                 cbxComSpeed.Enabled = false;
             }
 
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 &&
-                cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                cbELM327Kline.Enabled = enable;
-            }
-            else
-            {
-                cbELM327Kline.Enabled = false;
-            }
+            //if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 &&
+            //    cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            //{
+            //    cbELM327Kline.Enabled = enable;
+            //}
+            //else
+            //{
+            //    cbELM327Kline.Enabled = false;
+            //}
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.COMBI &&
                 cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
@@ -334,7 +333,7 @@ namespace TrionicCANFlasher
                             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetGenericOptions(trionic7);
-                                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                                 trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
 
                                 AddLogItem("Opening connection");
@@ -429,7 +428,7 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
-                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                 trionic7.UseFlasherOnDevice = false;
 
                 AddLogItem("Opening connection");
@@ -559,7 +558,7 @@ namespace TrionicCANFlasher
                     if (sfd.ShowDialog() == DialogResult.OK)
                     {
                         SetGenericOptions(trionic7);
-                        trionic7.ELM327Kline = cbELM327Kline.Checked;
+                        //trionic7.ELM327Kline = cbELM327Kline.Checked;
                         trionic7.UseFlasherOnDevice = false;
 
                         AddLogItem("Opening connection");
@@ -679,6 +678,7 @@ namespace TrionicCANFlasher
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
+            logger.Trace("frmMain_FormClosing()");
             SaveRegistrySetting("AdapterType", cbxAdapterType.SelectedItem.ToString());
             try
             {
@@ -693,10 +693,14 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("OnlyPBus", cbOnlyPBus.Checked);
             SaveRegistrySetting("DisableCanCheck", cbDisableConnectionCheck.Checked);
             SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem.ToString());
-            SaveRegistrySetting("ELM327Kline", cbELM327Kline.Checked);
+            //SaveRegistrySetting("ELM327Kline", cbELM327Kline.Checked);
 
+            logger.Trace("trionic8.Cleanup()");
             trionic8.Cleanup();
+            logger.Trace("trionic8.Cleanup()");
+            logger.Trace("trionic7.Cleanup()");
             trionic7.Cleanup();
+            logger.Trace("trionic7.Cleanup()");
             Environment.Exit(0);
         }
 
@@ -878,10 +882,10 @@ namespace TrionicCANFlasher
                             {
                                 cbxComSpeed.SelectedItem = Settings.GetValue(a).ToString();
                             }
-                            else if (a == "ELM327Kline")
-                            {
-                                cbELM327Kline.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
-                            }
+                            //else if (a == "ELM327Kline")
+                            //{
+                            //    cbELM327Kline.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                            //}
                         }
                         catch (Exception e)
                         {
@@ -1011,7 +1015,7 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
-                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                 trionic7.UseFlasherOnDevice = false;
 
                 EnableUserInput(false);
@@ -1144,7 +1148,7 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
-                trionic7.ELM327Kline = cbELM327Kline.Checked;
+                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                 trionic7.UseFlasherOnDevice = false;
 
                 EnableUserInput(false);
@@ -1385,6 +1389,12 @@ namespace TrionicCANFlasher
             {
                 LogManager.DisableLogging();
             }
+        }
+
+        private void linkLabelLogging_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/MattiasC/TrionicCANFlasher";
+            Process.Start(path);
         }
 
     }
