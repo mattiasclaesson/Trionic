@@ -142,7 +142,7 @@ namespace TrionicCANLib.API
 
         protected void CastInfoEvent(string info, ActivityType type)
         {
-            Console.WriteLine(info);
+            logger.Debug(info);
             if (onCanInfo != null)
             {
                 onCanInfo(this, new CanInfoEventArgs(info, type));
@@ -151,7 +151,7 @@ namespace TrionicCANLib.API
 
         protected void CastFrameEvent(CANMessage message)
         {
-            Console.WriteLine(message);
+            logger.Debug(message);
             if (onCanFrame != null)
             {
                 onCanFrame(this, new CanFrameEventArgs(message));

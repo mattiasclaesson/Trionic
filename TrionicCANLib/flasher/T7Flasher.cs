@@ -19,7 +19,7 @@ namespace TrionicCANLib.Flasher
     {
         public override event IFlasher.StatusChanged onStatusChanged;
 
-        private Logger logger = LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// This method returns the number of bytes that has been read or written so far.
@@ -297,12 +297,12 @@ namespace TrionicCANLib.Flasher
                 {
                     m_nrOfRetries++;
                 }
-                Console.WriteLine("Writing data to file: " + m_length + " bytes");
+                logger.Debug("Writing data to file: " + m_length + " bytes");
                 fileStream.Write(data, 0, nrOfBytes);
                 m_nrOfBytesRead += nrOfBytes;
             }
             fileStream.Close();
-            Console.WriteLine("Done reading");
+            logger.Debug("Done reading");
             m_kwpHandler.sendDataTransferExitRequest();
         }
 

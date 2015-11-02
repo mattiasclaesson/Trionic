@@ -300,12 +300,12 @@ public class LPCCANDevice : ICANDevice
             frame.is_remote = 0;
 
             combi.CAN_SendMessage(ref frame);
-            logger.Trace("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16"));
+            logger.Debug("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16"));
             return true;
         }
         catch (Exception e)
         {
-            logger.Trace("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16") + " failed" + e.Message);
+            logger.Debug("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16") + " failed" + e.Message);
             return false;
         }
     }
@@ -409,7 +409,7 @@ public class LPCCANDevice : ICANDevice
             // receive messages
             if (combi.CAN_GetMessage(ref frame, 1000))
             {
-                logger.Trace("rx: " + frame.id.ToString("X3") + " " + frame.data.ToString("X16"));
+                logger.Debug("rx: " + frame.id.ToString("X3") + " " + frame.data.ToString("X16"));
                 if (acceptMessageId(frame.id))
                 {
                     // convert message

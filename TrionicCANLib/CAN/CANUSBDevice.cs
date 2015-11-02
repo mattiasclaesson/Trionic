@@ -138,7 +138,7 @@ namespace TrionicCANLib.CAN
                         canMessage.setData(r_canMsg.data);
                         lock (m_listeners)
                         {
-                            logger.Trace(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
+                            logger.Debug(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
                             foreach (ICANListener listener in m_listeners)
                             {
                                 listener.handleMessage(canMessage);
@@ -294,12 +294,12 @@ namespace TrionicCANLib.CAN
             writeResult = Lawicel.CANUSB.canusb_Write(m_deviceHandle, ref msg);
             if (writeResult == Lawicel.CANUSB.ERROR_CANUSB_OK)
             {
-                logger.Trace("tx: " + msg.id.ToString("X3") + " " + msg.data.ToString("X16"));
+                logger.Debug("tx: " + msg.id.ToString("X3") + " " + msg.data.ToString("X16"));
                 return true;
             }
             else
             {
-                logger.Trace("tx: " + msg.id.ToString("X3") + " " + msg.data.ToString("X16") + " failed" + writeResult);
+                logger.Debug("tx: " + msg.id.ToString("X3") + " " + msg.data.ToString("X16") + " failed" + writeResult);
                 return false;
             }
         }
@@ -324,7 +324,7 @@ namespace TrionicCANLib.CAN
                 if (readResult == Lawicel.CANUSB.ERROR_CANUSB_OK)
                 {
                     Thread.Sleep(1);
-                    logger.Trace("rx: 0x" + r_canMsg.id.ToString("X3") + r_canMsg.data.ToString("X16"));
+                    logger.Debug("rx: 0x" + r_canMsg.id.ToString("X3") + r_canMsg.data.ToString("X16"));
                     if (r_canMsg.id == 0x00)
                     {
                         nrOfWait++;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NLog;
 
 namespace TrionicCANLib.KWP
 {
@@ -9,7 +10,7 @@ namespace TrionicCANLib.KWP
     /// </summary>
     public class KWPRequest
     {
-
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         byte[] m_request;
         uint m_nrOfPid;
 
@@ -86,7 +87,7 @@ namespace TrionicCANLib.KWP
             byte length = (byte)(2 + a_data.Length);
             if(a_mode == 0x3D && a_pid == 0x80)
             {
-                Console.WriteLine("KWPRequest length: " + length.ToString("X8"));
+                logger.Debug("KWPRequest length: " + length.ToString("X8"));
             }
             m_request = new byte[length + 1];
             //Set length of request

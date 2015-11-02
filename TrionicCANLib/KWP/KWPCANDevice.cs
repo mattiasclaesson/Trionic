@@ -70,7 +70,7 @@ namespace TrionicCANLib.KWP
         private ICANDevice m_canDevice;
         KWPCANListener m_kwpCanListener = new KWPCANListener();
         const int timeoutPeriod = 1000; // if timeout <GS-11022010> changed from 1000 to 250 to not intefere with the keepalive timer
-        private Logger logger = LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         private bool m_EnableLog = false;
 
@@ -118,14 +118,14 @@ namespace TrionicCANLib.KWP
             {
                 lock (m_lockObject)
                 {
-                    Console.WriteLine("******* KWPCANDevice: m_CanDevice set");
+                    logger.Debug("******* KWPCANDevice: m_CanDevice set");
 
                     m_canDevice = a_canDevice;
                 }
             }
             else
             {
-                Console.WriteLine("KWPCANDevice, candevice was already set");
+                logger.Debug("KWPCANDevice, candevice was already set");
             }
         }
 
@@ -135,23 +135,23 @@ namespace TrionicCANLib.KWP
         /// <returns>True if the device was opened, otherwise false.</returns>
         public override bool open()
         {
-            Console.WriteLine("******* KWPCANDevice: Opening KWPCANDevice");
+            logger.Debug("******* KWPCANDevice: Opening KWPCANDevice");
 
             bool retVal = false;
-            Console.WriteLine("Opening m_canDevice");
+            logger.Debug("Opening m_canDevice");
             lock (m_lockObject)
             {
-                Console.WriteLine("Lock passed: Opening m_canDevice");
+                logger.Debug("Lock passed: Opening m_canDevice");
                 if (m_canDevice.open() == OpenResult.OK)
                 {
-                    Console.WriteLine("Adding listener");
+                    logger.Debug("Adding listener");
                     m_canDevice.addListener(m_kwpCanListener);
                     retVal = true;
                 }
                 else
                     retVal = false;
             }
-            Console.WriteLine("return value = " + retVal.ToString());
+            logger.Debug("return value = " + retVal.ToString());
             return retVal;
         }
 
@@ -178,7 +178,7 @@ namespace TrionicCANLib.KWP
         /// <returns>True if the device was closed, otherwise false.</returns>
         public override bool close()
         {
-            Console.WriteLine("******* KWPCANDevice: Closing KWPCANDevice");
+            logger.Debug("******* KWPCANDevice: Closing KWPCANDevice");
 
             bool retVal = false;
             lock (m_lockObject)
@@ -266,6 +266,7 @@ namespace TrionicCANLib.KWP
                 row = 0;
                 if (nrOfRows == 0)
                     throw new Exception("Wrong nr of rows");
+
                 //Assume that no KWP reply contains more than 0x200 bytes
                 byte[] reply = new byte[0x200];
                 reply = collectReply(reply, response.getData(), row);
@@ -343,23 +344,27 @@ namespace TrionicCANLib.KWP
         {
             if (a_row > nrOfRowsToSend(a_data))
                 throw new Exception("Message nr out of index");
+            
             ulong result = 0;
             uint i = 0;
             if(nrOfRowsToSend(a_data) - a_row - 1 == 0)
                 result = setCanData(result, (byte)(0x40 | a_row), i++);
             else
                 result = setCanData(result, (byte)a_row, i++);
+            
             result = setCanData(result, (byte)0xA1, i++);
             uint j;
             if (nrOfRowsToSend(a_data) - a_row - 1 == 0)
                 j = 0;
             else
                 j = ((nrOfRowsToSend(a_data) - a_row  - 1)* 6);
+            
             int nrOfBytesToCopy;
             if (a_data.Length - j < 6)
                 nrOfBytesToCopy = (int)(a_data.Length - j);
             else
                 nrOfBytesToCopy = 6;
+            
             for (int k = 0; k < nrOfBytesToCopy; i++, j++, k++)
                 result = setCanData(result, (byte)a_data[j], i);
             return result;

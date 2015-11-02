@@ -4,12 +4,13 @@ using System.Text;
 using System.IO.Ports;
 using System.Threading;
 using TrionicCANLib.CAN;
+using NLog;
 
 namespace TrionicCANLib.KWP
 {
     class ELM327Device : IKWPDevice
     {
-
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         bool m_deviceIsOpen = false;
         SerialPort m_serialPort = new SerialPort();
 
@@ -279,7 +280,7 @@ namespace TrionicCANLib.KWP
                                 {
                                     string elmVersion = m_serialPort.ReadExisting();
                                     //AddToSerialTrace("elmVersion:" + elmVersion);
-                                    Console.WriteLine("elmVersion: " + elmVersion);
+                                    logger.Debug("elmVersion: " + elmVersion);
                                     if (elmVersion.Length > 5)
                                     {
                                         gotVersion = true;
@@ -331,7 +332,7 @@ namespace TrionicCANLib.KWP
             {
                 foreach (var speed in speeds)
                 {
-                    Console.Out.WriteLine("Try speed:" + speed);
+                    logger.Debug("Try speed:" + speed);
                     //if (m_serialPort.IsOpen)
                     m_serialPort.Close();
                     m_serialPort.BaudRate = speed;
@@ -346,7 +347,7 @@ namespace TrionicCANLib.KWP
                         WriteToSerialWithTrace("ATI\r"); //need to send 2 times for some reason...
                         Thread.Sleep(50);
                         string reply = m_serialPort.ReadExisting();
-                        Console.Out.WriteLine("Result:" + reply);
+                        logger.Debug("Result:" + reply);
                         bool success = !string.IsNullOrEmpty(reply) && reply.Contains("ELM327");
                         if (success)
                         {
@@ -365,7 +366,7 @@ namespace TrionicCANLib.KWP
                         }
                         else
                         {
-                            Console.Out.WriteLine("Failed");
+                            logger.Debug("Failed");
                             m_serialPort.Close();
                         }
                     }
