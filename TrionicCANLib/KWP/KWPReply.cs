@@ -26,7 +26,7 @@ namespace TrionicCANLib.KWP
             m_reply = a_reply;
             if (m_reply == null)
             {
-                logger.Trace("Reply was NULL");
+                logger.Debug("Reply was NULL");
             }
             m_nrOfPid = a_nrOfPid;
         }

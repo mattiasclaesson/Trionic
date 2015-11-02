@@ -130,7 +130,7 @@ namespace TrionicCANLib.CAN
                             canMessage.setCanData(msg, (byte)dlc);
                             lock (m_listeners)
                             {
-                                logger.Trace(string.Format("rx: {0:X3} {1:X16}", canMessage.getID(), canMessage.getData()));
+                                logger.Debug(string.Format("rx: {0:X3} {1:X16}", canMessage.getID(), canMessage.getData()));
                                 foreach (ICANListener listener in m_listeners)
                                 {
                                     listener.handleMessage(canMessage);
@@ -325,12 +325,12 @@ namespace TrionicCANLib.CAN
 
             if (writeStatus == Canlib.canStatus.canOK)
             {
-                logger.Trace(String.Format("tx: {0:X3} {1:X16}", a_message.getID(), a_message.getData()));
+                logger.Debug(String.Format("tx: {0:X3} {1:X16}", a_message.getID(), a_message.getData()));
                 return true;
             }
             else
             {
-                logger.Trace(String.Format("tx: {0:X3} {1:X16} failed {2}", a_message.getID(), a_message.getData(), writeStatus));
+                logger.Debug(String.Format("tx: {0:X3} {1:X16} failed {2}", a_message.getID(), a_message.getData(), writeStatus));
                 return false;
             }
         }

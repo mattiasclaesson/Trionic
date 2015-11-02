@@ -97,7 +97,7 @@ namespace TrionicCANLib.CAN
             CANMessage canMessage = new CANMessage();
             StringBuilder receiveText = new StringBuilder();
 
-            logger.Trace("readMessages started");
+            logger.Debug("readMessages started");
             while (true)
             {
                 receiveDataSemaphore.WaitOne();
@@ -106,7 +106,7 @@ namespace TrionicCANLib.CAN
                 {
                     if (m_endThread)
                     {
-                        logger.Trace("readMessages ended");
+                        logger.Debug("readMessages ended");
                         return;
                     }
                 }
@@ -148,7 +148,7 @@ namespace TrionicCANLib.CAN
                                 else if (rxMessage.StartsWith("NO DATA"))
                                 {
                                     logger.Debug("NO DATA");
-                                    logger.Trace("NO DATA");
+                                    logger.Debug("NO DATA");
                                 }
                                 else if (rxMessage.Length == 19) // is it a valid line
                                 {
@@ -165,7 +165,7 @@ namespace TrionicCANLib.CAN
 
                                             lock (m_listeners)
                                             {
-                                                logger.Trace(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
+                                                logger.Debug(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
                                                 foreach (ICANListener listener in m_listeners)
                                                 {
                                                     listener.handleMessage(canMessage);
@@ -175,7 +175,7 @@ namespace TrionicCANLib.CAN
                                     }
                                     catch (Exception)
                                     {
-                                        //logger.Trace("MSG: " + rxMessage);
+                                        //logger.Debug("MSG: " + rxMessage);
                                     }
                                 }
                                  //disable whitespace logging
@@ -257,7 +257,7 @@ namespace TrionicCANLib.CAN
                 {
                     lastSentTimestamp = Environment.TickCount;
                     WriteToSerialWithTrace(sendString);
-                    logger.Trace(string.Format("TX: {0} {1}", a_message.getID().ToString("X3"), sendString));
+                    logger.Debug(string.Format("TX: {0} {1}", a_message.getID().ToString("X3"), sendString));
                 }
                 return true; // remove after implementation
             }
@@ -664,11 +664,11 @@ namespace TrionicCANLib.CAN
             while (tries-- > 0)
             {
                 WriteToSerialAndWait("ATI\r");
-                Console.Write(".");
+                logger.Debug(".");
             }
             start = Environment.TickCount - start;
             logger.Debug(string.Format("Got {0} responses in {1} ms", 1000, start));
-            logger.Trace(string.Format("Got {0} responses in {1} ms", 1000, start));
+            logger.Debug(string.Format("Got {0} responses in {1} ms", 1000, start));
         }
 
         private void RunLoggingBenchmark()

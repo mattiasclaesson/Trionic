@@ -297,12 +297,12 @@ namespace TrionicCANLib.Flasher
                 {
                     m_nrOfRetries++;
                 }
-                logger.Trace("Writing data to file: " + m_length + " bytes");
+                logger.Debug("Writing data to file: " + m_length + " bytes");
                 fileStream.Write(data, 0, nrOfBytes);
                 m_nrOfBytesRead += nrOfBytes;
             }
             fileStream.Close();
-            logger.Trace("Done reading");
+            logger.Debug("Done reading");
             m_kwpHandler.sendDataTransferExitRequest();
         }
 

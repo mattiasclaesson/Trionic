@@ -168,7 +168,7 @@ namespace TrionicCANLib.API
                     {
                         _securityAccessOk = true;
                         tmr.Start();
-                        logger.Trace("Timer started");
+                        logger.Debug("Timer started");
                         break;
                     }
                 }
@@ -199,7 +199,7 @@ namespace TrionicCANLib.API
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             //ulong data = response.getData();
-            logger.Trace("---" + response.getData().ToString("X16"));
+            logger.Debug("---" + response.getData().ToString("X16"));
             if (response.getCanData(1) == 0x67)
             {
                 if (response.getCanData(2) == 0x01)
@@ -291,7 +291,7 @@ namespace TrionicCANLib.API
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             //ulong data = response.getData();
-            logger.Trace("---" + response.getData().ToString("X16"));
+            logger.Debug("---" + response.getData().ToString("X16"));
             if (response.getCanData(1) == 0x67)
             {
                 if (response.getCanData(2) == 0xFD || response.getCanData(2) == 0xFB || response.getCanData(2) == 0x01)
@@ -352,7 +352,7 @@ namespace TrionicCANLib.API
                         }
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
-                        logger.Trace("---" + response.getData().ToString("X16"));
+                        logger.Debug("---" + response.getData().ToString("X16"));
                         // is it ok or not
                         if (response.getCanData(1) == 0x67 && (response.getCanData(2) == 0xFE || response.getCanData(2) == 0xFC || response.getCanData(2) == 0x02))
                         {
@@ -858,7 +858,7 @@ namespace TrionicCANLib.API
             msg.setData(data);
             if (!canUsbDevice.sendMessage(msg))
             {
-                logger.Trace("Failed to send message");
+                logger.Debug("Failed to send message");
             }
         }
 
@@ -943,7 +943,7 @@ namespace TrionicCANLib.API
             //9A = 01 10 0
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x9A);
-            logger.Trace("data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 2)
             {
@@ -1163,7 +1163,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response62 = new CANMessage();
             response62 = m_canListener.waitMessage(1000);
-            logger.Trace("---" + response62.getData().ToString("X16"));
+            logger.Debug("---" + response62.getData().ToString("X16"));
             //05E8	62	00	00	02	A7	01	7F	01
             if (response62.getCanData(0) == 0x62)
             {
@@ -1191,7 +1191,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
-            logger.Trace("---" + response.getData().ToString("X16"));
+            logger.Debug("---" + response.getData().ToString("X16"));
             //05E8	02	02	A0	42	80	A0	00	00
             if (response.getCanData(0) == 0x02)
             {
@@ -1226,7 +1226,7 @@ namespace TrionicCANLib.API
             highoutput = false;
             raw = string.Empty;
             byte[] data = RequestECUInfo(0x01);
-            logger.Trace("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
 
             if (data[0] == 0x00 && data[1] == 0x00) return false;
             if (data.Length >= 2)
@@ -1308,7 +1308,7 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x03);
-            logger.Trace("03data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("03data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 5)
             {
@@ -1325,7 +1325,7 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x04);
-            logger.Trace("04data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("04data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 5)
             {
@@ -1342,7 +1342,7 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x07);
-            logger.Trace("07data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("07data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 5)
             {
@@ -1359,7 +1359,7 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x2E);
-            logger.Trace("2Edata: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("2Edata: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data.Length >= 5)
             {
                 for (int i = 0; i < data.Length; i++)
@@ -1375,7 +1375,7 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0xB9);
-            logger.Trace("B9data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("B9data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 5)
             {
@@ -1392,7 +1392,7 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x24);
-            logger.Trace("24data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("24data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
             if (data.Length >= 5)
             {
@@ -1410,7 +1410,7 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0xA0);
-            logger.Trace("A0data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("A0data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data.Length >= 5)
             {
                 for (int i = 0; i < data.Length; i++)
@@ -1426,7 +1426,7 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x96);
-            logger.Trace("96data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
+            logger.Debug("96data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
             if (data.Length >= 11)
             {
                 for (int i = 0; i < data.Length; i++)
@@ -1732,7 +1732,7 @@ namespace TrionicCANLib.API
                 for (int i = 0; i < 0x46; i++)
                 {
                     //10 F0 36 00 00 10 24 00
-                    //logger.Trace("Sending bootloader: " + startAddress.ToString("X8"));
+                    //logger.Debug("Sending bootloader: " + startAddress.ToString("X8"));
                     // cast event
                     int percentage = (int)(((float)i * 100) / 70F);
                     if (percentage > saved_progress)
@@ -1783,7 +1783,7 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
-                        logger.Trace("Did not receive correct response from SendTransferData");
+                        logger.Debug("Did not receive correct response from SendTransferData");
                     }
                 }
             }
@@ -1864,7 +1864,7 @@ namespace TrionicCANLib.API
 
         private int GetProgrammingState(uint responseID)
         {
-            logger.Trace("Get programming state");
+            logger.Debug("Get programming state");
             CANMessage msg = new CANMessage(0x11, 0, 2);
             ulong cmd = 0x000000000000A201; // 0x02 0x10 0x02
             msg.setData(cmd);
@@ -1877,7 +1877,7 @@ namespace TrionicCANLib.API
             response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             ulong data = response.getData();
-            logger.Trace("Get programming state response: " + data.ToString("X16"));
+            logger.Debug("Get programming state response: " + data.ToString("X16"));
             //\__ 00 00 03 11 02 e2 01 00 00 00 00 00 Magic reply, T8 replies with 0311 and programming state 01(recovery state?)
             if (data == 0) return -1;
             if (getCanData(data, 1) != 0xE2 || getCanData(data, 0) != 0x02)
@@ -1966,7 +1966,7 @@ namespace TrionicCANLib.API
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             //ulong data = response.getData();
-            logger.Trace("---" + response.getData().ToString("X16"));
+            logger.Debug("---" + response.getData().ToString("X16"));
             if (response.getCanData(1) == 0x67)
             {
                 if (response.getCanData(2) == 0xFD || response.getCanData(2) == 0xFB || response.getCanData(2) == 0x01)
@@ -2323,7 +2323,7 @@ namespace TrionicCANLib.API
             ulong data = 0;
             // first send 
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
-            //logger.Trace("Writing " + address.ToString("X8") + " len: " + memdata.Length.ToString("X2"));
+            //logger.Debug("Writing " + address.ToString("X8") + " len: " + memdata.Length.ToString("X2"));
             ulong cmd = 0x0000000000003406; // 0x34 = upload data to ECU
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
             addressHigh /= 0x10000;
@@ -2365,7 +2365,7 @@ namespace TrionicCANLib.API
             cmd |= (addressMiddle * 0x1000000000000);
             cmd |= (addressHigh * 0x10000000000);
             cmd |= (len * 0x100);
-            //logger.Trace("send: " + cmd.ToString("X16"));
+            //logger.Debug("send: " + cmd.ToString("X16"));
 
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
@@ -2408,7 +2408,7 @@ namespace TrionicCANLib.API
                 response = new CANMessage();
                 response = m_canListener.waitMessage(1000);
                 data = response.getData();
-                logger.Trace("received: " + data.ToString("X8"));
+                logger.Debug("received: " + data.ToString("X8"));
             }
             _stallKeepAlive = false;
             return true;
@@ -2420,7 +2420,7 @@ namespace TrionicCANLib.API
             ulong cmd = 0x0000000000003E01; // always 2 bytes
             msg.setData(cmd);
             msg.elmExpectedResponses = 1;
-            //logger.Trace("KA sent");
+            //logger.Debug("KA sent");
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
             {
@@ -2429,7 +2429,7 @@ namespace TrionicCANLib.API
             CANMessage response = new CANMessage();
             response = new CANMessage();
             response = m_canListener.waitMessage(1000);
-            //logger.Trace("received KA: " + response.getCanData(1).ToString("X2"));
+            //logger.Debug("received KA: " + response.getCanData(1).ToString("X2"));
         }
 
         public byte[] getSRAMSnapshot()
@@ -2505,7 +2505,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.isOpen()) return retData;
 
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
-            //logger.Trace("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
+            //logger.Debug("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
             ulong cmd = 0x0000000000002106; // always 2 bytes
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
             addressHigh /= 0x10000;
@@ -2519,7 +2519,7 @@ namespace TrionicCANLib.API
             cmd |= (addressMiddle * 0x10000000000);
             cmd |= (addressHigh * 0x100000000);
             cmd |= (len * 0x10000); // << 2 * 8
-            //logger.Trace("send: " + cmd.ToString("X16"));
+            //logger.Debug("send: " + cmd.ToString("X16"));
             /*cmd |= (ulong)(byte)(address & 0x000000FF) << 4 * 8;
             cmd |= (ulong)(byte)((address & 0x0000FF00) >> 8) << 3 * 8;
             cmd |= (ulong)(byte)((address & 0x00FF0000) >> 2 * 8) << 2 * 8;
@@ -2660,7 +2660,7 @@ namespace TrionicCANLib.API
             //optimize reading speed for ELM
             if (length <= 3)
                 msg.elmExpectedResponses = 1;
-            //logger.Trace("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
+            //logger.Debug("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
             ulong cmd = 0x0000000000002306; // always 2 bytes
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
             addressHigh /= 0x10000;
@@ -2674,7 +2674,7 @@ namespace TrionicCANLib.API
             cmd |= (addressMiddle * 0x1000000);
             cmd |= (addressHigh * 0x10000);
             cmd |= (len * 0x1000000000000);
-            //logger.Trace("send: " + cmd.ToString("X16"));
+            //logger.Debug("send: " + cmd.ToString("X16"));
             /*cmd |= (ulong)(byte)(address & 0x000000FF) << 4 * 8;
             cmd |= (ulong)(byte)((address & 0x0000FF00) >> 8) << 3 * 8;
             cmd |= (ulong)(byte)((address & 0x00FF0000) >> 2 * 8) << 2 * 8;
@@ -3212,7 +3212,7 @@ namespace TrionicCANLib.API
 
         private int GetProgrammingStateNormal()
         {
-            logger.Trace("Get programming state");
+            logger.Debug("Get programming state");
             CANMessage msg = new CANMessage(0x7E0, 0, 2);
             ulong cmd = 0x000000000000A201; // 0x02 0x10 0x02
             msg.setData(cmd);
@@ -3225,7 +3225,7 @@ namespace TrionicCANLib.API
             response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             ulong data = response.getData();
-            logger.Trace("Get programming state response: " + data.ToString("X16"));
+            logger.Debug("Get programming state response: " + data.ToString("X16"));
             //\__ 00 00 03 11 02 e2 01 00 00 00 00 00 Magic reply, T8 replies with 0311 and programming state 01(recovery state?)
             if (getCanData(data, 1) != 0xE2 || getCanData(data, 0) != 0x02)
             {
@@ -3885,7 +3885,7 @@ namespace TrionicCANLib.API
                 {
                     iFrameNumber = 0x21;
                     //10 F0 36 00 00 10 24 00
-                    //logger.Trace("Sending bootloader: " + startAddress.ToString("X8"));
+                    //logger.Debug("Sending bootloader: " + startAddress.ToString("X8"));
                     // cast event
                     int percentage = (int)(((float)i * 100) / 70F);
                     if (percentage > saved_progress)
@@ -3932,7 +3932,7 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
-                        logger.Trace("Did not receive correct response from SendTransferData");
+                        logger.Debug("Did not receive correct response from SendTransferData");
                     }
                 }
 
@@ -3964,7 +3964,7 @@ namespace TrionicCANLib.API
                 }
                 else
                 {
-                    logger.Trace("Did not receive correct response from SendTransferData");
+                    logger.Debug("Did not receive correct response from SendTransferData");
                 }
 
                 CastProgressWriteEvent(100);
@@ -3985,7 +3985,7 @@ namespace TrionicCANLib.API
                 {
                     iFrameNumber = 0x21;
                     //10 F0 36 00 00 10 24 00
-                    //logger.Trace("Sending bootloader: " + startAddress.ToString("X8"));
+                    //logger.Debug("Sending bootloader: " + startAddress.ToString("X8"));
                     // cast event
                     int percentage = (int)(((float)i * 100) / 70F);
                     if (percentage > saved_progress)
@@ -4030,7 +4030,7 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
-                        logger.Trace("Did not receive correct response from SendTransferData");
+                        logger.Debug("Did not receive correct response from SendTransferData");
                     }
                 }
 
@@ -4061,14 +4061,14 @@ namespace TrionicCANLib.API
                 }
                 else
                 {
-                    logger.Trace("Did not receive correct response from SendTransferData");
+                    logger.Debug("Did not receive correct response from SendTransferData");
                 }
 
                 CastProgressWriteEvent(100);
             }
             else
             {
-                logger.Trace("requestDownload() failed");
+                logger.Debug("requestDownload() failed");
                 return false;
             }
             return true;
@@ -4087,7 +4087,7 @@ namespace TrionicCANLib.API
                 {
                     iFrameNumber = 0x21;
                     //10 F0 36 00 00 10 24 00
-                    //logger.Trace("Sending bootloader: " + startAddress.ToString("X8"));
+                    //logger.Debug("Sending bootloader: " + startAddress.ToString("X8"));
                     // cast event
                     int percentage = (int)(((float)i * 100) / 70F);
                     if (percentage > saved_progress)
@@ -4130,7 +4130,7 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
-                        logger.Trace("Did not receive correct response from SendTransferData");
+                        logger.Debug("Did not receive correct response from SendTransferData");
                     }
                 }
 
@@ -4163,7 +4163,7 @@ namespace TrionicCANLib.API
                 }
                 else
                 {
-                    logger.Trace("Did not receive correct response from SendTransferData");
+                    logger.Debug("Did not receive correct response from SendTransferData");
                 }
 
                 CastProgressWriteEvent(100);
@@ -4176,7 +4176,7 @@ namespace TrionicCANLib.API
             BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
             string diagDataID = GetDiagnosticDataIdentifier0101();
-            logger.Trace("DataID: " + diagDataID);
+            logger.Debug("DataID: " + diagDataID);
             if (diagDataID == string.Empty)
             {
                 canUsbDevice.SetupCANFilter("7E8", "000");
@@ -4847,7 +4847,7 @@ namespace TrionicCANLib.API
                 }
                 else
                 {
-                    logger.Trace("Rx: " + data.ToString("X16"));
+                    logger.Debug("Rx: " + data.ToString("X16"));
                     if (canUsbDevice is CANELM327Device)
                     {
                         if (recoveryMode) BroadcastKeepAlive();
@@ -4891,7 +4891,7 @@ namespace TrionicCANLib.API
             cmd |= (addressMiddle * 0x1000000000000);
             cmd |= (addressHigh * 0x10000000000);
             cmd |= (len * 0x100);
-            //logger.Trace("send: " + cmd.ToString("X16"));
+            //logger.Debug("send: " + cmd.ToString("X16"));
             msg.elmExpectedResponses = 1;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(waitforResponseID);
@@ -4904,7 +4904,7 @@ namespace TrionicCANLib.API
             response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             ulong data = response.getData();
-            //logger.Trace("Received in SendTransferData: " + data.ToString("X16"));
+            //logger.Debug("Received in SendTransferData: " + data.ToString("X16"));
             if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
             {
                 return false;
@@ -4927,7 +4927,7 @@ namespace TrionicCANLib.API
             cmd |= (addressMiddle * 0x1000000000000);
             cmd |= (addressHigh * 0x10000000000);
             cmd |= (len * 0x100);
-            //logger.Trace("send: " + cmd.ToString("X16"));
+            //logger.Debug("send: " + cmd.ToString("X16"));
 
             msg.setData(cmd);
             msg.elmExpectedResponses = 1;
@@ -4941,7 +4941,7 @@ namespace TrionicCANLib.API
             response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             ulong data = response.getData();
-            //logger.Trace("Received in SendTransferData: " + data.ToString("X16"));
+            //logger.Debug("Received in SendTransferData: " + data.ToString("X16"));
             if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
             {
                 return false;
@@ -5077,7 +5077,7 @@ namespace TrionicCANLib.API
             //optimize reading speed for ELM
             if (length <= 3)
                 msg.elmExpectedResponses = 1;
-            //logger.Trace("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
+            //logger.Debug("Reading " + address.ToString("X8") + " len: " + length.ToString("X2"));
             ulong cmd = 0x0000000000002307; // always 2 bytes
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
             addressHigh /= 0x10000;
@@ -5091,7 +5091,7 @@ namespace TrionicCANLib.API
             cmd |= (addressMiddle * 0x100000000);
             cmd |= (addressHigh * 0x1000000);
             cmd |= (len * 0x100000000000000);
-            //logger.Trace("send: " + cmd.ToString("X16"));
+            //logger.Debug("send: " + cmd.ToString("X16"));
             /*cmd |= (ulong)(byte)(address & 0x000000FF) << 4 * 8;
             cmd |= (ulong)(byte)((address & 0x0000FF00) >> 8) << 3 * 8;
             cmd |= (ulong)(byte)((address & 0x00FF0000) >> 2 * 8) << 2 * 8;
@@ -5366,7 +5366,7 @@ namespace TrionicCANLib.API
                 }
                 else
                 {
-                    logger.Trace("Rx: " + data.ToString("X16"));
+                    logger.Debug("Rx: " + data.ToString("X16"));
                     if (canUsbDevice is CANELM327Device)
                     {
                         if (recoveryMode) BroadcastKeepAlive();
@@ -5490,7 +5490,7 @@ namespace TrionicCANLib.API
             cmd |= (addressMiddle * 0x1000000000000);
             cmd |= (addressHigh * 0x10000000000);
             cmd |= (len * 0x100);
-            logger.Trace("send: " + cmd.ToString("X16"));
+            logger.Debug("send: " + cmd.ToString("X16"));
 
             msg.setData(cmd);
             msg.elmExpectedResponses = 1;
@@ -5504,7 +5504,7 @@ namespace TrionicCANLib.API
             response = new CANMessage();
             response = m_canListener.waitMessage(1000);
             ulong data = response.getData();
-            logger.Trace("Received in SendTransferData: " + data.ToString("X16"));
+            logger.Debug("Received in SendTransferData: " + data.ToString("X16"));
             if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
             {
                 return false;

@@ -116,19 +116,19 @@ namespace TrionicCANLib.CAN
             {
                 if (_receiveMessageIndex == idx && _readMessageIndex == idx)
                 {
-                    logger.Trace(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + " RX RD");
+                    logger.Debug(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + " RX RD");
                 }
                 else if (_receiveMessageIndex == idx)
                 {
-                    logger.Trace(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + " RX");
+                    logger.Debug(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + " RX");
                 }
                 else if (_readMessageIndex == idx)
                 {
-                    logger.Trace(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + "    RD");
+                    logger.Debug(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16") + "    RD");
                 }
                 else
                 {
-                    logger.Trace(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16"));
+                    logger.Debug(_queue[idx].getID().ToString("X3") + " " + _queue[idx].getData().ToString("X16"));
 
                 }
             }
@@ -181,7 +181,7 @@ namespace TrionicCANLib.CAN
             }
             if (size > 1)
             {
-                logger.Trace("Buffering: " + size.ToString() + " messages");
+                logger.Debug("Buffering: " + size.ToString() + " messages");
                 //dumpQueue();
             }
         }

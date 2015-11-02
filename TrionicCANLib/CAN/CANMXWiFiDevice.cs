@@ -90,8 +90,8 @@ namespace TrionicCANLib.CAN
             foreach (NetworkInterface Interface in Interfaces)
             {
                 if (Interface.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
-                logger.Trace(Interface.Description);
-                logger.Trace(Interface.Name);
+                logger.Debug(Interface.Description);
+                logger.Debug(Interface.Name);
                 UnicastIPAddressInformationCollection addresses = Interface.GetIPProperties().UnicastAddresses;
                 foreach (UnicastIPAddressInformation address in addresses)
                 {
@@ -154,20 +154,20 @@ namespace TrionicCANLib.CAN
         {
             CANMessage canMessage = new CANMessage();
 
-            logger.Trace("readMessages started");
+            logger.Debug("readMessages started");
             while (true)
             {
                 lock (m_synchObject)
                 {
                     if (m_endThread)
                     {
-                        logger.Trace("readMessages ended");
+                        logger.Debug("readMessages ended");
                         return;
                     }
                 }
                 if (rawString != null)
                 {
-                    logger.Trace(String.Format("Raw Data: {0}", rawString));
+                    logger.Debug(String.Format("Raw Data: {0}", rawString));
                     //AddToSerialTrace("RAW RX: " + rawString.Replace("\r",m_cr_sequence));
                     string rxString = rawString.Replace("\r", m_cr_sequence); //replace , because stringbuilder cannot handle \r
                     bool isStopped = false;
@@ -199,7 +199,7 @@ namespace TrionicCANLib.CAN
 
                                         lock (m_listeners)
                                         {
-                                            logger.Trace(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
+                                            logger.Debug(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
                                             foreach (ICANListener listener in m_listeners)
                                             {
                                                 listener.handleMessage(canMessage);
@@ -209,7 +209,7 @@ namespace TrionicCANLib.CAN
                                 }
                                 catch (Exception)
                                 {
-                                    //logger.Trace("MSG: " + rxMessage);
+                                    //logger.Debug("MSG: " + rxMessage);
                                 }
                             }
                             //disable whitespace logging
@@ -259,7 +259,7 @@ namespace TrionicCANLib.CAN
 
                 lastSentTimestamp = Environment.TickCount;
                 rawString = WriteToTelnetAndWait(sendString);
-                logger.Trace(string.Format("tx: {0} {1}", a_message.getID().ToString("X3"), sendString));
+                logger.Debug(string.Format("tx: {0} {1}", a_message.getID().ToString("X3"), sendString));
 
                 return true; // remove after implementation
             }

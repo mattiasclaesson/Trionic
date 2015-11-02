@@ -87,7 +87,7 @@ namespace TrionicCANLib.KWP
             byte length = (byte)(2 + a_data.Length);
             if(a_mode == 0x3D && a_pid == 0x80)
             {
-                logger.Trace("KWPRequest length: " + length.ToString("X8"));
+                logger.Debug("KWPRequest length: " + length.ToString("X8"));
             }
             m_request = new byte[length + 1];
             //Set length of request

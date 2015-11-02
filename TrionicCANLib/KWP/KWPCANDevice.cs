@@ -118,14 +118,14 @@ namespace TrionicCANLib.KWP
             {
                 lock (m_lockObject)
                 {
-                    logger.Trace("******* KWPCANDevice: m_CanDevice set");
+                    logger.Debug("******* KWPCANDevice: m_CanDevice set");
 
                     m_canDevice = a_canDevice;
                 }
             }
             else
             {
-                logger.Trace("KWPCANDevice, candevice was already set");
+                logger.Debug("KWPCANDevice, candevice was already set");
             }
         }
 
@@ -135,23 +135,23 @@ namespace TrionicCANLib.KWP
         /// <returns>True if the device was opened, otherwise false.</returns>
         public override bool open()
         {
-            logger.Trace("******* KWPCANDevice: Opening KWPCANDevice");
+            logger.Debug("******* KWPCANDevice: Opening KWPCANDevice");
 
             bool retVal = false;
-            logger.Trace("Opening m_canDevice");
+            logger.Debug("Opening m_canDevice");
             lock (m_lockObject)
             {
-                logger.Trace("Lock passed: Opening m_canDevice");
+                logger.Debug("Lock passed: Opening m_canDevice");
                 if (m_canDevice.open() == OpenResult.OK)
                 {
-                    logger.Trace("Adding listener");
+                    logger.Debug("Adding listener");
                     m_canDevice.addListener(m_kwpCanListener);
                     retVal = true;
                 }
                 else
                     retVal = false;
             }
-            logger.Trace("return value = " + retVal.ToString());
+            logger.Debug("return value = " + retVal.ToString());
             return retVal;
         }
 
@@ -178,7 +178,7 @@ namespace TrionicCANLib.KWP
         /// <returns>True if the device was closed, otherwise false.</returns>
         public override bool close()
         {
-            logger.Trace("******* KWPCANDevice: Closing KWPCANDevice");
+            logger.Debug("******* KWPCANDevice: Closing KWPCANDevice");
 
             bool retVal = false;
             lock (m_lockObject)

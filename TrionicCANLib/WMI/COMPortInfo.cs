@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
-using NLog;
 
 // A way of using WMI to find the right COM port number from its 'friendly name'
 //
@@ -17,7 +16,7 @@ using NLog;
 // Example of how to use:
 //  foreach (COMPortInfo comPort in COMPortInfo.GetCOMPortsInfo())
 //  {
-//      logger.Trace(string.Format("{0} – {1}", comPort.Name, comPort.Description));
+//      logger.Debug(string.Format("{0} – {1}", comPort.Name, comPort.Description));
 //  }
 
 namespace TrionicCANLib.WMI
@@ -26,7 +25,6 @@ namespace TrionicCANLib.WMI
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         public static List<COMPortInfo> GetCOMPortsInfo()
         {
