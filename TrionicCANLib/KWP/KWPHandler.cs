@@ -840,6 +840,39 @@ namespace TrionicCANLib.KWP
 
         /// <summary>
         /// This method send a request for reading from ECU memory (both RAM and flash). 
+        /// It sets up start address and the length to read. The resulting response contains the requested values.
+        /// </summary>
+        /// <param name="a_address">The address to start reading from.</param>
+        /// <param name="a_length">The total length to read.</param>
+        /// <returns>true on success, otherwise false</returns>
+        public bool sendReadRequest(uint a_address, uint a_length, out byte[] data) 
+        {
+            logger.Debug("sendReadRequest");
+
+            KWPReply reply = new KWPReply();
+            KWPResult result;
+            data = new byte[a_length];
+            byte[] lengthAndAddress = new byte[6];
+            //set address and length (byte 0)
+            lengthAndAddress[0] = (byte)(a_address >> 16);
+            lengthAndAddress[1] = (byte)(a_address >> 8);
+            lengthAndAddress[2] = (byte)(a_address);
+            lengthAndAddress[3] = (byte)(a_length);
+            lengthAndAddress[4] = 0x01;
+            lengthAndAddress[5] = 0;
+            KWPRequest request = new KWPRequest(0x23, lengthAndAddress);
+            request.ElmExpectedResponses = 1;
+            result = sendRequest(request, out reply);
+            data = reply.getData();
+            
+            if (result == KWPResult.OK)
+                return true;
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// This method send a request for reading from ECU memory (both RAM and flash). 
         /// It sets up start address and the length to read.
         /// </summary>
         /// <param name="a_address">The address to start reading from.</param>
