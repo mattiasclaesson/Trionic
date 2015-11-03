@@ -569,6 +569,32 @@ namespace TrionicCANLib.API
             return completedata;
         }
 
+        public byte[] ReadValueFromSRAM(Int64 sramaddress, Int32 length, out bool _success)
+        {
+            _success = false;
+            byte[] data = new byte[length];
+            try
+            {
+                KWPHandler.getInstance().requestSequrityAccess(false);
+
+                if (canUsbDevice is LPCCANDevice) // or ELM327?
+                {
+                    Thread.Sleep(1);
+                }
+                if (KWPHandler.getInstance().sendReadRequest((uint)(sramaddress), (uint)length, out data))
+                {
+                    Thread.Sleep(0); //<GS-11022010>
+                     _success = true;
+                }
+            }
+            
+            catch (Exception E)
+            {
+                logger.Debug("Failed to read memory: " + E.Message);
+            }
+            return data;
+        }
+
         public byte[] ReadMapFromSRAM(Int64 sramaddress, Int32 length, out bool _success)
         {
             _success = false;
