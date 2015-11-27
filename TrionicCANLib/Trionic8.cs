@@ -3041,12 +3041,11 @@ namespace TrionicCANLib.API
         public bool ClearDTCCodes()
         {
             bool retval = false;
-            StartSession10();
 
             // ClearDiagnosticInformation ($04) Service
-            ulong cmd = 0x0000000000000401; // 7E0 01 04 00 00 00 00 00 00
+            ulong cmd = 0x0000000000000401; // 7DF 01 04 00 00 00 00 00 00
 
-            CANMessage msg = new CANMessage(0x7E0, 0, 2);
+            CANMessage msg = new CANMessage(0x7DF, 0, 2);
             msg.setData(cmd);
             msg.elmExpectedResponses = 15;
             m_canListener.setupWaitMessage(0x7E8);

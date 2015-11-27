@@ -1047,8 +1047,6 @@ namespace TrionicCANFlasher
                     {
                         AddLogItem(a);
                     }
-                    AddLogItem("Attempting to clear all faultcodes");
-                    trionic8.ClearDTCCodes();
                 }
 
                 trionic8.Cleanup();
