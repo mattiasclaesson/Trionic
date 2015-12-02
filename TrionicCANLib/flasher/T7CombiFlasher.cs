@@ -178,5 +178,9 @@ namespace TrionicCANLib.Flasher
             logger.Debug("End communication session");
             combi.CAN_DisconnectECU(false);
         }
+
+        public override void cleanup()
+        {
+        }
     };
 }

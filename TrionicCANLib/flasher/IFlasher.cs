@@ -75,6 +75,8 @@ namespace TrionicCANLib.Flasher
             this.m_command = FlashCommand.NoCommand;
         }
 
+        public abstract void cleanup();
+
         //-------------------------------------------------------------------------
         /**
             Returns the current status of flasher.

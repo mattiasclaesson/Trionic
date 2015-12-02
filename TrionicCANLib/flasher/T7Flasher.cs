@@ -54,16 +54,21 @@ namespace TrionicCANLib.Flasher
             m_thread.Start();
         }
 
-        /// <summary>
-        /// Destructor.
-        /// </summary>
-        ~T7Flasher()
+        public override void cleanup()
         {
             lock (m_synchObject)
             {
                 m_endThread = true;
             }
             m_resetEvent.Set();
+        }
+
+        /// <summary>
+        /// Destructor.
+        /// </summary>
+        ~T7Flasher()
+        {
+            cleanup();
         }
 
         /// <summary>
