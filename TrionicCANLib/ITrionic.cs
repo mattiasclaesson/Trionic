@@ -76,6 +76,14 @@ namespace TrionicCANLib.API
             set { m_DisableCanConnectionCheck = value; }
         }
 
+        protected Latency m_Latency = Latency.Default;
+
+        public Latency Latency
+        {
+            get { return m_Latency; }
+            set { m_Latency = value; }
+        }
+
         abstract public void setCANDevice(CANBusAdapter adapterType);
 
         abstract public void Cleanup();

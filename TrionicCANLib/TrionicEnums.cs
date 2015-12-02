@@ -62,4 +62,10 @@ namespace TrionicCANLib.API
         S1Mbit,
         S2Mbit
     };
+
+    public enum Latency : int
+    {
+        Low,
+        Default
+    };
 }

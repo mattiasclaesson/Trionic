@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TrionicCANLib.CAN;
 using NLog;
+using TrionicCANLib.API;
 
 namespace TrionicCANLib.KWP
 {
@@ -69,7 +70,6 @@ namespace TrionicCANLib.KWP
         private Object m_lockObject = new Object();
         private ICANDevice m_canDevice;
         KWPCANListener m_kwpCanListener = new KWPCANListener();
-        const int timeoutPeriod = 1000; // if timeout <GS-11022010> changed from 1000 to 250 to not intefere with the keepalive timer
         private Logger logger = LogManager.GetCurrentClassLogger();
 
         private bool m_EnableLog = false;
@@ -106,6 +106,20 @@ namespace TrionicCANLib.KWP
             {
                 m_forcedComport = value;
             }
+        }
+
+        protected Latency m_Latency = Latency.Default;
+
+        public Latency Latency
+        {
+            get { return m_Latency; }
+            set { m_Latency = value; }
+        }
+
+        private int getTimeout()
+        {
+            // if timeout <GS-11022010> changed from 1000 to 250 to not intefere with the keepalive timer
+            return m_Latency == Latency.Default ? 1000 : 20;
         }
 
         /// <summary>
@@ -213,7 +227,7 @@ namespace TrionicCANLib.KWP
                 return false;
             }
             logger.Debug("Init msg sent");
-            if (m_kwpCanListener.waitMessage(timeoutPeriod).getID() == 0x238)
+            if (m_kwpCanListener.waitMessage(getTimeout()).getID() == 0x238)
             {
                 logger.Debug("Successfully sent 0x000040021100813F message and received reply 0x238");
                 return true;
@@ -257,7 +271,7 @@ namespace TrionicCANLib.KWP
                 }
             }
 
-            var response = m_kwpCanListener.waitMessage(timeoutPeriod);          
+            var response = m_kwpCanListener.waitMessage(getTimeout());          
             
             // Receive one or several replys and send an ack for each reply.
             if (response.getID() == 0x258)
@@ -276,7 +290,7 @@ namespace TrionicCANLib.KWP
 
                 while (nrOfRows > 0)
                 {
-                    response = m_kwpCanListener.waitMessage(timeoutPeriod);
+                    response = m_kwpCanListener.waitMessage(getTimeout());
                     if (response.getID() == 0x258)
                     {
                         row++;

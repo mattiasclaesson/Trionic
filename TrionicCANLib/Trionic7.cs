@@ -89,7 +89,7 @@ namespace TrionicCANLib.API
             }
             else if (adapterType != CANBusAdapter.COMBI || !m_UseFlasherOnDevice)
             {
-                kwpDevice = new KWPCANDevice();
+                kwpDevice = new KWPCANDevice() { Latency = m_Latency };
                 kwpDevice.setCANDevice(canUsbDevice);
                 setFlasher();
             }
@@ -167,7 +167,7 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
-                        CastInfoEvent("Unable to start session", ActivityType.ConvertingFile);
+                        CastInfoEvent("Unable to start session. Wait for previous session to timeout (10 seconds) and try again!", ActivityType.ConvertingFile);
                         kwpHandler.closeDevice();
                         opened = false;
                     }
@@ -255,6 +255,7 @@ namespace TrionicCANLib.API
                 {
                     flash.onStatusChanged -= flash_onStatusChanged;
                     flash.stopFlasher();
+                    flash.cleanup();
                     flash = null;
                 }
                 if (kwpHandler != null)
