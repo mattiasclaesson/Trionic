@@ -15,6 +15,21 @@ using NLog;
 
 namespace TrionicCANLib.API
 {
+    public enum DiagnosticType : int
+    {
+        None,
+        OBD2,
+        EOBD,
+        LOBD
+    }
+
+    public enum TankType : int
+    {
+        US,
+        EU,
+        AWD
+    }
+
     public class Trionic8 : ITrionic
     {
         AccessLevel _securityLevel = AccessLevel.AccessLevelFD; // by default 0xFD
@@ -1213,35 +1228,81 @@ namespace TrionicCANLib.API
         }
 
         // Output level - Low, High
-        // Diagnostics - EOBD
         // Convertible - true, false
+        // Biopower - true, false 
+        // Diagnostics - EOBD, OBD2, LOBD
         // SAI - true, false
         // Clutch start - true, false
-        // Tank type - AWD
-        // Fuel type 
-        public bool GetPI01(out bool convertible, out bool sai, out bool highoutput, out string raw)
+        // Tank type - AWD, US, EU
+        public bool GetPI01(out bool convertible, out bool sai, out bool highoutput, out bool biopower, out DiagnosticType diagnosticType, out bool clutchStart, out TankType tankType, out string raw)
         {
             convertible = false;
             sai = false;
             highoutput = false;
+            biopower = false;
             raw = string.Empty;
+            diagnosticType = DiagnosticType.EOBD;
+            tankType = TankType.EU;
+            clutchStart = false;
             byte[] data = RequestECUInfo(0x01);
             Console.WriteLine("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
 
             if (data[0] == 0x00 && data[1] == 0x00) return false;
             if (data.Length >= 2)
             {
+                // high= -01-----
+                // low = -10-----
+                highoutput = BitTools.GetBit(data[1], 5) && !BitTools.GetBit(data[1], 6) ? true : false;
+
                 // -----C--
                 convertible = BitTools.GetBit(data[0], 2);
+
+                // -------C
+                biopower = BitTools.GetBit(data[0], 0);
+
+                // -01----- OBD2
+                // -10----- EOBD
+                // -11----- LOBD
+                switch (data[0]  & 0x60)
+                {
+                    case 0x20 :
+                        diagnosticType = DiagnosticType.OBD2;
+                        break;
+                    case 0x40 :
+                        diagnosticType = DiagnosticType.EOBD;
+                        break;
+                    case 0x60 :
+                        diagnosticType = DiagnosticType.LOBD;
+                        break;
+                    default :
+                        diagnosticType = DiagnosticType.None;
+                        break;
+                }
 
                 // on = ---10---
                 // off= ---01---
                 sai = !BitTools.GetBit(data[1], 3) && BitTools.GetBit(data[1], 4) ? true : false;
 
-                // high= -01-----
-                // low = -10-----
-                highoutput = BitTools.GetBit(data[1], 5) && !BitTools.GetBit(data[1], 6) ? true : false;
+                // on = -----10-
+                // off= -----01-
+                clutchStart = !BitTools.GetBit(data[1], 1) && BitTools.GetBit(data[1], 2) ? true : false;
 
+                // ---01--- US
+                // ---10--- EU
+                // ---11--- AWD
+                switch (data[1]  & 0x18)
+                {
+                    case 0x08 :
+                        tankType = TankType.US;
+                        break;
+                    case 0x10 :
+                        tankType = TankType.EU;
+                        break;
+                    case 0x18 :
+                        tankType = TankType.AWD;
+                        break;
+                }
+                
                 for (int i = 0; i < data.Length; i++)
                 {
                     raw += "0x" + data[i].ToString("X2") + " ";
@@ -1251,7 +1312,7 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        public bool SetPI01(bool convertible, bool sai, bool highoutput)
+        public bool SetPI01(bool convertible, bool sai, bool highoutput, bool biopower, DiagnosticType diagnosticType, bool clutchStart, TankType tankType)
         {
             bool retval = false;
             byte[] data = RequestECUInfo(0x01);
@@ -1262,15 +1323,61 @@ namespace TrionicCANLib.API
             // -----C--
             data[0] = BitTools.SetBit(data[0], 2, convertible);
 
+            // -------C
+            data[0] = BitTools.SetBit(data[0], 0, biopower);
+
+            // -01----- OBD2
+            // -10----- EOBD
+            // -11----- LOBD
+            switch (diagnosticType)
+            {
+                case DiagnosticType.OBD2:
+                    data[0] = BitTools.SetBit(data[0], 5, true);
+                    data[0] = BitTools.SetBit(data[0], 6, false);
+                    break;
+                case DiagnosticType.EOBD:
+                    data[0] = BitTools.SetBit(data[0], 5, false);
+                    data[0] = BitTools.SetBit(data[0], 6, true);
+                    break;
+                case DiagnosticType.LOBD:
+                    data[0] = BitTools.SetBit(data[0], 5, true);
+                    data[0] = BitTools.SetBit(data[0], 6, true);
+                    break;
+            }
+
             // on = ---10---
             // off= ---01---
             data[1] = BitTools.SetBit(data[1], 3, !sai);
             data[1] = BitTools.SetBit(data[1], 4, sai);
 
+            // on = -----10-
+            // off= -----01-
+            data[1] = BitTools.SetBit(data[1], 1, !clutchStart);
+            data[1] = BitTools.SetBit(data[1], 2, clutchStart);
+            
             // high= -01-----
             // low = -10-----
             data[1] = BitTools.SetBit(data[1], 5, highoutput);
             data[1] = BitTools.SetBit(data[1], 6, !highoutput);
+
+            // ---01--- US
+            // ---10--- EU
+            // ---11--- AWD
+            switch (tankType)
+            {
+                case TankType.US:
+                    data[0] = BitTools.SetBit(data[0], 3, true);
+                    data[0] = BitTools.SetBit(data[0], 4, false);
+                    break;
+                case TankType.EU:
+                    data[0] = BitTools.SetBit(data[0], 3, false);
+                    data[0] = BitTools.SetBit(data[0], 4, true);
+                    break;
+                case TankType.AWD:
+                    data[0] = BitTools.SetBit(data[0], 3, true);
+                    data[0] = BitTools.SetBit(data[0], 4, true);
+                    break;
+            }
 
             cmd = AddByteToCommand(cmd, data[0], 3);
             cmd = AddByteToCommand(cmd, data[1], 4);

@@ -480,10 +480,13 @@ namespace TrionicCANFlasher
                     AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
                     AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
                     AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromID(0xCC));
-                    bool convertible, sai, highoutput;
+                    bool convertible, sai, highoutput, biopower, clutchStart;
+                    TankType tankType;
+                    DiagnosticType diagnosticType;
                     string rawPI01;
-                    trionic8.GetPI01(out convertible, out sai, out highoutput, out rawPI01);
-                    AddLogItem("PI 0x01         : Cab:" + convertible + " SAI:" + sai + " HighOutput:" + highoutput + " rawValues: " + rawPI01);
+                    trionic8.GetPI01(out convertible, out sai, out highoutput, out biopower, out diagnosticType, out clutchStart, out tankType, out rawPI01);
+               
+                    AddLogItem("PI 0x01         : Cab:" + convertible + " SAI:" + sai + " HighOutput:" + highoutput + " Biopower:" + biopower + " DiagnosticType:" + diagnosticType + " ClutchStart:" + clutchStart + " TankType:" + tankType + " rawValues: " + rawPI01);
                     AddLogItem("PI 0x03         : " + trionic8.GetPI03());
                     AddLogItem("PI 0x04         : " + trionic8.GetPI04());
                     AddLogItem("PI 0x07         : " + trionic8.GetPI07());
@@ -1180,9 +1183,11 @@ namespace TrionicCANFlasher
                 {
                     EditParameters pi = new EditParameters();
                     pi.setECU(ECU.TRIONIC8);
-                    bool convertible, sai, highoutput;
-                    string raw;
-                    trionic8.GetPI01(out convertible, out sai, out highoutput, out raw);
+                    bool convertible, sai, highoutput, biopower, clutchStart;
+                    TankType tankType;
+                    DiagnosticType diagnosticType;
+                    string rawPI01;
+                    trionic8.GetPI01(out convertible, out sai, out highoutput, out biopower, out diagnosticType, out clutchStart, out tankType, out rawPI01);
                     pi.Convertible = convertible;
                     pi.SAI = sai;
                     pi.Highoutput = highoutput;
@@ -1206,11 +1211,12 @@ namespace TrionicCANFlasher
                     {
                         if (!pi.Convertible.Equals(convertible) || !pi.SAI.Equals(sai) || !pi.Highoutput.Equals(highoutput))
                         {
-                            if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput))
+                            //SetPI01(bool convertible, bool sai, bool highoutput, bool biopower, DiagnosticType diagnosticType, bool clutchStart, TankType tankType)
+                            //if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput))
                             {
                                 AddLogItem("Set fields successfull, Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
                             }
-                            else
+                            //else
                             {
                                 AddLogItem("Set fields failed, Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
                             }
