@@ -1317,48 +1317,12 @@ namespace TrionicCANLib.API
             bool retval = false;
             byte[] data = RequestECUInfo(0x01);
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
-            //063B01482A000000
             ulong cmd = 0x0000000000013B06;
-
-            // -----C--
-            data[0] = BitTools.SetBit(data[0], 2, convertible);
-
             // -------C
             data[0] = BitTools.SetBit(data[0], 0, biopower);
 
-            // -01----- OBD2
-            // -10----- EOBD
-            // -11----- LOBD
-            switch (diagnosticType)
-            {
-                case DiagnosticType.OBD2:
-                    data[0] = BitTools.SetBit(data[0], 5, true);
-                    data[0] = BitTools.SetBit(data[0], 6, false);
-                    break;
-                case DiagnosticType.EOBD:
-                    data[0] = BitTools.SetBit(data[0], 5, false);
-                    data[0] = BitTools.SetBit(data[0], 6, true);
-                    break;
-                case DiagnosticType.LOBD:
-                    data[0] = BitTools.SetBit(data[0], 5, true);
-                    data[0] = BitTools.SetBit(data[0], 6, true);
-                    break;
-            }
-
-            // on = ---10---
-            // off= ---01---
-            data[1] = BitTools.SetBit(data[1], 3, !sai);
-            data[1] = BitTools.SetBit(data[1], 4, sai);
-
-            // on = -----10-
-            // off= -----01-
-            data[1] = BitTools.SetBit(data[1], 1, !clutchStart);
-            data[1] = BitTools.SetBit(data[1], 2, clutchStart);
-            
-            // high= -01-----
-            // low = -10-----
-            data[1] = BitTools.SetBit(data[1], 5, highoutput);
-            data[1] = BitTools.SetBit(data[1], 6, !highoutput);
+            // -----C--
+            data[0] = BitTools.SetBit(data[0], 2, convertible);
 
             // ---01--- US
             // ---10--- EU
@@ -1378,6 +1342,45 @@ namespace TrionicCANLib.API
                     data[0] = BitTools.SetBit(data[0], 4, true);
                     break;
             }
+
+            // -01----- OBD2
+            // -10----- EOBD
+            // -11----- LOBD
+            switch (diagnosticType)
+            {
+                case DiagnosticType.OBD2:
+                    data[0] = BitTools.SetBit(data[0], 5, true);
+                    data[0] = BitTools.SetBit(data[0], 6, false);
+                    break;
+                case DiagnosticType.EOBD:
+                    data[0] = BitTools.SetBit(data[0], 5, false);
+                    data[0] = BitTools.SetBit(data[0], 6, true);
+                    break;
+                case DiagnosticType.LOBD:
+                    data[0] = BitTools.SetBit(data[0], 5, true);
+                    data[0] = BitTools.SetBit(data[0], 6, true);
+                    break;
+                case DiagnosticType.None:
+                default:
+                    data[0] = BitTools.SetBit(data[0], 5, false);
+                    data[0] = BitTools.SetBit(data[0], 6, false);
+                    break;
+            }
+
+            // on = -----10-
+            // off= -----01-
+            data[1] = BitTools.SetBit(data[1], 1, !clutchStart);
+            data[1] = BitTools.SetBit(data[1], 2, clutchStart);
+
+            // on = ---10---
+            // off= ---01---
+            data[1] = BitTools.SetBit(data[1], 3, !sai);
+            data[1] = BitTools.SetBit(data[1], 4, sai);
+            
+            // high= -01-----
+            // low = -10-----
+            data[1] = BitTools.SetBit(data[1], 5, highoutput);
+            data[1] = BitTools.SetBit(data[1], 6, !highoutput);
 
             cmd = AddByteToCommand(cmd, data[0], 3);
             cmd = AddByteToCommand(cmd, data[1], 4);

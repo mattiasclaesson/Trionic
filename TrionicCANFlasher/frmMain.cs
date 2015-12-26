@@ -1191,6 +1191,12 @@ namespace TrionicCANFlasher
                     pi.Convertible = convertible;
                     pi.SAI = sai;
                     pi.Highoutput = highoutput;
+                    pi.Biopower = biopower;
+                    pi.DiagnosticType = diagnosticType;
+                    pi.TankType = tankType;
+                    pi.ClutchStart = clutchStart;
+                    AddLogItem("Read fields");
+                    AddLogItem("Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput + " Biopower:" + pi.Biopower + " DiagnosticType:" + pi.DiagnosticType + " ClutchStart:" + pi.ClutchStart + " TankType:" + pi.TankType);
 
                     int rpm = trionic8.GetRPMLimiter();
                     pi.RPMLimit = rpm;
@@ -1209,17 +1215,17 @@ namespace TrionicCANFlasher
 
                     if (pi.ShowDialog() == DialogResult.OK)
                     {
-                        if (!pi.Convertible.Equals(convertible) || !pi.SAI.Equals(sai) || !pi.Highoutput.Equals(highoutput))
+                        if (!pi.Convertible.Equals(convertible) || !pi.SAI.Equals(sai) || !pi.Highoutput.Equals(highoutput) || !pi.Biopower.Equals(biopower) || !pi.ClutchStart.Equals(clutchStart) || !pi.DiagnosticType.Equals(diagnosticType) || !pi.TankType.Equals(tankType))
                         {
-                            //SetPI01(bool convertible, bool sai, bool highoutput, bool biopower, DiagnosticType diagnosticType, bool clutchStart, TankType tankType)
-                            //if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput))
+                            if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput, pi.Biopower, pi.DiagnosticType,pi.ClutchStart,pi.TankType))
                             {
-                                AddLogItem("Set fields successfull, Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
+                                AddLogItem("Set fields successfull");
                             }
-                            //else
+                            else
                             {
-                                AddLogItem("Set fields failed, Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput);
+                                AddLogItem("Set fields failed");
                             }
+                            AddLogItem("Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput + " Biopower:" + pi.Biopower + " DiagnosticType:" + pi.DiagnosticType + " ClutchStart:" + pi.ClutchStart + " TankType:" + pi.TankType);
                         }
 
                         if (!pi.RPMLimit.Equals(rpm))

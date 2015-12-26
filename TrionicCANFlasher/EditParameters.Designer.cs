@@ -35,6 +35,14 @@
             this.cbOutput = new System.Windows.Forms.CheckBox();
             this.btnWriteToECU = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.comboBoxTank = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.comboBoxDiag = new System.Windows.Forms.ComboBox();
+            this.cbClutchStart = new System.Windows.Forms.CheckBox();
+            this.cbBiopower = new System.Windows.Forms.CheckBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbOilQuality = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.tbE85 = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
@@ -44,15 +52,13 @@
             this.tbVIN = new System.Windows.Forms.TextBox();
             this.tbRPMLimit = new System.Windows.Forms.TextBox();
             this.closeButton = new System.Windows.Forms.Button();
-            this.tbOilQuality = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // cbCab
             // 
             this.cbCab.AutoSize = true;
-            this.cbCab.Location = new System.Drawing.Point(114, 161);
+            this.cbCab.Location = new System.Drawing.Point(114, 202);
             this.cbCab.Name = "cbCab";
             this.cbCab.Size = new System.Drawing.Size(79, 17);
             this.cbCab.TabIndex = 0;
@@ -62,7 +68,7 @@
             // cbSAI
             // 
             this.cbSAI.AutoSize = true;
-            this.cbSAI.Location = new System.Drawing.Point(114, 184);
+            this.cbSAI.Location = new System.Drawing.Point(114, 225);
             this.cbSAI.Name = "cbSAI";
             this.cbSAI.Size = new System.Drawing.Size(43, 17);
             this.cbSAI.TabIndex = 1;
@@ -72,7 +78,7 @@
             // cbOutput
             // 
             this.cbOutput.AutoSize = true;
-            this.cbOutput.Location = new System.Drawing.Point(114, 208);
+            this.cbOutput.Location = new System.Drawing.Point(114, 249);
             this.cbOutput.Name = "cbOutput";
             this.cbOutput.Size = new System.Drawing.Size(81, 17);
             this.cbOutput.TabIndex = 2;
@@ -81,16 +87,22 @@
             // 
             // btnWriteToECU
             // 
-            this.btnWriteToECU.Location = new System.Drawing.Point(88, 255);
+            this.btnWriteToECU.Location = new System.Drawing.Point(89, 347);
             this.btnWriteToECU.Name = "btnWriteToECU";
             this.btnWriteToECU.Size = new System.Drawing.Size(121, 23);
             this.btnWriteToECU.TabIndex = 3;
             this.btnWriteToECU.Text = "Write Fields to ECU";
             this.btnWriteToECU.UseVisualStyleBackColor = true;
-            this.btnWriteToECU.Click += new System.EventHandler(this.writeToECU_Click);
+            this.btnWriteToECU.Click += new System.EventHandler(this.btnWriteToECU_Click);
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label7);
+            this.groupBox1.Controls.Add(this.comboBoxTank);
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.comboBoxDiag);
+            this.groupBox1.Controls.Add(this.cbClutchStart);
+            this.groupBox1.Controls.Add(this.cbBiopower);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.tbOilQuality);
             this.groupBox1.Controls.Add(this.label4);
@@ -106,10 +118,89 @@
             this.groupBox1.Controls.Add(this.cbOutput);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(278, 237);
+            this.groupBox1.Size = new System.Drawing.Size(278, 321);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Fields";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(15, 178);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(59, 13);
+            this.label7.TabIndex = 19;
+            this.label7.Text = "Tank Type";
+            // 
+            // comboBoxTank
+            // 
+            this.comboBoxTank.FormattingEnabled = true;
+            this.comboBoxTank.Items.AddRange(new object[] {
+            "US",
+            "EU",
+            "AWD"});
+            this.comboBoxTank.Location = new System.Drawing.Point(114, 175);
+            this.comboBoxTank.Name = "comboBoxTank";
+            this.comboBoxTank.Size = new System.Drawing.Size(144, 21);
+            this.comboBoxTank.TabIndex = 18;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(15, 151);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(84, 13);
+            this.label6.TabIndex = 17;
+            this.label6.Text = "Diagnostic Type";
+            // 
+            // comboBoxDiag
+            // 
+            this.comboBoxDiag.FormattingEnabled = true;
+            this.comboBoxDiag.Items.AddRange(new object[] {
+            "None",
+            "OBD2",
+            "OBD",
+            "LOBD"});
+            this.comboBoxDiag.Location = new System.Drawing.Point(114, 148);
+            this.comboBoxDiag.Name = "comboBoxDiag";
+            this.comboBoxDiag.Size = new System.Drawing.Size(144, 21);
+            this.comboBoxDiag.TabIndex = 16;
+            // 
+            // cbClutchStart
+            // 
+            this.cbClutchStart.AutoSize = true;
+            this.cbClutchStart.Location = new System.Drawing.Point(114, 295);
+            this.cbClutchStart.Name = "cbClutchStart";
+            this.cbClutchStart.Size = new System.Drawing.Size(81, 17);
+            this.cbClutchStart.TabIndex = 15;
+            this.cbClutchStart.Text = "Clutch Start";
+            this.cbClutchStart.UseVisualStyleBackColor = true;
+            // 
+            // cbBiopower
+            // 
+            this.cbBiopower.AutoSize = true;
+            this.cbBiopower.Location = new System.Drawing.Point(114, 272);
+            this.cbBiopower.Name = "cbBiopower";
+            this.cbBiopower.Size = new System.Drawing.Size(70, 17);
+            this.cbBiopower.TabIndex = 14;
+            this.cbBiopower.Text = "Biopower";
+            this.cbBiopower.UseVisualStyleBackColor = true;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(15, 125);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(62, 13);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Oil Quality%";
+            // 
+            // tbOilQuality
+            // 
+            this.tbOilQuality.Location = new System.Drawing.Point(114, 122);
+            this.tbOilQuality.Name = "tbOilQuality";
+            this.tbOilQuality.Size = new System.Drawing.Size(144, 20);
+            this.tbOilQuality.TabIndex = 12;
             // 
             // label4
             // 
@@ -177,7 +268,7 @@
             // 
             // closeButton
             // 
-            this.closeButton.Location = new System.Drawing.Point(215, 255);
+            this.closeButton.Location = new System.Drawing.Point(216, 347);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(75, 23);
             this.closeButton.TabIndex = 5;
@@ -185,27 +276,11 @@
             this.closeButton.UseVisualStyleBackColor = true;
             this.closeButton.Click += new System.EventHandler(this.closeButton_Click);
             // 
-            // tbOilQuality
-            // 
-            this.tbOilQuality.Location = new System.Drawing.Point(114, 122);
-            this.tbOilQuality.Name = "tbOilQuality";
-            this.tbOilQuality.Size = new System.Drawing.Size(144, 20);
-            this.tbOilQuality.TabIndex = 12;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(15, 125);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(62, 13);
-            this.label5.TabIndex = 13;
-            this.label5.Text = "Oil Quality%";
-            // 
             // EditParameters
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(302, 290);
+            this.ClientSize = new System.Drawing.Size(303, 382);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnWriteToECU);
@@ -235,5 +310,11 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox tbOilQuality;
+        private System.Windows.Forms.CheckBox cbBiopower;
+        private System.Windows.Forms.CheckBox cbClutchStart;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ComboBox comboBoxTank;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox comboBoxDiag;
     }
 }

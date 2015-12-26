@@ -53,6 +53,18 @@ namespace TrionicCANFlasher
             }
         }
 
+        public bool Biopower
+        {
+            get
+            {
+                return cbBiopower.Checked;
+            }
+            set
+            {
+                cbBiopower.Checked = value;
+            }
+        }
+
         public int RPMLimit
         {
             get
@@ -119,7 +131,43 @@ namespace TrionicCANFlasher
             {
                 tbOilQuality.Text = value.ToString();
             }
-        } 
+        }
+        
+        public bool ClutchStart
+        {
+            get
+            {
+                return cbClutchStart.Checked;
+            }
+            set
+            {
+                cbClutchStart.Checked = value;
+            }
+        }
+
+        public DiagnosticType DiagnosticType
+        {
+            get
+            {
+                return (DiagnosticType)comboBoxDiag.SelectedIndex;
+            }
+            set
+            {
+                comboBoxDiag.SelectedIndex = (int)value;
+            }
+        }
+
+        public TankType TankType
+        {
+            get
+            {
+                return (TankType)comboBoxTank.SelectedIndex;
+            }
+            set
+            {
+                comboBoxTank.SelectedIndex = (int)value;
+            }
+        }
 
         public void setECU(ECU ecu) 
         {
@@ -133,6 +181,10 @@ namespace TrionicCANFlasher
                 tbTopSpeed.Show();
                 tbE85.Show();
                 tbOilQuality.Show();
+                cbBiopower.Show();
+                cbClutchStart.Show();
+                comboBoxDiag.Show();
+                comboBoxTank.Show();
             }
             else if(ecu == ECU.MOTRONIC96)
             {
@@ -144,6 +196,10 @@ namespace TrionicCANFlasher
                 tbTopSpeed.Show();
                 tbE85.Hide();
                 tbOilQuality.Hide();
+                cbBiopower.Hide();
+                cbClutchStart.Hide();
+                comboBoxDiag.Hide();
+                comboBoxTank.Hide();
             }
             else if(ecu == ECU.TRIONIC7)
             {
@@ -155,10 +211,14 @@ namespace TrionicCANFlasher
                 tbTopSpeed.Hide();
                 tbE85.Show();
                 tbOilQuality.Hide();
+                cbBiopower.Hide();
+                cbClutchStart.Hide();
+                comboBoxDiag.Hide();
+                comboBoxTank.Hide();
             }
         }
 
-        private void writeToECU_Click(object sender, EventArgs e)
+        private void btnWriteToECU_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
             this.Close();
