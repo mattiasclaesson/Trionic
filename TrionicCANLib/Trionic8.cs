@@ -1250,58 +1250,59 @@ namespace TrionicCANLib.API
             if (data[0] == 0x00 && data[1] == 0x00) return false;
             if (data.Length >= 2)
             {
-                // high= -01-----
-                // low = -10-----
-                highoutput = BitTools.GetBit(data[1], 5) && !BitTools.GetBit(data[1], 6) ? true : false;
+                // -------C
+                biopower = BitTools.GetBit(data[0], 0);
 
                 // -----C--
                 convertible = BitTools.GetBit(data[0], 2);
 
-                // -------C
-                biopower = BitTools.GetBit(data[0], 0);
+                // ---01--- US
+                // ---10--- EU
+                // ---11--- AWD
+                switch (data[0] & 0x18)
+                {
+                    case 0x08:
+                        tankType = TankType.US;
+                        break;
+                    case 0x10:
+                        tankType = TankType.EU;
+                        break;
+                    case 0x18:
+                        tankType = TankType.AWD;
+                        break;
+                }
 
                 // -01----- OBD2
                 // -10----- EOBD
                 // -11----- LOBD
-                switch (data[0]  & 0x60)
+                switch (data[0] & 0x60)
                 {
-                    case 0x20 :
+                    case 0x20:
                         diagnosticType = DiagnosticType.OBD2;
                         break;
-                    case 0x40 :
+                    case 0x40:
                         diagnosticType = DiagnosticType.EOBD;
                         break;
-                    case 0x60 :
+                    case 0x60:
                         diagnosticType = DiagnosticType.LOBD;
                         break;
-                    default :
+                    default:
                         diagnosticType = DiagnosticType.None;
                         break;
                 }
-
-                // on = ---10---
-                // off= ---01---
-                sai = !BitTools.GetBit(data[1], 3) && BitTools.GetBit(data[1], 4) ? true : false;
 
                 // on = -----10-
                 // off= -----01-
                 clutchStart = !BitTools.GetBit(data[1], 1) && BitTools.GetBit(data[1], 2) ? true : false;
 
-                // ---01--- US
-                // ---10--- EU
-                // ---11--- AWD
-                switch (data[1]  & 0x18)
-                {
-                    case 0x08 :
-                        tankType = TankType.US;
-                        break;
-                    case 0x10 :
-                        tankType = TankType.EU;
-                        break;
-                    case 0x18 :
-                        tankType = TankType.AWD;
-                        break;
-                }
+                // on = ---10---
+                // off= ---01---
+                sai = !BitTools.GetBit(data[1], 3) && BitTools.GetBit(data[1], 4) ? true : false;
+
+
+                // high= -01-----
+                // low = -10-----
+                highoutput = BitTools.GetBit(data[1], 5) && !BitTools.GetBit(data[1], 6) ? true : false;
                 
                 for (int i = 0; i < data.Length; i++)
                 {
