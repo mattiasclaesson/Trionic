@@ -48,9 +48,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.tbTopSpeed = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.tbVIN = new System.Windows.Forms.TextBox();
-            this.tbRPMLimit = new System.Windows.Forms.TextBox();
             this.closeButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -58,7 +56,7 @@
             // cbCab
             // 
             this.cbCab.AutoSize = true;
-            this.cbCab.Location = new System.Drawing.Point(114, 202);
+            this.cbCab.Location = new System.Drawing.Point(114, 176);
             this.cbCab.Name = "cbCab";
             this.cbCab.Size = new System.Drawing.Size(79, 17);
             this.cbCab.TabIndex = 0;
@@ -68,7 +66,7 @@
             // cbSAI
             // 
             this.cbSAI.AutoSize = true;
-            this.cbSAI.Location = new System.Drawing.Point(114, 225);
+            this.cbSAI.Location = new System.Drawing.Point(114, 199);
             this.cbSAI.Name = "cbSAI";
             this.cbSAI.Size = new System.Drawing.Size(43, 17);
             this.cbSAI.TabIndex = 1;
@@ -78,7 +76,7 @@
             // cbOutput
             // 
             this.cbOutput.AutoSize = true;
-            this.cbOutput.Location = new System.Drawing.Point(114, 249);
+            this.cbOutput.Location = new System.Drawing.Point(114, 223);
             this.cbOutput.Name = "cbOutput";
             this.cbOutput.Size = new System.Drawing.Size(81, 17);
             this.cbOutput.TabIndex = 2;
@@ -87,7 +85,7 @@
             // 
             // btnWriteToECU
             // 
-            this.btnWriteToECU.Location = new System.Drawing.Point(89, 347);
+            this.btnWriteToECU.Location = new System.Drawing.Point(88, 312);
             this.btnWriteToECU.Name = "btnWriteToECU";
             this.btnWriteToECU.Size = new System.Drawing.Size(121, 23);
             this.btnWriteToECU.TabIndex = 3;
@@ -110,15 +108,13 @@
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.tbTopSpeed);
             this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.tbVIN);
-            this.groupBox1.Controls.Add(this.tbRPMLimit);
             this.groupBox1.Controls.Add(this.cbCab);
             this.groupBox1.Controls.Add(this.cbSAI);
             this.groupBox1.Controls.Add(this.cbOutput);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(278, 321);
+            this.groupBox1.Size = new System.Drawing.Size(278, 294);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Fields";
@@ -126,7 +122,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(15, 178);
+            this.label7.Location = new System.Drawing.Point(15, 152);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(59, 13);
             this.label7.TabIndex = 19;
@@ -139,7 +135,7 @@
             "US",
             "EU",
             "AWD"});
-            this.comboBoxTank.Location = new System.Drawing.Point(114, 175);
+            this.comboBoxTank.Location = new System.Drawing.Point(114, 149);
             this.comboBoxTank.Name = "comboBoxTank";
             this.comboBoxTank.Size = new System.Drawing.Size(144, 21);
             this.comboBoxTank.TabIndex = 18;
@@ -147,7 +143,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(15, 151);
+            this.label6.Location = new System.Drawing.Point(15, 125);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(84, 13);
             this.label6.TabIndex = 17;
@@ -161,7 +157,7 @@
             "OBD2",
             "OBD",
             "LOBD"});
-            this.comboBoxDiag.Location = new System.Drawing.Point(114, 148);
+            this.comboBoxDiag.Location = new System.Drawing.Point(114, 122);
             this.comboBoxDiag.Name = "comboBoxDiag";
             this.comboBoxDiag.Size = new System.Drawing.Size(144, 21);
             this.comboBoxDiag.TabIndex = 16;
@@ -169,7 +165,7 @@
             // cbClutchStart
             // 
             this.cbClutchStart.AutoSize = true;
-            this.cbClutchStart.Location = new System.Drawing.Point(114, 295);
+            this.cbClutchStart.Location = new System.Drawing.Point(114, 269);
             this.cbClutchStart.Name = "cbClutchStart";
             this.cbClutchStart.Size = new System.Drawing.Size(81, 17);
             this.cbClutchStart.TabIndex = 15;
@@ -179,7 +175,7 @@
             // cbBiopower
             // 
             this.cbBiopower.AutoSize = true;
-            this.cbBiopower.Location = new System.Drawing.Point(114, 272);
+            this.cbBiopower.Location = new System.Drawing.Point(114, 246);
             this.cbBiopower.Name = "cbBiopower";
             this.cbBiopower.Size = new System.Drawing.Size(70, 17);
             this.cbBiopower.TabIndex = 14;
@@ -189,7 +185,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(15, 125);
+            this.label5.Location = new System.Drawing.Point(15, 99);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(62, 13);
             this.label5.TabIndex = 13;
@@ -197,7 +193,7 @@
             // 
             // tbOilQuality
             // 
-            this.tbOilQuality.Location = new System.Drawing.Point(114, 122);
+            this.tbOilQuality.Location = new System.Drawing.Point(114, 96);
             this.tbOilQuality.Name = "tbOilQuality";
             this.tbOilQuality.Size = new System.Drawing.Size(144, 20);
             this.tbOilQuality.TabIndex = 12;
@@ -205,7 +201,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(15, 73);
+            this.label4.Location = new System.Drawing.Point(15, 47);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(34, 13);
             this.label4.TabIndex = 11;
@@ -213,7 +209,7 @@
             // 
             // tbE85
             // 
-            this.tbE85.Location = new System.Drawing.Point(114, 70);
+            this.tbE85.Location = new System.Drawing.Point(114, 44);
             this.tbE85.Name = "tbE85";
             this.tbE85.Size = new System.Drawing.Size(144, 20);
             this.tbE85.TabIndex = 10;
@@ -221,7 +217,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(15, 99);
+            this.label3.Location = new System.Drawing.Point(15, 73);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(94, 13);
             this.label3.TabIndex = 9;
@@ -229,7 +225,7 @@
             // 
             // tbTopSpeed
             // 
-            this.tbTopSpeed.Location = new System.Drawing.Point(114, 96);
+            this.tbTopSpeed.Location = new System.Drawing.Point(114, 70);
             this.tbTopSpeed.Name = "tbTopSpeed";
             this.tbTopSpeed.Size = new System.Drawing.Size(144, 20);
             this.tbTopSpeed.TabIndex = 8;
@@ -243,15 +239,6 @@
             this.label1.TabIndex = 7;
             this.label1.Text = "VIN (17 characters)";
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(15, 47);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(55, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "RPM Limit";
-            // 
             // tbVIN
             // 
             this.tbVIN.Location = new System.Drawing.Point(114, 18);
@@ -259,16 +246,9 @@
             this.tbVIN.Size = new System.Drawing.Size(144, 20);
             this.tbVIN.TabIndex = 6;
             // 
-            // tbRPMLimit
-            // 
-            this.tbRPMLimit.Location = new System.Drawing.Point(114, 44);
-            this.tbRPMLimit.Name = "tbRPMLimit";
-            this.tbRPMLimit.Size = new System.Drawing.Size(144, 20);
-            this.tbRPMLimit.TabIndex = 3;
-            // 
             // closeButton
             // 
-            this.closeButton.Location = new System.Drawing.Point(216, 347);
+            this.closeButton.Location = new System.Drawing.Point(215, 312);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(75, 23);
             this.closeButton.TabIndex = 5;
@@ -280,7 +260,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(303, 382);
+            this.ClientSize = new System.Drawing.Size(303, 346);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnWriteToECU);
@@ -303,8 +283,6 @@
         private System.Windows.Forms.TextBox tbVIN;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbTopSpeed;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox tbRPMLimit;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox tbE85;
         private System.Windows.Forms.Label label3;

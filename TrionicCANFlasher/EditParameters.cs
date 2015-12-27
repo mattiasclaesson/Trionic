@@ -65,20 +65,6 @@ namespace TrionicCANFlasher
             }
         }
 
-        public int RPMLimit
-        {
-            get
-            {
-                int rpm;
-                int.TryParse(tbRPMLimit.Text, out rpm);
-                return rpm;
-            }
-            set
-            {
-                tbRPMLimit.Text = value.ToString();
-            }
-        }
-
         public string VIN
         {
             get
@@ -177,7 +163,6 @@ namespace TrionicCANFlasher
                 cbCab.Show();
                 cbSAI.Show();
                 cbOutput.Show();
-                tbRPMLimit.Show();
                 tbTopSpeed.Show();
                 tbE85.Show();
                 tbOilQuality.Show();
@@ -192,7 +177,6 @@ namespace TrionicCANFlasher
                 cbCab.Hide();
                 cbSAI.Hide();
                 cbOutput.Hide();
-                tbRPMLimit.Hide();
                 tbTopSpeed.Show();
                 tbE85.Hide();
                 tbOilQuality.Hide();
@@ -207,7 +191,6 @@ namespace TrionicCANFlasher
                 cbCab.Hide();
                 cbSAI.Hide();
                 cbOutput.Hide();
-                tbRPMLimit.Hide();
                 tbTopSpeed.Hide();
                 tbE85.Show();
                 tbOilQuality.Hide();
