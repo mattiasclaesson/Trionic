@@ -305,7 +305,7 @@ public class LPCCANDevice : ICANDevice
         }
         catch (Exception e)
         {
-            logger.Trace("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16") + " failed" + e.Message);
+            logger.Trace("tx: " + msg.getID().ToString("X3") + " " + msg.getData().ToString("X16") + " Exception.Message: " + e.Message);
             return false;
         }
     }
