@@ -210,6 +210,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -254,6 +255,7 @@ namespace TrionicCANLib.API
                         if (!canUsbDevice.sendMessage(msg))
                         {
                             CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                            return false;
                         }
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
@@ -302,6 +304,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -364,6 +367,7 @@ namespace TrionicCANLib.API
                         if (!canUsbDevice.sendMessage(msg))
                         {
                             CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                            return false;
                         }
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
@@ -544,6 +548,7 @@ namespace TrionicCANLib.API
                 if (!canUsbDevice.sendMessage(msg))
                 {
                     CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                    return string.Empty;
                 }
 
                 int msgcnt = 0;
@@ -638,6 +643,7 @@ namespace TrionicCANLib.API
                 if (!canUsbDevice.sendMessage(msg))
                 {
                     CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                    return string.Empty;
                 }
 
                 int msgcnt = 0;
@@ -726,6 +732,7 @@ namespace TrionicCANLib.API
                 if (!canUsbDevice.sendMessage(msg))
                 {
                     CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                    return retval;
                 }
 
                 int msgcnt = 0;
@@ -823,6 +830,7 @@ namespace TrionicCANLib.API
                 if (!canUsbDevice.sendMessage(msg))
                 {
                     CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                    return false;
                 }
                 CANMessage ECMresponse = new CANMessage();
                 ECMresponse = m_canListener.waitMessage(1000);
@@ -1069,6 +1077,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return 0f;
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -1103,6 +1112,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -1175,6 +1185,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg62))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response62 = new CANMessage();
             response62 = m_canListener.waitMessage(1000);
@@ -1203,6 +1214,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -1390,6 +1402,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -1596,6 +1609,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1618,6 +1632,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1643,6 +1658,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -1684,6 +1700,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1709,6 +1726,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1734,6 +1752,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1755,6 +1774,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1776,6 +1796,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1797,6 +1818,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             return true;
         }
@@ -1919,6 +1941,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             /*CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1940,6 +1963,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             /*CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1961,6 +1985,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -1983,6 +2008,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return 0;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -2007,6 +2033,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return 0;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -2029,6 +2056,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -2050,6 +2078,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             return true;
         }
@@ -2073,6 +2102,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(1000);
@@ -2127,6 +2157,7 @@ namespace TrionicCANLib.API
                         if (!canUsbDevice.sendMessage(msg))
                         {
                             CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                            return false;
                         }
                         response = new CANMessage();
                         response = m_canListener.waitMessage(1000);
@@ -2165,6 +2196,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -2188,6 +2220,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -2217,6 +2250,7 @@ namespace TrionicCANLib.API
                 if (!canUsbDevice.sendMessage(msg))
                 {
                     CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                    return retval;
                 }
 
                 int msgcnt = 0;
@@ -2536,6 +2570,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -2942,6 +2977,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return 0f;
             }
             // wait for a 0x58 or a 0x7F message
             CANMessage response = new CANMessage();
@@ -3099,6 +3135,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return listDTC.ToArray();
             }
 
             CANMessage response = new CANMessage();
@@ -3164,6 +3201,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
 
             CANMessage response = new CANMessage();
@@ -3224,6 +3262,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return list.ToArray();
             }
 
             CANMessage response = new CANMessage();
@@ -3297,6 +3336,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3314,6 +3354,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3330,6 +3371,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return 0;
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
@@ -3599,6 +3641,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3635,6 +3678,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             int waitMsgCount = 0;
             while (waitMsgCount < 10)
@@ -3726,6 +3770,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3747,6 +3792,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3805,6 +3851,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
 
             ulong rxdata = m_canListener.waitMessage(1000).getData();
@@ -3858,6 +3905,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3880,6 +3928,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3902,6 +3951,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3922,6 +3972,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return;
             }
         }
 
@@ -3936,6 +3987,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -3974,6 +4026,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return;
             }
             CANMessage ECMresponse = new CANMessage();
             ECMresponse = m_canListener.waitMessage(1000);
@@ -4916,6 +4969,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             bool eraseDone = false;
             int eraseCount = 0;
@@ -5435,6 +5489,7 @@ namespace TrionicCANLib.API
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
             }
             bool eraseDone = false;
             int eraseCount = 0;
