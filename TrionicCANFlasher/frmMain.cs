@@ -452,6 +452,7 @@ namespace TrionicCANFlasher
                 trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
                 if (trionic8.openDevice(false))
                 {
+                    //Add a connection check for connection here to avoid confused users when all fields show blank!
                     AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());            //0x90
                     AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());        //0x74
                     AddLogItem("Codefile version: " + trionic8.GetCodefileVersion());       //0x73
