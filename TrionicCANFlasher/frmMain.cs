@@ -10,6 +10,8 @@ using System.Diagnostics;
 using Microsoft.Win32;
 using TrionicCANLib;
 using TrionicCANLib.API;
+using TrionicCANLib.Firmware;
+using TrionicCANLib.Checksum;
 using System.Drawing;
 using NLog;
 using CommonSuite;
@@ -128,6 +130,13 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName);
+                            if (checksum != ChecksumResult.Ok)
+                            {
+                                AddLogItem("Checksum check failed: " + checksum);
+                                return;
+                            }
+
                             SetGenericOptions(trionic8);
 
                             EnableUserInput(false);
@@ -221,7 +230,7 @@ namespace TrionicCANFlasher
             FileInfo fi = new FileInfo(fileName);
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                if (fi.Length != 0x80000)
+                if (fi.Length != FileT7.Length)
                 {
                     AddLogItem("Not a trionic 7 file");
                     return false;
@@ -229,7 +238,7 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
-                if (fi.Length != 0x100000)
+                if (fi.Length != FileT8.Length)
                 {
                     AddLogItem("Not a trionic 8 file");
                     return false;
@@ -237,7 +246,7 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
             {
-                if (fi.Length != 0x200000)
+                if (fi.Length != FileME96.Length)
                 {
                     AddLogItem("Not a Motronic ME9.6 file");
                     return false;
@@ -394,7 +403,7 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    Me96ReadArgs args = new Me96ReadArgs() { FileName = sfd.FileName, start = 0, end = 0x200000 };
+                                    FlashReadArguments args = new FlashReadArguments() { FileName = sfd.FileName, start = 0, end = 0x200000 };
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
@@ -1351,7 +1360,7 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    var args = new Me96ReadArgs() { FileName = sfd.FileName, start = 0x1B0000, end = 0x1F0000 }; // Read more than only the calibration that start at 1c2000
+                                    var args = new FlashReadArguments() { FileName = sfd.FileName, start = 0x1B0000, end = 0x1F0000 }; // Read more than only the calibration that start at 1c2000
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);

@@ -93,12 +93,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Checksum\ChecksumT8.cs" />
+    <Compile Include="Checksum\ChecksumResult.cs" />
+    <Compile Include="FileTools.cs" />
     <Compile Include="EnumHelper.cs" />
     <Compile Include="CAN\CANMXWiFiDevice.cs" />
     <Compile Include="CAN\KvaserCANDevice.cs" />
+    <Compile Include="Firmware\FileME96.cs" />
+    <Compile Include="Firmware\FileT7.cs" />
+    <Compile Include="Firmware\FileT8.cs" />
+    <Compile Include="Firmware\IBaseFile.cs" />
     <Compile Include="ITrionic.cs" />
     <Compile Include="Md5Tools.cs" />
-    <Compile Include="Me96ReadArgs.cs" />
+    <Compile Include="FlashReadArguments.cs" />
     <Compile Include="SymbolHelper.cs" />
     <Compile Include="BitTools.cs" />
     <Compile Include="BlockManager.cs" />

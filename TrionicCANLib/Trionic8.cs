@@ -12,6 +12,7 @@ using TrionicCANLib;
 using System.Windows.Forms;
 using System.Collections;
 using NLog;
+using TrionicCANLib.Checksum;
 
 namespace TrionicCANLib.API
 {
@@ -4811,8 +4812,17 @@ namespace TrionicCANLib.API
                 {
                     File.WriteAllBytes(filename, buf);
                     Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
-                    CastInfoEvent("Download done", ActivityType.FinishedDownloadingFlash);
-                    workEvent.Result = true;
+                    ChecksumResult checksum = ChecksumT8.VerifyChecksum(filename);
+                    if (checksum != ChecksumResult.Ok)
+                    {
+                        CastInfoEvent("Checksum check failed: " + checksum, ActivityType.ConvertingFile);
+                        workEvent.Result = false;
+                    }
+                    else
+                    {
+                        CastInfoEvent("Download done", ActivityType.FinishedDownloadingFlash);
+                        workEvent.Result = true;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -5121,7 +5131,7 @@ namespace TrionicCANLib.API
         public void ReadFlashME96(object sender, DoWorkEventArgs workEvent)
         {
             BackgroundWorker bw = sender as BackgroundWorker;
-            Me96ReadArgs args = (Me96ReadArgs)workEvent.Argument;
+            FlashReadArguments args = (FlashReadArguments)workEvent.Argument;
             string filename = args.FileName;
             int start = args.start;
             int end = args.end;
