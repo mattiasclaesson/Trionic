@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace TrionicCANLib.API
 {
-    public class Me96ReadArgs
+    public class FlashReadArguments
     {
         public string FileName { get; set; }
         public int start { get; set; }
