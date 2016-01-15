@@ -1071,7 +1071,7 @@ namespace TrionicCANLib.API
             GetDiagnosticDataIdentifier();
 
             // ReadDataByPacketIdentifier ($AA) Service
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);
+            CANMessage msg = new CANMessage(0x7E0, 0, 4); 
             ulong cmd = 0x000000007A01AA03;// <dpid=7A> <level=sendOneResponse> <service=AA> <length>
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x5E8);
