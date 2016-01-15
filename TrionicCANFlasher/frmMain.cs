@@ -86,14 +86,9 @@ namespace TrionicCANFlasher
         private void btnFlashEcu_Click(object sender, EventArgs e)
         {
             DialogResult result = DialogResult.Cancel;
-            if(cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 || cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
-                result = MessageBox.Show("Attach a charger. Now turn key to ON to wakeup ECU.",
-                "Critical Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
-            else if(cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                result = MessageBox.Show("Attach a charger. Turn key to ON wait a few seconds, turn to LOCK. Wait 15 to 20 seconds then initiate the flash operation in car.",
-                "Critical Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
-            }
+            if(cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+                result = MessageBox.Show("Power on ECU",
+                "Information", MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
             if (result == DialogResult.Cancel)
             {
                 return;
@@ -105,30 +100,7 @@ namespace TrionicCANFlasher
                 {
                     if (checkFileSize(ofd.FileName))
                     {
-                        if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-                        {
-                            SetGenericOptions(trionic7);
-                            trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
-
-                            AddLogItem("Opening connection");
-                            EnableUserInput(false);
-                            if (trionic7.openDevice())
-                            {
-                                Thread.Sleep(1000);
-                                AddLogItem("Update FLASH content");
-                                Application.DoEvents();
-                                dtstart = DateTime.Now;
-                                trionic7.WriteFlash(ofd.FileName);
-                            }
-                            else
-                            {
-                                AddLogItem("Unable to connect to Trionic 7 ECU");
-                                trionic7.Cleanup();
-                                EnableUserInput(true);
-                                AddLogItem("Connection terminated");
-                            }
-                        }
-                        else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+                        if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
                             ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName);
                             if (checksum != ChecksumResult.Ok)
@@ -150,43 +122,11 @@ namespace TrionicCANFlasher
                                 Application.DoEvents();
                                 BackgroundWorker bgWorker;
                                 bgWorker = new BackgroundWorker();
-                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlash);
+                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.RestoreT8);
                                 bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
                                 bgWorker.WorkerReportsProgress = true;
                                 bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                 bgWorker.RunWorkerAsync(ofd.FileName);
-
-                            }
-                            else
-                            {
-                                AddLogItem("Unable to connect to Trionic 8 ECU");
-                                trionic8.Cleanup();
-                                EnableUserInput(true);
-                                AddLogItem("Connection terminated");
-                            }
-                        }
-                        else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
-                        {
-                            SetGenericOptions(trionic8);
-
-                            EnableUserInput(false);
-                            AddLogItem("Opening connection");
-                            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.ECU = ECU.MOTRONIC96;
-                            if (trionic8.openDevice(false))
-                            {
-                                Thread.Sleep(1000);
-                                dtstart = DateTime.Now;
-                                AddLogItem("Update FLASH content");
-                                Application.DoEvents();
-                                BackgroundWorker bgWorker;
-                                bgWorker = new BackgroundWorker();
-                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashME96);
-                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                bgWorker.WorkerReportsProgress = true;
-                                bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
-                                bgWorker.RunWorkerAsync(ofd.FileName);
-
                             }
                             else
                             {
@@ -270,6 +210,7 @@ namespace TrionicCANFlasher
             cbDisableConnectionCheck.Enabled = enable;
             btnEditParameters.Enabled = enable;
             btnReadECUcalibration.Enabled = enable;
+            btnRestoreT8.Enabled = enable;
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
@@ -308,6 +249,7 @@ namespace TrionicCANFlasher
             {
                 btnRecoverECU.Enabled = false;
                 btnReadECUcalibration.Enabled = false;
+                btnRestoreT8.Enabled = false;
             }
 
             // Always disable
@@ -322,6 +264,7 @@ namespace TrionicCANFlasher
                 btnRecoverECU.Enabled = false;
                 btnFlashECU.Enabled = false;
                 btnReadSRAM.Enabled = false;
+                btnRestoreT8.Enabled = false;
             }
         }
 
@@ -684,11 +627,6 @@ namespace TrionicCANFlasher
                 }
             }
             LogManager.Flush();
-        }
-
-        private void btnExit_Click(object sender, EventArgs e)
-        {
-            this.Close();
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -1400,6 +1338,61 @@ namespace TrionicCANFlasher
         {
             string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/MattiasC/TrionicCANFlasher";
             Process.Start(path);
+        }
+
+        private void btnRestoreT8_Click(object sender, EventArgs e)
+        {
+            DialogResult result = DialogResult.Cancel;
+            result = MessageBox.Show("Power on ECU",
+                "Information", MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
+
+            using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Bin files|*.bin", Multiselect = false })
+            {
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    if (checkFileSize(ofd.FileName))
+                    {
+                        if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+                        {
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName);
+                            if (checksum != ChecksumResult.Ok)
+                            {
+                                AddLogItem("Checksum check failed: " + checksum);
+                                return;
+                            }
+
+                            SetGenericOptions(trionic8);
+
+                            EnableUserInput(false);
+                            AddLogItem("Opening connection");
+                            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                            if (trionic8.openDevice(false))
+                            {
+                                Thread.Sleep(1000);
+                                dtstart = DateTime.Now;
+                                AddLogItem("Update FLASH content");
+                                Application.DoEvents();
+                                BackgroundWorker bgWorker;
+                                bgWorker = new BackgroundWorker();
+                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.RestoreT8);
+                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                bgWorker.WorkerReportsProgress = true;
+                                bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
+                                bgWorker.RunWorkerAsync(ofd.FileName);
+
+                            }
+                            else
+                            {
+                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                trionic8.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
+                            }
+                        }
+                    }
+                }
+            }
+            LogManager.Flush();
         }
 
     }

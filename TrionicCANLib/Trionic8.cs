@@ -5686,5 +5686,141 @@ namespace TrionicCANLib.API
             }
             return true;
         }
+
+        public void RestoreT8(object sender, DoWorkEventArgs workEvent)
+        {
+            BackgroundWorker bw = sender as BackgroundWorker;
+            string filename = (string)workEvent.Argument;
+
+            if (!canUsbDevice.isOpen()) return;
+            _needRecovery = false;
+            BlockManager bm = new BlockManager();
+            bm.SetFilename(filename);
+
+            _stallKeepAlive = true;
+
+            int waitCount = 0;
+            Boolean restored = false;
+            CastInfoEvent("Reset ECU now. Turn off and on power!", ActivityType.UploadingBootloader);
+            while (waitCount < 300 && !restored)
+            {
+                restored = SendRestoreT8();
+                waitCount++;
+            }
+
+            if (!restored)
+            {
+                CastInfoEvent("Failed to restore ECU", ActivityType.ConvertingFile);
+                workEvent.Result = false;
+                return;
+            }
+
+            SendKeepAlive();
+            sw.Reset();
+            sw.Start();
+            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
+            StartSession10();
+            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
+            SendShutup();
+            SendA2();
+            SendA5();
+            SendA503();
+            Thread.Sleep(50);
+            SendKeepAlive();
+
+            // verified upto here
+
+            _securityLevel = AccessLevel.AccessLevel01;
+            //CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
+            if (!RequestSecurityAccess(0))   // was 2000 milli-seconds
+            {
+                CastInfoEvent("Failed to get security access", ActivityType.UploadingFlash);
+                _stallKeepAlive = false;
+                workEvent.Result = false;
+                return;
+            }
+            Thread.Sleep(50);
+            CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
+            if (!UploadBootloaderWrite())
+            {
+                CastInfoEvent("Failed to upload bootloader", ActivityType.UploadingFlash);
+                _stallKeepAlive = false;
+                workEvent.Result = false;
+                return;
+            }
+            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
+            // start bootloader in ECU
+            //SendKeepAlive();
+            Thread.Sleep(50);
+            if (!StartBootloader())
+            {
+                CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
+                _stallKeepAlive = false;
+                workEvent.Result = false;
+                return;
+            }
+            Thread.Sleep(100);
+            SendKeepAlive();
+            Thread.Sleep(50);
+
+            CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
+            if (SendrequestDownload(false))
+            {
+                _needRecovery = true;
+                SendShutup();
+                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
+                bool success = ProgramFlash(bm);
+
+                if (success)
+                    CastInfoEvent("FLASH upload completed", ActivityType.ConvertingFile);
+                else
+                    CastInfoEvent("FLASH upload failed", ActivityType.ConvertingFile);
+
+                sw.Stop();
+                _needRecovery = false;
+
+                // what else to do?
+                Send0120();
+                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+            }
+            else
+            {
+                sw.Stop();
+                _needRecovery = false;
+                _stallKeepAlive = false;
+                CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
+                Send0120();
+                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+                workEvent.Result = false;
+                return;
+
+            }
+            _stallKeepAlive = false;
+            workEvent.Result = true;
+        }
+
+        private bool SendRestoreT8()
+        {
+            CANMessage msg = new CANMessage(0x7E0, 0, 3); 
+            // 02 1A 79 00 00 00 00 00
+            ulong cmd = 0x0000000000791A02;
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                // Do not return here want to wait for the response
+            }
+            CANMessage response = new CANMessage();
+            response = new CANMessage();
+            response = m_canListener.waitMessage(200);
+            ulong data = response.getData();
+            // 7E8 03 5A 79 01 00 00 00 00
+            if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x5A && getCanData(data, 2) == 0x79 && getCanData(data, 3) == 0x01)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

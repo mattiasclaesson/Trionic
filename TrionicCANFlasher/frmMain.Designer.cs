@@ -32,7 +32,7 @@
             this.btnReadECU = new System.Windows.Forms.Button();
             this.cbEnableLogging = new System.Windows.Forms.CheckBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.btnExit = new System.Windows.Forms.Button();
+            this.btnRestoreT8 = new System.Windows.Forms.Button();
             this.btnFlashECU = new System.Windows.Forms.Button();
             this.listBoxLog = new System.Windows.Forms.ListBox();
             this.btnGetECUInfo = new System.Windows.Forms.Button();
@@ -91,16 +91,16 @@
             this.progressBar1.Size = new System.Drawing.Size(648, 23);
             this.progressBar1.TabIndex = 23;
             // 
-            // btnExit
+            // btnRestoreT8
             // 
-            this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExit.Location = new System.Drawing.Point(906, 123);
-            this.btnExit.Name = "btnExit";
-            this.btnExit.Size = new System.Drawing.Size(107, 50);
-            this.btnExit.TabIndex = 22;
-            this.btnExit.Text = "Exit";
-            this.btnExit.UseVisualStyleBackColor = true;
-            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
+            this.btnRestoreT8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRestoreT8.Location = new System.Drawing.Point(906, 123);
+            this.btnRestoreT8.Name = "btnRestoreT8";
+            this.btnRestoreT8.Size = new System.Drawing.Size(107, 50);
+            this.btnRestoreT8.TabIndex = 22;
+            this.btnRestoreT8.Text = "Restore T8";
+            this.btnRestoreT8.UseVisualStyleBackColor = true;
+            this.btnRestoreT8.Click += new System.EventHandler(this.btnRestoreT8_Click);
             // 
             // btnFlashECU
             // 
@@ -392,7 +392,7 @@
             this.Controls.Add(this.btnGetECUInfo);
             this.Controls.Add(this.btnReadECU);
             this.Controls.Add(this.cbEnableLogging);
-            this.Controls.Add(this.btnExit);
+            this.Controls.Add(this.btnRestoreT8);
             this.Controls.Add(this.btnFlashECU);
             this.Controls.Add(this.listBoxLog);
             this.Controls.Add(this.progressBar1);
@@ -413,7 +413,7 @@
         private System.Windows.Forms.Button btnReadECU;
         private System.Windows.Forms.CheckBox cbEnableLogging;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.Button btnExit;
+        private System.Windows.Forms.Button btnRestoreT8;
         private System.Windows.Forms.Button btnFlashECU;
         private System.Windows.Forms.ListBox listBoxLog;
         private System.Windows.Forms.Button btnGetECUInfo;
