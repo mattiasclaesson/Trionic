@@ -30,6 +30,7 @@ namespace TrionicCANFlasher
         public DelegateProgressStatus m_DelegateProgressStatus;
         private Logger logger = LogManager.GetCurrentClassLogger();
         msiupdater m_msiUpdater;
+        BackgroundWorker bgworkerLogCanData;
 
         public frmMain()
         {
@@ -202,7 +203,11 @@ namespace TrionicCANFlasher
 
         void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Result != null && (bool)e.Result)
+            if (e.Cancelled)
+            {
+                AddLogItem("Stopped");
+            }
+            else if (e.Result != null && (bool)e.Result)
             {
                 AddLogItem("Operation done");
             }
@@ -213,7 +218,16 @@ namespace TrionicCANFlasher
          
             TimeSpan ts = DateTime.Now - dtstart;
             AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-            trionic8.Cleanup();
+
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                trionic7.Cleanup();
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 ||
+                cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+            {
+                trionic8.Cleanup();
+            }
             EnableUserInput(true);
             AddLogItem("Connection terminated");
         }
@@ -1025,7 +1039,6 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
-                //trionic7.ELM327Kline = cbELM327Kline.Checked;
                 trionic7.UseFlasherOnDevice = false;
 
                 EnableUserInput(false);
@@ -1382,6 +1395,11 @@ namespace TrionicCANFlasher
 
         private void cbEnableLogging_CheckedChanged(object sender, EventArgs e)
         {
+            UpdateLogManager();
+        }
+
+        private void UpdateLogManager()
+        {
             if (cbEnableLogging.Checked)
             {
                 LogManager.EnableLogging();
@@ -1453,5 +1471,63 @@ namespace TrionicCANFlasher
             LogManager.Flush();
         }
 
+        private void btnLogData_Click(object sender, EventArgs e)
+        {
+            if (btnLogData.Text != "Stop")
+            {
+                // Force logging on
+                LogManager.EnableLogging();
+                dtstart = DateTime.Now;
+                
+                if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+                {
+                    SetGenericOptions(trionic7);
+                    trionic7.UseFlasherOnDevice = false;
+
+                    EnableUserInput(false);
+                    AddLogItem("Opening connection");
+                    if (trionic7.openDevice())
+                    {
+                        StartBGWorkerLog(trionic7);
+                    }
+                }
+                else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 ||
+                    cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+                {
+                    SetGenericOptions(trionic8);
+
+                    EnableUserInput(false);
+                    AddLogItem("Opening connection");
+                    trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                    if (trionic8.openDevice(false))
+                    {
+                        StartBGWorkerLog(trionic8);
+                    }
+                }
+                btnLogData.Text = "Stop";
+            }
+            else
+            {
+                bgworkerLogCanData.CancelAsync();
+                // Reset logging to setting
+                UpdateLogManager();
+                btnLogData.Text = "Log Data";
+                EnableUserInput(true);
+            }
+        }
+
+        private void StartBGWorkerLog(ITrionic trionic)
+        {
+            AddLogItem("Logging in progress");
+            bgworkerLogCanData = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            bgworkerLogCanData.DoWork += new DoWorkEventHandler(trionic.LogCANData);
+            bgworkerLogCanData.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+            bgworkerLogCanData.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
+            bgworkerLogCanData.RunWorkerAsync();
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using TrionicCANLib.CAN;
 using NLog;
+using System.ComponentModel;
 
 namespace TrionicCANLib.API
 {
@@ -11,6 +12,7 @@ namespace TrionicCANLib.API
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         protected ICANDevice canUsbDevice;
+        private CANListener m_canLogListener;
 
         public delegate void WriteProgress(object sender, WriteProgressEventArgs e);
         public event ITrionic.WriteProgress onWriteProgress;
@@ -259,6 +261,33 @@ namespace TrionicCANLib.API
             public ReadProgressEventArgs(int percentage)
             {
                 _percentage = percentage;
+            }
+        }
+
+        public void LogCANData(object sender, DoWorkEventArgs workEvent)
+        {
+            BackgroundWorker bw = sender as BackgroundWorker;
+
+            if (!canUsbDevice.isOpen()) return;
+
+            if (m_canLogListener == null)
+            {
+                m_canLogListener = new CANListener();
+            }
+            canUsbDevice.AcceptOnlyMessageIds = null;
+            canUsbDevice.addListener(m_canLogListener);
+
+            while (true)
+            {
+                m_canLogListener.waitMessage(1000);
+
+                if (bw.CancellationPending)
+                {
+                    canUsbDevice.removeListener(m_canLogListener);
+                    m_canLogListener = null;
+                    workEvent.Cancel = true;
+                    return;
+                }
             }
         }
     }

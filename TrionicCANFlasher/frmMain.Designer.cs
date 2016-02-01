@@ -55,6 +55,7 @@
             this.cbAdapter = new System.Windows.Forms.ComboBox();
             this.cbUseFlasherOnDevice = new System.Windows.Forms.CheckBox();
             this.linkLabelLogging = new System.Windows.Forms.LinkLabel();
+            this.btnLogData = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -365,11 +366,23 @@
             this.linkLabelLogging.Text = "Open logging directory";
             this.linkLabelLogging.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelLogging_LinkClicked);
             // 
+            // btnLogData
+            // 
+            this.btnLogData.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnLogData.Location = new System.Drawing.Point(675, 180);
+            this.btnLogData.Name = "btnLogData";
+            this.btnLogData.Size = new System.Drawing.Size(107, 50);
+            this.btnLogData.TabIndex = 68;
+            this.btnLogData.Text = "Log data";
+            this.btnLogData.UseVisualStyleBackColor = true;
+            this.btnLogData.Click += new System.EventHandler(this.btnLogData_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1023, 392);
+            this.Controls.Add(this.btnLogData);
             this.Controls.Add(this.linkLabelLogging);
             this.Controls.Add(this.cbUseFlasherOnDevice);
             this.Controls.Add(this.cbAdapter);
@@ -436,6 +449,7 @@
         private System.Windows.Forms.ComboBox cbAdapter;
         private System.Windows.Forms.CheckBox cbUseFlasherOnDevice;
         private System.Windows.Forms.LinkLabel linkLabelLogging;
+        private System.Windows.Forms.Button btnLogData;
     }
 }
 
