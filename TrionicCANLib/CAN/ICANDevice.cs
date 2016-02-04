@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using TrionicCANLib.API;
+using NLog;
 
 namespace TrionicCANLib.CAN
 {
@@ -130,6 +131,8 @@ namespace TrionicCANLib.CAN
             set { m_ECU = value; }
         }
 
+        private Logger logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// This method opens the device for reading and writing.
         /// There is no mechanism for setting the bus speed so this method must
@@ -151,14 +154,36 @@ namespace TrionicCANLib.CAN
         abstract public bool isOpen();
 
         /// <summary>
-        /// This message sends a CANMessage to the CAN device.
+        /// This method sends a CANMessage to the CAN device.
         /// The open method must have been called and returned possitive result
         /// before this method is called.
         /// </summary>
         /// <param name="a_message">The CANMessage</param>
         /// <returns>true on success, otherwise false.</returns>
-        abstract public bool sendMessage(CANMessage a_message);
+        public bool sendMessage(CANMessage a_message)
+        {
+            bool result = sendMessageDevice(a_message);
+            string prefix = result == true ? "tx:" : "tx failed:";
+
+            logger.Trace(String.Format("{0} {1:X3} {2:X16}", prefix, a_message.getID(), BitTools.ReverseOrder(a_message.getData())));
+            return result;
+        }
+        abstract protected bool sendMessageDevice(CANMessage a_message);
+
         abstract public uint waitForMessage(uint a_canID, uint timeout, out CANMessage canMsg);
+
+        public void receivedMessage(CANMessage a_message)
+        {
+            lock (m_listeners)
+            {
+                logger.Trace(String.Format("rx: {0:X3} {1:X16}", a_message.getID(), BitTools.ReverseOrder(a_message.getData())));
+                foreach (ICANListener listener in m_listeners)
+                {
+                    listener.handleMessage(a_message);
+                }
+            }
+        }
+
         abstract public float GetThermoValue();
         abstract public float GetADCValue(uint channel);
 

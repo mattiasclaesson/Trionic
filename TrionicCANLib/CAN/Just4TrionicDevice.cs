@@ -92,17 +92,10 @@ namespace TrionicCANLib.CAN
                             canMessage.setLength(8);
                             canMessage.setData(0x0000000000000000);
                             for (uint i = 0; i < 8; i++)
-                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(5 + (2 * (int)i), 2), 16), i);
-
-                            lock (m_listeners)
                             {
-                                logger.Trace(String.Format("rx: {0:X3} {1:X1} {2:X16}", canMessage.getID(), canMessage.getLength(), canMessage.getData()));
-                                //Console.WriteLine("MSG: " + rxMessage);
-                                foreach (ICANListener listener in m_listeners)
-                                {
-                                    listener.handleMessage(canMessage);
-                                }
+                                canMessage.setCanData(Convert.ToByte(rxMessage.Substring(5 + (2 * (int)i), 2), 16), i);
                             }
+                            receivedMessage(canMessage);
                         }
                     }
                 }
@@ -118,10 +111,15 @@ namespace TrionicCANLib.CAN
             canMsg = new CANMessage();
             return 0;
         }
-            
 
-        public override bool sendMessage(CANMessage a_message)
+
+        protected override bool sendMessageDevice(CANMessage a_message)
         {
+            if (!m_serialPort.IsOpen)
+            {
+                return false;
+            }
+
             string sendString = "t";
             sendString += a_message.getID().ToString("X3");
             sendString += a_message.getLength().ToString("X1");
@@ -130,12 +128,9 @@ namespace TrionicCANLib.CAN
                 sendString += a_message.getCanData(i).ToString("X2");
             }
             sendString += "\r";
-            if (m_serialPort.IsOpen)
-            {
-                logger.Trace(String.Format("tx: {0:X3} {1:X1} {2:X16}", a_message.getID(), a_message.getLength(), a_message.getData()));
-                m_serialPort.Write(sendString);
-                //Console.WriteLine("TX: " + sendString);
-            }
+
+            m_serialPort.Write(sendString);
+            //Console.WriteLine("TX: " + sendString);
 
             // bitrate = 38400bps -> 3840 bytes per second
             // sending each byte will take 0.2 ms approx

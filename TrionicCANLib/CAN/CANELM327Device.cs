@@ -163,14 +163,7 @@ namespace TrionicCANLib.CAN
                                             //canMessage.setData(0x0000000000000000); // reset message content
                                             canMessage.setData(ExtractDataFromString(rxMessage));
 
-                                            lock (m_listeners)
-                                            {
-                                                logger.Trace(string.Format("rx: {0} {1}", canMessage.getID().ToString("X3"), canMessage.getData().ToString("X16")));
-                                                foreach (ICANListener listener in m_listeners)
-                                                {
-                                                    listener.handleMessage(canMessage);
-                                                }
-                                            }
+                                            receivedMessage(canMessage);
                                         }
                                     }
                                     catch (Exception)
@@ -203,7 +196,7 @@ namespace TrionicCANLib.CAN
             return 0;
         }
 
-        public override bool sendMessage(CANMessage a_message)
+        protected override bool sendMessageDevice(CANMessage a_message)
         {
             lock (lockObj)
             {
@@ -257,7 +250,6 @@ namespace TrionicCANLib.CAN
                 {
                     lastSentTimestamp = Environment.TickCount;
                     WriteToSerialWithTrace(sendString);
-                    logger.Trace(string.Format("TX: {0} {1}", a_message.getID().ToString("X3"), sendString));
                 }
                 return true; // remove after implementation
             }

@@ -128,14 +128,8 @@ namespace TrionicCANLib.CAN
                             canMessage.setTimeStamp((uint)time);
                             canMessage.setFlags((byte)flag);
                             canMessage.setCanData(msg, (byte)dlc);
-                            lock (m_listeners)
-                            {
-                                logger.Trace(string.Format("rx: {0:X3} {1:X16}", canMessage.getID(), canMessage.getData()));
-                                foreach (ICANListener listener in m_listeners)
-                                {
-                                    listener.handleMessage(canMessage);
-                                }
-                            }
+
+                            receivedMessage(canMessage);
                         }
                     }
                     else if (status == Canlib.canStatus.canERR_NOMSG)
@@ -317,7 +311,7 @@ namespace TrionicCANLib.CAN
         /// </summary>
         /// <param name="a_message">A CANMessage.</param>
         /// <returns>true on success, othewise false.</returns>
-        override public bool sendMessage(CANMessage a_message)
+        override protected bool sendMessageDevice(CANMessage a_message)
         {
             byte[] msg = a_message.getDataAsByteArray();
 
@@ -325,12 +319,11 @@ namespace TrionicCANLib.CAN
 
             if (writeStatus == Canlib.canStatus.canOK)
             {
-                logger.Trace(String.Format("tx: {0:X3} {1:X16}", a_message.getID(), a_message.getData()));
                 return true;
             }
             else
             {
-                logger.Trace(String.Format("tx: {0:X3} {1:X16} failed {2}", a_message.getID(), a_message.getData(), writeStatus));
+                logger.Debug(String.Format("tx failed with status {2}", writeStatus));
                 return false;
             }
         }
