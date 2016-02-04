@@ -476,7 +476,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.21.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.22.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_BAFCC793B41C6A448DEA42B07F4E19EE"
@@ -559,15 +559,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{857B43E9-8102-4936-8025-E4B3657AF6E8}"
-        "PackageCode" = "8:{0FD511B1-9F83-4D40-AA1D-C0F562E02324}"
+        "ProductCode" = "8:{9268B1C0-1B9E-4E01-AB88-9421E7031C1D}"
+        "PackageCode" = "8:{A188AA30-433E-4D02-98CD-4B3C16DD47A8}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.1.31"
+        "ProductVersion" = "8:0.1.32"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://www.txsuite.org"
