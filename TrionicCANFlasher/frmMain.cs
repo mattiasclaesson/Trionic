@@ -283,6 +283,7 @@ namespace TrionicCANFlasher
             btnEditParameters.Enabled = enable;
             btnReadECUcalibration.Enabled = enable;
             btnRestoreT8.Enabled = enable;
+            btnLogData.Enabled = enable;
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
