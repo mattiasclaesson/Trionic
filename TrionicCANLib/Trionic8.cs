@@ -4766,7 +4766,7 @@ namespace TrionicCANLib.API
                     int percentage = (int)((bufpnt * 100) / (float)lastAddress);
                     if (percentage > saved_progress)
                     {
-                        bw.ReportProgress(percentage);
+                        CastProgressReadEvent(percentage);
                         saved_progress = percentage;
                     }
                     startAddress += blockSize;
