@@ -5195,7 +5195,6 @@ namespace TrionicCANLib.API
                     if (percentage > saved_progress)
                     {
                         CastProgressReadEvent(percentage);
-                        bw.ReportProgress(percentage);
                         saved_progress = percentage;
                     }
                     retryCount = 0;

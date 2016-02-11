@@ -153,8 +153,6 @@ namespace TrionicCANFlasher
                                 bgWorker = new BackgroundWorker();
                                 bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlash);
                                 bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                bgWorker.WorkerReportsProgress = true;
-                                bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                 bgWorker.RunWorkerAsync(ofd.FileName);
                             }
                             else
@@ -183,8 +181,6 @@ namespace TrionicCANFlasher
                                 bgWorker = new BackgroundWorker();
                                 bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashME96);
                                 bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                bgWorker.WorkerReportsProgress = true;
-                                bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                 bgWorker.RunWorkerAsync(ofd.FileName);
                             }
                             else
@@ -230,11 +226,6 @@ namespace TrionicCANFlasher
             }
             EnableUserInput(true);
             AddLogItem("Connection terminated");
-        }
-
-        void bgWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            updateProgress(e.ProgressPercentage);     
         }
 
         bool checkFileSize(string fileName)
@@ -393,8 +384,6 @@ namespace TrionicCANFlasher
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlash);
                                     bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                    bgWorker.WorkerReportsProgress = true;
-                                    bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                     bgWorker.RunWorkerAsync(sfd.FileName);
                                 }
                                 else
@@ -424,8 +413,6 @@ namespace TrionicCANFlasher
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
                                     bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                    bgWorker.WorkerReportsProgress = true;
-                                    bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                     bgWorker.RunWorkerAsync(args);
                                 }
                                 else
@@ -685,8 +672,6 @@ namespace TrionicCANFlasher
                             bgWorker = new BackgroundWorker();
                             bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU);
                             bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                            bgWorker.WorkerReportsProgress = true;
-                            bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                             bgWorker.RunWorkerAsync(ofd.FileName);
                         }
                         else
@@ -1375,8 +1360,6 @@ namespace TrionicCANFlasher
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
                                     bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                    bgWorker.WorkerReportsProgress = true;
-                                    bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                     bgWorker.RunWorkerAsync(args);
                                 }
                                 else
@@ -1453,8 +1436,6 @@ namespace TrionicCANFlasher
                                 bgWorker = new BackgroundWorker();
                                 bgWorker.DoWork += new DoWorkEventHandler(trionic8.RestoreT8);
                                 bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                bgWorker.WorkerReportsProgress = true;
-                                bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
                                 bgWorker.RunWorkerAsync(ofd.FileName);
 
                             }
@@ -1527,7 +1508,6 @@ namespace TrionicCANFlasher
             };
             bgworkerLogCanData.DoWork += new DoWorkEventHandler(trionic.LogCANData);
             bgworkerLogCanData.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-            bgworkerLogCanData.ProgressChanged += new ProgressChangedEventHandler(bgWorker_ProgressChanged);
             bgworkerLogCanData.RunWorkerAsync();
         }
     }
