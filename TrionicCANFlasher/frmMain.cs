@@ -689,28 +689,16 @@ namespace TrionicCANFlasher
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            logger.Trace("frmMain_FormClosing()");
             SaveRegistrySetting("AdapterType", cbxAdapterType.SelectedItem.ToString());
-            try
-            {
-                SaveRegistrySetting("Adapter", cbAdapter.SelectedItem.ToString());
-            }
-            catch
-            {
-                SaveRegistrySetting("Adapter", String.Empty);
-            }
+            SaveRegistrySetting("Adapter", cbAdapter.SelectedItem != null ?  cbAdapter.SelectedItem.ToString() :  String.Empty);
             SaveRegistrySetting("ECU", cbxEcuType.SelectedItem.ToString());
             SaveRegistrySetting("EnableLogging", cbEnableLogging.Checked);
             SaveRegistrySetting("OnlyPBus", cbOnlyPBus.Checked);
             SaveRegistrySetting("DisableCanCheck", cbDisableConnectionCheck.Checked);
-            SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem.ToString());
+            SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem != null ? cbxComSpeed.SelectedItem.ToString() : String.Empty);
 
-            logger.Trace("trionic8.Cleanup()");
             trionic8.Cleanup();
-            logger.Trace("trionic8.Cleanup()");
-            logger.Trace("trionic7.Cleanup()");
             trionic7.Cleanup();
-            logger.Trace("trionic7.Cleanup()");
             System.Windows.Forms.Application.Exit();
         }
 
