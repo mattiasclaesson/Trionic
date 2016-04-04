@@ -1455,10 +1455,12 @@ namespace TrionicCANFlasher
                     trionic7.UseFlasherOnDevice = false;
 
                     EnableUserInput(false);
+                    btnLogData.Enabled = true;
                     AddLogItem("Opening connection");
                     if (trionic7.openDevice())
                     {
                         StartBGWorkerLog(trionic7);
+                        btnLogData.Text = "Stop";
                     }
                 }
                 else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 ||
@@ -1467,14 +1469,15 @@ namespace TrionicCANFlasher
                     SetGenericOptions(trionic8);
 
                     EnableUserInput(false);
+                    btnLogData.Enabled = true;
                     AddLogItem("Opening connection");
                     trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                     if (trionic8.openDevice(false))
                     {
                         StartBGWorkerLog(trionic8);
+                        btnLogData.Text = "Stop";
                     }
                 }
-                btnLogData.Text = "Stop";
             }
             else
             {
