@@ -101,7 +101,7 @@ namespace TrionicCANLib.API
             kwpHandler = KWPHandler.getInstance();
 
             T7Flasher.setKWPHandler(kwpHandler);
-            flash = T7Flasher.getInstance();
+            flash = new T7Flasher();
             flash.onStatusChanged += flash_onStatusChanged;
         }
 

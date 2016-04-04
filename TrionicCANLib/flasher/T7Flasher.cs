@@ -34,15 +34,6 @@ namespace TrionicCANLib.Flasher
             m_kwpHandler = a_kwpHandler;
         }
 
-        public static T7Flasher getInstance()
-        {
-            if (m_kwpHandler == null)
-                throw new Exception("KWPHandler not set");
-            if (m_instance == null)
-                m_instance = new T7Flasher();
-            return m_instance;
-        }
-
         /// <summary>
         /// Constructor for T7Flasher.
         /// </summary>
@@ -490,6 +481,5 @@ namespace TrionicCANLib.Flasher
         private bool m_endThread = false;
         private UInt32 m_offset;
         private UInt32 m_length;
-        private static T7Flasher m_instance;
     }
 }
