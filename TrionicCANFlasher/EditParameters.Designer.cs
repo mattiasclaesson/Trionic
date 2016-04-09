@@ -155,7 +155,7 @@
             this.comboBoxDiag.Items.AddRange(new object[] {
             "None",
             "OBD2",
-            "OBD",
+            "EOBD",
             "LOBD"});
             this.comboBoxDiag.Location = new System.Drawing.Point(114, 122);
             this.comboBoxDiag.Name = "comboBoxDiag";
