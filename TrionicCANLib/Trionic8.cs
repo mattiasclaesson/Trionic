@@ -815,8 +815,6 @@ namespace TrionicCANLib.API
         // writeDataByIdentifier service 0x3B
         public bool WriteECUInfo(uint _pid, byte[] write)
         {
-            bool retval = false;
-
             if (canUsbDevice.isOpen())
             {
                 ulong cmd = 0x0000000000003B00 | _pid << 16;
@@ -833,33 +831,41 @@ namespace TrionicCANLib.API
                     CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                     return false;
                 }
-                CANMessage ECMresponse = new CANMessage();
-                ECMresponse = m_canListener.waitMessage(1000);
-                ulong rxdata = ECMresponse.getData();
-                // response should be 0000000000<pid>7B02
-                if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == _pid)
+
+                int tries = 0;
+                while (tries < 5)
                 {
-                    RequestSecurityAccess(0);
-                    SendDeviceControlMessage(0x16);
-                    retval = true;
-                }
-                else if (getCanData(rxdata, 1) == 0x7E)
-                {
-                    CastInfoEvent("0x3E Service TesterPresent response 0x7E received", ActivityType.ConvertingFile);
-                }
-                // Negative Response 0x7F Service <nrsi> <service> <returncode>
-                // Bug: this is never handled because its sent with id=0x7E8
-                else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
-                {
-                    string info = TranslateErrorCode(getCanData(rxdata, 3));
-                    CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
-                }
-                else
-                {
-                    CastInfoEvent("Error unexpected response: " + rxdata.ToString("X16"), ActivityType.ConvertingFile);
+                    CANMessage ECMresponse = new CANMessage();
+                    ECMresponse = m_canListener.waitMessage(1000);
+                    ulong rxdata = ECMresponse.getData();
+                    // response should be 0000000000<pid>7B02
+                    if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == _pid)
+                    {
+                        RequestSecurityAccess(0);
+                        SendDeviceControlMessage(0x16);
+                        return true;
+                    }
+                    else if (getCanData(rxdata, 1) == 0x7E)
+                    {
+                        //CastInfoEvent("0x3E Service TesterPresent response 0x7E received", ActivityType.ConvertingFile);
+                        tries++;
+                    }
+                    // Negative Response 0x7F Service <nrsi> <service> <returncode>
+                    // Bug: this is never handled because its sent with id=0x7E8
+                    else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
+                    {
+                        string info = TranslateErrorCode(getCanData(rxdata, 3));
+                        CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                        return false;
+                    }
+                    else
+                    {
+                        CastInfoEvent("Error unexpected response: " + rxdata.ToString("X16"), ActivityType.ConvertingFile);
+                        return false;
+                    }
                 }
             }
-            return retval;
+            return false;
         }
 
         private void SendAckMessageCIM()
