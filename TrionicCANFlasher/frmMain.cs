@@ -516,6 +516,9 @@ namespace TrionicCANFlasher
                         AddLogItem("PI 0x24         : " + trionic8.GetPI24());
                         AddLogItem("PI 0xA0         : " + trionic8.GetPIA0());
                         AddLogItem("PI 0x96         : " + trionic8.GetPI96());
+                        
+                        // On a non biopower bin this request seem to poison the session, do it last always!
+                        AddLogItem("E85                       : " + trionic8.GetE85Percentage().ToString("F2") + " %");
                     }
                 }
 
@@ -1185,6 +1188,13 @@ namespace TrionicCANFlasher
                 {
                     EditParameters pi = new EditParameters();
                     pi.setECU(ECU.TRIONIC8);
+
+                    float oil = trionic8.GetOilQuality();
+                    pi.Oil = oil;
+
+                    string vin = trionic8.GetVehicleVIN();
+                    pi.VIN = vin;
+
                     bool convertible, sai, highoutput, biopower, clutchStart;
                     TankType tankType;
                     DiagnosticType diagnosticType;
@@ -1200,17 +1210,12 @@ namespace TrionicCANFlasher
                     AddLogItem("Read fields");
                     AddLogItem("Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput + " Biopower:" + pi.Biopower + " DiagnosticType:" + pi.DiagnosticType + " ClutchStart:" + pi.ClutchStart + " TankType:" + pi.TankType);
 
-                    string vin = trionic8.GetVehicleVIN();
-                    pi.VIN = vin;
-
                     int topspeed = trionic8.GetTopSpeed();
                     pi.TopSpeed = topspeed;
 
+                    // On a non biopower this call seem to poison the session, do it last!
                     float e85 = trionic8.GetE85Percentage();
                     pi.E85 = e85;
-
-                    float oil = trionic8.GetOilQuality();
-                    pi.Oil = oil;
 
                     if (pi.ShowDialog() == DialogResult.OK)
                     {
@@ -1251,7 +1256,7 @@ namespace TrionicCANFlasher
                             }
                         }
 
-                        if (!pi.E85.Equals(e85))
+                        if (!pi.E85.ToString("F2").Equals(e85.ToString("F2")))
                         {
                             if(trionic8.SetE85Percentage(pi.E85))
                             {
@@ -1263,7 +1268,7 @@ namespace TrionicCANFlasher
                             }
                         }
 
-                        if (!pi.Oil.Equals(oil))
+                        if (!pi.Oil.ToString("F2").Equals(oil.ToString("F2")))
                         {
                             if(trionic8.SetOilQuality(pi.Oil))
                             {
