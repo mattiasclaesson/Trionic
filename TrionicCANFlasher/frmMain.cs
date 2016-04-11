@@ -1221,15 +1221,28 @@ namespace TrionicCANFlasher
                     {
                         if (!pi.Convertible.Equals(convertible) || !pi.SAI.Equals(sai) || !pi.Highoutput.Equals(highoutput) || !pi.Biopower.Equals(biopower) || !pi.ClutchStart.Equals(clutchStart) || !pi.DiagnosticType.Equals(diagnosticType) || !pi.TankType.Equals(tankType))
                         {
-                            if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput, pi.Biopower, pi.DiagnosticType,pi.ClutchStart,pi.TankType))
+                            AddLogItem("Detected changed values from user:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput + " Biopower:" + pi.Biopower + " DiagnosticType:" + pi.DiagnosticType + " ClutchStart:" + pi.ClutchStart + " TankType:" + pi.TankType);
+                            
+                            // Do a second read to make sure the first one was ok
+                            bool convertible2, sai2, highoutput2, biopower2, clutchStart2;
+                            TankType tankType2;
+                            DiagnosticType diagnosticType2;
+                            trionic8.GetPI01(out convertible2, out sai2, out highoutput2, out biopower2, out diagnosticType2, out clutchStart2, out tankType2, out rawPI01);
+                            if (convertible2.Equals(convertible) && sai2.Equals(sai) && highoutput2.Equals(highoutput) && biopower2.Equals(biopower) && clutchStart2.Equals(clutchStart) && diagnosticType2.Equals(diagnosticType) && tankType2.Equals(tankType))
                             {
-                                AddLogItem("Set fields successfull");
+                                if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput, pi.Biopower, pi.DiagnosticType, pi.ClutchStart, pi.TankType))
+                                {
+                                    AddLogItem("Set fields successfull");
+                                }
+                                else
+                                {
+                                    AddLogItem("Set fields failed");
+                                }
                             }
                             else
                             {
-                                AddLogItem("Set fields failed");
+                                AddLogItem("Set fields failed, verification read does not match");
                             }
-                            AddLogItem("Convertible:" + pi.Convertible + " SAI:" + pi.SAI + " HighOutput:" + pi.Highoutput + " Biopower:" + pi.Biopower + " DiagnosticType:" + pi.DiagnosticType + " ClutchStart:" + pi.ClutchStart + " TankType:" + pi.TankType);
                         }
 
                         if (!pi.VIN.Equals(vin))
