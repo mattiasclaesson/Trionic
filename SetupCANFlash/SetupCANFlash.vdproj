@@ -183,11 +183,6 @@
                     "Name" = "8:Microsoft .NET Framework 4 (x86 and x64)"
                     "ProductCode" = "8:.NETFramework,Version=v4.0"
                     }
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.Visual.C++.10.0.x86"
-                    {
-                    "Name" = "8:Visual C++ 2010 Runtime Libraries (x86)"
-                    "ProductCode" = "8:Microsoft.Visual.C++.10.0.x86"
-                    }
                     "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.Windows.Installer.3.1"
                     {
                     "Name" = "8:Windows Installer 3.1"
@@ -224,11 +219,6 @@
                     {
                     "Name" = "8:Microsoft .NET Framework 4 (x86 and x64)"
                     "ProductCode" = "8:.NETFramework,Version=v4.0"
-                    }
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.Visual.C++.10.0.x86"
-                    {
-                    "Name" = "8:Visual C++ 2010 Runtime Libraries (x86)"
-                    "ProductCode" = "8:Microsoft.Visual.C++.10.0.x86"
                     }
                     "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.Windows.Installer.3.1"
                     {
@@ -560,7 +550,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
         "ProductCode" = "8:{B685BAD6-2D52-45A5-A14B-5D07549BEFBC}"
-        "PackageCode" = "8:{14E092D6-725A-4B14-9627-DF2AD9560DA0}"
+        "PackageCode" = "8:{B73E0D29-1688-4CF1-95EC-0315DDC606B1}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
