@@ -63,6 +63,7 @@ namespace TrionicCANLib.API
 
         private System.Timers.Timer tmr = new System.Timers.Timer(2000);
         private Stopwatch sw = new Stopwatch();
+        private Stopwatch eraseSw = new Stopwatch();
 
         public Trionic8()
         {
@@ -4982,6 +4983,7 @@ namespace TrionicCANLib.API
             ulong cmd = 0x0000000000013406;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
+            eraseSw.Start();
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
@@ -4989,20 +4991,18 @@ namespace TrionicCANLib.API
             }
             bool eraseDone = false;
             int eraseCount = 0;
-            int waitCount = 0;
             while (!eraseDone)
             {
-                m_canListener.setupWaitMessage(0x7E8); // TEST ELM327 31082011
-                CANMessage response = new CANMessage();
-                response = m_canListener.waitMessage(500); // 1 seconds!
+                m_canListener.setupWaitMessage(0x7E8);
+                CANMessage response = m_canListener.waitMessage(500);
                 ulong data = response.getData();
                 if (data == 0)
                 {
-                    m_canListener.setupWaitMessage(0x311); // TEST ELM327 31082011
-                    response = new CANMessage();
-                    response = m_canListener.waitMessage(500); // 1 seconds!
+                    m_canListener.setupWaitMessage(0x311);
+                    response = m_canListener.waitMessage(500);
                     data = response.getData();
                 }
+                
                 // response will be 03 7F 34 78 00 00 00 00 a couple of times while erasing
                 if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x78)
                 {
@@ -5018,10 +5018,13 @@ namespace TrionicCANLib.API
                     if (recoveryMode) BroadcastKeepAlive();
                     else SendKeepAlive();
                     eraseDone = true;
+                    eraseSw.Stop();
+                    CastInfoEvent(String.Format("Erase completed after {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
                     return true;
                 }
                 else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x11)
                 {
+                    eraseSw.Stop();
                     CastInfoEvent("Erase cannot be performed", ActivityType.ErasingFlash);
                     return false;
                 }
@@ -5034,19 +5037,20 @@ namespace TrionicCANLib.API
                         else SendKeepAlive();
                     }
                 }
-                waitCount++;
-                if (waitCount > 72)
+
+                if (eraseSw.Elapsed.Seconds > 72)
                 {
+                    eraseSw.Stop();
                     if (canUsbDevice is CANELM327Device)
                     {
                         CastInfoEvent("Erase completed", ActivityType.ErasingFlash);
                         // ELM327 seem to be unable to wait long enough for this response
-                        // Instead we assume its finnished ok after 35 seconds
+                        // Instead we assume its finnished ok after 72 seconds
                         return true;
                     }
                     else
                     {
-                        CastInfoEvent("Erase timed out after 45 seconds", ActivityType.ErasingFlash);
+                        CastInfoEvent("Erase timed out after 72 seconds", ActivityType.ErasingFlash);
                         return false;
                     }
                 }
