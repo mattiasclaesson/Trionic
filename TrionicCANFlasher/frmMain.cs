@@ -326,7 +326,6 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
             {
                 btnRecoverECU.Enabled = false;
-                btnFlashECU.Enabled = false;
                 btnReadSRAM.Enabled = false;
                 btnRestoreT8.Enabled = false;
             }
@@ -1361,7 +1360,7 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    var args = new FlashReadArguments() { FileName = sfd.FileName, start = 0x1B0000, end = 0x1F0000 }; // Read more than only the calibration that start at 1c2000
+                                    var args = new FlashReadArguments() { FileName = sfd.FileName, start = 0x1C2000, end = 0x1E0000 };
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);

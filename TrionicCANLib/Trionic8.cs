@@ -54,6 +54,8 @@ namespace TrionicCANLib.API
         private bool _stallKeepAlive;
         private float _oilQualityRead = 0;
         private const int maxRetries = 100;
+        private const int timeoutP2ct = 150;
+        private const int timeoutP2ce = 5000;
 
         public bool StallKeepAlive
         {
@@ -215,7 +217,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             //ulong data = response.getData();
             Console.WriteLine("---" + response.getData().ToString("X16"));
             if (response.getCanData(1) == 0x67)
@@ -260,7 +262,7 @@ namespace TrionicCANLib.API
                             return false;
                         }
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         // is it ok or not
                         if (response.getCanData(1) == 0x67 && response.getCanData(2) == 0x02)
                         {
@@ -309,7 +311,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             //ulong data = response.getData();
             Console.WriteLine("---" + response.getData().ToString("X16"));
             if (response.getCanData(1) == 0x67)
@@ -372,7 +374,7 @@ namespace TrionicCANLib.API
                             return false;
                         }
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         Console.WriteLine("---" + response.getData().ToString("X16"));
                         // is it ok or not
                         if (response.getCanData(1) == 0x67 && (response.getCanData(2) == 0xFE || response.getCanData(2) == 0xFC || response.getCanData(2) == 0x02))
@@ -560,7 +562,7 @@ namespace TrionicCANLib.API
                 while (!_success && msgcnt < 2)
                 {
                     response = new CANMessage();
-                    response = m_canListener.waitMessage(1000);
+                    response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                     {} //RequestCorrectlyReceived-ResponsePending
@@ -593,7 +595,7 @@ namespace TrionicCANLib.API
                     {
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                         { } //RequestCorrectlyReceived-ResponsePending
                         else if (response.getCanData(1) != 0x7E)
@@ -655,7 +657,7 @@ namespace TrionicCANLib.API
                 while (!_success && msgcnt < 2)
                 {
                     response = new CANMessage();
-                    response = m_canListener.waitMessage(1000);
+                    response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                     { } //RequestCorrectlyReceived-ResponsePending
@@ -664,7 +666,7 @@ namespace TrionicCANLib.API
                 }
 
                 //CANMessage response = new CANMessage();
-                //response = m_canListener.waitMessage(1000);
+                //response = m_canListener.waitMessage(timeoutPTct);
                 //ulong data = response.getData();
                 if (response.getCanData(1) == 0x5A)
                 {
@@ -688,7 +690,7 @@ namespace TrionicCANLib.API
                     {
                         m_canListener.setupWaitMessage(0x645);
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                         { } //RequestCorrectlyReceived-ResponsePending
                         else if (response.getCanData(1) != 0x7E)
@@ -744,7 +746,7 @@ namespace TrionicCANLib.API
                 while (!_success && msgcnt < 2)
                 {
                     response = new CANMessage();
-                    response = m_canListener.waitMessage(1000);
+                    response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                     { } //RequestCorrectlyReceived-ResponsePending
@@ -756,7 +758,7 @@ namespace TrionicCANLib.API
                 }
 
                 //CANMessage response = new CANMessage();
-                //response = m_canListener.waitMessage(1000);
+                //response = m_canListener.waitMessage(timeoutPTct);
                 //ulong data = response.getData();
                 if (response.getCanData(1) == 0x5A)
                 {
@@ -781,7 +783,7 @@ namespace TrionicCANLib.API
                     {
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                         { } //RequestCorrectlyReceived-ResponsePending
                         else if (response.getCanData(1) != 0x7E)
@@ -837,7 +839,7 @@ namespace TrionicCANLib.API
                 while (tries < 5)
                 {
                     CANMessage ECMresponse = new CANMessage();
-                    ECMresponse = m_canListener.waitMessage(1000);
+                    ECMresponse = m_canListener.waitMessage(timeoutP2ct);
                     ulong rxdata = ECMresponse.getData();
                     // response should be 0000000000<pid>7B02
                     if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == _pid)
@@ -1088,7 +1090,7 @@ namespace TrionicCANLib.API
                 return 0f;
             }
             CANMessage response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             // 7A 00 52 04 00 16 DC 00
             // <dpid><6 datavalues>
             if (response.getCanData(0) == 0x7A)
@@ -1123,7 +1125,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             ulong rxdata = ECMresponse.getData();
             // response should be 000000000018EE02
             if (getCanData(rxdata, 1) == 0xEE && getCanData(rxdata, 2) == 0x18) // <EE positive response service id> <cpid>
@@ -1196,7 +1198,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage response62 = new CANMessage();
-            response62 = m_canListener.waitMessage(1000);
+            response62 = m_canListener.waitMessage(timeoutP2ct);
             Console.WriteLine("---" + response62.getData().ToString("X16"));
             //05E8	62	00	00	02	A7	01	7F	01
             if (response62.getCanData(0) == 0x62)
@@ -1225,7 +1227,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             Console.WriteLine("---" + response.getData().ToString("X16"));
             //05E8	02	02	A0	42	80	A0	00	00
             if (response.getCanData(0) == 0x02)
@@ -1413,7 +1415,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             ulong rxdata = ECMresponse.getData();
             // response should be 0000000000017B02
             if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x01)
@@ -1621,7 +1623,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(2000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             //CastInfoEvent("rx requestDownload: " + data.ToString("X16"), ActivityType.UploadingBootloader);
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x74)
@@ -1644,7 +1646,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x50)
             {
@@ -1669,7 +1671,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x50)
             {
@@ -1690,7 +1692,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x03 || getCanData(data, 1) != 0x7F)
             {
@@ -1712,7 +1714,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x60)
             {
@@ -1738,7 +1740,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x68)
             {
@@ -1764,7 +1766,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0xE2)
             {
@@ -1786,7 +1788,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
             {
@@ -1808,7 +1810,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0xE5)
             {
@@ -1912,7 +1914,7 @@ namespace TrionicCANLib.API
                         // now wait for 01 76 00 00 00 00 00 00 
                         CANMessage response = new CANMessage();
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         ulong datax = response.getData();
                         if (getCanData(datax, 0) != 0x01 || getCanData(datax, 1) != 0x76)
                         {
@@ -1953,7 +1955,7 @@ namespace TrionicCANLib.API
             }
             /*CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutPTct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x50)
             {
@@ -1975,7 +1977,7 @@ namespace TrionicCANLib.API
             }
             /*CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutPTct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x68)
             {
@@ -1997,7 +1999,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x68)
             {
@@ -2020,7 +2022,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             Console.WriteLine("Get programming state response: " + data.ToString("X16"));
             //\__ 00 00 03 11 02 e2 01 00 00 00 00 00 Magic reply, T8 replies with 0311 and programming state 01(recovery state?)
@@ -2045,7 +2047,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             //\__ 00 00 03 11 02 e2 01 00 00 00 00 00 Magic reply, T8 replies with 0311 and programming state 01(recovery state?)
             if (getCanData(data, 1) != 0xE2 || getCanData(data, 0) != 0x02)
@@ -2068,7 +2070,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0xE5)
             {
@@ -2113,7 +2115,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             //ulong data = response.getData();
             Console.WriteLine("---" + response.getData().ToString("X16"));
             if (response.getCanData(1) == 0x67)
@@ -2168,7 +2170,7 @@ namespace TrionicCANLib.API
                             return false;
                         }
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         // is it ok or not
                         if (response.getCanData(1) == 0x67 && (response.getCanData(2) == 0xFE || response.getCanData(2) == 0xFC || response.getCanData(2) == 0x02))
                         {
@@ -2208,7 +2210,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(2000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             //CastInfoEvent("rx requestDownload: " + data.ToString("X16"), ActivityType.UploadingBootloader);
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x74)
@@ -2232,7 +2234,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
             {
@@ -2268,7 +2270,7 @@ namespace TrionicCANLib.API
                 while (!_success && msgcnt < 2)
                 {
                     response = new CANMessage();
-                    response = m_canListener.waitMessage(1000);
+                    response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                     { } //RequestCorrectlyReceived-ResponsePending
@@ -2280,7 +2282,7 @@ namespace TrionicCANLib.API
                 }
 
                 //CANMessage response = new CANMessage();
-                //response = m_canListener.waitMessage(1000);
+                //response = m_canListener.waitMessage(timeoutPTct);
                 //ulong data = response.getData();
                 if (response.getCanData(1) == 0x5A)
                 {
@@ -2305,7 +2307,7 @@ namespace TrionicCANLib.API
                     {
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                         { } //RequestCorrectlyReceived-ResponsePending
                         else if (response.getCanData(1) != 0x7E)
@@ -2417,7 +2419,7 @@ namespace TrionicCANLib.API
                         // now wait for 01 76 00 00 00 00 00 00 
                         CANMessage response = new CANMessage();
                         response = new CANMessage();
-                        response = m_canListener.waitMessage(1000);
+                        response = m_canListener.waitMessage(timeoutP2ct);
                         ulong data = response.getData();
                         if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                         {
@@ -2500,7 +2502,7 @@ namespace TrionicCANLib.API
 
 
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
             CastInfoEvent("Waited for response: " + data.ToString("X8"), ActivityType.ConvertingFile);
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x74)
@@ -2529,7 +2531,7 @@ namespace TrionicCANLib.API
             // wait for response, should be 30 00 00 00 00 00 00 00
             data = 0;
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
             int numberOfFrames = (int)len / 7; // remnants?
             if (((int)len % 7) > 0) numberOfFrames++;
@@ -2559,7 +2561,7 @@ namespace TrionicCANLib.API
                 }
                 m_canListener.setupWaitMessage(0x7E8);
                 response = new CANMessage();
-                response = m_canListener.waitMessage(1000);
+                response = m_canListener.waitMessage(timeoutP2ct);
                 data = response.getData();
                 Console.WriteLine("received: " + data.ToString("X8"));
             }
@@ -2582,7 +2584,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             //Console.WriteLine("received KA: " + response.getCanData(1).ToString("X2"));
         }
 
@@ -2690,7 +2692,7 @@ namespace TrionicCANLib.API
             CANMessage response = new CANMessage();
             ulong data = 0;
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
 
             if (getCanData(data, 0) == 0x7E)
@@ -2746,7 +2748,7 @@ namespace TrionicCANLib.API
                     //response.setData(0);
                     //response.setID(0);
                     // m_canListener.setupWaitMessage(0x7E8);
-                    response = m_canListener.waitMessage(1000);
+                    response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
                     //AddToCanTrace("frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
                     if (frameIndex != getCanData(data, 0))
@@ -2844,7 +2846,7 @@ namespace TrionicCANLib.API
             CANMessage response = new CANMessage();
             ulong data = 0;
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
 
             if (getCanData(data, 0) == 0x7E)
@@ -2918,7 +2920,7 @@ namespace TrionicCANLib.API
                     //response.setData(0);
                     //response.setID(0);
                     // m_canListener.setupWaitMessage(0x7E8);
-                    response = m_canListener.waitMessage(1000);
+                    response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
                     //AddToCanTrace("frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
                     if (frameIndex != getCanData(data, 0))
@@ -2991,7 +2993,7 @@ namespace TrionicCANLib.API
             CANMessage response = new CANMessage();
             ulong data = 0;
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
             retval = Convert.ToInt32(getCanData(data, 3)) * 256;
             retval += Convert.ToInt32(getCanData(data, 4));
@@ -3152,7 +3154,7 @@ namespace TrionicCANLib.API
             // 7E8 03 7F A9 78 00 00 00 00
             // or the first DTC
             // 5E8 81 07 03 00 7F 00 00 00
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
 
             if (response.getID() == 0x5E8 && response.getCanData(0) == 0x81)
@@ -3165,7 +3167,7 @@ namespace TrionicCANLib.API
                 while (more_errors)
                 {
                     CANMessage responseDTC = new CANMessage();
-                    responseDTC = m_canListener.waitMessage(1000);
+                    responseDTC = m_canListener.waitMessage(timeoutP2ct);
                     more_errors = addDTC(responseDTC);
                 }
             }
@@ -3179,7 +3181,7 @@ namespace TrionicCANLib.API
                 while (more_errors)
                 {
                     CANMessage responseDTC = new CANMessage();
-                    responseDTC = m_canListener.waitMessage(1000);
+                    responseDTC = m_canListener.waitMessage(timeoutP2ct);
                     more_errors = addDTC(responseDTC);
                 }
             }
@@ -3216,7 +3218,7 @@ namespace TrionicCANLib.API
             ulong data = 0;
             // Wait for response 
             // 7E8 01 44 00 00 00 00 00 00
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
 
             // Positive Response
@@ -3229,7 +3231,7 @@ namespace TrionicCANLib.API
             {
                 // Wait one more second
                 m_canListener.setupWaitMessage(0x7E8);
-                m_canListener.waitMessage(1000);
+                m_canListener.waitMessage(timeoutP2ct);
                 if (response.getID() == 0x7E8 && response.getCanData(1) == 0x44)
                 {
                     retval = true;
@@ -3277,7 +3279,7 @@ namespace TrionicCANLib.API
             ulong data = 0;
             // Wait for response 
             // 545 03 7F A9 78 00 00 00 00
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
 
             if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78)
@@ -3289,7 +3291,7 @@ namespace TrionicCANLib.API
                 while (more_errors)
                 {
                     CANMessage responseDTC = new CANMessage();
-                    responseDTC = m_canListener.waitMessage(1000);
+                    responseDTC = m_canListener.waitMessage(timeoutP2ct);
 
                     // Read until response:   No more errors, status == 0xFF
                     int dtcStatus = Convert.ToInt32(responseDTC.getCanData(4));
@@ -3347,7 +3349,7 @@ namespace TrionicCANLib.API
                 return;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
         }
 
         private bool ReadDataByPacketIdentifier(byte command, uint responseID)
@@ -3365,7 +3367,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             return true;
         }
 
@@ -3383,7 +3385,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             Console.WriteLine("Get programming state response: " + data.ToString("X16"));
             //\__ 00 00 03 11 02 e2 01 00 00 00 00 00 Magic reply, T8 replies with 0311 and programming state 01(recovery state?)
@@ -3652,7 +3654,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             ulong rxdata = ECMresponse.getData();
             m_canListener.setupWaitMessage(0x645);
             int waitMsgCount = 0;
@@ -3660,7 +3662,7 @@ namespace TrionicCANLib.API
             {
 
                 CANMessage CIMresponse = new CANMessage();
-                CIMresponse = m_canListener.waitMessage(1000);
+                CIMresponse = m_canListener.waitMessage(timeoutP2ct);
                 rxdata = CIMresponse.getData();
                 if (getCanData(rxdata, 1) == 0x44)
                 {
@@ -3693,7 +3695,7 @@ namespace TrionicCANLib.API
             {
 
                 CANMessage ECMresponse = new CANMessage();
-                ECMresponse = m_canListener.waitMessage(1000);
+                ECMresponse = m_canListener.waitMessage(timeoutP2ct);
                 ulong rxdata = ECMresponse.getData();
                 // response might be 00000000783B7F03 for some time
                 // final result should be 0000000000637B02
@@ -3781,7 +3783,7 @@ namespace TrionicCANLib.API
                 return;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
         }
 
         private void DynamicallyDefineLocalIdentifier(byte id, byte type)
@@ -3803,7 +3805,7 @@ namespace TrionicCANLib.API
                 return;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             //ulong rxdata = ECMresponse.getData();
         }
         private ulong AddByteToCommand(ulong cmd, byte b2add, int position)
@@ -3862,7 +3864,7 @@ namespace TrionicCANLib.API
                 return false;
             }
 
-            ulong rxdata = m_canListener.waitMessage(1000).getData();
+            ulong rxdata = m_canListener.waitMessage(timeoutP2ct).getData();
             if (rxdata == 0x0000000000000030)
             {
                 //2020202020202021
@@ -3893,7 +3895,7 @@ namespace TrionicCANLib.API
                 // wait for ack
                 //0000000000907B02
 
-                rxdata = m_canListener.waitMessage(1000).getData();
+                rxdata = m_canListener.waitMessage(timeoutP2ct).getData();
                 if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x90)
                 {
                     return true;
@@ -3916,7 +3918,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             ulong rxdata = ECMresponse.getData();
             if (getCanData(rxdata, 1) == 0xEE && getCanData(rxdata, 2) == 0x6E)
             {
@@ -3939,7 +3941,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             ulong rxdata = ECMresponse.getData();
             if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x60)
             {
@@ -3962,7 +3964,7 @@ namespace TrionicCANLib.API
                 return false;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             ulong rxdata = ECMresponse.getData();
             if (getCanData(rxdata, 1) == 0xEE && getCanData(rxdata, 2) == 0x60)
             {
@@ -3998,10 +4000,10 @@ namespace TrionicCANLib.API
                 return;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             m_canListener.setupWaitMessage(0x645);
             CANMessage CIMresponse = new CANMessage();
-            CIMresponse = m_canListener.waitMessage(1000);
+            CIMresponse = m_canListener.waitMessage(timeoutP2ct);
         }
 
         private void BroadcastRequestDiagnoseID()
@@ -4016,10 +4018,10 @@ namespace TrionicCANLib.API
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             m_canListener.setupWaitMessage(0x645);
             CANMessage CIMresponse = new CANMessage();
-            CIMresponse = m_canListener.waitMessage(1000);
+            CIMresponse = m_canListener.waitMessage(timeoutP2ct);
             // wait for response of CIM and ECU
         }
 
@@ -4037,7 +4039,7 @@ namespace TrionicCANLib.API
                 return;
             }
             CANMessage ECMresponse = new CANMessage();
-            ECMresponse = m_canListener.waitMessage(1000);
+            ECMresponse = m_canListener.waitMessage(timeoutP2ct);
             //07E8 00000084019A5A04
             //0645 00000008039A5A04
         }
@@ -4091,7 +4093,7 @@ namespace TrionicCANLib.API
                                 Thread.Sleep(m_sleepTime);
 
                         }
-                        var data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                        var data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
                         if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                         {
                             return false;
@@ -4124,7 +4126,7 @@ namespace TrionicCANLib.API
                         Thread.Sleep(m_sleepTime);
 
                     // now wait for 01 76 00 00 00 00 00 00 
-                    CANMessage response = m_canListener.waitMessage(1000, 0x7E8);
+                    CANMessage response = m_canListener.waitMessage(timeoutP2ct, 0x7E8);
                     ulong data = response.getData();
                     if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                     {
@@ -4189,7 +4191,7 @@ namespace TrionicCANLib.API
                             Thread.Sleep(m_sleepTime);
                         }
                         // now wait for 01 76 00 00 00 00 00 00 
-                        ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                        ulong data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
                         if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                         {
                             return false;
@@ -4222,7 +4224,7 @@ namespace TrionicCANLib.API
                     if (m_sleepTime > 0)
                         Thread.Sleep(m_sleepTime);
 
-                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                    ulong data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
                     if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                     {
                         return false;
@@ -4289,7 +4291,7 @@ namespace TrionicCANLib.API
                                 Thread.Sleep(m_sleepTime);
                         }
                         // now wait for 01 76 00 00 00 00 00 00 
-                        ulong data = m_canListener.waitMessage(1000, 0x311).getData();
+                        ulong data = m_canListener.waitMessage(timeoutP2ct, 0x311).getData();
                         if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                         {
                             return false;
@@ -4324,7 +4326,7 @@ namespace TrionicCANLib.API
                         Thread.Sleep(m_sleepTime);
 
                     // now wait for 01 76 00 00 00 00 00 00 
-                    ulong data = m_canListener.waitMessage(1000, 0x311).getData();
+                    ulong data = m_canListener.waitMessage(timeoutP2ct, 0x311).getData();
                     if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                     {
                         return false;
@@ -4499,7 +4501,7 @@ namespace TrionicCANLib.API
                             Thread.Sleep(m_sleepTime);
                     }
                     // now wait for 01 76 00 00 00 00 00 00 
-                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                    ulong data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
                     if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                     {
                         _stallKeepAlive = false;
@@ -4661,7 +4663,7 @@ namespace TrionicCANLib.API
                     Application.DoEvents();
 
                     // now wait for 01 76 00 00 00 00 00 00 
-                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
+                    ulong data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
                     if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                     {
                         CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
@@ -5086,7 +5088,7 @@ namespace TrionicCANLib.API
 
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             //Console.WriteLine("Received in SendTransferData: " + data.ToString("X16"));
             if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
@@ -5123,7 +5125,7 @@ namespace TrionicCANLib.API
 
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             //Console.WriteLine("Received in SendTransferData: " + data.ToString("X16"));
             if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
@@ -5290,7 +5292,7 @@ namespace TrionicCANLib.API
             CANMessage response = new CANMessage();
             ulong data = 0;
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             data = response.getData();
 
             if (getCanData(data, 0) == 0x7E)
@@ -5366,7 +5368,7 @@ namespace TrionicCANLib.API
                     //response.setData(0);
                     //response.setID(0);
                     // m_canListener.setupWaitMessage(0x7E8);
-                    response = m_canListener.waitMessage(1000);
+                    response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
                     logger.Debug("frame " + frameIndex.ToString("X2") + ": " + data.ToString("X16"));
                     if (frameIndex != getCanData(data, 0))
@@ -5583,9 +5585,10 @@ namespace TrionicCANLib.API
         {
             int startAddress = 0x1C2000;
             int start = startAddress;
-            int end = 0x1F0000;
+            int end = 0x1E0000;
             int range = end - start;
-            int blockSize = 0x80; // defined in bootloader... keep it that way!
+            int blockSize = 0xF8;
+            int bufsize = 0xFF;
             int bufpnt = startAddress;
             int saved_progress = 0;
             byte[] filebytes = File.ReadAllBytes(filename);
@@ -5599,26 +5602,27 @@ namespace TrionicCANLib.API
                     saved_progress = percentage;
                 }
 
-                byte[] data2Send = new byte[blockSize];
+                if (end - bufpnt < blockSize)
+                {
+                    blockSize = end - bufpnt;
+                }
+                byte[] data2Send = new byte[bufsize];
                 for (int j = 0; j < blockSize; j++)
                 {
-                    data2Send[bufpnt] = filebytes[j];
+                    data2Send[j] = filebytes[bufpnt];
                     bufpnt++;
                 }
-                int length = blockSize;
-                //if (blockNumber == 0xF50) length = 0xE6;
-                //TODO check last length...and detect differently
 
                 sw.Reset();
                 sw.Start();
-                if (SendTransferDataME96(length, startAddress, 0x7E8))
+                if (SendTransferDataME96(blockSize, startAddress, 0x7E8, data2Send[0]))
                 {
                     canUsbDevice.RequestDeviceReady();
                     // calculate number of frames
-                    int numberOfFrames = (int)data2Send.Length / 7; // remnants?
-                    if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
+                    int numberOfFrames = (int)(blockSize - 1) / 7; // remnants?
+                    if (((int)(blockSize - 1) % 7) > 0) numberOfFrames++;
                     byte iFrameNumber = 0x21;
-                    int txpnt = 0;
+                    int txpnt = 1; // First data byte allready sent in SendTransferData
                     CANMessage msg = new CANMessage(0x7E0, 0, 8);
                     for (int frame = 0; frame < numberOfFrames; frame++)
                     {
@@ -5641,13 +5645,20 @@ namespace TrionicCANLib.API
                     }
                     Application.DoEvents();
 
-                    // now wait for 01 76 00 00 00 00 00 00 
-                    ulong data = m_canListener.waitMessage(1000, 0x7E8).getData();
-                    if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                    ulong data = m_canListener.waitMessage(timeoutP2ce, 0x7E8).getData();
+                    while (true)
                     {
-                        CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
-                        _stallKeepAlive = false;
-                        return false;
+                        // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
+                        if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x36 && getCanData(data, 3) == 0x78)
+                        {
+                            CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                        }
+                        //wait for 01 76 00 00 00 00 00 00 
+                        else if (getCanData(data, 0) == 0x01 || getCanData(data, 1) == 0x76)
+                        {
+                            break;
+                        }
+                        data = m_canListener.waitMessage(timeoutP2ce, 0x7E8).getData();
                     }
                     canUsbDevice.RequestDeviceReady();
                     SendKeepAlive();
@@ -5656,24 +5667,28 @@ namespace TrionicCANLib.API
 
                 startAddress += blockSize;
             }
+            CastProgressWriteEvent(100);
             return true;
         }
 
-        private bool SendTransferDataME96(int length, int address, uint waitforResponseID)
+        private bool SendTransferDataME96(int length, int address, uint waitforResponseID, byte firstByteToSend )
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
-            ulong cmd = 0x000000000036FD10; // 0x36 = transferData
+            ulong cmd = 0x0000000000360010; // 0x36 = transferData
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
             addressHigh /= 0x10000;
             ulong addressMiddle = (uint)address & 0x000000000000FF00;
             addressMiddle /= 0x100;
             ulong addressLow = (uint)address & 0x00000000000000FF;
-            ulong len = (ulong)length;
+            ulong len = (ulong)length + 5;  // The extra 5 comes from the Service ID plus the sub-function parameter byte plus the 3 byte startingAddress.
+            ulong payload = (ulong)firstByteToSend;
 
-            cmd |= (addressLow * 0x100000000000000);
-            cmd |= (addressMiddle * 0x1000000000000);
-            cmd |= (addressHigh * 0x10000000000);
+            cmd |= (payload * 0x100000000000000);
+            cmd |= (addressLow * 0x1000000000000);
+            cmd |= (addressMiddle * 0x10000000000);
+            cmd |= (addressHigh * 0x100000000);
             cmd |= (len * 0x100);
+
             Console.WriteLine("send: " + cmd.ToString("X16"));
 
             msg.setData(cmd);
@@ -5686,7 +5701,7 @@ namespace TrionicCANLib.API
 
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(1000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             Console.WriteLine("Received in SendTransferData: " + data.ToString("X16"));
             if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
