@@ -95,6 +95,7 @@
   <ItemGroup>
     <Compile Include="Checksum\ChecksumT8.cs" />
     <Compile Include="Checksum\ChecksumResult.cs" />
+    <Compile Include="BootloaderFromFile.cs" />
     <Compile Include="FileTools.cs" />
     <Compile Include="EnumHelper.cs" />
     <Compile Include="CAN\CANMXWiFiDevice.cs" />
