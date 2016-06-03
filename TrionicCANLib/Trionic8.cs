@@ -4047,7 +4047,11 @@ namespace TrionicCANLib.API
         private bool UploadBootloaderRead()
         {
             int startAddress = 0x102400;
+#if (DEBUG)
+            BootloaderFromFile btloaderdata = new BootloaderFromFile();
+#else
             Bootloader btloaderdata = new Bootloader();
+#endif
 
             int txpnt = 0;
             byte iFrameNumber = 0x21;
@@ -4148,7 +4152,11 @@ namespace TrionicCANLib.API
         private bool UploadBootloaderWrite()
         {
             int startAddress = 0x102400;
+#if (DEBUG)
+            BootloaderFromFile btloaderdata = new BootloaderFromFile();
+#else
             Bootloader btloaderdata = new Bootloader();
+#endif
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             int saved_progress = 0;
