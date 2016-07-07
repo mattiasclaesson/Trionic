@@ -4048,7 +4048,8 @@ namespace TrionicCANLib.API
         {
             int startAddress = 0x102400;
 #if (DEBUG)
-            BootloaderFromFile btloaderdata = new BootloaderFromFile();
+            //BootloaderFromFile btloaderdata = new BootloaderFromFile();
+            Bootloader btloaderdata = new Bootloader();
 #else
             Bootloader btloaderdata = new Bootloader();
 #endif
@@ -4153,7 +4154,8 @@ namespace TrionicCANLib.API
         {
             int startAddress = 0x102400;
 #if (DEBUG)
-            BootloaderFromFile btloaderdata = new BootloaderFromFile();
+            //BootloaderFromFile btloaderdata = new BootloaderFromFile();
+            Bootloader btloaderdata = new Bootloader();
 #else
             Bootloader btloaderdata = new Bootloader();
 #endif
