@@ -323,7 +323,7 @@ namespace TrionicCANLib.CAN
             }
             else
             {
-                logger.Debug(String.Format("tx failed with status {2}", writeStatus));
+                logger.Debug(String.Format("tx failed with status {0}", writeStatus));
                 return false;
             }
         }
