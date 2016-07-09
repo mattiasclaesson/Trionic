@@ -14,8 +14,8 @@ namespace TrionicCANLib.CAN
     public class KvaserCANDevice : ICANDevice
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
-        int handleWrite;
-        int handleRead;
+        int handleWrite = -1;
+        int handleRead = -1;
 
         Canlib.canStatus writeStatus;
 
@@ -277,8 +277,8 @@ namespace TrionicCANLib.CAN
                 logger.Debug("canlibCLSNET.Canlib.canClose(handleRead)");
             }
 
-            handleWrite = 0;
-            handleRead = 0;
+            handleWrite = -1;
+            handleRead = -1;
             if (Canlib.canStatus.canOK == statusBusOff1 && Canlib.canStatus.canOK == statusBusOff2 &&
                 Canlib.canStatus.canOK == statusCanClose1 && Canlib.canStatus.canOK == statusCanClose2)
             {
