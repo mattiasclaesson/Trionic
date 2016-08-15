@@ -5664,6 +5664,10 @@ namespace TrionicCANLib.API
                         {
                             CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
                         }
+                        else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x36)
+                        {
+                            CastInfoEvent("Error: " + TranslateErrorCode(getCanData(data, 3)), ActivityType.ConvertingFile);
+                        }
                         //wait for 01 76 00 00 00 00 00 00 
                         else if (getCanData(data, 0) == 0x01 || getCanData(data, 1) == 0x76)
                         {
