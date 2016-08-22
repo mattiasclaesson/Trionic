@@ -67,10 +67,6 @@ namespace TrionicCANLib.API
             {
                 canUsbDevice = new KvaserCANDevice();
             }
-            else if (adapterType == CANBusAdapter.MXWIFI)
-            {
-                canUsbDevice = new CANMXWiFiDevice() { ForcedBaudrate = m_forcedBaudrate };
-            }
 
             if (canUsbDevice != null)
             {

@@ -98,7 +98,6 @@
     <Compile Include="BootloaderFromFile.cs" />
     <Compile Include="FileTools.cs" />
     <Compile Include="EnumHelper.cs" />
-    <Compile Include="CAN\CANMXWiFiDevice.cs" />
     <Compile Include="CAN\KvaserCANDevice.cs" />
     <Compile Include="Firmware\FileME96.cs" />
     <Compile Include="Firmware\FileT7.cs" />
@@ -120,8 +119,6 @@
     <Compile Include="CAN\ICANListener.cs" />
     <Compile Include="CAN\Just4TrionicDevice.cs" />
     <Compile Include="CAN\LPCCANDevice.cs" />
-    <Compile Include="TelnetClient\ScriptableCommunicator.cs" />
-    <Compile Include="TelnetClient\TelnetSocket.cs" />
     <Compile Include="Trionic7.cs" />
     <Compile Include="flasher\IFlasher.cs" />
     <Compile Include="flasher\T7CombiFlasher.cs" />

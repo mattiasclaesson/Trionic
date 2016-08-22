@@ -49,7 +49,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
             this.documentation = new System.Windows.Forms.LinkLabel();
-            this.cbELM327Kline = new System.Windows.Forms.CheckBox();
             this.btnEditParameters = new System.Windows.Forms.Button();
             this.btnReadECUcalibration = new System.Windows.Forms.Button();
             this.cbAdapter = new System.Windows.Forms.ComboBox();
@@ -170,8 +169,7 @@
             "CombiAdapter",
             "ELM327 v1.3 or higher",
             "Just4Trionic",
-            "Kvaser",
-            "OBDLink MX WiFi"});
+            "Kvaser"});
             this.cbxAdapterType.Location = new System.Drawing.Point(863, 220);
             this.cbxAdapterType.Name = "cbxAdapterType";
             this.cbxAdapterType.Size = new System.Drawing.Size(150, 21);
@@ -297,18 +295,6 @@
             this.documentation.Text = "View documentation";
             this.documentation.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.documentation_LinkClicked);
             // 
-            // cbELM327Kline
-            // 
-            this.cbELM327Kline.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbELM327Kline.AutoSize = true;
-            this.cbELM327Kline.Location = new System.Drawing.Point(863, 370);
-            this.cbELM327Kline.Name = "cbELM327Kline";
-            this.cbELM327Kline.Size = new System.Drawing.Size(99, 17);
-            this.cbELM327Kline.TabIndex = 62;
-            this.cbELM327Kline.Text = "ELM327 K-Line";
-            this.cbELM327Kline.UseVisualStyleBackColor = true;
-            this.cbELM327Kline.Visible = false;
-            // 
             // btnEditParameters
             // 
             this.btnEditParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -347,7 +333,7 @@
             this.cbUseFlasherOnDevice.AutoSize = true;
             this.cbUseFlasherOnDevice.Checked = true;
             this.cbUseFlasherOnDevice.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(721, 301);
+            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(863, 370);
             this.cbUseFlasherOnDevice.Name = "cbUseFlasherOnDevice";
             this.cbUseFlasherOnDevice.Size = new System.Drawing.Size(129, 17);
             this.cbUseFlasherOnDevice.TabIndex = 66;
@@ -388,7 +374,6 @@
             this.Controls.Add(this.cbAdapter);
             this.Controls.Add(this.btnReadECUcalibration);
             this.Controls.Add(this.btnEditParameters);
-            this.Controls.Add(this.cbELM327Kline);
             this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.cbxComSpeed);
@@ -443,7 +428,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cbxComSpeed;
         private System.Windows.Forms.LinkLabel documentation;
-        private System.Windows.Forms.CheckBox cbELM327Kline;
         private System.Windows.Forms.Button btnEditParameters;
         private System.Windows.Forms.Button btnReadECUcalibration;
         private System.Windows.Forms.ComboBox cbAdapter;

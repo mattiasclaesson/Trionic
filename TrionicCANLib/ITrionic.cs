@@ -120,10 +120,6 @@ namespace TrionicCANLib.API
                 {
                     return KvaserCANDevice.GetAdapterNames();
                 }
-                else if (adapterType == CANBusAdapter.MXWIFI)
-                {
-                    return CANMXWiFiDevice.GetAdapterNames();
-                }
             }
             catch(Exception ex)
             {
