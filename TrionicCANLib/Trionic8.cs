@@ -4992,6 +4992,7 @@ namespace TrionicCANLib.API
             ulong cmd = 0x0000000000013406;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
+            eraseSw.Reset();
             eraseSw.Start();
             if (!canUsbDevice.sendMessage(msg))
             {
