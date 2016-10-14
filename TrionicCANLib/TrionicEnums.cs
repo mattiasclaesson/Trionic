@@ -37,9 +37,7 @@ namespace TrionicCANLib.API
         [Description("Just4Trionic")]
         JUST4TRIONIC,
         [Description("Kvaser")]
-        KVASER,
-        [Description("OBDLink MX WiFi")]
-        MXWIFI
+        KVASER
     };
 
     public enum ECU : int

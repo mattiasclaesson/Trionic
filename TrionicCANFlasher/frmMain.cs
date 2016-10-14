@@ -297,8 +297,7 @@ namespace TrionicCANFlasher
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.MXWIFI)
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL)
             {
                 cbAdapter.Enabled = enable;
             }
@@ -307,8 +306,7 @@ namespace TrionicCANFlasher
                 cbAdapter.Enabled = false;
             }
 
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.MXWIFI)
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
             {
                 cbxComSpeed.Enabled = enable;
             }
@@ -764,9 +762,6 @@ namespace TrionicCANFlasher
                             break;
                     }
                     break;
-                case (int)CANBusAdapter.MXWIFI:
-                    trionic.ForcedBaudrate = Convert.ToInt32(cbxComSpeed.Text);
-                    break;
                 default:
                     break;
             }
@@ -1001,35 +996,6 @@ namespace TrionicCANFlasher
 
         private void cbxAdapterType_SelectedIndexChanged(object sender, EventArgs e)
         {
-
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.MXWIFI)
-            {
-                label5.Text = "IP Address";
-                label6.Text = "Port";
-                cbxComSpeed.BeginUpdate();
-                cbxComSpeed.DropDownStyle = ComboBoxStyle.Simple;
-                cbxComSpeed.Items.Clear();
-                cbxComSpeed.Items.Insert(0, "35000");
-                cbxComSpeed.SelectedIndex = 0;
-                cbxComSpeed.EndUpdate();
-
-            }
-            else
-            {
-                label5.Text = "Adapter";
-                label6.Text = "Com Speed";
-                int currentIndex = cbxComSpeed.SelectedIndex;
-                cbxComSpeed.BeginUpdate();
-                cbxComSpeed.DropDownStyle = ComboBoxStyle.DropDownList;
-                cbxComSpeed.Items.Clear();
-                cbxComSpeed.Items.Insert((int)ComSpeed.S115200, "115200");
-                cbxComSpeed.Items.Insert((int)ComSpeed.S230400, "230400");
-                cbxComSpeed.Items.Insert((int)ComSpeed.S1Mbit, "1Mbit");
-                cbxComSpeed.Items.Insert((int)ComSpeed.S2Mbit, "2Mbit");
-                cbxComSpeed.SelectedIndex = currentIndex;
-                cbxComSpeed.EndUpdate();
-            }
-
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
             {
                 cbxComSpeed.SelectedIndex = (int)ComSpeed.S115200;
