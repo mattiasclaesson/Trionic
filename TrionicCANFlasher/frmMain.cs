@@ -1460,7 +1460,7 @@ namespace TrionicCANFlasher
                 // Force logging on
                 LogManager.EnableLogging();
                 dtstart = DateTime.Now;
-                
+
                 if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                 {
                     SetGenericOptions(trionic7);
@@ -1473,6 +1473,13 @@ namespace TrionicCANFlasher
                     {
                         StartBGWorkerLog(trionic7);
                         btnLogData.Text = "Stop";
+                    }
+                    else
+                    {
+                        // Reset logging to setting
+                        UpdateLogManager();
+                        btnLogData.Text = "Log Data";
+                        EnableUserInput(true);
                     }
                 }
                 else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 ||
@@ -1488,6 +1495,13 @@ namespace TrionicCANFlasher
                     {
                         StartBGWorkerLog(trionic8);
                         btnLogData.Text = "Stop";
+                    }
+                    else
+                    {
+                        // Reset logging to setting
+                        UpdateLogManager();
+                        btnLogData.Text = "Log Data";
+                        EnableUserInput(true);
                     }
                 }
             }

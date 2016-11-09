@@ -57,13 +57,13 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7B58566DB4AE4974A67199ACD5BC18ED"
+        "MsmKey" = "8:_7CACF0603656C794259DD5162980944A"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_7B58566DB4AE4974A67199ACD5BC18ED"
+        "MsmKey" = "8:_7CACF0603656C794259DD5162980944A"
         "OwnerKey" = "8:_BAFCC793B41C6A448DEA42B07F4E19EE"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -148,7 +148,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_7B58566DB4AE4974A67199ACD5BC18ED"
+        "OwnerKey" = "8:_7CACF0603656C794259DD5162980944A"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -349,14 +349,14 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7B58566DB4AE4974A67199ACD5BC18ED"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7CACF0603656C794259DD5162980944A"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NLog, Version=3.2.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_7B58566DB4AE4974A67199ACD5BC18ED"
+                    "_7CACF0603656C794259DD5162980944A"
                     {
                     "Name" = "8:NLog.dll"
                     "Attributes" = "3:512"
@@ -466,7 +466,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.30.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.32.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_BAFCC793B41C6A448DEA42B07F4E19EE"
@@ -549,15 +549,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{EDAC0237-CE4C-4094-9C05-3B864DAF4D0E}"
-        "PackageCode" = "8:{B63E8BC9-B14C-4AEC-A62E-F655B845AC7B}"
+        "ProductCode" = "8:{05F3F939-4E78-4DCA-9B0E-78D2D7CA3FC5}"
+        "PackageCode" = "8:{E296FA3B-43B4-4BB0-87FE-BCB543D81DAE}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.1.42"
+        "ProductVersion" = "8:0.1.43"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://www.txsuite.org"
