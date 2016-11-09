@@ -1,5 +1,5 @@
 call SetupCANFlash\version.bat
-devenv Trionic.sln /Rebuild Release /project SetupCANFlash
+devenv TrionicCanFlasher.sln /Rebuild Release /project SetupCANFlash
 
 pushd SetupCANFlash\Release\
 "C:\Program Files (x86)\hashutils-1.3.0-redist\bin.x86-32\md5sum.exe" TrionicCANFlash.msi >> TrionicCANFlash.md5
