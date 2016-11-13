@@ -87,7 +87,7 @@ namespace TrionicCANFlasher
         private void btnFlashEcu_Click(object sender, EventArgs e)
         {
             DialogResult result = DialogResult.Cancel;
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 || cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96 || cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP/* || cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_LE */)
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 || cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96 || cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP/* || cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_LEG */)
                 result = MessageBox.Show("Attach a charger. Now turn key to ON to wakeup ECU.",
                 "Critical Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
