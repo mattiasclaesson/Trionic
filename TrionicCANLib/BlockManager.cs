@@ -7,7 +7,13 @@ namespace TrionicCANLib
 {
     public class BlockManager
     {
+        private uint checksum32 = 0;
         private int _blockNumber = 0;
+
+        // Legion mod
+        private long Len = 0;
+
+
 
         private string _filename = string.Empty;
         byte[] filebytes = null;
@@ -17,8 +23,11 @@ namespace TrionicCANLib
             if (File.Exists(filename))
             {
                 FileInfo fi = new FileInfo(filename);
-                if (fi.Length == 0x100000)
+                // Legion mod
+                // if (fi.Length == 0x100000) 
+                if (fi.Length == 0x100000 || fi.Length == 0x40100)
                 {
+                    Len = fi.Length; /* I really hope this won't break stuff / Christian */
                     _filename = filename;
                     filebytes = File.ReadAllBytes(_filename);
                     return true;
@@ -72,5 +81,65 @@ namespace TrionicCANLib
             lastAddress += 0x200;
             return (lastAddress - 0x020000) / 0xEA;
         }
+
+        // Legion hacks
+        public byte[] GetNextBlock_128()
+        {
+            byte[] returnarray = GetCurrentBlock_128();
+            _blockNumber++;
+            return returnarray;
+        }
+
+        public byte[] GetCurrentBlock_128()
+        {
+            int address = 0 + _blockNumber * 0x80;
+
+            ByteCoder bc = new ByteCoder();
+
+            byte[] array = new byte[0x86];
+            bc.ResetCounter();
+            for (int byteCount = 0; byteCount < 0x80; byteCount++)
+            {
+                array[byteCount] = bc.codeByte(filebytes[address++]);
+            }
+            return array;
+        }
+
+
+        public byte FFblock(int address)
+        {
+            int count = 0;
+
+            for (int byteCount = 0; byteCount < 0x80; byteCount++)
+            {
+                if (address == Len)
+                    break;
+                if (filebytes[address] == 0xFF)
+                    count++;
+
+                address++;
+            }
+
+            if (count == 0x80)
+                return 1;
+            else
+                return 0;
+        }
+
+        public uint GetChecksum32()
+        {
+            checksum32 = 0;
+            long i;
+
+            for (i = 0; i < Len; i++)
+                checksum32 += (byte)filebytes[i];
+
+            return checksum32;
+        }
+
+
+
+
+
     }
 }

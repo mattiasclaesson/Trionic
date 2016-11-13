@@ -225,7 +225,9 @@
             this.cbxEcuType.Items.AddRange(new object[] {
             "Trionic 7",
             "Trionic 8",
-            "Bosch ME9.6"});
+            "Bosch ME9.6",
+            "Trionic 8: MCP (Experimental)",
+            "Trionic 8 (Exp, Dangerous)"});
             this.cbxEcuType.Location = new System.Drawing.Point(863, 193);
             this.cbxEcuType.Name = "cbxEcuType";
             this.cbxEcuType.Size = new System.Drawing.Size(150, 21);
