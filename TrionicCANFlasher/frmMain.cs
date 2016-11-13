@@ -796,10 +796,10 @@ namespace TrionicCANFlasher
                             AddLogItem("Aquiring snapshot");
                             Application.DoEvents();
                             byte[] snapshot = trionic8.getSRAMSnapshot();
-                            byte[] snapshot7000 = trionic8.ReadSRAMSnapshot();
+                            byte[] snapshot5000 = trionic8.ReadSRAMSnapshot();
                             byte[] total = new byte[0x008000];
                             snapshot.CopyTo(total, 0);
-                            snapshot7000.CopyTo(total, 0x7000);
+                            snapshot5000.CopyTo(total, 0x5000);
                             try
                             {
                                 File.WriteAllBytes(sfd.FileName, total);
