@@ -6082,6 +6082,33 @@ namespace TrionicCANLib.API
             return 0;
         }
 
+        private bool Setspeed_Legion()
+        {
+
+            CANMessage msg = new CANMessage(0x7E0, 0, 8);
+
+            ulong cmd = 0x01A502;
+            // ulong cmd = 0x02A502; //Turbo (Do NOT enable, just here for ref)
+
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+
+                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                return false;
+            }
+
+            CANMessage response = new CANMessage();
+            response = new CANMessage();
+            response = m_canListener.waitMessage(2000);
+            ulong data = response.getData();
+            if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0xE5)
+            {
+                return false;
+            }
+            return true;
+        }
 
         private bool StartCommon(object sender, DoWorkEventArgs workEvent)
         {
@@ -6136,9 +6163,11 @@ namespace TrionicCANLib.API
                 }
                 else
                     LegionIsAlive = 1;
+                
 
                 // Bootloader needs time to upload the secondary loader into MCP 
                 Thread.Sleep(4000);
+                Setspeed_Legion();
 
             } // "if(LegionIsAlive==0)" 
             return true;
