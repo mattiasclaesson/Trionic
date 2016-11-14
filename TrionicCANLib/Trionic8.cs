@@ -6338,9 +6338,9 @@ namespace TrionicCANLib.API
 
                             if (!canUsbDevice.sendMessage(msg))
                                 logger.Debug("Couldn't send message");
-                            
-                            // if (m_sleepTime > 0)
-                            //    Thread.Sleep(m_sleepTime);
+
+                            if (m_sleepTime > 0)
+                                Thread.Sleep(m_sleepTime);
                         }
 
                         Application.DoEvents();
