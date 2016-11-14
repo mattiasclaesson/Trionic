@@ -2726,7 +2726,7 @@ namespace TrionicCANLib.API
                 {
                     // was a response to a KA.
                 }
-                logger.Debug("Incorrect response to 0x23, sendReadDataByLocalIdentifier.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
+                logger.Debug("Incorrect response to 0x21, sendReadDataByLocalIdentifier.  Byte 2 was " + getCanData(data, 2).ToString("X2"));
                 success = false;
                 return retData;
             }
