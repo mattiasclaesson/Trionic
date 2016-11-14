@@ -89,6 +89,10 @@ namespace TrionicCANLib
             _blockNumber++;
             return returnarray;
         }
+        public void ReverseBlock(int Block)
+        {
+            _blockNumber= Block;
+        }
 
         public byte[] GetCurrentBlock_128()
         {

@@ -301,7 +301,7 @@ namespace TrionicCANLib.API
             {
                 cmd = 0x0000000000FB2702; // request security access
             }
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);
+            CANMessage msg = new CANMessage(0x7E0, 0, 3); 
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             CastInfoEvent("Requesting security access", ActivityType.ConvertingFile);
@@ -1080,7 +1080,7 @@ namespace TrionicCANLib.API
             GetDiagnosticDataIdentifier();
 
             // ReadDataByPacketIdentifier ($AA) Service
-            CANMessage msg = new CANMessage(0x7E0, 0, 4);
+            CANMessage msg = new CANMessage(0x7E0, 0, 4); 
             ulong cmd = 0x000000007A01AA03;// <dpid=7A> <level=sendOneResponse> <service=AA> <length>
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x5E8);
@@ -1612,7 +1612,7 @@ namespace TrionicCANLib.API
 
         private bool requestDownload()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);   
             ulong cmd = 0x0000000000003406;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
@@ -1635,7 +1635,7 @@ namespace TrionicCANLib.API
 
         private bool Send0120()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 2);
+            CANMessage msg = new CANMessage(0x7E0, 0, 2); 
             ulong cmd = 0x0000000000002001;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
@@ -1777,7 +1777,7 @@ namespace TrionicCANLib.API
 
         private bool StartBootloader()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);   
             ulong cmd = 0x0060241000803606;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
@@ -1799,7 +1799,7 @@ namespace TrionicCANLib.API
 
         private bool SendA5()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);
+            CANMessage msg = new CANMessage(0x7E0, 0, 3);   
             ulong cmd = 0x000000000001A502; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
@@ -2059,7 +2059,7 @@ namespace TrionicCANLib.API
 
         private bool SendA5011()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 3);
+            CANMessage msg = new CANMessage(0x11, 0, 3);   
             ulong cmd = 0x000000000001A502; // 0x02 0x10 0x02
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
@@ -2105,7 +2105,7 @@ namespace TrionicCANLib.API
             {
                 cmd = 0x0000000000FB2702; // request security access
             }
-            CANMessage msg = new CANMessage(0x11, 0, 3);
+            CANMessage msg = new CANMessage(0x11, 0, 3); 
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
             CastInfoEvent("Requesting security access", ActivityType.ConvertingFile);
@@ -2199,7 +2199,7 @@ namespace TrionicCANLib.API
 
         private bool requestDownload011()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 7);
+            CANMessage msg = new CANMessage(0x11, 0, 7);   
             ulong cmd = 0x0000000000003406;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
@@ -2223,7 +2223,7 @@ namespace TrionicCANLib.API
 
         private bool StartBootloader011()
         {
-            CANMessage msg = new CANMessage(0x11, 0, 7);
+            CANMessage msg = new CANMessage(0x11, 0, 7);   
             ulong cmd = 0x0060241000803606;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
@@ -2598,7 +2598,7 @@ namespace TrionicCANLib.API
             int blockSize = 0x40;
             int bufpnt = 0;
             int saved_progress = 0;
-            byte[] buf = new byte[0x5000];
+            byte[] buf = new byte[0x7000];
             success = false;
             //for (int i = 0; i < buf.Length/blockSize; i++)
             while (bufpnt < buf.Length - 1)
@@ -3159,7 +3159,7 @@ namespace TrionicCANLib.API
             CANMessage msg = new CANMessage(0x7E0, 0, 4);
             msg.setData(cmd);
             msg.elmExpectedResponses = 15;
-            m_canListener.setupWaitMessage(0x7E8, 0x5e8);
+            m_canListener.setupWaitMessage(0x7E8,0x5e8);
             canUsbDevice.SetupCANFilter("7E8", "DFF"); // Mask will allow 7E8 and 5E8
             if (!canUsbDevice.sendMessage(msg))
             {
@@ -3191,7 +3191,7 @@ namespace TrionicCANLib.API
                 }
             }
             // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
-            else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78)
+            else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78) 
             {
                 // Now wait for all DTCs
                 m_canListener.setupWaitMessage(0x5E8);
@@ -4737,7 +4737,7 @@ namespace TrionicCANLib.API
             SendKeepAlive();
             _securityLevel = AccessLevel.AccessLevel01;
             CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            if (!RequestSecurityAccess(0))
+            if(!RequestSecurityAccess(0))
                 return;
             Thread.Sleep(50);
 
@@ -4782,7 +4782,7 @@ namespace TrionicCANLib.API
             //10 82 61 80 00 10 0C 00 // 4 bytes data already
 
             while (startAddress < lastAddress)
-            {
+                {
                 if (!canUsbDevice.isOpen())
                 {
                     _stallKeepAlive = false;
@@ -4880,10 +4880,10 @@ namespace TrionicCANLib.API
             _stallKeepAlive = true;
             bool success = false;
             int retryCount = 0;
-            int startAddress = 0x105000;
+            int startAddress = 0x107000;
             int blockSize = 0x80; // defined in bootloader... keep it that way!
             int bufpnt = 0;
-            byte[] buf = new byte[0x003000];
+            byte[] buf = new byte[0x001000];
             int blockCount = 0;
             int saved_progress = 0;
             SendKeepAlive();
@@ -5037,7 +5037,7 @@ namespace TrionicCANLib.API
                     response = m_canListener.waitMessage(500);
                     data = response.getData();
                 }
-
+                
                 // response will be 03 7F 34 78 00 00 00 00 a couple of times while erasing
                 if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x78)
                 {
@@ -5049,7 +5049,7 @@ namespace TrionicCANLib.API
                     CastInfoEvent(info, ActivityType.ErasingFlash);
                     // Hack for now. It's missing a timer
                     if(LegionIsAlive==1)
-                        Thread.Sleep(500); 
+                        Thread.Sleep(800); 
                 }
                 else if (getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x74)
                 {
@@ -5240,7 +5240,7 @@ namespace TrionicCANLib.API
                             buf[bufpnt++] = readbuf[j];
                         }
                     }
-                    int percentage = (int)((float)100 * (bufpnt - start) / (float)range);
+                    int percentage = (int)((float)100*(bufpnt-start) / (float)range);
                     if (percentage > saved_progress)
                     {
                         CastProgressReadEvent(percentage);
@@ -5712,7 +5712,7 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        private bool SendTransferDataME96(int length, int address, uint waitforResponseID, byte firstByteToSend)
+        private bool SendTransferDataME96(int length, int address, uint waitforResponseID, byte firstByteToSend )
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
             ulong cmd = 0x0000000000360010; // 0x36 = transferData
@@ -5866,7 +5866,7 @@ namespace TrionicCANLib.API
 
         private bool SendRestoreT8()
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 3);
+            CANMessage msg = new CANMessage(0x7E0, 0, 3); 
             // 02 1A 79 00 00 00 00 00
             ulong cmd = 0x0000000000791A02;
             msg.setData(cmd);
@@ -5888,9 +5888,8 @@ namespace TrionicCANLib.API
             return false;
         }
 
-        ///////////////////////////////////////////////////////////////////////////
-        /// Flash and read methods for MCP using the Legion bootloader 
-        ///
+
+        // Legion hacks 
         private bool UploadBootloaderLegion()
         {
             int startAddress = 0x102400;
@@ -6044,7 +6043,7 @@ namespace TrionicCANLib.API
 
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(2000);
+            response = m_canListener.waitMessage(2000); // This command takes some time since it has to read the whole flash.
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x60){
                 return false;
@@ -6052,43 +6051,39 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        // A modified version of "TesterPresent" to trigger a special response only this bootloader should give 
+        // Send a magic message to check if the loader is alive
         private byte LegionPing()
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 8);
-            ulong cmd = 0x6633000000003E01;
+            ulong cmd = 0x663300000000BEEF;
 
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
-
             if (!canUsbDevice.sendMessage(msg))
             {
+
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
                 return 0;
             }
 
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(200);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
 
-           /*
-            if(data==0xE501)
-                return 1;
-            return 0;*/
-            
-            if (getCanData(data, 6) == 0xF0 && getCanData(data, 7) == 0x0F)
+            if (getCanData(data, 0) == 0xDE && getCanData(data, 1) == 0xAD && getCanData(data, 2) == 0xF0 && getCanData(data, 3) == 0x0F)
                 return 1;
             return 0;
         }
 
+        // Add more options to this command and rename it to Configure_Legion
         private bool Setspeed_Legion()
         {
 
             CANMessage msg = new CANMessage(0x7E0, 0, 8);
 
-            ulong cmd = 0x01A502;
-            // ulong cmd = 0x02A502; //Turbo (Do NOT enable, just here for ref)
+            // ulong cmd = 0x01A502;
+            ulong cmd = 0x02A502; //No delays; (Do NOT enable, just here for ref)
 
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
@@ -6101,7 +6096,7 @@ namespace TrionicCANLib.API
 
             CANMessage response = new CANMessage();
             response = new CANMessage();
-            response = m_canListener.waitMessage(2000);
+            response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
             if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0xE5)
             {
@@ -6113,27 +6108,27 @@ namespace TrionicCANLib.API
         private bool StartCommon(object sender, DoWorkEventArgs workEvent)
         {
 
-            SendKeepAlive();
-            sw.Reset();
-            sw.Start();
-            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
-            StartSession10();
-            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
-            SendShutup();
-            SendA2();
-            SendA5();
-            SendA503();
-            Thread.Sleep(50);
-
-            // SendKeepAlive(); 
-            // verified upto here
-
-            // LegionIsAlive = LegionPing();
-            // LegionIsAlive = 1; 
+            LegionIsAlive = LegionPing();
 
             // Don't bother with this if the loader is already up and running 
             if (LegionIsAlive == 0)
             {
+
+                SendKeepAlive();
+                sw.Reset();
+                sw.Start();
+                CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
+                StartSession10();
+                CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
+                SendShutup();
+                SendA2();
+                SendA5();
+                SendA503();
+                Thread.Sleep(50);
+                SendKeepAlive(); 
+                // verified upto here
+
+            
                 _securityLevel = AccessLevel.AccessLevel01;
                 //CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
                 if (!RequestSecurityAccess(0))
@@ -6165,9 +6160,9 @@ namespace TrionicCANLib.API
                     LegionIsAlive = 1;
                 
 
-                // Bootloader needs time to upload the secondary loader into MCP 
-                Thread.Sleep(4000);
-                Setspeed_Legion();
+                // Bootloader needs time to upload the secondary loader into MCP (Around two seconds )
+                Thread.Sleep(4500);
+                // Setspeed_Legion();
 
             } // "if(LegionIsAlive==0)" 
             return true;
@@ -6234,7 +6229,7 @@ namespace TrionicCANLib.API
                     if (Send0120_Legion(bm.GetChecksum32()))
                     {
 
-                        CastInfoEvent("FLASH upload completed (And checksum-matched)", ActivityType.ConvertingFile);
+                        CastInfoEvent("FLASH upload completed and checksum-matched", ActivityType.ConvertingFile);
                         LegionIsAlive = 0;
                         _needRecovery = false;
                     }
@@ -6277,28 +6272,45 @@ namespace TrionicCANLib.API
             // The mcp part of legion can not handle writes to other than 64-byte boundaries, use hardcoded values to make sure that rule is followed 
             int lastBlockNumber = (End / 0x80)-1; 
             int saved_progress = 0;
-            int length = 0x86; // 128 bytes plus dreq, param and address 
+            int length = 0x88; // 128 bytes plus dreq, param and checksum (We have 6 free bytes in the last package anyway)
             int numberOfFrames = 19;
+            bool Problem = false;
+            int Retries = 0;
+            int blockNumber = 0;
 
-            for (int blockNumber = 0; blockNumber <= lastBlockNumber; blockNumber++)
+            // for (int blockNumber = 0; blockNumber <= lastBlockNumber; blockNumber++)
+            while(blockNumber <= lastBlockNumber)
             {
 
                 int percentage = (int)(((float)blockNumber * 100) / (float)lastBlockNumber);
-                if (percentage > saved_progress)
+                if (percentage > saved_progress || percentage==0)
                 {
-
                     CastProgressWriteEvent(percentage);
                     saved_progress = percentage;
                 }
 
-                byte[] data2Send = bm.GetNextBlock_128();
+                // Reset status
+                Problem = false;
+
+                byte[] data2Send  = bm.GetNextBlock_128();
+                
+                // Calculate checksum-16 of frame-data and add it to the frame.
+                int Csum16 = 0;
+                for (int i = 0; i < 0x80; i++)
+                {
+                    Csum16 += data2Send[i];
+                }
+                data2Send[0x80/*length-2*/] = (byte)(Csum16 >> 8 & 0xff);
+                data2Send[0x81/*length -1*/] = (byte)(Csum16 & 0xff);
+
+
                 int currentAddress = startAddress + (blockNumber * 0x80);
 
                 sw.Reset();
                 sw.Start();
 
                 // Check for blocks filled with 0xFF and skip those 
-                if (bm.FFblock(currentAddress) ==0)
+                if (bm.FFblock(currentAddress) ==0 || currentAddress==0 )
                 { 
                     if (SendTransferData(length, currentAddress, 0x7E8))
                     {
@@ -6324,25 +6336,53 @@ namespace TrionicCANLib.API
                             if (frame == numberOfFrames - 1)
                                 m_canListener.ClearQueue();
 
-                            if (!canUsbDevice.sendMessage(msg)){
-
+                            if (!canUsbDevice.sendMessage(msg))
                                 logger.Debug("Couldn't send message");
-                            }
-
-                            if (m_sleepTime > 0)
-                                Thread.Sleep(m_sleepTime);
+                            
+                            // if (m_sleepTime > 0)
+                            //    Thread.Sleep(m_sleepTime);
                         }
 
                         Application.DoEvents();
-
-                        // now wait for 01 76 00 00 00 00 00 00 
                         ulong data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
                         if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                         {
-                            CastInfoEvent("Got incorrect response " + data.ToString("X16"), ActivityType.UploadingFlash);
-                            _stallKeepAlive = false;
-                            return false;
+                            // The elm-hacks makes it hard to catch this in time so the next best thing is to start over.
+                            // As it is right now the loader will also force the host to start over from 0 since it's pointless to continue
+                            /*if ((getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x12) && Retries<20)
+                            {
+
+                                // Last failed address can be read in byte[] 2-5 though there's no point in implementing it right now
+                                blockNumber = 0;
+                                currentAddress = 0;
+                                bm.ReverseBlock(0);
+                                CastInfoEvent("Bootloader reported a problem or did not respond in time. ", ActivityType.UploadingFlash);
+                                CastInfoEvent("Starting over.. ", ActivityType.UploadingFlash);
+                            }*/
+
+                            if (Retries < 20)
+                            {
+                                blockNumber = 0;
+                                currentAddress = 0;
+                                bm.ReverseBlock(0);
+                                CastInfoEvent("Bootloader reported a problem or did not respond in time. ", ActivityType.UploadingFlash);
+                                CastInfoEvent("Starting over.. ", ActivityType.UploadingFlash);
+                                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
+                            }
+                            else
+                            {
+                                CastInfoEvent("Lost connection or something is really wrong with this ECUs flash ", ActivityType.UploadingFlash);
+                                CastInfoEvent("Gave up on block-address: " + currentAddress.ToString("X6"), ActivityType.UploadingFlash);
+                                _stallKeepAlive = false;
+                                return false;
+                            }
+
+                            Problem = true;
+                            Retries++;
                         }
+                        else
+                            Retries = 0;
+
                         canUsbDevice.RequestDeviceReady();
 
                     }
@@ -6351,6 +6391,9 @@ namespace TrionicCANLib.API
                     Application.DoEvents();
 
                 sw.Stop();
+
+                if (!Problem)
+                    blockNumber++;
             }
             return true;
         }
