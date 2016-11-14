@@ -4066,12 +4066,7 @@ namespace TrionicCANLib.API
         private bool UploadBootloaderRead()
         {
             int startAddress = 0x102400;
-#if (DEBUG)
-            //BootloaderFromFile btloaderdata = new BootloaderFromFile();
             Bootloader btloaderdata = new Bootloader();
-#else
-            Bootloader btloaderdata = new Bootloader();
-#endif
 
             int txpnt = 0;
             byte iFrameNumber = 0x21;
@@ -4172,12 +4167,8 @@ namespace TrionicCANLib.API
         private bool UploadBootloaderWrite()
         {
             int startAddress = 0x102400;
-#if (DEBUG)
-            //BootloaderFromFile btloaderdata = new BootloaderFromFile();
             Bootloader btloaderdata = new Bootloader();
-#else
-            Bootloader btloaderdata = new Bootloader();
-#endif
+
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             int saved_progress = 0;
@@ -5889,16 +5880,13 @@ namespace TrionicCANLib.API
         }
 
 
-        // Legion hacks 
+        ///////////////////////////////////////////////////////////////////////////
+        /// Flash and read methods specifically for T8 and MCP using Legion bootloader
+        ///
         private bool UploadBootloaderLegion()
         {
             int startAddress = 0x102400;
-#if (DEBUG)
-            //BootloaderFromFile btloaderdata = new BootloaderFromFile();
             Bootloader btloaderdata = new Bootloader();
-#else
-            Bootloader btloaderdata = new Bootloader();
-#endif
 
             int txpnt = 0;
             byte iFrameNumber = 0x21;

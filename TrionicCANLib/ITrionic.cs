@@ -123,7 +123,7 @@ namespace TrionicCANLib.API
             }
             catch(Exception ex)
             {
-                logger.Debug("Failed to get adapternames", ex);
+                logger.Debug(ex, "Failed to get adapternames");
             }
             return new string[0];
         }
