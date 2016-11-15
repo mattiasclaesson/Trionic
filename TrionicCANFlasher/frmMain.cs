@@ -415,6 +415,7 @@ namespace TrionicCANFlasher
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
                 btnReadECUcalibration.Enabled = false;
+                btnReadSRAM.Enabled = false;
             }
 
             // Always disable
