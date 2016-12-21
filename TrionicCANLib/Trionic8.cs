@@ -6517,8 +6517,8 @@ namespace TrionicCANLib.API
                     if(Localcsum32 != Remotecsum32)
                     {
                         // Is it possible the print these in hex? 
-                        CastInfoEvent("Checksum check failed. Local Checksum-32: " + Localcsum32, ActivityType.ConvertingFile);
-                        CastInfoEvent("Remote Checksum-32: " + Remotecsum32, ActivityType.ConvertingFile);
+                        CastInfoEvent("Checksum check failed. Local Checksum-32: " + Localcsum32.ToString("X8"), ActivityType.ConvertingFile);
+                        CastInfoEvent("Remote Checksum-32: " + Remotecsum32.ToString("X8"), ActivityType.ConvertingFile);
 
                         workEvent.Result = false;
                     }
