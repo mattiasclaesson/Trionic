@@ -51,8 +51,8 @@ namespace TrionicCANLib.API
         }
 
 
-        private byte LegionIsAlive = 0;
-        private byte SupportAutoskip = 0;
+        private bool LegionIsAlive = false;
+        private bool SupportAutoskip = false;
         private CANListener m_canListener;
         private bool _stallKeepAlive;
         private float _oilQualityRead = 0;
@@ -2743,7 +2743,7 @@ namespace TrionicCANLib.API
                 // Thread.Sleep(1);
 
                 // Check if autoskip feature is enabled and a tag has been received
-                if ((SupportAutoskip == 0) || (getCanData(data, 3) == 0))
+                if ((!SupportAutoskip) || (getCanData(data, 3) == 0))
                 {
                     SendAckMessageT8(); // send ack to request more bytes
 
@@ -5039,7 +5039,7 @@ namespace TrionicCANLib.API
                     for (int i = 0; i < eraseCount; i++) info += ".";
                     CastInfoEvent(info, ActivityType.ErasingFlash);
                     // Hack for now. It's missing a timer
-                    if(LegionIsAlive==1)
+                    if(LegionIsAlive)
                         Thread.Sleep(800); 
                 }
                 else if (getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x74)
@@ -6095,11 +6095,17 @@ namespace TrionicCANLib.API
 
         private bool StartCommon(object sender, DoWorkEventArgs workEvent)
         {
+            LegionIsAlive = false;
 
-            LegionIsAlive = LegionPing();
-
+            // This command will sometimes fail even though the loader is alive; Ugly workaround.
+            for (int i = 0; i < 4; i++)
+            {
+                if (LegionPing() > 0)
+                    LegionIsAlive = true;
+                Thread.Sleep(10);
+            }
             // Don't bother with this if the loader is already up and running 
-            if (LegionIsAlive == 0)
+            if (!LegionIsAlive)
             {
 
                 SendKeepAlive();
@@ -6145,7 +6151,7 @@ namespace TrionicCANLib.API
                     return false;
                 }
                 else
-                    LegionIsAlive = 1;
+                    LegionIsAlive = true;
                 
 
                 // Bootloader needs time to upload the secondary loader into MCP (Around two seconds )
@@ -6218,7 +6224,7 @@ namespace TrionicCANLib.API
                     {
 
                         CastInfoEvent("FLASH upload completed and checksum-matched", ActivityType.ConvertingFile);
-                        LegionIsAlive = 0;
+                        LegionIsAlive = false;
                         _needRecovery = false;
                     }
                     else
@@ -6389,7 +6395,7 @@ namespace TrionicCANLib.API
 
         private void ReadFlashLegion(byte Device, int lastAddress, object sender, DoWorkEventArgs workEvent)
         {
-            SupportAutoskip = 1;
+            SupportAutoskip = true;
 
             BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
@@ -6436,7 +6442,7 @@ namespace TrionicCANLib.API
 
                     _stallKeepAlive = false;
                     workEvent.Result = false;
-                    SupportAutoskip = 0; // Make sure to restore tags in case the user decides to try something else.
+                    SupportAutoskip = false; // Make sure to restore tags in case the user decides to try something else.
 
                     return;
                 }
@@ -6479,7 +6485,7 @@ namespace TrionicCANLib.API
                         CastInfoEvent("Failed to download FLASH content", ActivityType.ConvertingFile);
                         _stallKeepAlive = false;
                         workEvent.Result = false;
-                        SupportAutoskip = 0; // Make sure to restore tags in case the user decides to try something else.. 
+                        SupportAutoskip = false; // Make sure to restore tags in case the user decides to try something else.. 
                         Send0120_Legion(0);
 
                         return;
@@ -6540,8 +6546,8 @@ namespace TrionicCANLib.API
 
             // Loader will never exit on its own. Tell it to 
             Send0120_Legion(0);
-            LegionIsAlive = 0;
-            SupportAutoskip = 0; // Make sure to restore tags in case the user decides to do something that requires another loader 
+            LegionIsAlive = false;
+            SupportAutoskip = false; // Make sure to restore tags in case the user decides to do something that requires another loader 
 
             return;
         }
