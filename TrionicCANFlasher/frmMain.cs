@@ -179,6 +179,7 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                            trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -249,7 +250,7 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
+                            trionic8.FormatBootPartition = true; // Do _NOT_ make this an option. It works in a completely different way than trionic 8..
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -284,6 +285,7 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                            trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
