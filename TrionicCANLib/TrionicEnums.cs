@@ -45,8 +45,10 @@ namespace TrionicCANLib.API
         TRIONIC7,
         TRIONIC8,
         MOTRONIC96,
+        TRIONIC8_LEG,
         TRIONIC8_MCP,
-        TRIONIC8_LEG
+        Z22SEMain_LEG,
+        Z22SEMCP_LEG
     };
 
     public enum SleepTime : int

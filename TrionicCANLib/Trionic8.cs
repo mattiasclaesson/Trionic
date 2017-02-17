@@ -50,9 +50,15 @@ namespace TrionicCANLib.API
             set { _securityLevel = value; }
         }
 
+        public bool FormatBootPartition
+        {
+            get { return formatBootPartition; }
+            set { formatBootPartition = value; }
+        }
 
         private bool LegionIsAlive = false;
         private bool SupportAutoskip = false;
+        private bool formatBootPartition = false;
         private CANListener m_canListener;
         private bool _stallKeepAlive;
         private float _oilQualityRead = 0;
@@ -312,6 +318,7 @@ namespace TrionicCANLib.API
             }
             CANMessage response = new CANMessage();
             response = m_canListener.waitMessage(timeoutP2ct);
+
             //ulong data = response.getData();
             Console.WriteLine("---" + response.getData().ToString("X16"));
             if (response.getCanData(1) == 0x67)
@@ -1610,10 +1617,15 @@ namespace TrionicCANLib.API
             }
         }
 
-        private bool requestDownload()
+        private bool requestDownload(bool z22se)
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 7);   
-            ulong cmd = 0x0000000000003406;
+            ulong cmd = 0x0000000000003400;
+            if (z22se)
+                cmd += 5;
+            else
+                cmd += 6;
+
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
@@ -1775,10 +1787,22 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        private bool StartBootloader()
+        private bool StartBootloader(uint StartAddr)
         {
-            CANMessage msg = new CANMessage(0x7E0, 0, 7);   
-            ulong cmd = 0x0060241000803606;
+            CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            // ulong cmd = 0x0060241000803606;
+            ulong cmd = 0x0000000000803606;
+
+            // Swap address to make it easy to use
+            ulong tmp = (
+                (StartAddr & 0xFF) << 24 |
+                ((StartAddr >> 8) & 0xFF) << 16 |
+                ((StartAddr >> 16) & 0xFF) << 8 |
+                ((StartAddr >> 24) & 0xFF));
+            tmp <<= 24;
+            cmd += tmp;
+
+
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
@@ -1870,7 +1894,7 @@ namespace TrionicCANLib.API
             int startAddress = 0x102400;
             int saved_progress = 0;
             Bootloader btloaderdata = new Bootloader();
-            if (requestDownload())
+            if (requestDownload(false))
             {
                 for (int i = 0; i < 0x46; i++)
                 {
@@ -2220,11 +2244,14 @@ namespace TrionicCANLib.API
             return true;
         }
 
-
-        private bool StartBootloader011()
+        private bool StartBootloader011(byte LowStart)
         {
-            CANMessage msg = new CANMessage(0x11, 0, 7);   
-            ulong cmd = 0x0060241000803606;
+            CANMessage msg = new CANMessage(0x11, 0, 7);
+            // ulong cmd = 0x0060241000803606;
+            ulong cmd = 0x0000241000803606;
+            if (LowStart != 1)
+                cmd += 0x0060000000000000;
+
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x311);
             if (!canUsbDevice.sendMessage(msg))
@@ -2474,7 +2501,7 @@ namespace TrionicCANLib.API
                  Thread.Sleep(1000);
              }*/
 
-            CANMessage response = new CANMessage();
+        CANMessage response = new CANMessage();
             ulong data = 0;
             // first send 
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
@@ -4071,7 +4098,7 @@ namespace TrionicCANLib.API
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             int saved_progress = 0;
-            if (requestDownload())
+            if (requestDownload(false))
             {
                 for (int i = 0; i < 0x46; i++)
                 {
@@ -4172,7 +4199,7 @@ namespace TrionicCANLib.API
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             int saved_progress = 0;
-            if (requestDownload())
+            if (requestDownload(false))
             {
                 for (int i = 0; i < 0x46; i++)
                 {
@@ -4267,10 +4294,11 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        private bool UploadBootloaderRecover()
+        private bool UploadBootloaderRecover(int mode)
         {
             int startAddress = 0x102400;
             Bootloader btloaderdata = new Bootloader();
+            Bootloader_Leg btloaderdata_Leg = new Bootloader_Leg();
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             int saved_progress = 0;
@@ -4297,6 +4325,9 @@ namespace TrionicCANLib.API
                         for (int j = 0; j < 0x22; j++)
                         {
                             var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt);
+                            if (mode==1)
+                                cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata_Leg.BootloaderLegionBytes, txpnt);
+
                             msg.setData(cmd);
                             txpnt += 7;
                             iFrameNumber++;
@@ -4334,6 +4365,8 @@ namespace TrionicCANLib.API
                     CANMessage msg = new CANMessage(0x11, 0, 8);
 
                     var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt);
+                    if (mode == 1)
+                        cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata_Leg.BootloaderLegionBytes, txpnt);
                     msg.setData(cmd);
                     txpnt += 7;
                     iFrameNumber++;
@@ -4364,7 +4397,19 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        public void RecoverECU(object sender, DoWorkEventArgs workEvent)
+
+        public void RecoverECU_Def(object sender, DoWorkEventArgs workEvent)
+        {
+            RecoverECU(0, sender, workEvent);
+        }
+
+
+        public void RecoverECU_Leg(object sender, DoWorkEventArgs workEvent)
+        {
+            RecoverECU(1, sender, workEvent);
+        }
+
+        private void RecoverECU(int mode, object sender, DoWorkEventArgs workEvent)
         {
             BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
@@ -4411,17 +4456,33 @@ namespace TrionicCANLib.API
                         if (RequestSecurityAccess011(0))
                         {
                             CastInfoEvent("Security access granted, uploading bootloader", ActivityType.UploadingBootloader);
-                            UploadBootloaderRecover();
+                            UploadBootloaderRecover(mode);
                             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
                             Thread.Sleep(500);
-                            StartBootloader011();
-                            Thread.Sleep(500);
-                            CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
-                            if (SendrequestDownload(6, true))
+                            
+
+                            if (mode == 1)
+                            {
+                                StartBootloader011(1);
+                                // We're not supposed to start the session like this so a delay has to be added to prevent the bootloader-upload fuction from going haywire
+                                Thread.Sleep(500);
+                                WriteFlashLegion(6, 0x100000, false, sender, workEvent);
+                                return;
+                            }
+                            else
+                            {
+                                StartBootloader011(0);
+                                Thread.Sleep(500);
+                                CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
+                            }
+
+                            
+                            if (SendrequestDownload(6, true) && mode == 0)
                             {
                                 _needRecovery = true;
                                 CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
                                 bool success = WriteFlashRecover(bm);
+
                                 sw.Stop();
                                 _needRecovery = false;
                                 // what else to do?
@@ -4584,7 +4645,7 @@ namespace TrionicCANLib.API
             // start bootloader in ECU
             //SendKeepAlive();
             Thread.Sleep(50);
-            if (!StartBootloader())
+            if (!StartBootloader(0x102460))
             {
                 CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
                 _stallKeepAlive = false;
@@ -4742,7 +4803,7 @@ namespace TrionicCANLib.API
             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
             // start bootloader in ECU
             Thread.Sleep(50);
-            StartBootloader();
+            StartBootloader(0x102460);
             SendKeepAlive();
             Thread.Sleep(100);
 
@@ -4917,7 +4978,7 @@ namespace TrionicCANLib.API
             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
             // start bootloader in ECU
             Thread.Sleep(500);
-            StartBootloader();
+            StartBootloader(0x102460);
             SendKeepAlive();
             Thread.Sleep(500);
 
@@ -5003,7 +5064,13 @@ namespace TrionicCANLib.API
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
             //06 34 01 00 00 00 00 00
             //ulong cmd = 0x0000000000013406;
-            ulong cmd = 0x0000000000013400;
+            ulong cmd;
+            ulong tmp = ((formatmask & 0xff) << 8 | (formatmask >> 8) & 0xFF); 
+            if (formatmask==0 || !LegionIsAlive) 
+                cmd = 0x0000000000013400;
+            else
+                cmd = (tmp) << 40 | 0x13400;
+
             cmd += PCI;
 
             msg.setData(cmd);
@@ -5017,75 +5084,144 @@ namespace TrionicCANLib.API
             }
             bool eraseDone = false;
             int eraseCount = 0;
+            bool Firstpass = true;
+            int retryCount = 0;
+            int progress = 0;
+
             while (!eraseDone)
             {
-                m_canListener.setupWaitMessage(0x7E8);
-                CANMessage response = m_canListener.waitMessage(500);
-                ulong data = response.getData();
-                if (data == 0)
+                // ELM327 is one annoying adapter; It's hard to fix the stock loader but it is at least possible to work around it in the new loader
+                if (!LegionIsAlive)
                 {
-                    m_canListener.setupWaitMessage(0x311);
-                    response = m_canListener.waitMessage(500);
-                    data = response.getData();
-                }
-                
-                // response will be 03 7F 34 78 00 00 00 00 a couple of times while erasing
-                if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x78)
-                {
-                    if (recoveryMode) BroadcastKeepAlive();
-                    else SendKeepAlive();
-                    eraseCount++;
-                    string info = "Erasing FLASH";
-                    for (int i = 0; i < eraseCount; i++) info += ".";
-                    CastInfoEvent(info, ActivityType.ErasingFlash);
-                    // Hack for now. It's missing a timer
-                    if(LegionIsAlive)
-                        Thread.Sleep(800); 
-                }
-                else if (getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x74)
-                {
-                    if (recoveryMode) BroadcastKeepAlive();
-                    else SendKeepAlive();
-                    eraseDone = true;
-                    eraseSw.Stop();
-                    CastInfoEvent(String.Format("Erase completed after {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
-                    return true;
-                }
-                else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x11)
-                {
-                    eraseSw.Stop();
-                    CastInfoEvent("Erase cannot be performed", ActivityType.ErasingFlash);
-                    return false;
-                }
-                else
-                {
-                    Console.WriteLine("Rx: " + data.ToString("X16"));
-                    if (canUsbDevice is CANELM327Device)
+                    m_canListener.setupWaitMessage(0x7E8);
+                    CANMessage response = m_canListener.waitMessage(500);
+                    ulong data = response.getData();
+
+                    // CastInfoEvent("Data1: " + data.ToString("X16"), ActivityType.ErasingFlash);
+                    if (data == 0)
+                    {
+                        m_canListener.setupWaitMessage(0x311);
+                        response = m_canListener.waitMessage(500);
+                        data = response.getData();
+                        // CastInfoEvent("Data2: " + data.ToString("X16"), ActivityType.ErasingFlash);
+                    }
+
+                    // response will be 03 7F 34 78 00 00 00 00 a couple of times while erasing
+                    if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x78)
                     {
                         if (recoveryMode) BroadcastKeepAlive();
                         else SendKeepAlive();
+                        eraseCount++;
+                        string info = "Erasing FLASH";
+                        for (int i = 0; i < eraseCount; i++) info += ".";
+                        CastInfoEvent(info, ActivityType.ErasingFlash);
                     }
-                }
-
-                if (eraseSw.Elapsed.Seconds > 50)
-                {
-                    eraseSw.Stop();
-                    if (canUsbDevice is CANELM327Device)
+                    else if (getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x74)
                     {
-                        CastInfoEvent("Erase completed", ActivityType.ErasingFlash);
-                        // ELM327 seem to be unable to wait long enough for this response
-                        // Instead we assume its finnished ok now
+                        if (recoveryMode) BroadcastKeepAlive();
+                        else SendKeepAlive();
+                        eraseDone = true;
+                        eraseSw.Stop();
+                        CastInfoEvent(String.Format("Erase completed after {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
                         return true;
+                    }
+                    else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x11)
+                    {
+                        eraseSw.Stop();
+                        CastInfoEvent("Erase cannot be performed", ActivityType.ErasingFlash);
+                        return false;
                     }
                     else
                     {
-                        CastInfoEvent("Erase timed out after 50 seconds", ActivityType.ErasingFlash);
+                        Console.WriteLine("Rx: " + data.ToString("X16"));
+                        if (canUsbDevice is CANELM327Device)
+                        {
+                            if (recoveryMode) BroadcastKeepAlive();
+                            else SendKeepAlive();
+                        }
+                    }
+
+                    if (eraseSw.Elapsed.Seconds > 50)
+                    {
+                        eraseSw.Stop();
+                        if (canUsbDevice is CANELM327Device)
+                        {
+                            CastInfoEvent("Erase completed", ActivityType.ErasingFlash);
+                            // ELM327 seem to be unable to wait long enough for this response
+                            // Instead we assume its finnished ok now
+                            return true;
+                        }
+                        else
+                        {
+                            CastInfoEvent("Erase timed out after 50 seconds", ActivityType.ErasingFlash);
+                            return false;
+                        }
+                    }
+                    CastInfoEvent(string.Format("Erasing FLASH waited: {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                }
+                else
+                {
+                    // Send this information as a data frame to make elm behave
+                    
+                    bool success = false;
+                    byte[] formatbuf = readDataByLocalIdentifier(0xF0, 0, 4, out success);
+                    if (success)
+                    {
+                        retryCount = 0;
+                        // Check if the loader missed the request, we should see a number higher than 0 in byte[7] ( Byte[3] after it has been read by readDataByLocalIdentifier() )
+                        if (Firstpass)
+                        {
+                            CastInfoEvent(string.Format("Erasing device {0}.. ", formatbuf[3]), ActivityType.ErasingFlash);
+                            if (formatbuf[3] != PCI)
+                            {
+                                Thread.Sleep(5);
+                                msg.setData(cmd);
+                                m_canListener.setupWaitMessage(0x7E8);
+                                CastInfoEvent("Wrong response. Resending request.. ", ActivityType.ErasingFlash);
+                            }
+                            else
+                                Firstpass = false;
+                        }
+                        else
+                        {
+                            // Avoid confusion; Don't show the response if it's 1
+                            if (formatbuf[3] > 1) {
+
+/*                              if (progress > 100)
+                                    progress = 0;
+
+                                CastProgressReadEvent(progress);
+                                progress += 25;*/
+
+                                eraseCount++;
+                                string info = "";
+                                for (int i = 0; i < eraseCount; i++) info += ".";
+                                if((eraseCount&3)==2)
+                                    CastInfoEvent(info, ActivityType.ErasingFlash);
+
+                            }
+                            if (formatbuf[3] == 1)
+                            {
+                                // CastProgressReadEvent(100);
+                                CastInfoEvent(String.Format("Erase completed after {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                                eraseDone = true;
+                                return true;
+                            }
+                        }
+                    }
+                    else
+                        retryCount++;
+
+                    Thread.Sleep(500);
+
+                    if (retryCount > 20)
+                    {
+                        CastInfoEvent("Erase failed; No response", ActivityType.ErasingFlash);
                         return false;
                     }
+                    
                 }
-                CastInfoEvent(string.Format("Erasing FLASH waited: {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
                 Thread.Sleep(m_sleepTime);
-
             }
             return true;
         }
@@ -5808,7 +5944,7 @@ namespace TrionicCANLib.API
             // start bootloader in ECU
             //SendKeepAlive();
             Thread.Sleep(50);
-            if (!StartBootloader())
+            if (!StartBootloader(0x102460))
             {
                 CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
                 _stallKeepAlive = false;
@@ -5886,12 +6022,12 @@ namespace TrionicCANLib.API
         private bool UploadBootloaderLegion()
         {
             int startAddress = 0x102400;
-            Bootloader btloaderdata = new Bootloader();
+            Bootloader_Leg btloaderdata = new Bootloader_Leg();
 
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             int saved_progress = 0;
-            if (requestDownload())
+            if (requestDownload(false))
             {
                 for (int i = 0; i < 0x46; i++)
                 {
@@ -5983,64 +6119,10 @@ namespace TrionicCANLib.API
             }
             return true;
         }
-
         
-        private int RequestChecksum32_Legion(byte Region) {
-
-            CANMessage msg = new CANMessage(0x7E0, 0, 2);
-            ulong cmd = 0xA200;
-            cmd += Region;
-
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-
-            if (!canUsbDevice.sendMessage(msg))
-            {
-                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
-                return 0;
-            }
-
-            CANMessage response = new CANMessage();
-            response = new CANMessage();
-            response = m_canListener.waitMessage(4000);
-            ulong data = response.getData();
-
-            if (getCanData(data, 0) != 0x02 || getCanData(data, 1) != 0xE2)
-                return 0;
-            
-            return (getCanData(data, 3)<<24 | getCanData(data, 4) << 16 | getCanData(data, 5) << 8 | getCanData(data, 6));
-        }
-
-        // Modified exit command since legion will not exit after a flash if not given a correct checksum 
-        private bool Send0120_Legion(uint CSUM32)
-        {
-
-            CANMessage msg = new CANMessage(0x7E0, 0, 8);
-            // (Do some byteswapping) 
-            ulong privatecsum = (  (CSUM32&0xff)<<24 | ((CSUM32>>8)&0xff)<<16 | ((CSUM32>>16)&0xff)<<8 | (CSUM32>>24)&0xff);
-            ulong cmd = privatecsum <<24 | 0x2001;
-
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-
-                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
-                return false;
-            }
-
-            CANMessage response = new CANMessage();
-            response = new CANMessage();
-            response = m_canListener.waitMessage(2000); // This command takes some time since it has to read the whole flash.
-            ulong data = response.getData();
-            if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x60){
-                return false;
-            }
-            return true;
-        }
 
         // Send a magic message to check if the loader is alive
-        private byte LegionPing()
+        private bool LegionPing()
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 8);
             ulong cmd = 0x663300000000BEEF;
@@ -6051,7 +6133,7 @@ namespace TrionicCANLib.API
             {
 
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
-                return 0;
+                return false;
             }
 
             CANMessage response = new CANMessage();
@@ -6060,54 +6142,28 @@ namespace TrionicCANLib.API
             ulong data = response.getData();
 
             if (getCanData(data, 0) == 0xDE && getCanData(data, 1) == 0xAD && getCanData(data, 2) == 0xF0 && getCanData(data, 3) == 0x0F)
-                return 1;
-            return 0;
+                return true;
+
+            return false;
         }
 
-        // Add more options to this command and rename it to Configure_Legion
-        private bool Setspeed_Legion()
-        {
+        // Restless coders; Look no further!
+        private bool fasterdamnit = false;
 
-            CANMessage msg = new CANMessage(0x7E0, 0, 8);
-
-            // ulong cmd = 0x01A502;
-            ulong cmd = 0x02A502; //No delays; (Do NOT enable, just here for ref)
-
-            msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x7E8);
-            if (!canUsbDevice.sendMessage(msg))
-            {
-
-                CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
-                return false;
-            }
-
-            CANMessage response = new CANMessage();
-            response = new CANMessage();
-            response = m_canListener.waitMessage(timeoutP2ct);
-            ulong data = response.getData();
-            if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0xE5)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private bool StartCommon(object sender, DoWorkEventArgs workEvent)
+        private bool StartCommon(byte Device, bool z22se)
         {
             LegionIsAlive = false;
-
+            
             // This command will sometimes fail even though the loader is alive; Ugly workaround.
             for (int i = 0; i < 4; i++)
             {
-                if (LegionPing() > 0)
+                if (LegionPing())
                     LegionIsAlive = true;
-                Thread.Sleep(10);
+                Thread.Sleep(40);
             }
             // Don't bother with this if the loader is already up and running 
             if (!LegionIsAlive)
             {
-
                 SendKeepAlive();
                 sw.Reset();
                 sw.Start();
@@ -6119,10 +6175,10 @@ namespace TrionicCANLib.API
                 SendA5();
                 SendA503();
                 Thread.Sleep(50);
-                SendKeepAlive(); 
+                SendKeepAlive();
                 // verified upto here
 
-            
+
                 _securityLevel = AccessLevel.AccessLevel01;
                 //CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
                 if (!RequestSecurityAccess(0))
@@ -6132,8 +6188,36 @@ namespace TrionicCANLib.API
                 }
 
                 Thread.Sleep(50);
-                CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
+                
+                if (z22se)
+                {
+                    CastInfoEvent("Uploading preloader", ActivityType.UploadingBootloader);
+                    if (!UploadZ22sePreloader())
+                    {   // was 2000 milli-seconds
+                        CastInfoEvent("Failed to upload preloader", ActivityType.UploadingFlash);
+                        return false;
+                    }
+                    else
+                    {
+                        Thread.Sleep(500);
+                        // Investigate; The firmware i tried did not respond to this nor tester present when in programming mode. (It's actually the preloader that sends the response.)
+                        // Problem is that if one fw version actually decides to send a response there will be one message too much in the queue that could mess with, in particular, the md5 function.
+                        CastInfoEvent("Starting preloader", ActivityType.UploadingBootloader);
+                        if (!StartBootloader(0xFF2000))
+                        {
+                            CastInfoEvent("Failed to start preloader", ActivityType.UploadingFlash);
+                            return false;
+                        }
+                        else
+                        {
+                            // Flush buffer
+                            Thread.Sleep(500);
+                            m_canListener.FlushQueue();
+                        }
+                    }
+                }
 
+                CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
                 if (!UploadBootloaderLegion())
                 {
                     CastInfoEvent("Failed to upload bootloader", ActivityType.UploadingFlash);
@@ -6145,47 +6229,527 @@ namespace TrionicCANLib.API
                 SendKeepAlive();
                 Thread.Sleep(50);
 
-                if (!StartBootloader())
+                if (!StartBootloader(0x102400))
                 {
                     CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
                     return false;
                 }
                 else
                     LegionIsAlive = true;
-                
 
-                // Bootloader needs time to upload the secondary loader into MCP (Around two seconds )
-                Thread.Sleep(4500);
-                // Setspeed_Legion();
+            }
+            else
+                CastInfoEvent("Loader was left running. Starting over", ActivityType.UploadingBootloader);
 
-            } // "if(LegionIsAlive==0)" 
+            Thread.Sleep(500);
+            // ..
+            bool success;
+            if (fasterdamnit)
+            {
+                CastInfoEvent("(Fasterdamnit is set; Remember to disable!)", ActivityType.UploadingBootloader);
+                if (canUsbDevice is CANELM327Device)
+                    LegionIDemand(0, 100, out success);
+                else
+                    LegionIDemand(0, 1200, out success);
+            }
+            else
+                LegionIDemand(0, 2000, out success);
+
+            if (!success)
+                return false;
+
+            // Start the secondary bootloader
+            if (Device == 5) {
+
+                CastInfoEvent("Waiting for bootloader to spawn its minion..", ActivityType.UploadingBootloader);
+                LegionIDemand(4, 0, out success);
+                return success;
+            }
+
             return true;
        }
-
-
+        // Reset partition bitmask to all partitions.
+        private uint formatmask = 0x1FF;
         public void ReadFlashLegMCP(object sender, DoWorkEventArgs workEvent)
         {
-            ReadFlashLegion(5, 0x40100, sender, workEvent);
+            ReadFlashLegion(5, 0x40100, false, sender, workEvent);
         }
 
         public void ReadFlashLegT8(object sender, DoWorkEventArgs workEvent)
         {
-            ReadFlashLegion(6, 0x100000, sender, workEvent);
+            ReadFlashLegion(6, 0x100000, false, sender, workEvent);
         }
 
         public void WriteFlashLegMCP(object sender, DoWorkEventArgs workEvent)
         {
-            WriteFlashLegion(5, 0x40100, sender, workEvent);
+            WriteFlashLegion(5, 0x40100, false, sender, workEvent);
         }
 
         public void WriteFlashLegT8(object sender, DoWorkEventArgs workEvent)
         {
-            WriteFlashLegion(6, 0x100000, sender, workEvent);
+            WriteFlashLegion(6, 0x100000, false, sender, workEvent);
         }
 
 
 
-        private void WriteFlashLegion(byte Device, int EndAddress, object sender, DoWorkEventArgs workEvent)
+
+        public void ReadFlashLegZ22SE_Main(object sender, DoWorkEventArgs workEvent)
+        {
+            ReadFlashLegion(6, 0x100000, true, sender, workEvent);
+        }
+        public void ReadFlashLegZ22SE_MCP(object sender, DoWorkEventArgs workEvent)
+        {
+            ReadFlashLegion(5, 0x40100, true, sender, workEvent);
+        }
+
+        public void WriteFlashLegZ22SE_Main(object sender, DoWorkEventArgs workEvent)
+        {
+            formatBootPartition = true;
+            WriteFlashLegion(6, 0x100000, true, sender, workEvent);
+        }
+        public void WriteFlashLegZ22SE_MCP(object sender, DoWorkEventArgs workEvent)
+        {
+            WriteFlashLegion(5, 0x40100, true, sender, workEvent);
+        }
+
+
+
+
+        private bool UploadZ22sePreloader()
+        {
+            int startAddress = 0xFF2000;
+            Bootloader_z22se btloaderdata = new Bootloader_z22se();
+
+            int txpnt = 0;
+            byte iFrameNumber = 0x21;
+            int saved_progress = 0;
+
+            if (requestDownload(true))
+            {
+                // The bin is only 1230 B but I made the tool in such a way that it will pad the file to make things easy to work with.
+                for (int i = 0; i < 6; i++)
+                {
+                    iFrameNumber = 0x21;
+                    //10 F0 36 00 00 10 24 00
+                    //Console.WriteLine("Sending bootloader: " + startAddress.ToString("X8"));
+                    // cast event
+                    int percentage = (int)(((float)i * 100) / 6);
+                    if (percentage > saved_progress)
+                    {
+                        CastProgressWriteEvent(percentage);
+                        saved_progress = percentage;
+                    }
+
+                    if (SendTransferData(0xF0, startAddress, 0x7E8))
+                    {
+                        canUsbDevice.RequestDeviceReady();
+                        // send 0x22 (34) frames with data from bootloader
+                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                        for (int j = 0; j < 0x22; j++)
+                        {
+                            var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.Bootloaderz22seBytes, txpnt);
+                            msg.setData(cmd);
+                            txpnt += 7;
+                            iFrameNumber++;
+
+                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
+                            msg.elmExpectedResponses = j == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
+                            if (j == 0x21)
+                                m_canListener.ClearQueue();
+
+                            if (!canUsbDevice.sendMessage(msg))
+                            {
+                                logger.Debug("Couldn't send message");
+                            }
+                            Application.DoEvents();
+                            if (m_sleepTime > 0)
+                                Thread.Sleep(m_sleepTime);
+
+                        }
+                        var data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
+                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
+                        {
+                            return false;
+                        }
+                        canUsbDevice.RequestDeviceReady();
+                        SendKeepAlive();
+                        startAddress += 0xEA;
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Did not receive correct response from SendTransferData");
+                    }
+                }
+
+                CastProgressWriteEvent(100);
+            }
+            else
+                return false;
+
+            return true;
+        }
+
+
+        // Test; Read md5 of full flash, partition 1, partition 2..
+        private bool PrintLegmd5(byte device)
+        {
+            bool success = false;
+            CastInfoEvent("Remote md5: ", ActivityType.ConvertingFile);
+
+            for (byte i = 1; i < 10; i++)
+            {
+                byte[] resp = LegionIDemand(device, i, out success);
+                if (success)
+                {
+                    // Tried this using two long/ulong's; Let's just say it didn't like it even with casts (Scrambled data).
+                    int mdlolo = (resp[12] << 24 | resp[13] << 16 | resp[14] << 8 | resp[15]);
+                    int mdlohi = (resp[8] << 24 | resp[9] << 16 | resp[10] << 8 | resp[11]);
+                    int mdhilo = (resp[4] << 24 | resp[5] << 16 | resp[6] << 8 | resp[7]);
+                    int mdhihi = (resp[0] << 24 | resp[1] << 16 | resp[2] << 8 | resp[3]);
+
+                    CastInfoEvent(("Part " + i.ToString("X1") + ": " + mdhihi.ToString("X8") + mdhilo.ToString("X8") + mdlohi.ToString("X8") + mdlolo.ToString("X8")), ActivityType.ConvertingFile);
+                }
+                else
+                    return false;
+            }
+            return true;
+        }
+
+        // Let's stick to silly names
+        // Needs fixing; Try and read several packets in case the first one is a reply from something else
+        private byte[] LegionIDemand(uint command, uint wish, out bool success)
+        {
+            // Commands are as follows:
+            // command 00: Configure packet delay.
+            // wish: Delay ( default is 2000 )
+
+            // command 01: Full Checksum-32
+            // wish:
+            // 00: Trionic 8.
+            // 01: Trionic 8; MCP.
+
+            // command 02: Trionic 8; md5.
+            // wish:
+            // 00: Full md5.
+            // 01: Partition 1.
+            // ..
+            // 09: Partition 9.
+
+            // command 03: Trionic 8 MCP; md5.
+            // wish:
+            // 00: Full md5.
+            // 01: Partition 1.
+            // ..
+            // 09: Partition 9 aka 'Shadow'.
+
+            // command 04: Start secondary bootloader
+            // wish: None, just wish.
+
+            // command 05: Format Trionic 8; MCP.
+            // wish:
+            // Bitmask of partitions to erase: (You can select several or ALL partitions at once)
+            // b 0 0000 0001 : Erase partition 1.
+            // b 0 0000 0010 : Erase partition 2.
+            // ..
+            // b 1 0000 0000 : Erase partition 9. (Shadow row: 0x0 to 0x100)
+
+            // command 06: Format Trionic 8; Main flash.
+            // wish:
+            // Bitmask of partitions to erase: (You can select several or ALL partitions at once)
+            // b 0 0000 0001 : Erase partition 1.
+            // b 0 0000 0010 : Erase partition 2.
+            // ..
+            // b 1 0000 0000 : Erase partition 9.
+
+            // command 0xFF: Report stats.
+            // wish: TBD
+            // Return:
+            // Byte[ 0]: TBD
+            // Byte[ 1]: TBD
+            // Byte[ 2]: TBD
+            // Byte[ 3]: TBD
+            // Byte[ 4]: TBD
+            // Byte[ 5]: TBD
+            // Byte[ 6]: TBD
+            // Byte[ 7]: TBD
+            // Byte[ 8]: TBD
+            // Byte[ 9]: TBD
+            // Byte[10]: TBD
+            // Byte[11]: TBD
+            // Byte[12]: TBD
+            // Byte[13]: TBD
+            // Byte[14]: TBD
+            // Byte[15]: TBD
+
+
+            success = false;
+            int Retries = 0;
+            byte[] buf = new byte[16];
+
+            CANMessage msg = new CANMessage(0x7E0, 0, 8);
+            // Do some byteswapping
+            ulong privatewish = ((wish & 0xff) << 24 | ((wish >> 8) & 0xff) << 16  );
+            // Use ProgrammingMode as carrier 
+            ulong cmd = (privatewish) << 32 | (command & 0xff) << 16 | 0xA502;
+
+            do
+            {
+                msg.setData(cmd);
+                m_canListener.setupWaitMessage(0x7E8);
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    // Critical error; Abort...
+                    CastInfoEvent("Couldn't send bootloader command", ActivityType.ConvertingFile);
+                    return buf;
+                }
+
+                CANMessage response = new CANMessage();
+                response = new CANMessage();
+                response = m_canListener.waitMessage(250);
+                ulong data;
+                data = response.getData();
+
+
+                // CastInfoEvent("Data: " + data.ToString("X16"), ActivityType.ConvertingFile);
+
+                // elm327 strikes yet again; It has a fixed length for certain commands.
+                // The loader will respond with something "slightly" out of spec to circumvent this.
+                if (getCanData(data, 0) != 0x33 || getCanData(data, 1) != 0x55 || getCanData(data, 2) != (command & 0xFF) )
+                {
+                    CastInfoEvent("Retrying bootloader command..", ActivityType.ConvertingFile);
+                    logger.Debug(("(Legion) Retrying cmd " + command.ToString("X8") + " Wish "   + wish.ToString("X8")));
+                    Retries++;
+                }
+                else
+                {
+                    // Something is wrong or we sent the wrong command.
+                    if (getCanData(data, 3) == 0xFF)
+                    {
+                        CastInfoEvent("Bootloader did what it could and failed. Sorry", ActivityType.ConvertingFile);
+                        return buf;
+                    }
+
+                    // Settings correctly received.
+                    if (command == 0 && getCanData(data, 3) == 1)
+                    {
+                        success = true;
+                        return buf;
+                    }
+
+                    // Checksum32; complete
+                    if (command == 1 && getCanData(data, 3) == 1)
+                    {   
+                        success = true;
+                        for (uint i = 0; i < 4; i++)
+                            buf[i] = getCanData(data, 4+i);
+
+                        return buf;
+                    }
+
+                    // md5; complete
+                    if ((command == 2 || command == 3) && getCanData(data, 3) == 1)
+                    {
+                        do
+                        {   // ...
+                            byte[] md5dbuf = readDataByLocalIdentifier(7, 0, 16, out success);
+                            if (success)
+                                return md5dbuf;
+                            else
+                                Retries++;
+
+                            Thread.Sleep(50);
+                        } while (Retries < 20);
+
+                        CastInfoEvent("Bootloader has generated md5 but it couldn't be fetched..", ActivityType.ConvertingFile);
+                    }
+
+                    // Secondary loader is alive!
+                    if (command == 4 && getCanData(data, 3) == 1)
+                    {
+                        success = true;
+                        return buf;
+                    }
+                    // ...
+                }
+
+                Thread.Sleep(50);
+
+            } while (Retries < 20);
+
+            // One should never get here unless something is wrong; Throw a generic error message. 
+            CastInfoEvent("Gave up on bootloader command", ActivityType.ConvertingFile);
+            return buf;
+        }
+
+        private bool LeaveRecoveryBe(bool verify)
+        {
+            if (!verify)
+            {
+                if (formatBootPartition)
+                {
+                    CastInfoEvent("Warning, boot partition will be formated", ActivityType.ErasingFlash);
+                }
+                else
+                {
+                    CastInfoEvent("Skipped format of boot partition", ActivityType.ErasingFlash);
+                }
+            }
+
+            return !formatBootPartition;
+        }
+
+        // Nts: Clean this function. There are several ways it could fail
+        private bool ComparePartmd5(DoWorkEventArgs workEvent, byte device, bool verify)
+        {
+            /*BackgroundWorker bw = sender as BackgroundWorker;*/
+            string filename = (string)workEvent.Argument;
+
+
+            BlockManager bm = new BlockManager();
+            bm.SetFilename(filename);
+            int progress = 0;
+
+            int shift = 0;
+            bool success = false;
+            byte toerase = 0;
+            // Reset partition bitmask to select all partitions. BUT! Only if this is NOT a verification procedure.
+            if(!verify)
+                formatmask = 0x1FF;
+            
+            // Toy for debug
+            // PrintLegmd5();
+            CastProgressReadEvent(0);
+
+            for (byte i = 1; i < 10; i++)
+            {
+                // Store bit location and reset status
+                shift = 1 << (i - 1);
+                bool ret = true;
+                bool skip = false;
+
+                // Fetch local and remote md5 of selected partition.
+                byte[] Locmd5dbuf = new byte[16];
+                byte[] Remd5dbuf = new byte[16];
+
+                // ..
+                if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verify)
+                {
+                    if (device == 6)
+                    {
+                        Locmd5dbuf = bm.GetRegmd5(2, i);
+                        Remd5dbuf = LegionIDemand(2, i, out success);
+                    }
+                    else
+                    {
+                        Locmd5dbuf = bm.GetRegmd5(3, i);
+                        Remd5dbuf = LegionIDemand(3, i, out success);
+                    }
+                }
+                else
+                {
+                    // CastInfoEvent(("Skipped verification of partition " + i.ToString("X1")), ActivityType.ConvertingFile);
+                    success = true;
+                    skip = true;
+                }
+                progress += 11;
+                if (progress >= 99)
+                    progress = 100;
+                CastProgressReadEvent(progress);
+
+                // If, for some reason, the remote fetch fails, do not give an error (yet). Just leave the partition as tagged for format. 
+                if (success && !skip)
+                {
+                    // Compare both md5's
+                    for (byte a = 0; a < 16; a++)
+                    {
+                        if (Locmd5dbuf[a] != Remd5dbuf[a])
+                            ret = false;
+                    }
+
+                    // Special case. Override automatic selection of boot partition if the user so choose.
+                    // MCP Partition 9 is part of partition 1
+                    if (i == 1 && ret == false || (i == 9 && ret == false && device == 5))
+                        ret = LeaveRecoveryBe(verify);
+
+                    if (ret)
+                    {
+                        formatmask -= (uint)shift;
+                        if (!verify)
+                        {
+                            // CastInfoEvent(("Partition " + i.ToString("X1") + ": Identical / Skipping"), ActivityType.ConvertingFile);
+                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Identical / Skipping"));
+                        }
+                    }
+                    else
+                    {
+                        if (!verify)
+                        {
+                            // CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write" ), ActivityType.ConvertingFile);
+                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Tagged for erase and write"));
+                            toerase++;
+                        }
+                    }
+                }
+                else
+                    ; // Add failure-mechanism
+
+            }
+
+            // MCP special case:
+            // Partition 1 contains partition 9 (It's hidden and... Just read the datasheet )
+            // Make sure both gets written if any of them are selected since formatting one of them _WILL_ format the other.
+            if (((formatmask & 0x101) > 0) && ((formatmask & 0x101) != 0x101) && device == 5)
+            {
+                CastInfoEvent(("Patched MCP mask to write 1 and 9"), ActivityType.ConvertingFile);
+                logger.Debug("(Legion) Patched MCP mask");
+                toerase++;
+                formatmask |= 0x101;
+            }
+
+            CastInfoEvent("Done!", ActivityType.ConvertingFile);
+
+            if (!verify)
+            {
+                if (toerase > 0)
+                    CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.ConvertingFile);
+                else
+                    CastInfoEvent("Everything is identical. Exiting.. ", ActivityType.ConvertingFile);
+
+                // TODO: Send this only to log..
+                // CastInfoEvent(("Partition erase bitmask:" + formatmask.ToString("X3")), ActivityType.ConvertingFile);
+                
+            }
+            logger.Debug(("(Legion) Partition erase bitmask:" + formatmask.ToString("X3")));
+
+
+            return false;
+        }
+
+        
+        // I intend to either A: Remove this one and use md5 for everything or B: rewrite command to let the user select address range 
+        private bool RequestChecksum32_Legion(byte Region, out int csum32)
+        {
+            bool success = false;
+            csum32 = 0;
+            byte[] framedata = new byte[4];
+
+            if (Region == 6)
+                framedata = LegionIDemand(1, 0, out success);
+            else if (Region == 5)
+                framedata = LegionIDemand(1, 1, out success);
+
+            if (success)
+            {
+                csum32 = (framedata[0] << 24 | framedata[1] << 16 | framedata[2] << 8 | framedata[3]);
+                return true;
+            }
+            return false;
+
+        }
+
+
+        private void WriteFlashLegion(byte Device, int EndAddress, bool z22se, object sender, DoWorkEventArgs workEvent)
         {
 
             BackgroundWorker bw = sender as BackgroundWorker;
@@ -6201,7 +6765,7 @@ namespace TrionicCANLib.API
             _stallKeepAlive = true;
 
             // Init session and start loader 
-            if (!StartCommon(sender, workEvent))
+            if (!StartCommon(Device, z22se))
             {
 
                 _stallKeepAlive = false;
@@ -6209,57 +6773,112 @@ namespace TrionicCANLib.API
                 return;
             }
 
-            CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
-            if (SendrequestDownload(Device, false))
+            // compare md5 and set bitmask accordingly
+            CastInfoEvent("Comparing md5 for selective erase..", ActivityType.ConvertingFile);
+            ComparePartmd5(workEvent, Device, false);
+            // formatmask = 0xFA;
+            if (formatmask > 0)
             {
-               
-                _needRecovery = true;
-                // SendShutup(); 
-                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
-                bool success = ProgramFlashLeg(EndAddress, bm);
-
-                if (success)
+                if (SendrequestDownload(Device, false))
                 {
-                    if (Send0120_Legion(bm.GetChecksum32()))
-                    {
+                    _needRecovery = true;
+                    CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
 
-                        CastInfoEvent("FLASH upload completed and checksum-matched", ActivityType.ConvertingFile);
-                        LegionIsAlive = false;
-                        _needRecovery = false;
+                    // formatmask = 0;
+                    bool success = ProgramFlashLeg(EndAddress, bm, Device);
+
+                    if (success)
+                    {
+                        CastInfoEvent("Verifying md5..", ActivityType.ConvertingFile);
+                        ComparePartmd5(workEvent, Device, true);
+                        if (formatmask == 0)
+                        {
+                            CastInfoEvent("FLASH upload completed and verified", ActivityType.ConvertingFile);
+                            LegionIsAlive = false;
+                            _needRecovery = false;
+                            Send0120();
+                        }
+                        else
+                        {
+                            for (int i = 0; i < 5; i++)
+                                CastInfoEvent("FLASH upload failed (Wrong checksum) Please try again! ", ActivityType.ConvertingFile);
+                        }
                     }
                     else
                     {
-                        for(int i=0; i<5; i++)
-                            CastInfoEvent("FLASH upload failed (Wrong checksum) Please try again! ", ActivityType.ConvertingFile);
+                        for (int i = 0; i < 5; i++)
+                            CastInfoEvent("FLASH upload failed, please try again!", ActivityType.ConvertingFile);
                     }
+
+                    CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
+                    sw.Stop();
+
                 }
                 else
                 {
-                    for (int i = 0; i < 5; i++)
-                        CastInfoEvent("FLASH upload failed, please try again!", ActivityType.ConvertingFile);
+                    sw.Stop();
+                    _needRecovery = false;
+                    _stallKeepAlive = false;
+                    CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
+                    // Send0120(); 
+                    CastInfoEvent("Session ended but the bootloader is still active;", ActivityType.FinishedFlashing);
+                    CastInfoEvent("You could try again", ActivityType.FinishedFlashing);
+                    workEvent.Result = false;
+                    return;
+
                 }
 
-                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                sw.Stop();
-
-            }
-            else
-            {
-                sw.Stop();
-                _needRecovery = false;
-                _stallKeepAlive = false;
-                CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
+            // Tell loader to exit; Same data on both ends
+            }else
                 Send0120();
-                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                workEvent.Result = false;
-                return;
 
-            }
             _stallKeepAlive = false;
             workEvent.Result = true;
         }
 
-        private bool ProgramFlashLeg(int End, BlockManager bm)
+        //// Sister function to ProgramFlashLeg()
+        // Figure out whether or not to write a certain address range.
+        private bool Erasedregion(int address, byte device)
+        {
+            // Note: The format function count partitions as 1 to 9.
+            // this on the other hand will count from 0 to 8
+            int part = 0;
+
+
+            // T8 main
+            if (device == 6)
+            {
+                if (address >= 0xC0000)
+                    part = 8;
+                else if (address >= 0x80000)
+                    part = 7;
+                else if (address >= 0x60000)
+                    part = 6;
+                else if (address >= 0x40000)
+                    part = 5;
+                else if (address >= 0x20000)
+                    part = 4;
+                else if (address >= 0x8000)
+                    part = 3;
+                else if (address >= 0x6000)
+                    part = 2;
+                else if (address >= 0x4000)
+                    part = 1;
+            }
+
+            // MCP
+            else if (device == 5)
+                part = (address >> 15) & 0xF;
+            
+            // Read one bit from selected part of the format mask to figure out if this partition should be written or not.
+            if (((formatmask >> part) & 1) > 0)
+                return true;
+
+            return false;
+        }
+
+
+        private bool ProgramFlashLeg(int End, BlockManager bm, byte device)
         {
             const int startAddress = 0x000000;
 
@@ -6271,11 +6890,15 @@ namespace TrionicCANLib.API
             bool Problem = false;
             int Retries = 0;
             int blockNumber = 0;
+            bool byteswapped = false;
 
-            // for (int blockNumber = 0; blockNumber <= lastBlockNumber; blockNumber++)
-            while(blockNumber <= lastBlockNumber)
+            // Early MCP dumps were byteswapped..
+            if (End == 0x40100)
+                byteswapped = bm.mcpswapped();
+
+            while (blockNumber <= lastBlockNumber)
             {
-
+                
                 int percentage = (int)(((float)blockNumber * 100) / (float)lastBlockNumber);
                 if (percentage > saved_progress || percentage==0)
                 {
@@ -6286,29 +6909,30 @@ namespace TrionicCANLib.API
                 // Reset status
                 Problem = false;
 
-                byte[] data2Send  = bm.GetNextBlock_128();
+
+                int currentAddress = startAddress + (blockNumber * 0x80);
+                byte[] data2Send  = bm.GetCurrentBlock_128(blockNumber, byteswapped);
                 
                 // Calculate checksum-16 of frame-data and add it to the frame.
                 int Csum16 = 0;
-                for (int i = 0; i < 0x80; i++)
-                {
+
+                for (int i = 0; i < (length - 8); i++)
                     Csum16 += data2Send[i];
-                }
-                data2Send[0x80/*length-2*/] = (byte)(Csum16 >> 8 & 0xff);
-                data2Send[0x81/*length -1*/] = (byte)(Csum16 & 0xff);
-
-
-                int currentAddress = startAddress + (blockNumber * 0x80);
+                
+                data2Send[length - 8] = (byte)(Csum16 >> 8 & 0xff);
+                data2Send[length - 7] = (byte)(Csum16 & 0xff);
+                
 
                 sw.Reset();
                 sw.Start();
 
-                // Check for blocks filled with 0xFF and skip those 
-                if (bm.FFblock(currentAddress) ==0 || currentAddress==0 )
-                { 
+                // Check for blocks filled with 0xFF / identical partitions and skip those
+                if (!bm.FFblock(currentAddress, length - 8) && Erasedregion(currentAddress, device))
+                {
+                    // CastInfoEvent("Current addr: " + currentAddress.ToString("X6"), ActivityType.UploadingFlash);
                     if (SendTransferData(length, currentAddress, 0x7E8))
                     {
-
+                        // CastInfoEvent("Current Succ addr: " + currentAddress.ToString("X6"), ActivityType.UploadingFlash);
                         canUsbDevice.RequestDeviceReady();
 
                         byte iFrameNumber = 0x21;
@@ -6321,8 +6945,8 @@ namespace TrionicCANLib.API
                             var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
                             msg.setData(cmd);
                             txpnt += 7;
-                           
-                            if (iFrameNumber++ >0x2E)  // It checks before incrementing so it will end @ 0x2f before rolling over 
+
+                            if (iFrameNumber++ > 0x2E)  // It checks before incrementing so it will end @ 0x2f before rolling over 
                                 iFrameNumber = 0x20;
 
                             msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
@@ -6333,8 +6957,16 @@ namespace TrionicCANLib.API
                             if (!canUsbDevice.sendMessage(msg))
                                 logger.Debug("Couldn't send message");
 
-                            if (m_sleepTime > 0)
-                                Thread.Sleep(m_sleepTime);
+
+                            // This turd is too slow!
+                            if (canUsbDevice is CANELM327Device || fasterdamnit)
+                                ;
+                            else
+                            {
+                                if (m_sleepTime > 0)
+                                    Thread.Sleep(m_sleepTime);
+                            }
+                                
                         }
 
                         Application.DoEvents();
@@ -6358,7 +6990,6 @@ namespace TrionicCANLib.API
                             {
                                 blockNumber = 0;
                                 currentAddress = 0;
-                                bm.ReverseBlock(0);
                                 CastInfoEvent("Bootloader reported a problem or did not respond in time. ", ActivityType.UploadingFlash);
                                 CastInfoEvent("Starting over.. ", ActivityType.UploadingFlash);
                                 CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
@@ -6380,8 +7011,10 @@ namespace TrionicCANLib.API
                         canUsbDevice.RequestDeviceReady();
 
                     }
-
-                } else
+                    else
+                        Problem = true;
+                }
+                else
                     Application.DoEvents();
 
                 sw.Stop();
@@ -6392,8 +7025,7 @@ namespace TrionicCANLib.API
             return true;
         }
 
-
-        private void ReadFlashLegion(byte Device, int lastAddress, object sender, DoWorkEventArgs workEvent)
+        private void ReadFlashLegion(byte Device, int lastAddress, bool z22se, object sender, DoWorkEventArgs workEvent)
         {
             SupportAutoskip = true;
 
@@ -6407,28 +7039,56 @@ namespace TrionicCANLib.API
             int blockSize = 0x80; // defined in bootloader... keep it that way!
             int bufpnt = 0;
             byte[] buf = new byte[lastAddress];
+            int Localcsum32 = 0;
+            int Remotecsum32 = 0;
 
             // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
             for (int i = 0; i < lastAddress; i++)
                 buf[i] = 0xFF;
 
             // Init session and start loader 
-            if (!StartCommon(sender, workEvent))
+            if (!StartCommon(Device, z22se))
             {
-
                 _stallKeepAlive = false;
                 workEvent.Result = false;
                 return;
             }
 
-            CastInfoEvent("Downloading FLASH", ActivityType.DownloadingFlash);
+            // Another hack to help elm
+            if (lastAddress == 0x100000)
+            {
+                bool md5success = false;
+                // Read flash partition 9; is it filled with 0xff? -Skip!
+                byte[] resp = LegionIDemand(2, 9, out md5success);
+                
+                if (md5success)
+                {
+                    uint mdlolo = (uint)(resp[12] << 24 | resp[13] << 16 | resp[14] << 8 | resp[15]);
+                    uint mdlohi = (uint)(resp[8] << 24 | resp[9] << 16 | resp[10] << 8 | resp[11]);
+                    uint mdhilo = (uint)(resp[4] << 24 | resp[5] << 16 | resp[6] << 8 | resp[7]);
+                    uint mdhihi = (uint)(resp[0] << 24 | resp[1] << 16 | resp[2] << 8 | resp[3]);
 
+                    if (mdhihi == 0x9a1d434  && mdhilo == 0xdbd7197e && mdlohi == 0x7c3af8a7 && mdlolo == 0xc28ca38b)
+                    {
+                        logger.Debug("(Legion) md5 confirms partition 9 is empty; Skiping", ActivityType.DownloadingFlash);
+                        lastAddress = 0xC0000;
+                    }
+                    else
+                        logger.Debug("(Legion) Partition 9 is not empty; Performing full dump", ActivityType.DownloadingFlash);
+                }
+            }
+
+            CastInfoEvent("Downloading FLASH", ActivityType.DownloadingFlash);
             Stopwatch keepAliveSw = new Stopwatch();
             keepAliveSw.Start();
 
             int saved_progress = 0;
 
-            CastInfoEvent("Downloading " + lastAddress.ToString("D") + " Bytes.", ActivityType.DownloadingFlash);
+            // Don't let the user know what has been done.
+            if (lastAddress != 0xC0000)
+                CastInfoEvent("Downloading " + lastAddress.ToString("D") + " Bytes.", ActivityType.DownloadingFlash);
+            else
+                CastInfoEvent("Downloading " + 0x100000.ToString("D") + " Bytes.", ActivityType.DownloadingFlash);
 
             // now start sending commands:
             //06 21 80 00 00 00 00 00 
@@ -6439,7 +7099,6 @@ namespace TrionicCANLib.API
             {
                 if (!canUsbDevice.isOpen())
                 {
-
                     _stallKeepAlive = false;
                     workEvent.Result = false;
                     SupportAutoskip = false; // Make sure to restore tags in case the user decides to try something else.
@@ -6450,21 +7109,24 @@ namespace TrionicCANLib.API
                 byte[] readbuf = readDataByLocalIdentifier(Device, startAddress, blockSize, out success);
                 if (success)
                 {
-
+                    // figure out why readDataByLocalIdentifier() sometimes return true even though the frame is incomplete
                     if (readbuf.Length == blockSize)
                     {
                         for (int j = 0; j < blockSize; j++)
                             buf[bufpnt++] = readbuf[j];
+
+                        startAddress += blockSize;
+                        retryCount = 0;
                     }
-                    //string infoStr = "Address: " + startAddress.ToString("X8"); //+ " ";
+                    else
+                        retryCount++;
+
                     int percentage = (int)((bufpnt * 100) / (float)lastAddress);
                     if (percentage > saved_progress)
                     {
                         CastProgressReadEvent(percentage);
                         saved_progress = percentage;
                     }
-                    startAddress += blockSize;
-                    retryCount = 0;
                 }
                 else
                 {
@@ -6486,52 +7148,61 @@ namespace TrionicCANLib.API
                         _stallKeepAlive = false;
                         workEvent.Result = false;
                         SupportAutoskip = false; // Make sure to restore tags in case the user decides to try something else.. 
-                        Send0120_Legion(0);
+                        Send0120();
 
                         return;
                     }
                 }
 
-                // Loader will never exit on its own. 
-                //if (keepAliveSw.ElapsedMilliseconds > 3000) // once every 3 seconds{
-                //  keepAliveSw.Stop();
-                //  keepAliveSw.Reset();
-                //  SendKeepAlive();
-                //  keepAliveSw.Start();
-                // }
                 Application.DoEvents();
             }
             sw.Stop();
             _stallKeepAlive = false;
 
- 
-
-
             if (buf != null)
             {
                 try{
+                    
+                    
+                    // Restore md5-hack..
+                    if (lastAddress == 0xC0000)
+                        lastAddress = 0x100000;
+
+                    // Byteswap mcp
+                    if (lastAddress == 0x040100)
+                    {
+                        CastInfoEvent("Byteswapping..", ActivityType.ConvertingFile);
+                        for (int i=0; i<0x40100; i+=2)
+                        {
+                            byte temp = buf[i];
+                            buf[i] = buf[i + 1];
+                            buf[i + 1] = temp;
+                        }
+                        CastInfoEvent("Done!", ActivityType.ConvertingFile);
+                    }
 
                     File.WriteAllBytes(filename, buf);
                     Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
-
-                    // (Checksum32 hack) 
-                    int Remotecsum32 = RequestChecksum32_Legion(Device);
-                    int Localcsum32 = 0;
+                    // Compare checksum-32 
                     for (int i = 0; i< lastAddress; i++)
                         Localcsum32 += buf[i];
 
-                    if(Localcsum32 != Remotecsum32)
+                    bool succ = RequestChecksum32_Legion(Device, out Remotecsum32);
+                    if (Localcsum32 != Remotecsum32 || !succ)
                     {
-                        // Is it possible the print these in hex? 
-                        CastInfoEvent("Checksum check failed. Local Checksum-32: " + Localcsum32.ToString("X8"), ActivityType.ConvertingFile);
-                        CastInfoEvent("Remote Checksum-32: " + Remotecsum32.ToString("X8"), ActivityType.ConvertingFile);
+                        CastInfoEvent("Checksum check failed!", ActivityType.ConvertingFile);
+                        CastInfoEvent("Local Checksum-32: " + Localcsum32.ToString("X8"), ActivityType.ConvertingFile);
+
+                        if(succ)
+                            CastInfoEvent("Remote Checksum-32: " + Remotecsum32.ToString("X8"), ActivityType.ConvertingFile);
+                        else
+                            CastInfoEvent("Could not fetch remote Checksum-32", ActivityType.ConvertingFile);
 
                         workEvent.Result = false;
                     }
                     else
                     {
-
-                        CastInfoEvent("Download done", ActivityType.FinishedDownloadingFlash);
+                        CastInfoEvent("Download done and checksum-matched", ActivityType.FinishedDownloadingFlash);
                         workEvent.Result = true;
                     }
                 }
@@ -6545,7 +7216,7 @@ namespace TrionicCANLib.API
                 workEvent.Result = false;
 
             // Loader will never exit on its own. Tell it to 
-            Send0120_Legion(0);
+            Send0120();
             LegionIsAlive = false;
             SupportAutoskip = false; // Make sure to restore tags in case the user decides to do something that requires another loader 
 

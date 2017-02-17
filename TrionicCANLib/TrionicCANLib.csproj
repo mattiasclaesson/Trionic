@@ -94,6 +94,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bootloader_legion.cs" />
     <Compile Include="Checksum\ChecksumT8.cs" />
     <Compile Include="Checksum\ChecksumResult.cs" />
     <Compile Include="FileTools.cs" />
@@ -144,6 +145,7 @@
     </Compile>
     <Compile Include="WMI\COMPortInfo.cs" />
     <Compile Include="WMI\ProcessConnection.cs" />
+    <Compile Include="z22se_preloader.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

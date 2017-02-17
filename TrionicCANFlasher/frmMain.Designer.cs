@@ -55,6 +55,7 @@
             this.cbUseFlasherOnDevice = new System.Windows.Forms.CheckBox();
             this.linkLabelLogging = new System.Windows.Forms.LinkLabel();
             this.btnLogData = new System.Windows.Forms.Button();
+            this.cbFormatBootPartition = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -86,7 +87,7 @@
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(12, 357);
+            this.progressBar1.Location = new System.Drawing.Point(12, 378);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(648, 23);
             this.progressBar1.TabIndex = 23;
@@ -123,7 +124,7 @@
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(648, 340);
+            this.listBoxLog.Size = new System.Drawing.Size(648, 354);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
@@ -226,8 +227,10 @@
             "Trionic 7",
             "Trionic 8",
             "Bosch ME9.6",
+            "Trionic 8 (Experimental)",
             "Trionic 8: MCP (Experimental)",
-            "Trionic 8 (Exp, Dangerous)"});
+            "Z22SE (Experimental)",
+            "Z22SE: MCP (Experimental)"});
             this.cbxEcuType.Location = new System.Drawing.Point(863, 193);
             this.cbxEcuType.Name = "cbxEcuType";
             this.cbxEcuType.Size = new System.Drawing.Size(150, 21);
@@ -365,11 +368,23 @@
             this.btnLogData.UseVisualStyleBackColor = true;
             this.btnLogData.Click += new System.EventHandler(this.btnLogData_Click);
             // 
+            // cbFormatBootPartition
+            // 
+            this.cbFormatBootPartition.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbFormatBootPartition.AutoSize = true;
+            this.cbFormatBootPartition.Location = new System.Drawing.Point(863, 393);
+            this.cbFormatBootPartition.Name = "cbFormatBootPartition";
+            this.cbFormatBootPartition.Size = new System.Drawing.Size(122, 17);
+            this.cbFormatBootPartition.TabIndex = 69;
+            this.cbFormatBootPartition.Text = "Format boot partition";
+            this.cbFormatBootPartition.UseVisualStyleBackColor = true;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1023, 392);
+            this.ClientSize = new System.Drawing.Size(1023, 413);
+            this.Controls.Add(this.cbFormatBootPartition);
             this.Controls.Add(this.btnLogData);
             this.Controls.Add(this.linkLabelLogging);
             this.Controls.Add(this.cbUseFlasherOnDevice);
@@ -436,6 +451,7 @@
         private System.Windows.Forms.CheckBox cbUseFlasherOnDevice;
         private System.Windows.Forms.LinkLabel linkLabelLogging;
         private System.Windows.Forms.Button btnLogData;
+        private System.Windows.Forms.CheckBox cbFormatBootPartition;
     }
 }
 

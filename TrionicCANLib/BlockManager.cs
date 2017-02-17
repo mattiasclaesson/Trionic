@@ -27,7 +27,7 @@ namespace TrionicCANLib
                 // if (fi.Length == 0x100000) 
                 if (fi.Length == 0x100000 || fi.Length == 0x40100)
                 {
-                    Len = fi.Length; /* I really hope this won't break stuff / Christian */
+                    Len = fi.Length; 
                     _filename = filename;
                     filebytes = File.ReadAllBytes(_filename);
                     return true;
@@ -83,38 +83,57 @@ namespace TrionicCANLib
         }
 
         // Legion hacks
-        public byte[] GetNextBlock_128()
+        public bool mcpswapped()
         {
-            byte[] returnarray = GetCurrentBlock_128();
-            _blockNumber++;
-            return returnarray;
-        }
-        public void ReverseBlock(int Block)
-        {
-            _blockNumber= Block;
-        }
+            if (filebytes[0] == 0x08 && filebytes[1] == 0x00 & filebytes[2] == 0x00 & filebytes[3] == 0x20)
+                return true;
 
-        public byte[] GetCurrentBlock_128()
+            return false;
+        }
+        public byte[] GetCurrentBlock_128(int block, bool byteswapped)
         {
-            int address = 0 + _blockNumber * 0x80;
+            _blockNumber = block;
+            int address = _blockNumber * 0x80;
+
+
+            byte[] buffer = new byte[0x80];
+            byte[] array = new byte[0x88];
+
+            
+            if (byteswapped)
+            {
+                for (int byteCount = 0; byteCount < 0x80; byteCount+=2)
+                {
+                    buffer[byteCount + 1] = filebytes[address];
+                    buffer[byteCount] = filebytes[address + 1];
+                    address += 2;
+                }
+            }
+            else
+            {
+                for (int byteCount = 0; byteCount < 0x80; byteCount++)
+                {
+                    buffer[byteCount] = filebytes[address++];
+                }
+            }
 
             ByteCoder bc = new ByteCoder();
-
-            byte[] array = new byte[0x86];
             bc.ResetCounter();
+
             for (int byteCount = 0; byteCount < 0x80; byteCount++)
             {
-                array[byteCount] = bc.codeByte(filebytes[address++]);
+                array[byteCount] = bc.codeByte(buffer[byteCount]);
             }
+
             return array;
         }
 
 
-        public byte FFblock(int address)
+        public bool FFblock(int address, int size)
         {
             int count = 0;
 
-            for (int byteCount = 0; byteCount < 0x80; byteCount++)
+            for (int byteCount = 0; byteCount < size; byteCount++)
             {
                 if (address == Len)
                     break;
@@ -124,10 +143,10 @@ namespace TrionicCANLib
                 address++;
             }
 
-            if (count == 0x80)
-                return 1;
-            else
-                return 0;
+            if (count == size)
+                return true;
+
+            return false;
         }
 
         public uint GetChecksum32()
@@ -141,8 +160,123 @@ namespace TrionicCANLib
             return checksum32;
         }
 
+        // Find a better place for this!
+        public byte[] GetRegmd5(uint device, uint partition)
+        {
+            /*     0- 3FFF ( 16K) (Boot)
+             *  4000- 5FFF (  8K) (NVDM)
+             *  6000- 7FFF (  8K) (NVDM)
+             *  8000-1FFFF ( 96K) (HWIO)
+             * 20000-3FFFF (128K) (APP)
+             * 40000-5FFFF (128K) (APP)
+             * 60000-7FFFF (128K) (APP)
+             * 80000-BFFFF (256K) (APP)
+             * C0000-FFFFF (256K) (APP) */
 
+            uint start=0;
+            uint end=0;
+            byte[] hash = new byte[16];
+            bool byteswapped = false;
 
+            // Trionic 8, Main
+            if (device == 2)
+            {
+                if (partition == 1)
+                {
+                    start = 0;
+                    end = start + (16 * 1024);
+                }
+                else if (partition == 2)
+                {
+                    start = 0x4000;
+                    end = start + (8 * 1024);
+                }
+                else if (partition == 3)
+                {
+                    start = 0x6000;
+                    end = start + (8 * 1024);
+                }
+                else if (partition == 4)
+                {
+                    start = 0x8000;
+                    end = start + (96 * 1024);
+                }
+                else if (partition == 5)
+                {
+                    start = 0x20000;
+                    end = start + (128 * 1024);
+                }
+                else if (partition == 6)
+                {
+                    start = 0x40000;
+                    end = start + (128 * 1024);
+                }
+                else if (partition == 7)
+                {
+                    start = 0x60000;
+                    end = start + (128 * 1024);
+                }
+                else if (partition == 8)
+                {
+                    start = 0x80000;
+                    end = start + (256 * 1024);
+                }
+                else if (partition == 9)
+                {
+                    start = 0xC0000;
+                    end = start + (256 * 1024);
+                }
+                else
+                    return hash;
+
+            }
+            // MCP
+            else if (device == 3)
+            {
+                byteswapped = mcpswapped();
+                if (partition > 0 && partition < 9)
+                {
+                    end = partition << 15;
+                    start = end - 0x8000;
+                }
+                else if (partition == 0)
+                    end = 0x40100;
+                
+                else if (partition == 9)
+                {
+                    start = 0x40000;
+                    end = 0x40100;
+                }
+                else
+                    return hash;
+            }
+
+            System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
+            md5.Initialize();
+            byte[] buf = new byte[end-start];
+            uint e = 0;
+            if (!byteswapped)
+            {
+                for (uint i = start; i < end; i++)
+                {
+                    buf[e] = filebytes[i];
+                    e++;
+                }
+            }
+            else
+            {
+                for (uint i = start; i < end; i+=2)
+                {
+                    buf[e] = filebytes[i + 1];
+                    buf[e + 1] = filebytes[i];
+                    e +=2;
+                }
+
+            }
+            hash = md5.ComputeHash(buf);
+            return hash;
+
+        }
 
 
     }
