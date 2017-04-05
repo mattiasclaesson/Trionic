@@ -5141,7 +5141,7 @@ namespace TrionicCANLib.API
                         }
                     }
 
-                    if (eraseSw.Elapsed.Seconds > 50)
+                    if (eraseSw.Elapsed.Seconds > 120)
                     {
                         eraseSw.Stop();
                         if (canUsbDevice is CANELM327Device)
@@ -5153,7 +5153,7 @@ namespace TrionicCANLib.API
                         }
                         else
                         {
-                            CastInfoEvent("Erase timed out after 50 seconds", ActivityType.ErasingFlash);
+                            CastInfoEvent("Erase timed out after 120 seconds", ActivityType.ErasingFlash);
                             return false;
                         }
                     }
