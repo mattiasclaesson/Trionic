@@ -15,18 +15,6 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_1CD663634790325E7A026BEAFF7B9EB4"
-        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_1CD663634790325E7A026BEAFF7B9EB4"
-        "OwnerKey" = "8:_F1AEE1D0AEFF11C787AEC46C06417DBF"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -45,6 +33,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_7747543A6C6FB526E50E3C76BEF28F10"
+        "OwnerKey" = "8:_D42D3477D8D2384CECF37D5EA679190F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7747543A6C6FB526E50E3C76BEF28F10"
+        "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_788CD0B4D54DDFA1DD325A7E543A21B4"
         "OwnerKey" = "8:_D42D3477D8D2384CECF37D5EA679190F"
         "MsmSig" = "8:_UNDEFINED"
@@ -69,20 +69,20 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_A437E1A2EF91AB37C80E69415C904FF6"
-        "OwnerKey" = "8:_D42D3477D8D2384CECF37D5EA679190F"
+        "MsmKey" = "8:_B69D594B59284F939B1F4A00C77E172B"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_A437E1A2EF91AB37C80E69415C904FF6"
+        "MsmKey" = "8:_C4BD42520AFF43C457B1F6D462F382F8"
         "OwnerKey" = "8:_3C87B40D8D4F4B188624286CF0A35439"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_B69D594B59284F939B1F4A00C77E172B"
-        "OwnerKey" = "8:_UNDEFINED"
+        "MsmKey" = "8:_C4BD42520AFF43C457B1F6D462F382F8"
+        "OwnerKey" = "8:_F1AEE1D0AEFF11C787AEC46C06417DBF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -130,19 +130,19 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_7747543A6C6FB526E50E3C76BEF28F10"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_5879D9CF7D1DBAFFFF4A4322A269CC00"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_A437E1A2EF91AB37C80E69415C904FF6"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1CD663634790325E7A026BEAFF7B9EB4"
+        "OwnerKey" = "8:_C4BD42520AFF43C457B1F6D462F382F8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -256,20 +256,20 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_1CD663634790325E7A026BEAFF7B9EB4"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5879D9CF7D1DBAFFFF4A4322A269CC00"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:canlibCLSNET, Version=8.14.384.1, Culture=neutral, PublicKeyToken=bb7f2cd46200de24, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:canusbdrv_net, Version=2.0.0.1, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
-                    "_1CD663634790325E7A026BEAFF7B9EB4"
+                    "_5879D9CF7D1DBAFFFF4A4322A269CC00"
                     {
-                    "Name" = "8:canlibCLSNET.dll"
+                    "Name" = "8:canusbdrv_net.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:canlibCLSNET.dll"
+            "SourcePath" = "8:canusbdrv_net.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
@@ -287,20 +287,20 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5879D9CF7D1DBAFFFF4A4322A269CC00"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7747543A6C6FB526E50E3C76BEF28F10"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:canusbdrv_net, Version=2.0.0.1, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:FTD2XX_NET, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_5879D9CF7D1DBAFFFF4A4322A269CC00"
+                    "_7747543A6C6FB526E50E3C76BEF28F10"
                     {
-                    "Name" = "8:canusbdrv_net.dll"
+                    "Name" = "8:FTD2XX_NET.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:canusbdrv_net.dll"
+            "SourcePath" = "8:FTD2XX_NET.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
@@ -380,37 +380,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A437E1A2EF91AB37C80E69415C904FF6"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:FTD2XX_NET, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_A437E1A2EF91AB37C80E69415C904FF6"
-                    {
-                    "Name" = "8:FTD2XX_NET.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:FTD2XX_NET.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B69D594B59284F939B1F4A00C77E172B"
             {
             "SourcePath" = "8:..\\TrionicCANFlasher\\TrionicCanFlasher.ico"
@@ -429,6 +398,37 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C4BD42520AFF43C457B1F6D462F382F8"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:canlibCLSNET, Version=8.14.384.1, Culture=neutral, PublicKeyToken=bb7f2cd46200de24, processorArchitecture=x86"
+                "ScatterAssemblies"
+                {
+                    "_C4BD42520AFF43C457B1F6D462F382F8"
+                    {
+                    "Name" = "8:canlibCLSNET.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:canlibCLSNET.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D42D3477D8D2384CECF37D5EA679190F"
@@ -466,7 +466,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.34.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.35.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_F1AEE1D0AEFF11C787AEC46C06417DBF"
@@ -549,15 +549,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{4ECEADAD-E333-4111-B0A5-62ED71499AA1}"
-        "PackageCode" = "8:{04BA2598-C570-42CF-BECE-6D264D1FEB55}"
+        "ProductCode" = "8:{C68037DA-BBF6-479A-AE4D-024DD5A3FD10}"
+        "PackageCode" = "8:{2CDF7F84-2AF6-442B-887A-8B5EC533A8F4}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.1.45"
+        "ProductVersion" = "8:0.1.46"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://www.txsuite.org"
