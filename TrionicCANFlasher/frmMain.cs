@@ -1014,9 +1014,9 @@ namespace TrionicCANFlasher
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            SaveRegistrySetting("AdapterType", cbxAdapterType.SelectedItem.ToString());
+            SaveRegistrySetting("AdapterType", cbxAdapterType.SelectedItem != null ? cbxAdapterType.SelectedItem.ToString() : String.Empty);
             SaveRegistrySetting("Adapter", cbAdapter.SelectedItem != null ?  cbAdapter.SelectedItem.ToString() :  String.Empty);
-            SaveRegistrySetting("ECU", cbxEcuType.SelectedItem.ToString());
+            SaveRegistrySetting("ECU", cbxEcuType.SelectedItem != null ? cbxEcuType.SelectedItem.ToString() : String.Empty);
             SaveRegistrySetting("EnableLogging", cbEnableLogging.Checked);
             SaveRegistrySetting("OnlyPBus", cbOnlyPBus.Checked);
             SaveRegistrySetting("DisableCanCheck", cbDisableConnectionCheck.Checked);
