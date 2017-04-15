@@ -5155,7 +5155,15 @@ namespace TrionicCANLib.API
                             return false;
                         }
                     }
-                    CastInfoEvent(string.Format("Erasing FLASH waited: {0} minutes and {1} seconds", eraseSw.Elapsed.Minutes, eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+
+                    if (eraseSw.Elapsed.Minutes == 0)
+                    {
+                        CastInfoEvent(string.Format("Erasing FLASH waited: {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                    }
+                    else
+                    {
+                        CastInfoEvent(string.Format("Erasing FLASH waited: {0} minutes and {1} seconds", eraseSw.Elapsed.Minutes, eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                    }
                 }
                 else
                 {
@@ -5201,7 +5209,14 @@ namespace TrionicCANLib.API
                             if (formatbuf[3] == 1)
                             {
                                 // CastProgressReadEvent(100);
-                                CastInfoEvent(String.Format("Erase completed after {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                                if (eraseSw.Elapsed.Minutes == 0)
+                                {
+                                    CastInfoEvent(String.Format("Erase completed after {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                                }
+                                else
+                                {
+                                    CastInfoEvent(string.Format("Erase completed after: {0} minutes and {1} seconds", eraseSw.Elapsed.Minutes, eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                                }
                                 eraseDone = true;
                                 return true;
                             }
@@ -5728,7 +5743,7 @@ namespace TrionicCANLib.API
                     {
                         CastInfoEvent("Erase completed", ActivityType.ErasingFlash);
                         // ELM327 seem to be unable to wait long enough for this response
-                        // Instead we assume its finnished ok after 35 seconds
+                        // Instead we assume its finished ok after 35 seconds
                         return true;
                     }
                     else
