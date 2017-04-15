@@ -645,55 +645,6 @@ namespace TrionicCANLib.API
             return data;
         }
 
-        public byte[] ReadMapFromSRAMVarLength(SymbolHelper sh)
-        {
-            int varlength = 2;
-            byte[] completedata = new byte[sh.Length];
-            try
-            {
-                byte[] data;
-                int m_nrBytes = varlength;
-                int m_nrOfReads = 0;
-                int m_nrOfRetries = 0;
-                m_nrOfReads = sh.Length / m_nrBytes;
-                if (((sh.Length) % varlength) > 0) m_nrOfReads++;
-                int bytecount = 0;
-                KWPHandler.getInstance().requestSequrityAccess(false); // no seq. access <GS-10022010>
-                for (int readcount = 0; readcount < m_nrOfReads; readcount++)
-                {
-                    m_nrOfRetries = 0;
-                    int addresstoread = (int)sh.Start_address + (readcount * m_nrBytes);
-                    //LogHelper.Log("Reading 64 bytes from address: " + addresstoread.ToString("X6"));
-
-                    while (!KWPHandler.getInstance().sendReadRequest(/*0xF04768*/(uint)(addresstoread), (uint)varlength) && m_nrOfRetries < 20)
-                    {
-                        m_nrOfRetries++;
-                    }
-                    logger.Debug("Send command in " + m_nrOfRetries.ToString() + " retries");
-                    m_nrOfRetries = 0;
-                    while (!KWPHandler.getInstance().sendRequestDataByOffset(out data) && m_nrOfRetries < 20)
-                    {
-                        m_nrOfRetries++;
-                    }
-                    logger.Debug("Read data in " + m_nrOfRetries.ToString() + " retries");
-                    logger.Debug("Read " + data.Length.ToString() + " bytes from CAN interface");
-                    foreach (byte b in data)
-                    {
-                        //Console.Write(b.ToString("X2") + " ");
-                        if (bytecount < completedata.Length)
-                        {
-                            completedata[bytecount++] = b;
-                        }
-                    }
-                }
-            }
-            catch (Exception E)
-            {
-                logger.Debug("Failed to read memory: " + E.Message);
-            }
-            return completedata;
-        }
-
         public bool WriteSymbolToSRAM(uint symbolnumber, byte[] bytes)
         {
             KWPHandler.getInstance().requestSequrityAccess(false);
