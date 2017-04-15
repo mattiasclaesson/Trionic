@@ -119,7 +119,6 @@ namespace TrionicCANLib.API
             }
 
             canUsbDevice.UseOnlyPBus = m_OnlyPBus;
-            canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
             canUsbDevice.TrionicECU = ECU.TRIONIC8;
             canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
             canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
@@ -5086,7 +5085,6 @@ namespace TrionicCANLib.API
             int eraseCount = 0;
             bool Firstpass = true;
             int retryCount = 0;
-            int progress = 0;
 
             while (!eraseDone)
             {

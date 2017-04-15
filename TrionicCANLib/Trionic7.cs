@@ -71,7 +71,6 @@ namespace TrionicCANLib.API
             if (canUsbDevice != null)
             {
                 canUsbDevice.UseOnlyPBus = m_OnlyPBus;
-                canUsbDevice.DisableCanConnectionCheck = m_DisableCanConnectionCheck;
                 canUsbDevice.TrionicECU = ECU.TRIONIC7;
                 canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
                 canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);

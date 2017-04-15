@@ -70,14 +70,6 @@ namespace TrionicCANLib.API
             set { m_OnlyPBus = value; }
         }
 
-        protected bool m_DisableCanConnectionCheck = false;
-
-        public bool DisableCanConnectionCheck
-        {
-            get { return m_DisableCanConnectionCheck; }
-            set { m_DisableCanConnectionCheck = value; }
-        }
-
         protected Latency m_Latency = Latency.Default;
 
         public Latency Latency

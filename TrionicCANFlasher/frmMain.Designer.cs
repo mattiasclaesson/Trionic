@@ -45,7 +45,6 @@
             this.label2 = new System.Windows.Forms.Label();
             this.cbxEcuType = new System.Windows.Forms.ComboBox();
             this.cbOnlyPBus = new System.Windows.Forms.CheckBox();
-            this.cbDisableConnectionCheck = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
             this.documentation = new System.Windows.Forms.LinkLabel();
@@ -56,6 +55,7 @@
             this.linkLabelLogging = new System.Windows.Forms.LinkLabel();
             this.btnLogData = new System.Windows.Forms.Button();
             this.cbFormatBootPartition = new System.Windows.Forms.CheckBox();
+            this.cbUseLegionBootloader = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -227,7 +227,6 @@
             "Trionic 7",
             "Trionic 8",
             "Bosch ME9.6",
-            "Trionic 8 (Experimental)",
             "Trionic 8: MCP (Experimental)",
             "Z22SE (Experimental)",
             "Z22SE: MCP (Experimental)"});
@@ -249,19 +248,6 @@
             this.cbOnlyPBus.TabIndex = 57;
             this.cbOnlyPBus.Text = "Only P-Bus connection";
             this.cbOnlyPBus.UseVisualStyleBackColor = true;
-            // 
-            // cbDisableConnectionCheck
-            // 
-            this.cbDisableConnectionCheck.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbDisableConnectionCheck.AutoSize = true;
-            this.cbDisableConnectionCheck.Checked = true;
-            this.cbDisableConnectionCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbDisableConnectionCheck.Location = new System.Drawing.Point(863, 347);
-            this.cbDisableConnectionCheck.Name = "cbDisableConnectionCheck";
-            this.cbDisableConnectionCheck.Size = new System.Drawing.Size(150, 17);
-            this.cbDisableConnectionCheck.TabIndex = 58;
-            this.cbDisableConnectionCheck.Text = "Disable connection check";
-            this.cbDisableConnectionCheck.UseVisualStyleBackColor = true;
             // 
             // label6
             // 
@@ -338,7 +324,7 @@
             this.cbUseFlasherOnDevice.AutoSize = true;
             this.cbUseFlasherOnDevice.Checked = true;
             this.cbUseFlasherOnDevice.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(863, 370);
+            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(863, 347);
             this.cbUseFlasherOnDevice.Name = "cbUseFlasherOnDevice";
             this.cbUseFlasherOnDevice.Size = new System.Drawing.Size(129, 17);
             this.cbUseFlasherOnDevice.TabIndex = 66;
@@ -379,11 +365,26 @@
             this.cbFormatBootPartition.Text = "Format boot partition";
             this.cbFormatBootPartition.UseVisualStyleBackColor = true;
             // 
+            // cbUseLegionBootloader
+            // 
+            this.cbUseLegionBootloader.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbUseLegionBootloader.AutoSize = true;
+            this.cbUseLegionBootloader.Checked = true;
+            this.cbUseLegionBootloader.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbUseLegionBootloader.Location = new System.Drawing.Point(863, 370);
+            this.cbUseLegionBootloader.Name = "cbUseLegionBootloader";
+            this.cbUseLegionBootloader.Size = new System.Drawing.Size(134, 17);
+            this.cbUseLegionBootloader.TabIndex = 70;
+            this.cbUseLegionBootloader.Text = "Use Legion Bootloader";
+            this.cbUseLegionBootloader.UseVisualStyleBackColor = true;
+            this.cbUseLegionBootloader.CheckedChanged += new System.EventHandler(this.cbUseLegionBootloader_CheckedChanged);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1023, 413);
+            this.Controls.Add(this.cbUseLegionBootloader);
             this.Controls.Add(this.cbFormatBootPartition);
             this.Controls.Add(this.btnLogData);
             this.Controls.Add(this.linkLabelLogging);
@@ -394,7 +395,6 @@
             this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.cbxComSpeed);
-            this.Controls.Add(this.cbDisableConnectionCheck);
             this.Controls.Add(this.cbOnlyPBus);
             this.Controls.Add(this.cbxEcuType);
             this.Controls.Add(this.label2);
@@ -441,7 +441,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cbxEcuType;
         private System.Windows.Forms.CheckBox cbOnlyPBus;
-        private System.Windows.Forms.CheckBox cbDisableConnectionCheck;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cbxComSpeed;
         private System.Windows.Forms.LinkLabel documentation;
@@ -452,6 +451,7 @@
         private System.Windows.Forms.LinkLabel linkLabelLogging;
         private System.Windows.Forms.Button btnLogData;
         private System.Windows.Forms.CheckBox cbFormatBootPartition;
+        private System.Windows.Forms.CheckBox cbUseLegionBootloader;
     }
 }
 

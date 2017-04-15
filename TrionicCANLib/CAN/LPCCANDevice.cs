@@ -119,7 +119,7 @@ public class LPCCANDevice : ICANDevice
             logger.Debug("Connected LPCCanDevice");
 
             // try listening on I-bus first
-            if (!UseOnlyPBus && try_bitrate(47619, !DisableCanConnectionCheck))
+            if (!UseOnlyPBus && try_bitrate(47619, false))
             {
                 // got traffic
                 logger.Debug("I-bus connected");
@@ -130,24 +130,25 @@ public class LPCCANDevice : ICANDevice
             logger.Debug("Trying P-bus connection");
 
             // try P-bus next
-            if (!try_bitrate(500000, !DisableCanConnectionCheck))
+            if (!try_bitrate(500000, false))
             {
                 // give up
                 logger.Debug("Failed to open canchannel");
                 combi.Close();
                 return OpenResult.OpenError;
             }
-
             logger.Debug("Canchannel opened");
-            if (read_thread != null) //logger.Debug("Threadstate: " + read_thread.ThreadState);
-            // start reader thread
-            try
+            
+            if (read_thread != null)
             {
-                if (read_thread != null) read_thread.Abort();
-            }
-            catch (Exception tE)
-            {
-                logger.Debug("Failed to abort thread: " + tE.Message);
+                try
+                {
+                    read_thread.Abort();
+                }
+                catch (Exception tE)
+                {
+                    logger.Debug("Failed to abort thread: " + tE.Message);
+                }
             }
             term_requested = false;
             read_thread = new Thread(read_messages); // move here to ensure a new thread is started

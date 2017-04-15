@@ -107,14 +107,6 @@ namespace TrionicCANLib.CAN
             set { m_OnlyPBus = value; }
         }
 
-        private bool _DisableCanConnectionCheck = false;
-
-        public bool DisableCanConnectionCheck
-        {
-            get { return _DisableCanConnectionCheck; }
-            set { _DisableCanConnectionCheck = value; }
-        }
-
         protected List<uint> m_AcceptedMessageIds;
 
         public virtual List<uint> AcceptOnlyMessageIds

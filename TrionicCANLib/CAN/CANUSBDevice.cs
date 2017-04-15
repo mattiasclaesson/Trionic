@@ -213,17 +213,12 @@ namespace TrionicCANLib.CAN
             {
                 return OpenResult.OpenError;
             }
-            if(DisableCanConnectionCheck || boxIsThere())
-            {
-                logger.Debug("P bus connected");
-                m_readThread = new Thread(readMessages) { Name = "CANUSBDevice.m_readThread" };
-                if (m_readThread.ThreadState == ThreadState.Unstarted)
-                    m_readThread.Start();
-                return OpenResult.OK;
-            }
-            logger.Debug("Box not there");
-            close();
-            return OpenResult.OpenError;
+            
+            logger.Debug("P bus connected");
+            m_readThread = new Thread(readMessages) { Name = "CANUSBDevice.m_readThread" };
+            if (m_readThread.ThreadState == ThreadState.Unstarted)
+                m_readThread.Start();
+            return OpenResult.OK;
         }
 
         /// <summary>
@@ -398,30 +393,6 @@ namespace TrionicCANLib.CAN
             }
             r_canMsg = new Lawicel.CANUSB.CANMsg();
             return 0;
-        }
-
-        /// <summary>
-        /// Check if there is connection with a CAN bus.
-        /// </summary>
-        /// <returns>true on connection, otherwise false</returns>
-        private bool boxIsThere()
-        {
-			// TODO T8 disabled this method, always returned true
-            Lawicel.CANUSB.CANMsg msg = new Lawicel.CANUSB.CANMsg();
-            if (waitAnyMessage(2000, out msg) != 0)
-            {
-                logger.Debug("A message was seen");
-                return true;
-            }
-            if (sendSessionRequest())
-            {
-                logger.Debug("Session request success");
-
-                return true;
-            }
-            logger.Debug("Box not there");
-
-            return false;
         }
 
         /// <summary>
