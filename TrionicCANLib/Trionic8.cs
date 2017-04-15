@@ -5122,7 +5122,7 @@ namespace TrionicCANLib.API
                         else SendKeepAlive();
                         eraseDone = true;
                         eraseSw.Stop();
-                        CastInfoEvent(String.Format("Erase completed after {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                        CastInfoEvent(string.Format("Erase completed after: {0} minutes and {1} seconds", eraseSw.Elapsed.Minutes, eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
                         return true;
                     }
                     else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x34 && getCanData(data, 3) == 0x11)
@@ -5141,23 +5141,23 @@ namespace TrionicCANLib.API
                         }
                     }
 
-                    if (eraseSw.Elapsed.Seconds > 120)
+                    if (eraseSw.Elapsed.Minutes >= 2)
                     {
                         eraseSw.Stop();
                         if (canUsbDevice is CANELM327Device)
                         {
                             CastInfoEvent("Erase completed", ActivityType.ErasingFlash);
                             // ELM327 seem to be unable to wait long enough for this response
-                            // Instead we assume its finnished ok now
+                            // Instead we assume its finished ok now
                             return true;
                         }
                         else
                         {
-                            CastInfoEvent("Erase timed out after 120 seconds", ActivityType.ErasingFlash);
+                            CastInfoEvent("Erase timed out after 2 minutes", ActivityType.ErasingFlash);
                             return false;
                         }
                     }
-                    CastInfoEvent(string.Format("Erasing FLASH waited: {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
+                    CastInfoEvent(string.Format("Erasing FLASH waited: {0} minutes and {1} seconds", eraseSw.Elapsed.Minutes, eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
                 }
                 else
                 {
