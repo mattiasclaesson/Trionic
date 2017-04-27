@@ -570,8 +570,11 @@ namespace TrionicCANLib.API
                     response = new CANMessage();
                     response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
+                    //RequestCorrectlyReceived-ResponsePending
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
-                    {} //RequestCorrectlyReceived-ResponsePending
+                    {
+                        CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                    }
                     else if (response.getCanData(1) != 0x7E)
                     {
                         _success = true;
@@ -602,8 +605,11 @@ namespace TrionicCANLib.API
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
                         response = m_canListener.waitMessage(timeoutP2ct);
+                        //RequestCorrectlyReceived-ResponsePending
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
-                        { } //RequestCorrectlyReceived-ResponsePending
+                        {
+                            CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                        }
                         else if (response.getCanData(1) != 0x7E)
                         {
                             m_nrFrameToReceive--;
@@ -665,8 +671,11 @@ namespace TrionicCANLib.API
                     response = new CANMessage();
                     response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
+                    //RequestCorrectlyReceived-ResponsePending
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
-                    { } //RequestCorrectlyReceived-ResponsePending
+                    {
+                        CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                    }
                     else if (response.getCanData(1) != 0x7E) _success = true;
                     msgcnt++;
                 }
@@ -697,8 +706,11 @@ namespace TrionicCANLib.API
                         m_canListener.setupWaitMessage(0x645);
                         response = new CANMessage();
                         response = m_canListener.waitMessage(timeoutP2ct);
+                        //RequestCorrectlyReceived-ResponsePending
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
-                        { } //RequestCorrectlyReceived-ResponsePending
+                        {
+                            CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                        }
                         else if (response.getCanData(1) != 0x7E)
                         {
                             m_nrFrameToReceive--;
@@ -754,8 +766,11 @@ namespace TrionicCANLib.API
                     response = new CANMessage();
                     response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
+                    //RequestCorrectlyReceived-ResponsePending
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
-                    { } //RequestCorrectlyReceived-ResponsePending
+                    {
+                        CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                    }
                     else if (response.getCanData(1) != 0x7E)
                     {
                         _success = true;
@@ -790,8 +805,11 @@ namespace TrionicCANLib.API
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
                         response = m_canListener.waitMessage(timeoutP2ct);
+                        //RequestCorrectlyReceived-ResponsePending
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
-                        { } //RequestCorrectlyReceived-ResponsePending
+                        {
+                            CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                        }
                         else if (response.getCanData(1) != 0x7E)
                         {
                             m_nrFrameToReceive--;
@@ -2298,8 +2316,11 @@ namespace TrionicCANLib.API
                     response = new CANMessage();
                     response = m_canListener.waitMessage(timeoutP2ct);
                     data = response.getData();
+                    //RequestCorrectlyReceived-ResponsePending
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
-                    { } //RequestCorrectlyReceived-ResponsePending
+                    {
+                        CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                    }
                     else if (response.getCanData(1) != 0x7E)
                     {
                         _success = true;
@@ -2334,8 +2355,11 @@ namespace TrionicCANLib.API
                         m_canListener.setupWaitMessage(0x7E8);
                         response = new CANMessage();
                         response = m_canListener.waitMessage(timeoutP2ct);
+                        //RequestCorrectlyReceived-ResponsePending
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
-                        { } //RequestCorrectlyReceived-ResponsePending
+                        {
+                            CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                        }
                         else if (response.getCanData(1) != 0x7E)
                         {
                             m_nrFrameToReceive--;
@@ -3219,6 +3243,7 @@ namespace TrionicCANLib.API
             // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
             else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78) 
             {
+                CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
                 // Now wait for all DTCs
                 m_canListener.setupWaitMessage(0x5E8);
 
@@ -3274,6 +3299,7 @@ namespace TrionicCANLib.API
             // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
             else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x04 && response.getCanData(3) == 0x78)
             {
+                CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
                 // Wait one more second
                 m_canListener.setupWaitMessage(0x7E8);
                 m_canListener.waitMessage(timeoutP2ct);
@@ -5829,6 +5855,16 @@ namespace TrionicCANLib.API
                         if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x36 && getCanData(data, 3) == 0x78)
                         {
                             CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                            if (canUsbDevice is CANELM327Device)
+                            {
+                                CastInfoEvent("Response timedout, ELM327 will wait 35 seconds", ActivityType.ErasingFlash);
+                                for (int i = 0; i < 35; i++)
+                                {
+                                    SendKeepAlive();
+                                    Thread.Sleep(1000);
+                                }
+                                break;
+                            }
                         }
                         else if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x36)
                         {

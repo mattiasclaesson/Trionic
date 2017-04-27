@@ -468,15 +468,12 @@ namespace TrionicCANFlasher
                 btnReadECUcalibration.Enabled = false;
                 btnReadSRAM.Enabled = false;
 
-                // Legion Bootloader handles recovery?
-                //btnRecoverECU.Enabled = !cbUseLegionBootloader.Checked;
                 cbFormatBootPartition.Enabled = cbUseLegionBootloader.Checked;
             }
 
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
             {
-                btnRecoverECU.Enabled = false;
                 btnReadSRAM.Enabled = false;
                 btnRestoreT8.Enabled = false;
                 cbUseLegionBootloader.Enabled = false;
@@ -928,42 +925,72 @@ namespace TrionicCANFlasher
 
         private void btnRecoverECU_Click(object sender, EventArgs e)
         {
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Binary files|*.bin", Multiselect = false })
             {
-                using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Binary files|*.bin", Multiselect = false })
+                if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    if (ofd.ShowDialog() == DialogResult.OK)
+                    if (checkFileSize(ofd.FileName))
                     {
-                        SetGenericOptions(trionic8);
-
-                        EnableUserInput(false);
-                        AddLogItem("Opening connection");
-                        trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                        if (trionic8.openDevice(false))
+                        if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            Thread.Sleep(1000);
-                            dtstart = DateTime.Now;
-                            AddLogItem("Recovering ECU");
-                            Application.DoEvents();
-                            BackgroundWorker bgWorker;
-                            bgWorker = new BackgroundWorker();
-                            if (cbUseLegionBootloader.Enabled)
+                            SetGenericOptions(trionic8);
+
+                            EnableUserInput(false);
+                            AddLogItem("Opening connection");
+                            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                            if (trionic8.openDevice(false))
                             {
-                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU_Leg);
+                                Thread.Sleep(1000);
+                                dtstart = DateTime.Now;
+                                AddLogItem("Recovering ECU");
+                                Application.DoEvents();
+                                BackgroundWorker bgWorker;
+                                bgWorker = new BackgroundWorker();
+                                if (cbUseLegionBootloader.Enabled)
+                                {
+                                    bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU_Leg);
+                                }
+                                else
+                                {
+                                    bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU_Def);
+                                }
+                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                bgWorker.RunWorkerAsync(ofd.FileName);
                             }
                             else
                             {
-                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU_Def);
+                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                trionic8.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
                             }
-                            bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                            bgWorker.RunWorkerAsync(ofd.FileName);
                         }
-                        else
+                        else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
                         {
-                            AddLogItem("Unable to connect to Trionic 8 ECU");
-                            trionic8.Cleanup();
-                            EnableUserInput(true);
-                            AddLogItem("Connection terminated");
+                            SetGenericOptions(trionic8);
+
+                            EnableUserInput(false);
+                            AddLogItem("Opening connection");
+                            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                            if (trionic8.openDevice(false))
+                            {
+                                Thread.Sleep(1000);
+                                dtstart = DateTime.Now;
+                                AddLogItem("Recovering ECU");
+                                Application.DoEvents();
+                                BackgroundWorker bgWorker;
+                                bgWorker = new BackgroundWorker();
+                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashME96);
+                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                bgWorker.RunWorkerAsync(ofd.FileName);
+                            }
+                            else
+                            {
+                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                trionic8.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
+                            }
                         }
                     }
                 }
