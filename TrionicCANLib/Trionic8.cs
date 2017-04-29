@@ -6495,7 +6495,7 @@ namespace TrionicCANLib.API
             // command 04: Start secondary bootloader
             // wish: None, just wish.
 
-            // command 05: Marry secondary bootloader
+            // command 05: Marry secondary processor
             // wish: None, just wish.           
 
             // command 0xFF: Report stats.
