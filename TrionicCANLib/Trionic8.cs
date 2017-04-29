@@ -6495,21 +6495,8 @@ namespace TrionicCANLib.API
             // command 04: Start secondary bootloader
             // wish: None, just wish.
 
-            // command 05: Format Trionic 8; MCP.
-            // wish:
-            // Bitmask of partitions to erase: (You can select several or ALL partitions at once)
-            // b 0 0000 0001 : Erase partition 1.
-            // b 0 0000 0010 : Erase partition 2.
-            // ..
-            // b 1 0000 0000 : Erase partition 9. (Shadow row: 0x0 to 0x100)
-
-            // command 06: Format Trionic 8; Main flash.
-            // wish:
-            // Bitmask of partitions to erase: (You can select several or ALL partitions at once)
-            // b 0 0000 0001 : Erase partition 1.
-            // b 0 0000 0010 : Erase partition 2.
-            // ..
-            // b 1 0000 0000 : Erase partition 9.
+            // command 05: Marry secondary bootloader
+            // wish: None, just wish.           
 
             // command 0xFF: Report stats.
             // wish: TBD
@@ -6619,7 +6606,38 @@ namespace TrionicCANLib.API
                         success = true;
                         return buf;
                     }
-                    // ...
+
+
+                    // MCP marriage
+                    if (command == 5)
+                    {
+                        // Failed to write!
+                        if (getCanData(data, 3) == 0xFD)
+                        {
+                            CastInfoEvent("Retrying write..", ActivityType.ConvertingFile);
+                            Retries++;
+                        }
+                        // Failed to format!
+                        else if (getCanData(data, 3) == 0xFE)
+                        {
+                            CastInfoEvent("Retrying format..", ActivityType.ConvertingFile);
+                            Retries++;
+                        }
+                        // Marriage; Complete
+                        else if (getCanData(data, 3) == 1)
+                        {
+                            success = true;
+                            return buf;
+                        }
+                        // Busy
+                        else
+                        {
+                            CastInfoEvent("..", ActivityType.ConvertingFile);
+                        }
+
+                        Thread.Sleep(750);
+                    }
+
                 }
 
                 Thread.Sleep(50);
@@ -6842,7 +6860,25 @@ namespace TrionicCANLib.API
                         ComparePartmd5(workEvent, Device, true);
                         if (formatmask == 0)
                         {
-                            CastInfoEvent("FLASH upload completed and verified", ActivityType.ConvertingFile);
+                           
+
+                            if (Device == 6 && !z22se)
+                            {
+                                CastInfoEvent("Proposing to MCP..", ActivityType.ConvertingFile);
+                                LegionIDemand(5, 0, out success);
+
+                                if (success)
+                                {
+                                    CastInfoEvent("Successfully married the coprocessor", ActivityType.ConvertingFile);
+                                    CastInfoEvent("FLASH upload completed and verified", ActivityType.ConvertingFile);
+                                }
+                                else
+                                    for (int i = 0; i < 5; i++)
+                                        CastInfoEvent("FLASH upload failed; Could not marry the co-processor", ActivityType.ConvertingFile);
+                            }
+                            else
+                                CastInfoEvent("FLASH upload completed and verified", ActivityType.ConvertingFile);
+
                             LegionIsAlive = false;
                             _needRecovery = false;
                             Send0120();
