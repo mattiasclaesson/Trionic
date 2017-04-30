@@ -6674,7 +6674,7 @@ namespace TrionicCANLib.API
         }
 
         // Nts: Clean this function. There are several ways it could fail
-        private bool ComparePartmd5(DoWorkEventArgs workEvent, byte device, bool verify)
+        private bool ComparePartmd5(DoWorkEventArgs workEvent, byte device, bool verify, bool z22se)
         {
             /*BackgroundWorker bw = sender as BackgroundWorker;*/
             string filename = (string)workEvent.Argument;
@@ -6746,6 +6746,10 @@ namespace TrionicCANLib.API
                     if (i == 1 && ret == false || (i == 9 && ret == false && device == 5))
                         ret = LeaveRecoveryBe(verify);
 
+                    // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
+                    if (device == 5 && !z22se && i == 7)
+                        ret = true;
+
                     if (ret)
                     {
                         formatmask -= (uint)shift;
@@ -6787,15 +6791,14 @@ namespace TrionicCANLib.API
             {
                 if (toerase > 0)
                     CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.ConvertingFile);
-                else
-                    CastInfoEvent("Everything is identical. Exiting.. ", ActivityType.ConvertingFile);
+
+                    
 
                 // TODO: Send this only to log..
                 // CastInfoEvent(("Partition erase bitmask:" + formatmask.ToString("X3")), ActivityType.ConvertingFile);
                 
             }
             logger.Debug(("(Legion) Partition erase bitmask:" + formatmask.ToString("X3")));
-
 
             return false;
         }
@@ -6822,12 +6825,28 @@ namespace TrionicCANLib.API
 
         }
 
+        bool MarryMCP(bool z22se)
+        {
+            bool success = true;
+
+            if (!z22se)
+            {
+                CastInfoEvent("Proposing to MCP..", ActivityType.ConvertingFile);
+                LegionIDemand(5, 0, out success);
+
+                if (success)
+                    CastInfoEvent("Successfully married the co-processor", ActivityType.ConvertingFile);
+            }
+
+            return success;
+        }
 
         private void WriteFlashLegion(byte Device, int EndAddress, bool z22se, object sender, DoWorkEventArgs workEvent)
         {
 
             BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
+            bool success;
 
             if (!canUsbDevice.isOpen())
                 return;
@@ -6849,8 +6868,8 @@ namespace TrionicCANLib.API
 
             // compare md5 and set bitmask accordingly
             CastInfoEvent("Comparing md5 for selective erase..", ActivityType.ConvertingFile);
-            ComparePartmd5(workEvent, Device, false);
-            // formatmask = 0xFA;
+            ComparePartmd5(workEvent, Device, false, z22se);
+
             if (formatmask > 0)
             {
                 if (SendrequestDownload(Device, false))
@@ -6859,32 +6878,20 @@ namespace TrionicCANLib.API
                     CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
 
                     // formatmask = 0;
-                    bool success = ProgramFlashLeg(EndAddress, bm, Device);
+                    success = ProgramFlashLeg(EndAddress, bm, Device);
 
                     if (success)
                     {
                         CastInfoEvent("Verifying md5..", ActivityType.ConvertingFile);
-                        ComparePartmd5(workEvent, Device, true);
+                        ComparePartmd5(workEvent, Device, true, z22se);
                         if (formatmask == 0)
                         {
-                           
-
-                            if (Device == 6 && !z22se)
-                            {
-                                CastInfoEvent("Proposing to MCP..", ActivityType.ConvertingFile);
-                                LegionIDemand(5, 0, out success);
-
-                                if (success)
-                                {
-                                    CastInfoEvent("Successfully married the coprocessor", ActivityType.ConvertingFile);
-                                    CastInfoEvent("FLASH upload completed and verified", ActivityType.ConvertingFile);
-                                }
-                                else
-                                    for (int i = 0; i < 5; i++)
-                                        CastInfoEvent("FLASH upload failed; Could not marry the co-processor", ActivityType.ConvertingFile);
-                            }
-                            else
+                            // It won't touch md5 on z22s
+                            if(MarryMCP(z22se))
                                 CastInfoEvent("FLASH upload completed and verified", ActivityType.ConvertingFile);
+                            else
+                                for (int i = 0; i < 5; i++)
+                                    CastInfoEvent("FLASH upload completed but the co-processor could not be married!", ActivityType.ConvertingFile);
 
                             LegionIsAlive = false;
                             _needRecovery = false;
@@ -6893,7 +6900,7 @@ namespace TrionicCANLib.API
                         else
                         {
                             for (int i = 0; i < 5; i++)
-                                CastInfoEvent("FLASH upload failed (Wrong checksum) Please try again! ", ActivityType.ConvertingFile);
+                                CastInfoEvent("FLASH upload failed (Wrong checksum) Please try again!", ActivityType.ConvertingFile);
                         }
                     }
                     else
@@ -6921,8 +6928,17 @@ namespace TrionicCANLib.API
                 }
 
             // Tell loader to exit; Same data on both ends
-            }else
+            }
+            else
+            {
+                CastInfoEvent("Everything is identical", ActivityType.ConvertingFile);
+                if (!MarryMCP(z22se))
+                    for (int i = 0; i < 5; i++)
+                        CastInfoEvent("The co-processor could not be married!", ActivityType.ConvertingFile);
+            
                 Send0120();
+            }
+               
 
             _stallKeepAlive = false;
             workEvent.Result = true;
