@@ -6559,12 +6559,6 @@ namespace TrionicCANLib.API
                 }
                 else
                 {
-                    // Something is wrong or we sent the wrong command.
-                    if (getCanData(data, 3) == 0xFF)
-                    {
-                        CastInfoEvent("Bootloader did what it could and failed. Sorry", ActivityType.ConvertingFile);
-                        return buf;
-                    }
 
                     // Settings correctly received.
                     if (command == 0 && getCanData(data, 3) == 1)
@@ -6611,8 +6605,14 @@ namespace TrionicCANLib.API
                     // MCP marriage
                     if (command == 5)
                     {
+                        // Critical error; Could not start the secondary loader!
+                        else if (getCanData(data, 3) == 0xFF)
+                        {
+                            CastInfoEvent("Failed to start the secondary loader!", ActivityType.ConvertingFile);
+                            return buf;
+                        }
                         // Failed to write!
-                        if (getCanData(data, 3) == 0xFD)
+                        else if (getCanData(data, 3) == 0xFD)
                         {
                             CastInfoEvent("Retrying write..", ActivityType.ConvertingFile);
                             Retries++;
@@ -6636,6 +6636,13 @@ namespace TrionicCANLib.API
                         }
 
                         Thread.Sleep(750);
+                    }
+
+                    // Something is wrong or we sent the wrong command.
+                    if (getCanData(data, 3) == 0xFF)
+                    {
+                        CastInfoEvent("Bootloader did what it could and failed. Sorry", ActivityType.ConvertingFile);
+                        return buf;
                     }
 
                 }
