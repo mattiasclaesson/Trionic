@@ -6606,7 +6606,7 @@ namespace TrionicCANLib.API
                     if (command == 5)
                     {
                         // Critical error; Could not start the secondary loader!
-                        else if (getCanData(data, 3) == 0xFF)
+                        if (getCanData(data, 3) == 0xFF)
                         {
                             CastInfoEvent("Failed to start the secondary loader!", ActivityType.ConvertingFile);
                             return buf;
