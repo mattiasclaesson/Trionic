@@ -6716,21 +6716,22 @@ namespace TrionicCANLib.API
             return buf;
         }
 
-        private bool LeaveRecoveryBe(bool verify)
+        private bool LeaveRecoveryBe()
         {
-            if (!verify)
+            if (formatBootPartition)
             {
-                if (formatBootPartition)
+                DialogResult result = DialogResult.No;
+                result = MessageBox.Show("Do you REALLY want to write a new boot partition?",
+                "Final Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+
+                if (result == DialogResult.Yes)
                 {
                     CastInfoEvent("Warning, boot partition will be formated", ActivityType.ErasingFlash);
+                    return false;
                 }
-                else
-                {
-                    CastInfoEvent("Skipped format of boot partition", ActivityType.ErasingFlash);
-                }
+                CastInfoEvent("Skipped format of boot partition", ActivityType.ErasingFlash);
             }
-
-            return !formatBootPartition;
+            return true;
         }
 
         // Nts: Clean this function. There are several ways it could fail
@@ -6801,14 +6802,27 @@ namespace TrionicCANLib.API
                             ret = false;
                     }
 
-                    // Special case. Override automatic selection of boot partition if the user so choose.
-                    // MCP Partition 9 is part of partition 1
-                    if (i == 1 && ret == false || (i == 9 && ret == false && device == 5))
-                        ret = LeaveRecoveryBe(verify);
+                    if (!verify)
+                    {
+                        // Special case. Override automatic selection of boot if the the user so choose.
+                        if (i == 1 && !ret)
+                            ret = LeaveRecoveryBe();
 
-                    // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
-                    if (device == 5 && !z22se && i == 7)
-                        ret = true;
+                        // MCP requires a few more checks..
+                        if (device == 5)
+                        {
+                            // Make sure to select shadow if boot is
+                            if (i == 9)
+                            {
+                                ret = false;
+                                if ((formatmask & 1) == 0)
+                                    ret = true;
+                            }
+                            // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
+                            if (!z22se && i == 7)
+                                ret = true;
+                        }
+                    }
 
                     if (ret)
                     {
@@ -6834,16 +6848,6 @@ namespace TrionicCANLib.API
 
             }
 
-            // MCP special case:
-            // Partition 1 contains partition 9 (It's hidden and... Just read the datasheet )
-            // Make sure both gets written if any of them are selected since formatting one of them _WILL_ format the other.
-            if (((formatmask & 0x101) > 0) && ((formatmask & 0x101) != 0x101) && device == 5)
-            {
-                CastInfoEvent(("Patched MCP mask to write 1 and 9"), ActivityType.StartErasingFlash);
-                logger.Debug("(Legion) Patched MCP mask");
-                toerase++;
-                formatmask |= 0x101;
-            }
 
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
 
@@ -6851,11 +6855,6 @@ namespace TrionicCANLib.API
             {
                 if (toerase > 0)
                     CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
-
-                    
-
-                // TODO: Send this only to log..
-                // CastInfoEvent(("Partition erase bitmask:" + formatmask.ToString("X3")), ActivityType.ConvertingFile);
                 
             }
             logger.Debug(("(Legion) Partition erase bitmask:" + formatmask.ToString("X3")));
