@@ -6737,17 +6737,15 @@ namespace TrionicCANLib.API
         // Nts: Clean this function. There are several ways it could fail
         private bool ComparePartmd5(DoWorkEventArgs workEvent, byte device, bool verify, bool z22se)
         {
-            /*BackgroundWorker bw = sender as BackgroundWorker;*/
             string filename = (string)workEvent.Argument;
-
-
             BlockManager bm = new BlockManager();
             bm.SetFilename(filename);
 
-            int shift;
-            bool success;
-            bool ret;
             byte toerase = 0;
+            byte placeholder = 3;
+
+            if (device == 6)
+                placeholder = 2;
 
             byte[] Locmd5dbuf = new byte[16];
             byte[] Remd5dbuf = new byte[16];
@@ -6760,62 +6758,51 @@ namespace TrionicCANLib.API
             for (byte i = 1; i < 10; i++)
             {
                 // Store bit location and reset status
-                shift = 1 << (i - 1);
-                success = false;
+                int shift = 1 << (i - 1);
+                bool success = false;
                 
                 // Normal operation: Fetch md5 of every partition.
                 // Verification: Only fetch md5 of written partitions.
                 if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verify)
                 {
-                    if (device == 6)
-                    {
-                        Locmd5dbuf = bm.GetRegmd5(2, i);
-                        Remd5dbuf = LegionIDemand(2, i, out success);
-                    }
-                    else
-                    {
-                        Locmd5dbuf = bm.GetRegmd5(3, i);
-                        Remd5dbuf = LegionIDemand(3, i, out success);
-                    }
+                    Locmd5dbuf = bm.GetRegmd5(placeholder, i);
+                    Remd5dbuf = LegionIDemand(placeholder, i, out success);
                 }
-                
-                // 
+
                 if (success)
                 {
                     // Compare both md5's
-                    ret = true;
+                    bool identical = true;
                     for (byte a = 0; a < 16; a++)
                     {
                         if (Locmd5dbuf[a] != Remd5dbuf[a])
-                            ret = false;
+                            identical = false;
                     }
 
                     if (!verify)
                     {
                         // Special case. Override automatic selection of boot if the the user so choose.
-                        if (i == 1 && !ret)
-                            ret = LeaveRecoveryBe();
+                        if (i == 1 && !identical)
+                            identical = LeaveRecoveryBe();
 
                         // MCP requires a few more checks..
                         if (device == 5)
                         {
-                            // Make sure to select shadow if boot is
+                            // Catch dangerous situation; ALWAYS select shadow and only deselect it if partition 1 is not to be written.
                             if (i == 9)
                             {
-                                ret = false;
+                                identical = false;
                                 if ((formatmask & 1) == 0)
-                                    ret = true;
+                                    identical = true;
                             }
+
                             // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
                             if (!z22se && i == 7)
-                                ret = true;
+                                identical = true;
                         }
-                    }
-
-                    if (!verify)
-                    {
-                        // Data is not identical; Add partition to bitmask
-                        if (!ret)
+                        
+                        // Add partition to bitmask
+                        if (!identical)
                         {
                             formatmask += (uint)shift;
                             // CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
@@ -6831,8 +6818,8 @@ namespace TrionicCANLib.API
                     }
                     // Verifying written partitions
                     else
-                    {   // Data is identical; Remove partition from bitmask
-                        if (ret)
+                    {   // Remove partition from bitmask
+                        if (identical)
                         {
                             formatmask -= (uint)shift;
                             // CastInfoEvent(("Partition " + i.ToString("X1") + ": Verified"), ActivityType.ConvertingFile);
