@@ -65,6 +65,7 @@ namespace TrionicCANLib.API
         private const int maxRetries = 100;
         private const int timeoutP2ct = 150;
         private const int timeoutP2ce = 5000;
+        private int Blockstoskip;
 
         public bool StallKeepAlive
         {
@@ -2717,6 +2718,8 @@ namespace TrionicCANLib.API
             /* ulong cmd = 0x0000000000002106;*/ // always 2 bytes
             ulong cmd = 0x0000000000002100;
             cmd += PCI;
+            // Only used by Legion. Determine how many blocks to skip (Stuff filled with 0xFF)
+            Blockstoskip = 0;
 
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
             addressHigh /= 0x10000;
@@ -2846,11 +2849,13 @@ namespace TrionicCANLib.API
                     }
                 }
                 //Loader tagged package as filled with FF (Ie it's not necessary to send a go and receive the rest of the frame, we already know what it contains) 
-                else{
-
+                else
+                {
                     success = true;
                     for (int i = 0; i < 0x80; i++)
                         retData[i] = 0xFF;
+
+                    Blockstoskip = getCanData(data, 3);
                     return retData;
                 }
             }
@@ -6319,6 +6324,7 @@ namespace TrionicCANLib.API
        }
         // Reset partition bitmask to all partitions.
         private uint formatmask = 0x1FF;
+
         public void ReadFlashLegMCP(object sender, DoWorkEventArgs workEvent)
         {
             ReadFlashLegion(5, 0x40100, false, sender, workEvent);
@@ -6445,41 +6451,62 @@ namespace TrionicCANLib.API
         // TODO: Expand this function to verify if installed version is compatible with the main software
         private void PrintMCPVer()
         {
-            bool success;
-            byte[] BSVer = new byte[10];
-
+            int Entry = 0;
+            bool success = false;
+            bool success2 = false;
+            byte[] BSVer1 = new byte[8];
+            byte[] BSVer2 = new byte[10];
+            
             // Start the secondary loader if required
             LegionIDemand(4, 0, out success);
 
             if (success)
             {
-                byte[] resp = readDataByLocalIdentifier(5, 0x8100, 32, out success);
+                CastInfoEvent(("MCP Firmware information"), ActivityType.DownloadingFlash);
 
-                if (success)
+                // Fetch string 1 and 2
+                byte[] resp1 = readDataByLocalIdentifier(5, 0x8000, 0x80, out success);
+                byte[] resp2 = readDataByLocalIdentifier(5, 0x8100, 0x80, out success2);
+
+                if (success && success2)
                 {
                     // Byteswap response and trim it down to only store relevant data
-                    // Trionic 8 is the master of confusion since EVERYTHING; data/address registers, ram and flash has to be byteswapped when working with MCP but the main cpu can be read as is...
+                    // Trionic 8 is the master of confusion since EVERYTHING; data/address registers, ram and flash has to be byte or word-swapped when working with MCP but the main cpu can be read as is...
                     for (int i = 0; i < 10; i += 2)
                     {
-                        BSVer[i + 1] = resp[0xC + i];
-                        BSVer[i] = resp[0xC + i + 1];
+                        BSVer2[i + 1] = resp2[0xC + i];
+                        BSVer2[i] = resp2[0xC + i + 1];
+                        if (i < 8)
+                        {
+                            BSVer1[i + 1] = resp1[0x4 + i];
+                            BSVer1[i] = resp1[0x4 + i + 1];
+                        }
                     }
 
-                    string str = Encoding.ASCII.GetString(BSVer);
-                    CastInfoEvent(("MCP Firmware version: " + str), ActivityType.ConvertingFile);
+                    string str1 = Encoding.ASCII.GetString(BSVer1);
+                    string str2 = Encoding.ASCII.GetString(BSVer2);
+                    Entry = resp1[1] << 24 | resp1[0] << 16 | resp1[3] << 8 | resp1[2];
+
+                    CastInfoEvent(("Main entry-point: 0x" + Entry.ToString("X5")), ActivityType.DownloadingFlash);
+                    CastInfoEvent(("Version string 1: " + str1), ActivityType.DownloadingFlash);
+                    CastInfoEvent(("Version string 2: " + str2), ActivityType.DownloadingFlash);
                 }
                 else
-                    CastInfoEvent(("MCP Firmware version: FAIL!"), ActivityType.ConvertingFile);
+                {
+                    CastInfoEvent(("Main entry-point: FAIL!"), ActivityType.DownloadingFlash);
+                    CastInfoEvent(("Version string 1: FAIL!"), ActivityType.DownloadingFlash);
+                    CastInfoEvent(("Version string 2: FAIL!"), ActivityType.DownloadingFlash);
+                }
             }
             else
-                CastInfoEvent(("Could not start the secondary loader to retreive version!"), ActivityType.ConvertingFile);
+                CastInfoEvent(("Could not start the secondary loader to retreive version!"), ActivityType.DownloadingFlash);
         }
 
         // Test; Read md5 of full flash, partition 1, partition 2..
         private bool PrintLegmd5(byte device)
         {
             bool success = false;
-            CastInfoEvent("Remote md5: ", ActivityType.ConvertingFile);
+            CastInfoEvent("Remote md5: ", ActivityType.DownloadingFlash);
 
             for (byte i = 1; i < 10; i++)
             {
@@ -6492,7 +6519,7 @@ namespace TrionicCANLib.API
                     int mdhilo = (resp[4] << 24 | resp[5] << 16 | resp[6] << 8 | resp[7]);
                     int mdhihi = (resp[0] << 24 | resp[1] << 16 | resp[2] << 8 | resp[3]);
 
-                    CastInfoEvent(("Part " + i.ToString("X1") + ": " + mdhihi.ToString("X8") + mdhilo.ToString("X8") + mdlohi.ToString("X8") + mdlolo.ToString("X8")), ActivityType.ConvertingFile);
+                    CastInfoEvent(("Part " + i.ToString("X1") + ": " + mdhihi.ToString("X8") + mdhilo.ToString("X8") + mdlohi.ToString("X8") + mdlolo.ToString("X8")), ActivityType.DownloadingFlash);
                 }
                 else
                     return false;
@@ -6571,7 +6598,7 @@ namespace TrionicCANLib.API
                 if (!canUsbDevice.sendMessage(msg))
                 {
                     // Critical error; Abort...
-                    CastInfoEvent("Couldn't send bootloader command", ActivityType.ConvertingFile);
+                    CastInfoEvent("Couldn't send bootloader command", ActivityType.DownloadingFlash);
                     return buf;
                 }
 
@@ -6582,13 +6609,11 @@ namespace TrionicCANLib.API
                 data = response.getData();
 
 
-                // CastInfoEvent("Data: " + data.ToString("X16"), ActivityType.ConvertingFile);
-
                 // elm327 strikes yet again; It has a fixed length for certain commands.
                 // The loader will respond with something "slightly" out of spec to circumvent this.
                 if (getCanData(data, 0) != 0x33 || getCanData(data, 1) != 0x55 || getCanData(data, 2) != (command & 0xFF) )
                 {
-                    CastInfoEvent("Retrying bootloader command..", ActivityType.ConvertingFile);
+                    CastInfoEvent("Retrying bootloader command..", ActivityType.DownloadingFlash);
                     logger.Debug(("(Legion) Retrying cmd " + command.ToString("X8") + " Wish "   + wish.ToString("X8")));
                     Retries++;
                 }
@@ -6626,7 +6651,7 @@ namespace TrionicCANLib.API
                             Thread.Sleep(50);
                         } while (Retries < 20);
 
-                        CastInfoEvent("Bootloader has generated md5 but it couldn't be fetched..", ActivityType.ConvertingFile);
+                        CastInfoEvent("Bootloader has generated md5 but it couldn't be fetched..", ActivityType.DownloadingFlash);
                     }
 
                     // Secondary loader is alive!
@@ -6643,19 +6668,19 @@ namespace TrionicCANLib.API
                         // Critical error; Could not start the secondary loader!
                         if (getCanData(data, 3) == 0xFF)
                         {
-                            CastInfoEvent("Failed to start the secondary loader!", ActivityType.ConvertingFile);
+                            CastInfoEvent("Failed to start the secondary loader!", ActivityType.UploadingFlash);
                             return buf;
                         }
                         // Failed to write!
                         else if (getCanData(data, 3) == 0xFD)
                         {
-                            CastInfoEvent("Retrying write..", ActivityType.ConvertingFile);
+                            CastInfoEvent("Retrying write..", ActivityType.UploadingFlash);
                             Retries++;
                         }
                         // Failed to format!
                         else if (getCanData(data, 3) == 0xFE)
                         {
-                            CastInfoEvent("Retrying format..", ActivityType.ConvertingFile);
+                            CastInfoEvent("Retrying format..", ActivityType.ErasingFlash);
                             Retries++;
                         }
                         // Marriage; Complete
@@ -6667,7 +6692,7 @@ namespace TrionicCANLib.API
                         // Busy
                         else
                         {
-                            CastInfoEvent("..", ActivityType.ConvertingFile);
+                            CastInfoEvent("..", ActivityType.UploadingFlash);
                         }
 
                         Thread.Sleep(750);
@@ -6814,7 +6839,7 @@ namespace TrionicCANLib.API
             // Make sure both gets written if any of them are selected since formatting one of them _WILL_ format the other.
             if (((formatmask & 0x101) > 0) && ((formatmask & 0x101) != 0x101) && device == 5)
             {
-                CastInfoEvent(("Patched MCP mask to write 1 and 9"), ActivityType.ConvertingFile);
+                CastInfoEvent(("Patched MCP mask to write 1 and 9"), ActivityType.StartErasingFlash);
                 logger.Debug("(Legion) Patched MCP mask");
                 toerase++;
                 formatmask |= 0x101;
@@ -6825,7 +6850,7 @@ namespace TrionicCANLib.API
             if (!verify)
             {
                 if (toerase > 0)
-                    CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.ConvertingFile);
+                    CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
 
                     
 
@@ -6866,12 +6891,12 @@ namespace TrionicCANLib.API
 
             if (!z22se)
             {
-                CastInfoEvent("Proposing to MCP..", ActivityType.ConvertingFile);
+                CastInfoEvent("Proposing to MCP..", ActivityType.UploadingFlash);
                 LegionIDemand(5, 0, out success);
 
                 if (success)
                 {
-                    CastInfoEvent("Successfully married the co-processor", ActivityType.ConvertingFile);
+                    CastInfoEvent("Successfully married the co-processor", ActivityType.UploadingFlash);
                     // Print firmware version just for reference
                     PrintMCPVer();
                 }
@@ -6906,7 +6931,7 @@ namespace TrionicCANLib.API
             }
 
             // compare md5 and set bitmask accordingly
-            CastInfoEvent("Comparing md5 for selective erase..", ActivityType.ConvertingFile);
+            CastInfoEvent("Comparing md5 for selective erase..", ActivityType.StartErasingFlash);
             ComparePartmd5(workEvent, Device, false, z22se);
 
             if (formatmask > 0)
@@ -6921,16 +6946,16 @@ namespace TrionicCANLib.API
 
                     if (success)
                     {
-                        CastInfoEvent("Verifying md5..", ActivityType.ConvertingFile);
+                        CastInfoEvent("Verifying md5..", ActivityType.UploadingFlash);
                         ComparePartmd5(workEvent, Device, true, z22se);
                         if (formatmask == 0)
                         {
                             // It won't touch md5 on z22s
                             if(MarryMCP(z22se))
-                                CastInfoEvent("FLASH upload completed and verified", ActivityType.ConvertingFile);
+                                CastInfoEvent("FLASH upload completed and verified", ActivityType.FinishedFlashing);
                             else
                                 for (int i = 0; i < 5; i++)
-                                    CastInfoEvent("FLASH upload completed but the co-processor could not be married!", ActivityType.ConvertingFile);
+                                    CastInfoEvent("FLASH upload completed but the co-processor could not be married!", ActivityType.FinishedFlashing);
 
                             LegionIsAlive = false;
                             _needRecovery = false;
@@ -6939,13 +6964,13 @@ namespace TrionicCANLib.API
                         else
                         {
                             for (int i = 0; i < 5; i++)
-                                CastInfoEvent("FLASH upload failed (Wrong checksum) Please try again!", ActivityType.ConvertingFile);
+                                CastInfoEvent("FLASH upload failed (Wrong checksum) Please try again!", ActivityType.FinishedFlashing);
                         }
                     }
                     else
                     {
                         for (int i = 0; i < 5; i++)
-                            CastInfoEvent("FLASH upload failed, please try again!", ActivityType.ConvertingFile);
+                            CastInfoEvent("FLASH upload failed, please try again!", ActivityType.FinishedFlashing);
                     }
 
                     CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
@@ -6957,7 +6982,7 @@ namespace TrionicCANLib.API
                     sw.Stop();
                     _needRecovery = false;
                     _stallKeepAlive = false;
-                    CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
+                    CastInfoEvent("Failed to erase FLASH", ActivityType.FinishedErasingFlash);
                     // Send0120(); 
                     CastInfoEvent("Session ended but the bootloader is still active;", ActivityType.FinishedFlashing);
                     CastInfoEvent("You could try again", ActivityType.FinishedFlashing);
@@ -6970,10 +6995,10 @@ namespace TrionicCANLib.API
             }
             else
             {
-                CastInfoEvent("Everything is identical", ActivityType.ConvertingFile);
+                CastInfoEvent("Everything is identical", ActivityType.FinishedFlashing);
                 if (!MarryMCP(z22se))
                     for (int i = 0; i < 5; i++)
-                        CastInfoEvent("The co-processor could not be married!", ActivityType.ConvertingFile);
+                        CastInfoEvent("The co-processor could not be married!", ActivityType.UploadingFlash);
             
                 Send0120();
             }
@@ -7257,7 +7282,14 @@ namespace TrionicCANLib.API
                 if (success)
                 {
                     // figure out why readDataByLocalIdentifier() sometimes return true even though the frame is incomplete
-                    if (readbuf.Length == blockSize)
+                    if(Blockstoskip > 0)
+                    {
+                        bufpnt += (Blockstoskip * blockSize);
+
+                        startAddress += Blockstoskip * blockSize;
+                        retryCount = 0;
+                    }
+                    else if (readbuf.Length == blockSize)
                     {
                         for (int j = 0; j < blockSize; j++)
                             buf[bufpnt++] = readbuf[j];
@@ -7291,7 +7323,7 @@ namespace TrionicCANLib.API
                     }
                     if (retryCount == maxRetries)
                     {
-                        CastInfoEvent("Failed to download FLASH content", ActivityType.ConvertingFile);
+                        CastInfoEvent("Failed to download FLASH content", ActivityType.DownloadingFlash);
                         _stallKeepAlive = false;
                         workEvent.Result = false;
                         SupportAutoskip = false; // Make sure to restore tags in case the user decides to try something else.. 
@@ -7309,8 +7341,6 @@ namespace TrionicCANLib.API
             if (buf != null)
             {
                 try{
-                    
-                    
                     // Restore md5-hack..
                     if (lastAddress == 0xC0000)
                         lastAddress = 0x100000;
@@ -7330,8 +7360,9 @@ namespace TrionicCANLib.API
 
                     File.WriteAllBytes(filename, buf);
                     Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
+
                     // Compare checksum-32 
-                    for (int i = 0; i< lastAddress; i++)
+                    for (int i = 0; i < lastAddress; i++)
                         Localcsum32 += buf[i];
 
                     bool succ = RequestChecksum32_Legion(Device, out Remotecsum32);
