@@ -6340,8 +6340,7 @@ namespace TrionicCANLib.API
         }
 
 
-
-
+        // Z22SE stuff. The loader will NOT marry the co-processor since their checksum algorithm is unknown. 
         public void ReadFlashLegZ22SE_Main(object sender, DoWorkEventArgs workEvent)
         {
             ReadFlashLegion(6, 0x100000, true, sender, workEvent);
@@ -6353,11 +6352,14 @@ namespace TrionicCANLib.API
 
         public void WriteFlashLegZ22SE_Main(object sender, DoWorkEventArgs workEvent)
         {
+            // They're not using the first partition as recovery in those softwares that i've looked into. Flash Everything!
             formatBootPartition = true;
             WriteFlashLegion(6, 0x100000, true, sender, workEvent);
         }
         public void WriteFlashLegZ22SE_MCP(object sender, DoWorkEventArgs workEvent)
         {
+            // It seems they use the same recovery on MCP as regular Trionic 8 but do this just to make sure.
+            formatBootPartition = true;
             WriteFlashLegion(5, 0x40100, true, sender, workEvent);
         }
 
@@ -6427,7 +6429,7 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
-                        Console.WriteLine("Did not receive correct response from SendTransferData");
+                        CastInfoEvent("Did not receive correct response from SendTransferData", ActivityType.ConvertingFile);
                     }
                 }
 
@@ -6439,6 +6441,39 @@ namespace TrionicCANLib.API
             return true;
         }
 
+        // Not used for anything as of yet.
+        // TODO: Expand this function to verify if installed version is compatible with the main software
+        private void PrintMCPVer()
+        {
+            bool success;
+            byte[] BSVer = new byte[10];
+
+            // Start the secondary loader if required
+            LegionIDemand(4, 0, out success);
+
+            if (success)
+            {
+                byte[] resp = readDataByLocalIdentifier(5, 0x8100, 32, out success);
+
+                if (success)
+                {
+                    // Byteswap response and trim it down to only store relevant data
+                    // Trionic 8 is the master of confusion since EVERYTHING; data/address registers, ram and flash has to be byteswapped when working with MCP but the main cpu can be read as is...
+                    for (int i = 0; i < 10; i += 2)
+                    {
+                        BSVer[i + 1] = resp[0xC + i];
+                        BSVer[i] = resp[0xC + i + 1];
+                    }
+
+                    string str = Encoding.ASCII.GetString(BSVer);
+                    CastInfoEvent(("MCP Firmware version: " + str), ActivityType.ConvertingFile);
+                }
+                else
+                    CastInfoEvent(("MCP Firmware version: FAIL!"), ActivityType.ConvertingFile);
+            }
+            else
+                CastInfoEvent(("Could not start the secondary loader to retreive version!"), ActivityType.ConvertingFile);
+        }
 
         // Test; Read md5 of full flash, partition 1, partition 2..
         private bool PrintLegmd5(byte device)
@@ -6835,7 +6870,11 @@ namespace TrionicCANLib.API
                 LegionIDemand(5, 0, out success);
 
                 if (success)
+                {
                     CastInfoEvent("Successfully married the co-processor", ActivityType.ConvertingFile);
+                    // Print firmware version just for reference
+                    PrintMCPVer();
+                }
             }
 
             return success;
