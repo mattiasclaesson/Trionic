@@ -6323,7 +6323,7 @@ namespace TrionicCANLib.API
             return true;
        }
         // Reset partition bitmask to all partitions.
-        private uint formatmask = 0x1FF;
+        private uint formatmask;
 
         public void ReadFlashLegMCP(object sender, DoWorkEventArgs workEvent)
         {
@@ -6743,31 +6743,28 @@ namespace TrionicCANLib.API
 
             BlockManager bm = new BlockManager();
             bm.SetFilename(filename);
-            int progress = 0;
 
-            int shift = 0;
-            bool success = false;
+            int shift;
+            bool success;
+            bool ret;
             byte toerase = 0;
-            // Reset partition bitmask to select all partitions. BUT! Only if this is NOT a verification procedure.
-            if(!verify)
-                formatmask = 0x1FF;
-            
-            // Toy for debug
-            // PrintLegmd5();
+
+            byte[] Locmd5dbuf = new byte[16];
+            byte[] Remd5dbuf = new byte[16];
+
+            if (!verify)
+                formatmask = 0;
+
             CastProgressReadEvent(0);
 
             for (byte i = 1; i < 10; i++)
             {
                 // Store bit location and reset status
                 shift = 1 << (i - 1);
-                bool ret = true;
-                bool skip = false;
-
-                // Fetch local and remote md5 of selected partition.
-                byte[] Locmd5dbuf = new byte[16];
-                byte[] Remd5dbuf = new byte[16];
-
-                // ..
+                success = false;
+                
+                // Normal operation: Fetch md5 of every partition.
+                // Verification: Only fetch md5 of written partitions.
                 if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verify)
                 {
                     if (device == 6)
@@ -6781,21 +6778,12 @@ namespace TrionicCANLib.API
                         Remd5dbuf = LegionIDemand(3, i, out success);
                     }
                 }
-                else
-                {
-                    // CastInfoEvent(("Skipped verification of partition " + i.ToString("X1")), ActivityType.ConvertingFile);
-                    success = true;
-                    skip = true;
-                }
-                progress += 11;
-                if (progress >= 99)
-                    progress = 100;
-                CastProgressReadEvent(progress);
-
-                // If, for some reason, the remote fetch fails, do not give an error (yet). Just leave the partition as tagged for format. 
-                if (success && !skip)
+                
+                // 
+                if (success)
                 {
                     // Compare both md5's
+                    ret = true;
                     for (byte a = 0; a < 16; a++)
                     {
                         if (Locmd5dbuf[a] != Remd5dbuf[a])
@@ -6824,39 +6812,51 @@ namespace TrionicCANLib.API
                         }
                     }
 
-                    if (ret)
+                    if (!verify)
                     {
-                        formatmask -= (uint)shift;
-                        if (!verify)
+                        // Data is not identical; Add partition to bitmask
+                        if (!ret)
+                        {
+                            formatmask += (uint)shift;
+                            // CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
+                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Tagged for erase and write"));
+                            toerase++;
+                        }
+                        else
                         {
                             // CastInfoEvent(("Partition " + i.ToString("X1") + ": Identical / Skipping"), ActivityType.ConvertingFile);
                             logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Identical / Skipping"));
                         }
+
                     }
+                    // Verifying written partitions
                     else
-                    {
-                        if (!verify)
+                    {   // Data is identical; Remove partition from bitmask
+                        if (ret)
                         {
-                            // CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write" ), ActivityType.ConvertingFile);
-                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Tagged for erase and write"));
-                            toerase++;
+                            formatmask -= (uint)shift;
+                            // CastInfoEvent(("Partition " + i.ToString("X1") + ": Verified"), ActivityType.ConvertingFile);
+                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Verified"));
+                        }
+                        else
+                        {
+                            CastInfoEvent(("Partition " + i.ToString("X1") + ": VERIFICATION ERROR!"), ActivityType.ConvertingFile);
+                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": VERIFICATION ERROR!"));
                         }
                     }
                 }
+                // Add failure-mechanism
                 else
-                    ; // Add failure-mechanism
+                    ;
 
+                CastProgressReadEvent((int)((i * 100) / (float)9));
             }
-
 
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
 
-            if (!verify)
-            {
-                if (toerase > 0)
-                    CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
-                
-            }
+            if (toerase > 0)
+                CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
+
             logger.Debug(("(Legion) Partition erase bitmask:" + formatmask.ToString("X3")));
 
             return false;
@@ -6940,7 +6940,6 @@ namespace TrionicCANLib.API
                     _needRecovery = true;
                     CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
 
-                    // formatmask = 0;
                     success = ProgramFlashLeg(EndAddress, bm, Device);
 
                     if (success)
