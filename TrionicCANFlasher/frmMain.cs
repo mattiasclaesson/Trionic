@@ -1821,8 +1821,6 @@ namespace TrionicCANFlasher
         private void cbUseLegionBootloader_CheckedChanged(object sender, EventArgs e)
         {
             cbFormatBootPartition.Enabled = cbUseLegionBootloader.Checked;
-            // Legion Bootloader handles recovery?
-            //btnRecoverECU.Enabled = !cbUseLegionBootloader.Checked;
         }
     }
 }
