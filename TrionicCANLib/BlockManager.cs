@@ -160,6 +160,20 @@ namespace TrionicCANLib
             return checksum32;
         }
 
+
+        private uint[] T8parts = 
+        {
+            0x000000, // Boot
+            0x004000, // NVDM
+            0x006000, // NVDM
+            0x008000, // HWIO
+            0x020000, // APP
+            0x040000, // APP
+            0x060000, // APP
+            0x080000, // APP
+            0x0C0000, // APP
+            0x100000  // End
+        };
         // Find a better place for this!
         public byte[] GetRegmd5(uint device, uint partition)
         {
@@ -178,78 +192,42 @@ namespace TrionicCANLib
             byte[] hash = new byte[16];
             bool byteswapped = false;
 
-            // Trionic 8, Main
-            if (device == 2)
+            if (partition < 10)
             {
-                if (partition == 1)
+                // Trionic 8, Main
+                if (device == 2)
                 {
-                    start = 0;
-                    end = start + (16 * 1024);
+                    if (partition > 0)
+                    {
+                        start = T8parts[partition - 1];
+                        end = T8parts[partition];
+                    }
+                    else
+                        end = T8parts[9];
                 }
-                else if (partition == 2)
+                // Trionic 8; MCP
+                else if (device == 3)
                 {
-                    start = 0x4000;
-                    end = start + (8 * 1024);
-                }
-                else if (partition == 3)
-                {
-                    start = 0x6000;
-                    end = start + (8 * 1024);
-                }
-                else if (partition == 4)
-                {
-                    start = 0x8000;
-                    end = start + (96 * 1024);
-                }
-                else if (partition == 5)
-                {
-                    start = 0x20000;
-                    end = start + (128 * 1024);
-                }
-                else if (partition == 6)
-                {
-                    start = 0x40000;
-                    end = start + (128 * 1024);
-                }
-                else if (partition == 7)
-                {
-                    start = 0x60000;
-                    end = start + (128 * 1024);
-                }
-                else if (partition == 8)
-                {
-                    start = 0x80000;
-                    end = start + (256 * 1024);
-                }
-                else if (partition == 9)
-                {
-                    start = 0xC0000;
-                    end = start + (256 * 1024);
-                }
-                else
-                    return hash;
+                    byteswapped = mcpswapped();
+                    if (partition > 0 && partition < 9)
+                    {
+                        end = partition << 15;
+                        start = end - 0x8000;
+                    }
+                    else if (partition == 0)
+                        end = 0x40100;
 
-            }
-            // MCP
-            else if (device == 3)
-            {
-                byteswapped = mcpswapped();
-                if (partition > 0 && partition < 9)
-                {
-                    end = partition << 15;
-                    start = end - 0x8000;
-                }
-                else if (partition == 0)
-                    end = 0x40100;
-                
-                else if (partition == 9)
-                {
-                    start = 0x40000;
-                    end = 0x40100;
+                    else if (partition == 9)
+                    {
+                        start = 0x40000;
+                        end = 0x40100;
+                    }
                 }
                 else
                     return hash;
             }
+            else
+                return hash;
 
             System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
             md5.Initialize();
@@ -258,10 +236,7 @@ namespace TrionicCANLib
             if (!byteswapped)
             {
                 for (uint i = start; i < end; i++)
-                {
-                    buf[e] = filebytes[i];
-                    e++;
-                }
+                    buf[e++] = filebytes[i];
             }
             else
             {
@@ -271,7 +246,6 @@ namespace TrionicCANLib
                     buf[e + 1] = filebytes[i];
                     e +=2;
                 }
-
             }
             hash = md5.ComputeHash(buf);
             return hash;
