@@ -145,6 +145,7 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                            trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
