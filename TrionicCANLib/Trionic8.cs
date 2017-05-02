@@ -6323,6 +6323,7 @@ namespace TrionicCANLib.API
             return true;
        }
 
+        // Partition bitmask
         private uint formatmask;
 
         public void ReadFlashLegMCP(object sender, DoWorkEventArgs workEvent)
@@ -6840,6 +6841,7 @@ namespace TrionicCANLib.API
             }
             
             // Yes. Do NOT power off!!
+            if (verificationproc && ( (formatmask&1) > 0 || ( (formatmask&0x101) > 0 && device == 5) ))
             {
                 for (int i = 0; i < 5; i++)
                     CastInfoEvent(("Do NOT power cycle the ECU!"), ActivityType.ConvertingFile);
