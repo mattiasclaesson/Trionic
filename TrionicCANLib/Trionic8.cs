@@ -6322,7 +6322,7 @@ namespace TrionicCANLib.API
 
             return true;
        }
-        // Reset partition bitmask to all partitions.
+
         private uint formatmask;
 
         public void ReadFlashLegMCP(object sender, DoWorkEventArgs workEvent)
@@ -6735,7 +6735,7 @@ namespace TrionicCANLib.API
         }
 
         // Nts: Clean this function. There are several ways it could fail
-        private bool ComparePartmd5(DoWorkEventArgs workEvent, byte device, bool verify, bool z22se)
+        private bool ComparePartmd5(DoWorkEventArgs workEvent, byte device, bool verificationproc, bool z22se)
         {
             string filename = (string)workEvent.Argument;
             BlockManager bm = new BlockManager();
@@ -6750,7 +6750,7 @@ namespace TrionicCANLib.API
             byte[] Locmd5dbuf = new byte[16];
             byte[] Remd5dbuf = new byte[16];
 
-            if (!verify)
+            if (!verificationproc)
                 formatmask = 0;
 
             CastProgressReadEvent(0);
@@ -6763,7 +6763,7 @@ namespace TrionicCANLib.API
                 
                 // Normal operation: Fetch md5 of every partition.
                 // Verification: Only fetch md5 of written partitions.
-                if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verify)
+                if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verificationproc)
                 {
                     Locmd5dbuf = bm.GetRegmd5(placeholder, i);
                     Remd5dbuf = LegionIDemand(placeholder, i, out success);
@@ -6779,7 +6779,7 @@ namespace TrionicCANLib.API
                             identical = false;
                     }
 
-                    if (!verify)
+                    if (!verificationproc)
                     {
                         // Special case. Override automatic selection of boot if the the user so choose.
                         if (i == 1 && !identical)
@@ -6837,6 +6837,12 @@ namespace TrionicCANLib.API
                     ;
 
                 CastProgressReadEvent((int)((i * 100) / (float)9));
+            }
+            
+            // Yes. Do NOT power off!!
+            {
+                for (int i = 0; i < 5; i++)
+                    CastInfoEvent(("Do NOT power cycle the ECU!"), ActivityType.ConvertingFile);
             }
 
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
