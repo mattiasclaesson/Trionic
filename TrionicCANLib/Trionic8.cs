@@ -7219,41 +7219,13 @@ namespace TrionicCANLib.API
                 return;
             }
 
-            // Another hack to help elm
-            if (lastAddress == 0x100000)
-            {
-                bool md5success = false;
-                // Read flash partition 9; is it filled with 0xff? -Skip!
-                byte[] resp = LegionIDemand(2, 9, out md5success);
-                
-                if (md5success)
-                {
-                    uint mdlolo = (uint)(resp[12] << 24 | resp[13] << 16 | resp[14] << 8 | resp[15]);
-                    uint mdlohi = (uint)(resp[8] << 24 | resp[9] << 16 | resp[10] << 8 | resp[11]);
-                    uint mdhilo = (uint)(resp[4] << 24 | resp[5] << 16 | resp[6] << 8 | resp[7]);
-                    uint mdhihi = (uint)(resp[0] << 24 | resp[1] << 16 | resp[2] << 8 | resp[3]);
-
-                    if (mdhihi == 0x9a1d434  && mdhilo == 0xdbd7197e && mdlohi == 0x7c3af8a7 && mdlolo == 0xc28ca38b)
-                    {
-                        logger.Debug("(Legion) md5 confirms partition 9 is empty; Skiping", ActivityType.DownloadingFlash);
-                        lastAddress = 0xC0000;
-                    }
-                    else
-                        logger.Debug("(Legion) Partition 9 is not empty; Performing full dump", ActivityType.DownloadingFlash);
-                }
-            }
-
             CastInfoEvent("Downloading FLASH", ActivityType.DownloadingFlash);
             Stopwatch keepAliveSw = new Stopwatch();
             keepAliveSw.Start();
 
             int saved_progress = 0;
 
-            // Don't let the user know what has been done.
-            if (lastAddress != 0xC0000)
-                CastInfoEvent("Downloading " + lastAddress.ToString("D") + " Bytes.", ActivityType.DownloadingFlash);
-            else
-                CastInfoEvent("Downloading " + 0x100000.ToString("D") + " Bytes.", ActivityType.DownloadingFlash);
+            CastInfoEvent("Downloading " + lastAddress.ToString("D") + " Bytes.", ActivityType.DownloadingFlash);
 
             // now start sending commands:
             //06 21 80 00 00 00 00 00 
@@ -7333,11 +7305,8 @@ namespace TrionicCANLib.API
 
             if (buf != null)
             {
-                try{
-                    // Restore md5-hack..
-                    if (lastAddress == 0xC0000)
-                        lastAddress = 0x100000;
-
+                try
+                {
                     // Byteswap mcp
                     if (lastAddress == 0x040100)
                     {
@@ -7350,10 +7319,7 @@ namespace TrionicCANLib.API
                         }
                         CastInfoEvent("Done!", ActivityType.ConvertingFile);
                     }
-
-                    File.WriteAllBytes(filename, buf);
-                    Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
-
+                    
                     // Compare checksum-32 
                     for (int i = 0; i < lastAddress; i++)
                         Localcsum32 += buf[i];
@@ -7373,6 +7339,9 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
+                        File.WriteAllBytes(filename, buf);
+                        Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
+
                         CastInfoEvent("Download done and checksum-matched", ActivityType.FinishedDownloadingFlash);
                         workEvent.Result = true;
                     }
