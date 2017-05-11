@@ -36,6 +36,9 @@ namespace TrionicCANLib.API
         AccessLevel _securityLevel = AccessLevel.AccessLevelFD; // by default 0xFD
         private Logger logger = LogManager.GetCurrentClassLogger();
 
+        static public byte EcuByte_MCP = 5;
+        static public byte EcuByte_T8 = 6;
+
         private ECU m_ECU = ECU.TRIONIC8;
 
         public ECU ECU
@@ -2409,103 +2412,6 @@ namespace TrionicCANLib.API
             return retval;
         }
 
-
-        /// <summary>
-        /// Send ONLY the erase and write commands, ECU is already in running bootloader
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public bool RecoverECUOLD(string filename)
-        {
-            if (!canUsbDevice.isOpen()) return false;
-            _stallKeepAlive = true;
-            BlockManager bm = new BlockManager();
-            bm.SetFilename(filename);
-            int startAddress = 0x020000;
-            int saved_progress = 0;
-
-            SendKeepAlive();
-            _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
-            if (SendrequestDownload(6, true))
-            {
-                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
-                for (int blockNumber = 0; blockNumber <= 0xF50; blockNumber++)
-                {
-                    int percentage = (int)(((float)blockNumber * 100) / 3920F);
-                    if (percentage > saved_progress)
-                    {
-                        CastProgressWriteEvent(percentage);
-                        saved_progress = percentage;
-                    }
-                    byte[] data2Send = bm.GetNextBlock();
-                    int length = 0xF0;
-                    if (blockNumber == 0xF50) length = 0xE6;
-                    if (SendTransferData(length, startAddress + (blockNumber * 0xEA), 0x311))
-                    {
-                        // send the data from the block
-
-                        // calculate number of frames
-                        int numberOfFrames = (int)data2Send.Length / 7; // remnants?
-                        if (((int)data2Send.Length % 7) > 0) numberOfFrames++;
-                        byte iFrameNumber = 0x21;
-                        int txpnt = 0;
-                        CANMessage msg = new CANMessage(0x7E0, 0, 8);
-                        for (int frame = 0; frame < numberOfFrames; frame++)
-                        {
-                            ulong cmd = 0x0000000000000000; // 0x34 = upload data to ECU
-                            msg.setData(cmd);
-                            msg.setCanData(iFrameNumber, 0);
-                            msg.setCanData(data2Send[txpnt++], 1);
-                            msg.setCanData(data2Send[txpnt++], 2);
-                            msg.setCanData(data2Send[txpnt++], 3);
-                            msg.setCanData(data2Send[txpnt++], 4);
-                            msg.setCanData(data2Send[txpnt++], 5);
-                            msg.setCanData(data2Send[txpnt++], 6);
-                            msg.setCanData(data2Send[txpnt++], 7);
-                            iFrameNumber++;
-                            if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
-                            if (!canUsbDevice.sendMessage(msg))
-                            {
-                                logger.Debug("Couldn't send message");
-                            }
-                            Thread.Sleep(1);
-                        }
-
-                        // send the remaining data
-                        m_canListener.setupWaitMessage(0x7E8);
-                        // now wait for 01 76 00 00 00 00 00 00 
-                        CANMessage response = new CANMessage();
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(timeoutP2ct);
-                        ulong data = response.getData();
-                        if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
-                        {
-                            return false;
-                        }
-                        SendKeepAlive();
-                    }
-                }
-                sw.Stop();
-                CastInfoEvent("FLASH upload completed", ActivityType.ConvertingFile);
-                // what else to do?
-                Send0120();
-                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-            }
-            else
-            {
-                sw.Stop();
-                CastInfoEvent("Failed to erase FLASH", ActivityType.ConvertingFile);
-                Send0120();
-                CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
-                return false;
-
-            }
-            _stallKeepAlive = false;
-            return true;
-
-        }
-
         private bool _needRecovery = false;
 
         public bool NeedRecovery
@@ -4503,7 +4409,7 @@ namespace TrionicCANLib.API
                                 StartBootloader011(1);
                                 // We're not supposed to start the session like this so a delay has to be added to prevent the bootloader-upload fuction from going haywire
                                 Thread.Sleep(500);
-                                WriteFlashLegion(6, 0x100000, false, sender, workEvent);
+                                WriteFlashLegion(EcuByte_T8, 0x100000, false, sender, workEvent);
                                 return;
                             }
                             else
@@ -6335,46 +6241,46 @@ namespace TrionicCANLib.API
 
         public void ReadFlashLegMCP(object sender, DoWorkEventArgs workEvent)
         {
-            ReadFlashLegion(5, 0x40100, false, sender, workEvent);
+            ReadFlashLegion(EcuByte_MCP, 0x40100, false, sender, workEvent);
         }
 
         public void ReadFlashLegT8(object sender, DoWorkEventArgs workEvent)
         {
-            ReadFlashLegion(6, 0x100000, false, sender, workEvent);
+            ReadFlashLegion(EcuByte_T8, 0x100000, false, sender, workEvent);
         }
 
         public void WriteFlashLegMCP(object sender, DoWorkEventArgs workEvent)
         {
-            WriteFlashLegion(5, 0x40100, false, sender, workEvent);
+            WriteFlashLegion(EcuByte_MCP, 0x40100, false, sender, workEvent);
         }
 
         public void WriteFlashLegT8(object sender, DoWorkEventArgs workEvent)
         {
-            WriteFlashLegion(6, 0x100000, false, sender, workEvent);
+            WriteFlashLegion(EcuByte_T8, 0x100000, false, sender, workEvent);
         }
 
 
         // Z22SE stuff. The loader will NOT marry the co-processor since their checksum algorithm is unknown. 
         public void ReadFlashLegZ22SE_Main(object sender, DoWorkEventArgs workEvent)
         {
-            ReadFlashLegion(6, 0x100000, true, sender, workEvent);
+            ReadFlashLegion(EcuByte_T8, 0x100000, true, sender, workEvent);
         }
         public void ReadFlashLegZ22SE_MCP(object sender, DoWorkEventArgs workEvent)
         {
-            ReadFlashLegion(5, 0x40100, true, sender, workEvent);
+            ReadFlashLegion(EcuByte_MCP, 0x40100, true, sender, workEvent);
         }
 
         public void WriteFlashLegZ22SE_Main(object sender, DoWorkEventArgs workEvent)
         {
             // They're not using the first partition as recovery in those softwares that i've looked into. Flash Everything!
             formatBootPartition = true;
-            WriteFlashLegion(6, 0x100000, true, sender, workEvent);
+            WriteFlashLegion(EcuByte_T8, 0x100000, true, sender, workEvent);
         }
         public void WriteFlashLegZ22SE_MCP(object sender, DoWorkEventArgs workEvent)
         {
             // It seems they use the same recovery on MCP as regular Trionic 8 but do this just to make sure.
             formatBootPartition = true;
-            WriteFlashLegion(5, 0x40100, true, sender, workEvent);
+            WriteFlashLegion(EcuByte_MCP, 0x40100, true, sender, workEvent);
         }
 
 
@@ -6752,7 +6658,7 @@ namespace TrionicCANLib.API
             byte toerase = 0;
             byte placeholder = 3;
 
-            if (device == 6)
+            if (device == EcuByte_T8)
                 placeholder = 2;
 
             byte[] Locmd5dbuf = new byte[16];
@@ -6848,7 +6754,7 @@ namespace TrionicCANLib.API
             }
             
             // Yes. Do NOT power off!!
-            if ( verificationproc && ((formatmask&1) > 0 || ((formatmask&0x101) > 0 && device == 5)) )
+            if (verificationproc && ((formatmask & 1) > 0 || ((formatmask & 0x101) > 0 && device == EcuByte_MCP)))
             {
                 for (int i = 0; i < 5; i++)
                     CastInfoEvent(("Do NOT power cycle the ECU!"), ActivityType.ConvertingFile);
@@ -6857,7 +6763,7 @@ namespace TrionicCANLib.API
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
 
             // Damn broken bins..
-            if (!formatSystemPartitions && !z22se && !verificationproc && device != 5 && ((formatmask&0xF) > 0))
+            if (!formatSystemPartitions && !z22se && !verificationproc && device != EcuByte_MCP && ((formatmask & 0xF) > 0))
             {
                 // Mask off system partitions and re-count number of partitions to mess with.
                 toerase = 0;
@@ -7037,7 +6943,7 @@ namespace TrionicCANLib.API
 
 
             // T8 main
-            if (device == 6)
+            if (device == EcuByte_T8)
             {
                 if (address >= 0xC0000)
                     part = 8;
@@ -7058,7 +6964,7 @@ namespace TrionicCANLib.API
             }
 
             // MCP
-            else if (device == 5)
+            else if (device == EcuByte_MCP)
                 part = (address >> 15) & 0xF;
             
             // Read one bit from selected part of the format mask to figure out if this partition should be written or not.
