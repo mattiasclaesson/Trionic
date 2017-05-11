@@ -56,9 +56,16 @@ namespace TrionicCANLib.API
             set { formatBootPartition = value; }
         }
 
+        public bool FormatSystemPartitions
+        {
+            get { return formatSystemPartitions; }
+            set { formatSystemPartitions = value; }
+        }
+
         private bool LegionIsAlive = false;
         private bool SupportAutoskip = false;
         private bool formatBootPartition = false;
+        private bool formatSystemPartitions = false;
         private CANListener m_canListener;
         private bool _stallKeepAlive;
         private float _oilQualityRead = 0;
@@ -4354,11 +4361,11 @@ namespace TrionicCANLib.API
                         CANMessage msg = new CANMessage(0x11, 0, 8);
                         for (int j = 0; j < 0x22; j++)
                         {
-                            var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt);
                             if (mode==1)
-                                cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata_Leg.BootloaderLegionBytes, txpnt);
+                                msg.setData(BitTools.GetFrameBytes(iFrameNumber, btloaderdata_Leg.BootloaderLegionBytes, txpnt));
+                            else
+                                msg.setData(BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt));
 
-                            msg.setData(cmd);
                             txpnt += 7;
                             iFrameNumber++;
                             if (iFrameNumber > 0x2F) iFrameNumber = 0x20;
@@ -6719,7 +6726,7 @@ namespace TrionicCANLib.API
 
         private bool LeaveRecoveryBe()
         {
-            if (formatBootPartition)
+            if (formatBootPartition && formatSystemPartitions)
             {
                 DialogResult result = DialogResult.No;
                 result = MessageBox.Show("Do you REALLY want to write a new boot partition?",
@@ -6806,7 +6813,7 @@ namespace TrionicCANLib.API
                         if (!identical)
                         {
                             formatmask += (uint)shift;
-                            // CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
+                            CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
                             logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Tagged for erase and write"));
                             toerase++;
                         }
@@ -6841,7 +6848,7 @@ namespace TrionicCANLib.API
             }
             
             // Yes. Do NOT power off!!
-            if (verificationproc && ( (formatmask&1) > 0 || ( (formatmask&0x101) > 0 && device == 5) ))
+            if ( verificationproc && ((formatmask&1) > 0 || ((formatmask&0x101) > 0 && device == 5)) )
             {
                 for (int i = 0; i < 5; i++)
                     CastInfoEvent(("Do NOT power cycle the ECU!"), ActivityType.ConvertingFile);
@@ -6849,6 +6856,25 @@ namespace TrionicCANLib.API
 
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
 
+            // Damn broken bins..
+            if (!formatSystemPartitions && !z22se && !verificationproc && device != 5 && ((formatmask&0xF) > 0))
+            {
+                // Mask off system partitions and re-count number of partitions to mess with.
+                toerase = 0;
+                formatmask &= 0x1F0;
+
+                CastInfoEvent(("Patching mask to exclude system partitions"), ActivityType.ConvertingFile);
+                logger.Debug("(Legion) Patched out system partitions");
+
+                for (byte i = 4; i < 9; i++)
+                {
+                    if (((formatmask >> i) & 0x1) > 0)
+                    {
+                        CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
+                        toerase++;
+                    }
+                }
+            }
             if (toerase > 0)
                 CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
 

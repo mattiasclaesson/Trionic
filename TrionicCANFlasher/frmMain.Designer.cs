@@ -56,6 +56,7 @@
             this.btnLogData = new System.Windows.Forms.Button();
             this.cbFormatBootPartition = new System.Windows.Forms.CheckBox();
             this.cbUseLegionBootloader = new System.Windows.Forms.CheckBox();
+            this.cbFormatSystemPartitions = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -87,7 +88,7 @@
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(12, 378);
+            this.progressBar1.Location = new System.Drawing.Point(12, 405);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(648, 23);
             this.progressBar1.TabIndex = 23;
@@ -124,7 +125,7 @@
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(648, 354);
+            this.listBoxLog.Size = new System.Drawing.Size(648, 368);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
@@ -242,7 +243,7 @@
             this.cbOnlyPBus.AutoSize = true;
             this.cbOnlyPBus.Checked = true;
             this.cbOnlyPBus.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbOnlyPBus.Location = new System.Drawing.Point(863, 324);
+            this.cbOnlyPBus.Location = new System.Drawing.Point(863, 321);
             this.cbOnlyPBus.Name = "cbOnlyPBus";
             this.cbOnlyPBus.Size = new System.Drawing.Size(134, 17);
             this.cbOnlyPBus.TabIndex = 57;
@@ -324,7 +325,7 @@
             this.cbUseFlasherOnDevice.AutoSize = true;
             this.cbUseFlasherOnDevice.Checked = true;
             this.cbUseFlasherOnDevice.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(863, 347);
+            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(863, 343);
             this.cbUseFlasherOnDevice.Name = "cbUseFlasherOnDevice";
             this.cbUseFlasherOnDevice.Size = new System.Drawing.Size(129, 17);
             this.cbUseFlasherOnDevice.TabIndex = 66;
@@ -358,7 +359,7 @@
             // 
             this.cbFormatBootPartition.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbFormatBootPartition.AutoSize = true;
-            this.cbFormatBootPartition.Location = new System.Drawing.Point(863, 393);
+            this.cbFormatBootPartition.Location = new System.Drawing.Point(863, 412);
             this.cbFormatBootPartition.Name = "cbFormatBootPartition";
             this.cbFormatBootPartition.Size = new System.Drawing.Size(122, 17);
             this.cbFormatBootPartition.TabIndex = 69;
@@ -371,7 +372,7 @@
             this.cbUseLegionBootloader.AutoSize = true;
             this.cbUseLegionBootloader.Checked = true;
             this.cbUseLegionBootloader.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbUseLegionBootloader.Location = new System.Drawing.Point(863, 370);
+            this.cbUseLegionBootloader.Location = new System.Drawing.Point(863, 366);
             this.cbUseLegionBootloader.Name = "cbUseLegionBootloader";
             this.cbUseLegionBootloader.Size = new System.Drawing.Size(134, 17);
             this.cbUseLegionBootloader.TabIndex = 70;
@@ -379,11 +380,24 @@
             this.cbUseLegionBootloader.UseVisualStyleBackColor = true;
             this.cbUseLegionBootloader.CheckedChanged += new System.EventHandler(this.cbUseLegionBootloader_CheckedChanged);
             // 
+            // cbFormatSystemPartitions
+            // 
+            this.cbFormatSystemPartitions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbFormatSystemPartitions.AutoSize = true;
+            this.cbFormatSystemPartitions.Location = new System.Drawing.Point(863, 389);
+            this.cbFormatSystemPartitions.Name = "cbFormatSystemPartitions";
+            this.cbFormatSystemPartitions.Size = new System.Drawing.Size(126, 17);
+            this.cbFormatSystemPartitions.TabIndex = 71;
+            this.cbFormatSystemPartitions.Text = "Unlock sys. partitions";
+            this.cbFormatSystemPartitions.UseVisualStyleBackColor = true;
+            this.cbFormatSystemPartitions.CheckedChanged += new System.EventHandler(this.cbFormatSystemPartitions_CheckedChanged);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1023, 413);
+            this.ClientSize = new System.Drawing.Size(1023, 440);
+            this.Controls.Add(this.cbFormatSystemPartitions);
             this.Controls.Add(this.cbUseLegionBootloader);
             this.Controls.Add(this.cbFormatBootPartition);
             this.Controls.Add(this.btnLogData);
@@ -452,6 +466,7 @@
         private System.Windows.Forms.Button btnLogData;
         private System.Windows.Forms.CheckBox cbFormatBootPartition;
         private System.Windows.Forms.CheckBox cbUseLegionBootloader;
+        private System.Windows.Forms.CheckBox cbFormatSystemPartitions;
     }
 }
 

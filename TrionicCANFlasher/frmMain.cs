@@ -146,6 +146,7 @@ namespace TrionicCANFlasher
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
+                            trionic8.FormatSystemPartitions = cbFormatSystemPartitions.Checked;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -188,6 +189,7 @@ namespace TrionicCANFlasher
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
+                            trionic8.FormatSystemPartitions = cbFormatSystemPartitions.Checked;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -259,6 +261,7 @@ namespace TrionicCANFlasher
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
+                            trionic8.FormatSystemPartitions = cbFormatSystemPartitions.Checked;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -418,6 +421,7 @@ namespace TrionicCANFlasher
             cbOnlyPBus.Enabled = enable;
             cbUseLegionBootloader.Enabled = enable;
             cbFormatBootPartition.Enabled = enable;
+            cbFormatSystemPartitions.Enabled = enable;
             btnEditParameters.Enabled = enable;
             btnReadECUcalibration.Enabled = enable;
             btnRestoreT8.Enabled = enable;
@@ -461,6 +465,7 @@ namespace TrionicCANFlasher
                 btnRestoreT8.Enabled = false;
                 cbUseLegionBootloader.Enabled = false;
                 cbFormatBootPartition.Enabled = false;
+                cbFormatSystemPartitions.Enabled = false;
             }
 
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
@@ -469,7 +474,8 @@ namespace TrionicCANFlasher
                 btnReadECUcalibration.Enabled = false;
                 btnReadSRAM.Enabled = false;
 
-                cbFormatBootPartition.Enabled = cbUseLegionBootloader.Checked;
+                cbFormatSystemPartitions.Enabled = cbUseLegionBootloader.Checked;
+                cbFormatBootPartition.Enabled = cbFormatSystemPartitions.Checked;
             }
 
             // Always disable
@@ -479,6 +485,7 @@ namespace TrionicCANFlasher
                 btnRestoreT8.Enabled = false;
                 cbUseLegionBootloader.Enabled = false;
                 cbFormatBootPartition.Enabled = false;
+                cbFormatSystemPartitions.Enabled = false;
             }
             
             // Always disable
@@ -492,6 +499,7 @@ namespace TrionicCANFlasher
                 if (cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG)
                 {
                     cbFormatBootPartition.Enabled = false;
+                    cbFormatSystemPartitions.Enabled = false;
                 }
 
                 btnRestoreT8.Enabled = false;
@@ -947,7 +955,7 @@ namespace TrionicCANFlasher
                                 Application.DoEvents();
                                 BackgroundWorker bgWorker;
                                 bgWorker = new BackgroundWorker();
-                                if (cbUseLegionBootloader.Enabled)
+                                if (cbUseLegionBootloader.Checked)
                                 {
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU_Leg);
                                 }
@@ -1008,8 +1016,8 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("OnlyPBus", cbOnlyPBus.Checked);
             SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem != null ? cbxComSpeed.SelectedItem.ToString() : String.Empty);
             SaveRegistrySetting("UseLegionBootloader", cbUseLegionBootloader.Checked);
+            SaveRegistrySetting("FormatSystemPartitions", cbFormatSystemPartitions.Checked);
             SaveRegistrySetting("FormatBootPartition", cbFormatBootPartition.Checked);
-
             trionic8.Cleanup();
             trionic7.Cleanup();
             System.Windows.Forms.Application.Exit();
@@ -1192,6 +1200,10 @@ namespace TrionicCANFlasher
                             else if (a == "UseLegionBootlooder")
                             {
                                 cbUseLegionBootloader.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                            }
+                            else if (a == "FormatSystemPartitions")
+                            {
+                                cbFormatSystemPartitions.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
                             else if (a == "FormatBootPartition")
                             {
@@ -1820,7 +1832,14 @@ namespace TrionicCANFlasher
 
         private void cbUseLegionBootloader_CheckedChanged(object sender, EventArgs e)
         {
-            cbFormatBootPartition.Enabled = cbUseLegionBootloader.Checked;
+            cbFormatSystemPartitions.Enabled = cbUseLegionBootloader.Checked;
+            cbFormatBootPartition.Enabled = (cbFormatSystemPartitions.Checked && cbFormatSystemPartitions.Enabled);
+        }
+
+        private void cbFormatSystemPartitions_CheckedChanged(object sender, EventArgs e)
+        {
+            cbFormatSystemPartitions.Enabled = cbUseLegionBootloader.Checked;
+            cbFormatBootPartition.Enabled = cbFormatSystemPartitions.Checked;
         }
     }
 }
