@@ -125,7 +125,7 @@
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(648, 368);
+            this.listBoxLog.Size = new System.Drawing.Size(648, 382);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
