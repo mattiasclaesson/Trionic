@@ -65,7 +65,6 @@ namespace TrionicCANLib.API
             set { formatSystemPartitions = value; }
         }
 
-        private bool SupportAutoskip = false;
         private bool formatBootPartition = false;
         private bool formatSystemPartitions = false;
         private CANListener m_canListener;
@@ -1609,10 +1608,10 @@ namespace TrionicCANLib.API
         /// Flash and read methods
         ///
 
-        public byte[] readDataByLocalIdentifier(byte PCI, int address, int length, out bool success)
+        public byte[] readDataByLocalIdentifier(bool LegionMode, byte PCI, int address, int length, out bool success)
         {
             success = false;
-            byte[] buffer = this.sendReadDataByLocalIdentifier(PCI, address, length, out success);
+            byte[] buffer = this.sendReadDataByLocalIdentifier(LegionMode, PCI, address, length, out success);
 
             //Thread.Sleep(1); //was 1 <GS-05052011>
             return buffer;
@@ -1687,7 +1686,7 @@ namespace TrionicCANLib.API
             response = new CANMessage();
             response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
-            if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x50)
+            if (getCanData(data, 0) != 0x01 || (getCanData(data, 1) != 0x50 && getCanData(data, 1) != 0x60))
             {
                 return false;
             }
@@ -2614,7 +2613,7 @@ namespace TrionicCANLib.API
             return (byte)(m_data >> (int)(a_index * 8));
         }
 
-        private byte[] sendReadDataByLocalIdentifier(byte PCI, int address, int length, out bool success)
+        private byte[] sendReadDataByLocalIdentifier(bool LegionMode, byte PCI, int address, int length, out bool success)
         {
             // we send: 0040000000002106
             // .. send: 06 21 80 00 00 00 00 00
@@ -2708,7 +2707,7 @@ namespace TrionicCANLib.API
                 // Thread.Sleep(1);
 
                 // Check if autoskip feature is enabled and a tag has been received
-                if ((!SupportAutoskip) || (getCanData(data, 3) == 0))
+                if (!LegionMode || (getCanData(data, 3) == 0))
                 {
                     SendAckMessageT8(); // send ack to request more bytes
 
@@ -4754,7 +4753,7 @@ namespace TrionicCANLib.API
 
             // Determine last part of the FLASH chip that is used (to save time when reading (DUMPing))
             // Address 0x020140 stores a pointer to the BIN file Header which is the last used area in FLASH
-            byte[] buffer = readDataByLocalIdentifier(6, 0x020140, blockSize, out success);
+            byte[] buffer = readDataByLocalIdentifier(false, 6, 0x020140, blockSize, out success);
             if (success)
             {
                 if (buffer.Length == blockSize)
@@ -4780,7 +4779,7 @@ namespace TrionicCANLib.API
                     return;
                 }
 
-                byte[] readbuf = readDataByLocalIdentifier(6, startAddress, blockSize, out success);
+                byte[] readbuf = readDataByLocalIdentifier(false, 6, startAddress, blockSize, out success);
                 if (success)
                 {
                     if (readbuf.Length == blockSize)
@@ -4937,7 +4936,7 @@ namespace TrionicCANLib.API
                     _stallKeepAlive = false;
                     return buf;
                 }
-                byte[] readbuf = readDataByLocalIdentifier(6, startAddress, blockSize, out success);
+                byte[] readbuf = readDataByLocalIdentifier(false, 6, startAddress, blockSize, out success);
                 if (success)
                 {
                     if (readbuf.Length == blockSize)
@@ -5109,7 +5108,7 @@ namespace TrionicCANLib.API
                     // Send this information as a data frame to make elm behave
                     
                     bool success = false;
-                    byte[] formatbuf = readDataByLocalIdentifier(0xF0, 0, 4, out success);
+                    byte[] formatbuf = readDataByLocalIdentifier(LegionMode, 0xF0, 0, 4, out success);
                     if (success)
                     {
                         retryCount = 0;
@@ -6374,8 +6373,8 @@ namespace TrionicCANLib.API
                 CastInfoEvent(("MCP Firmware information"), ActivityType.DownloadingFlash);
 
                 // Fetch string 1 and 2
-                byte[] resp1 = readDataByLocalIdentifier(EcuByte_MCP, 0x8000, 0x80, out success);
-                byte[] resp2 = readDataByLocalIdentifier(EcuByte_MCP, 0x8100, 0x80, out success2);
+                byte[] resp1 = readDataByLocalIdentifier(true, EcuByte_MCP, 0x8000, 0x80, out success);
+                byte[] resp2 = readDataByLocalIdentifier(true, EcuByte_MCP, 0x8100, 0x80, out success2);
 
                 if (success && success2)
                 {
@@ -6547,7 +6546,7 @@ namespace TrionicCANLib.API
                     {
                         do
                         {   // ...
-                            byte[] md5dbuf = readDataByLocalIdentifier(7, 0, 16, out success);
+                            byte[] md5dbuf = readDataByLocalIdentifier(true, 7, 0, 16, out success);
                             if (success)
                                 return md5dbuf;
                             else
@@ -6809,7 +6808,30 @@ namespace TrionicCANLib.API
 
             return success;
         }
+        private void LegionRequestexit()
+        {
+            CastInfoEvent("Requesting bootloader exit..", ActivityType.ConvertingFile);
+            bool success = Send0120();
 
+            if (!success)
+            {
+                int i = 10;
+                do
+                {
+                    CastInfoEvent("Retrying exit-request", ActivityType.ConvertingFile);
+                    success = Send0120();
+                    Thread.Sleep(100);
+                } while (i-- > 0 && !success);
+
+                if (i == 0)
+                {
+                    CastInfoEvent("Bootloader did not respond to exit-request", ActivityType.ConvertingFile);
+                    CastInfoEvent("You may have to power-cycle the ECU", ActivityType.ConvertingFile);
+                }
+            }
+
+
+        }
         private void WriteFlashLegion(byte Device, int EndAddress, bool z22se, object sender, DoWorkEventArgs workEvent)
         {
 
@@ -6862,7 +6884,7 @@ namespace TrionicCANLib.API
                                     CastInfoEvent("FLASH upload completed but the co-processor could not be married!", ActivityType.FinishedFlashing);
 
                             _needRecovery = false;
-                            Send0120();
+                            LegionRequestexit();
                         }
                         else
                         {
@@ -6902,8 +6924,8 @@ namespace TrionicCANLib.API
                 if (!MarryMCP(z22se))
                     for (int i = 0; i < 5; i++)
                         CastInfoEvent("The co-processor could not be married!", ActivityType.UploadingFlash);
-            
-                Send0120();
+
+                LegionRequestexit();
             }
                
 
@@ -7102,8 +7124,6 @@ namespace TrionicCANLib.API
 
         private void ReadFlashLegion(byte Device, int lastAddress, bool z22se, object sender, DoWorkEventArgs workEvent)
         {
-            SupportAutoskip = true;
-
             BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
 
@@ -7148,12 +7168,11 @@ namespace TrionicCANLib.API
                 {
                     _stallKeepAlive = false;
                     workEvent.Result = false;
-                    SupportAutoskip = false; // Make sure to restore tags in case the user decides to try something else.
 
                     return;
                 }
 
-                byte[] readbuf = readDataByLocalIdentifier(Device, startAddress, blockSize, out success);
+                byte[] readbuf = readDataByLocalIdentifier(true, Device, startAddress, blockSize, out success);
                 if (success)
                 {
                     // figure out why readDataByLocalIdentifier() sometimes return true even though the frame is incomplete
@@ -7201,8 +7220,7 @@ namespace TrionicCANLib.API
                         CastInfoEvent("Failed to download FLASH content", ActivityType.DownloadingFlash);
                         _stallKeepAlive = false;
                         workEvent.Result = false;
-                        SupportAutoskip = false; // Make sure to restore tags in case the user decides to try something else.. 
-                        Send0120();
+                        LegionRequestexit();
 
                         return;
                     }
@@ -7217,19 +7235,6 @@ namespace TrionicCANLib.API
             {
                 try
                 {
-                    // Byteswap mcp
-                    /*if (lastAddress == 0x040100)
-                    {
-                        CastInfoEvent("Byteswapping..", ActivityType.ConvertingFile);
-                        for (int i=0; i<0x40100; i+=2)
-                        {
-                            byte temp = buf[i];
-                            buf[i] = buf[i + 1];
-                            buf[i + 1] = temp;
-                        }
-                        CastInfoEvent("Done!", ActivityType.ConvertingFile);
-                    }*/
-                    
                     // Compare checksum-32 
                     for (int i = 0; i < lastAddress; i++)
                         Localcsum32 += buf[i];
@@ -7266,8 +7271,7 @@ namespace TrionicCANLib.API
                 workEvent.Result = false;
 
             // Loader will never exit on its own. Tell it to 
-            Send0120();
-            SupportAutoskip = false; // Make sure to restore tags in case the user decides to do something that requires another loader 
+            LegionRequestexit();
 
             return;
         }
