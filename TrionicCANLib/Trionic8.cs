@@ -6359,10 +6359,10 @@ namespace TrionicCANLib.API
         // TODO: Expand this function to verify if installed version is compatible with the main software
         private void PrintMCPVer()
         {
-            int Entry = 0;
-            bool success = false;
-            bool success2 = false;
-            byte[] Resp1 = new byte[8];
+            // int Entry = 0;
+            bool success;
+            // bool success2;
+            // byte[] Resp1 = new byte[8];
             byte[] Resp2 = new byte[10];
 
             // Start the secondary loader if required
@@ -6373,33 +6373,32 @@ namespace TrionicCANLib.API
                 CastInfoEvent(("MCP Firmware information"), ActivityType.DownloadingFlash);
 
                 // Fetch string 1 and 2
-                byte[] resp1 = readDataByLocalIdentifier(true, EcuByte_MCP, 0x8000, 0x80, out success);
-                byte[] resp2 = readDataByLocalIdentifier(true, EcuByte_MCP, 0x8100, 0x80, out success2);
+                // byte[] resp1 = readDataByLocalIdentifier(true, EcuByte_MCP, 0x8000, 0x80, out success2);
+                byte[] resp2 = readDataByLocalIdentifier(true, EcuByte_MCP, 0x8100, 0x80, out success);
 
-                if (success && success2)
+                if (success/* && success2*/)
                 {
-                    Entry = resp1[0] << 24 | resp1[1] << 16 | resp1[2] << 8 | resp1[3];
-
+                    // Entry = resp1[0] << 24 | resp1[1] << 16 | resp1[2] << 8 | resp1[3];
                     for (int i = 0; i < 10; i ++)
                     {
                         Resp2[i] = resp2[0xC + i];
 
-                        if (i < 8)
-                            Resp1[i] = resp1[0x4 + i];
+                        // if (i < 8)
+                        //    Resp1[i] = resp1[0x4 + i];
                     }
 
-                    string str1 = Encoding.ASCII.GetString(Resp1);
+                    //string str1 = Encoding.ASCII.GetString(Resp1);
                     string str2 = Encoding.ASCII.GetString(Resp2);
 
-                    CastInfoEvent(("Main entry-point: 0x" + Entry.ToString("X5")), ActivityType.DownloadingFlash);
-                    CastInfoEvent(("Version string 1: " + str1), ActivityType.DownloadingFlash);
-                    CastInfoEvent(("Version string 2: " + str2), ActivityType.DownloadingFlash);
+                    // CastInfoEvent(("Main entry-point: 0x" + Entry.ToString("X5")), ActivityType.DownloadingFlash);
+                    // CastInfoEvent(("Version string 1: " + str1), ActivityType.DownloadingFlash);
+                    CastInfoEvent(("Version string: " + str2), ActivityType.DownloadingFlash);
                 }
                 else
                 {
-                    CastInfoEvent(("Main entry-point: FAIL!"), ActivityType.DownloadingFlash);
-                    CastInfoEvent(("Version string 1: FAIL!"), ActivityType.DownloadingFlash);
-                    CastInfoEvent(("Version string 2: FAIL!"), ActivityType.DownloadingFlash);
+                    // CastInfoEvent(("Main entry-point: FAIL!"), ActivityType.DownloadingFlash);
+                    // CastInfoEvent(("Version string 1: FAIL!"), ActivityType.DownloadingFlash);
+                    CastInfoEvent(("Version string: FAIL!"), ActivityType.DownloadingFlash);
                 }
             }
             else
@@ -6808,6 +6807,7 @@ namespace TrionicCANLib.API
 
             return success;
         }
+
         private void LegionRequestexit()
         {
             CastInfoEvent("Requesting bootloader exit..", ActivityType.ConvertingFile);
@@ -6815,13 +6815,14 @@ namespace TrionicCANLib.API
 
             if (!success)
             {
-                int i = 10;
+                byte i = 10;
                 do
                 {
                     CastInfoEvent("Retrying exit-request", ActivityType.ConvertingFile);
                     success = Send0120();
                     Thread.Sleep(100);
-                } while (i-- > 0 && !success);
+                    i--;
+                } while (i > 0 && !success);
 
                 if (i == 0)
                 {
