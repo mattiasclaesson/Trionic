@@ -65,7 +65,6 @@ namespace TrionicCANLib.API
             set { formatSystemPartitions = value; }
         }
 
-        private bool LegionIsAlive = false;
         private bool SupportAutoskip = false;
         private bool formatBootPartition = false;
         private bool formatSystemPartitions = false;
@@ -2272,12 +2271,12 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        private bool StartBootloader011(byte LowStart)
+        private bool StartBootloader011(bool LegionMode)
         {
             CANMessage msg = new CANMessage(0x11, 0, 7);
             // ulong cmd = 0x0060241000803606;
             ulong cmd = 0x0000241000803606;
-            if (LowStart != 1)
+            if (!LegionMode)
                 cmd += 0x0060000000000000;
 
             msg.setData(cmd);
@@ -4237,7 +4236,7 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        private bool UploadBootloaderRecover(int mode)
+        private bool UploadBootloaderRecover(bool LegionMode)
         {
             int startAddress = 0x102400;
             Bootloader btloaderdata = new Bootloader();
@@ -4267,7 +4266,7 @@ namespace TrionicCANLib.API
                         CANMessage msg = new CANMessage(0x11, 0, 8);
                         for (int j = 0; j < 0x22; j++)
                         {
-                            if (mode==1)
+                            if (LegionMode)
                                 msg.setData(BitTools.GetFrameBytes(iFrameNumber, btloaderdata_Leg.BootloaderLegionBytes, txpnt));
                             else
                                 msg.setData(BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt));
@@ -4308,7 +4307,7 @@ namespace TrionicCANLib.API
                     CANMessage msg = new CANMessage(0x11, 0, 8);
 
                     var cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata.BootloaderProgBytes, txpnt);
-                    if (mode == 1)
+                    if (LegionMode)
                         cmd = BitTools.GetFrameBytes(iFrameNumber, btloaderdata_Leg.BootloaderLegionBytes, txpnt);
                     msg.setData(cmd);
                     txpnt += 7;
@@ -4343,16 +4342,16 @@ namespace TrionicCANLib.API
 
         public void RecoverECU_Def(object sender, DoWorkEventArgs workEvent)
         {
-            RecoverECU(0, sender, workEvent);
+            RecoverECU(false, sender, workEvent);
         }
 
 
         public void RecoverECU_Leg(object sender, DoWorkEventArgs workEvent)
         {
-            RecoverECU(1, sender, workEvent);
+            RecoverECU(true, sender, workEvent);
         }
 
-        private void RecoverECU(int mode, object sender, DoWorkEventArgs workEvent)
+        private void RecoverECU(bool LegionMode, object sender, DoWorkEventArgs workEvent)
         {
             BackgroundWorker bw = sender as BackgroundWorker;
             string filename = (string)workEvent.Argument;
@@ -4399,28 +4398,24 @@ namespace TrionicCANLib.API
                         if (RequestSecurityAccess011(0))
                         {
                             CastInfoEvent("Security access granted, uploading bootloader", ActivityType.UploadingBootloader);
-                            UploadBootloaderRecover(mode);
+                            UploadBootloaderRecover(LegionMode);
                             CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
                             Thread.Sleep(500);
-                            
 
-                            if (mode == 1)
+                            StartBootloader011(LegionMode);
+                            Thread.Sleep(500);
+                            if (LegionMode)
                             {
-                                StartBootloader011(1);
-                                // We're not supposed to start the session like this so a delay has to be added to prevent the bootloader-upload fuction from going haywire
-                                Thread.Sleep(500);
                                 WriteFlashLegion(EcuByte_T8, 0x100000, false, sender, workEvent);
                                 return;
                             }
                             else
                             {
-                                StartBootloader011(0);
-                                Thread.Sleep(500);
                                 CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
                             }
 
                             
-                            if (SendrequestDownload(6, true) && mode == 0)
+                            if (SendrequestDownload(6, true, LegionMode))
                             {
                                 _needRecovery = true;
                                 CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
@@ -4600,7 +4595,7 @@ namespace TrionicCANLib.API
             Thread.Sleep(50);
 
             CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
-            if (SendrequestDownload(6, false))
+            if (SendrequestDownload(6, false, false))
             {
                 _needRecovery = true;
                 SendShutup();
@@ -5002,14 +4997,14 @@ namespace TrionicCANLib.API
             return buf;
         }
 
-        private bool SendrequestDownload(byte PCI, bool recoveryMode)
+        private bool SendrequestDownload(byte PCI, bool recoveryMode, bool LegionMode)
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
             //06 34 01 00 00 00 00 00
             //ulong cmd = 0x0000000000013406;
             ulong cmd;
             ulong tmp = ((formatmask & 0xff) << 8 | (formatmask >> 8) & 0xFF); 
-            if (formatmask==0 || !LegionIsAlive) 
+            if (formatmask==0 || !LegionMode) 
                 cmd = 0x0000000000013400;
             else
                 cmd = (tmp) << 40 | 0x13400;
@@ -5033,7 +5028,7 @@ namespace TrionicCANLib.API
             while (!eraseDone)
             {
                 // ELM327 is one annoying adapter; It's hard to fix the stock loader but it is at least possible to work around it in the new loader
-                if (!LegionIsAlive)
+                if (!LegionMode)
                 {
                     m_canListener.setupWaitMessage(0x7E8);
                     CANMessage response = m_canListener.waitMessage(500);
@@ -5923,7 +5918,7 @@ namespace TrionicCANLib.API
             Thread.Sleep(50);
 
             CastInfoEvent("Erasing FLASH", ActivityType.StartErasingFlash);
-            if (SendrequestDownload(6, false))
+            if (SendrequestDownload(6, false, false))
             {
                 _needRecovery = true;
                 SendShutup();
@@ -6116,16 +6111,19 @@ namespace TrionicCANLib.API
 
         // Restless coders; Look no further!
         private bool fasterdamnit = false;
-
+        
         private bool StartCommon(byte Device, bool z22se)
         {
-            LegionIsAlive = false;
+            bool LegionIsAlive = false;
             
             // This command will sometimes fail even though the loader is alive; Ugly workaround.
             for (int i = 0; i < 4; i++)
             {
                 if (LegionPing())
+                {
                     LegionIsAlive = true;
+                    break;
+                }
                 Thread.Sleep(40);
             }
             // Don't bother with this if the loader is already up and running 
@@ -6201,9 +6199,6 @@ namespace TrionicCANLib.API
                     CastInfoEvent("Failed to start bootloader", ActivityType.UploadingFlash);
                     return false;
                 }
-                else
-                    LegionIsAlive = true;
-
             }
             else
                 CastInfoEvent("Loader was left running. Starting over", ActivityType.UploadingBootloader);
@@ -6226,7 +6221,7 @@ namespace TrionicCANLib.API
                 return false;
 
             // Start the secondary bootloader
-            if (Device == 5) {
+            if (Device == EcuByte_MCP) {
 
                 CastInfoEvent("Waiting for bootloader to spawn its minion..", ActivityType.UploadingBootloader);
                 LegionIDemand(4, 0, out success);
@@ -6368,9 +6363,9 @@ namespace TrionicCANLib.API
             int Entry = 0;
             bool success = false;
             bool success2 = false;
-            byte[] BSVer1 = new byte[8];
-            byte[] BSVer2 = new byte[10];
-            
+            byte[] Resp1 = new byte[8];
+            byte[] Resp2 = new byte[10];
+
             // Start the secondary loader if required
             LegionIDemand(4, 0, out success);
 
@@ -6379,27 +6374,23 @@ namespace TrionicCANLib.API
                 CastInfoEvent(("MCP Firmware information"), ActivityType.DownloadingFlash);
 
                 // Fetch string 1 and 2
-                byte[] resp1 = readDataByLocalIdentifier(5, 0x8000, 0x80, out success);
-                byte[] resp2 = readDataByLocalIdentifier(5, 0x8100, 0x80, out success2);
+                byte[] resp1 = readDataByLocalIdentifier(EcuByte_MCP, 0x8000, 0x80, out success);
+                byte[] resp2 = readDataByLocalIdentifier(EcuByte_MCP, 0x8100, 0x80, out success2);
 
                 if (success && success2)
                 {
-                    // Byteswap response and trim it down to only store relevant data
-                    // Trionic 8 is the master of confusion since EVERYTHING; data/address registers, ram and flash has to be byte or word-swapped when working with MCP but the main cpu can be read as is...
-                    for (int i = 0; i < 10; i += 2)
+                    Entry = resp1[0] << 24 | resp1[1] << 16 | resp1[2] << 8 | resp1[3];
+
+                    for (int i = 0; i < 10; i ++)
                     {
-                        BSVer2[i + 1] = resp2[0xC + i];
-                        BSVer2[i] = resp2[0xC + i + 1];
+                        Resp2[i] = resp2[0xC + i];
+
                         if (i < 8)
-                        {
-                            BSVer1[i + 1] = resp1[0x4 + i];
-                            BSVer1[i] = resp1[0x4 + i + 1];
-                        }
+                            Resp1[i] = resp1[0x4 + i];
                     }
 
-                    string str1 = Encoding.ASCII.GetString(BSVer1);
-                    string str2 = Encoding.ASCII.GetString(BSVer2);
-                    Entry = resp1[1] << 24 | resp1[0] << 16 | resp1[3] << 8 | resp1[2];
+                    string str1 = Encoding.ASCII.GetString(Resp1);
+                    string str2 = Encoding.ASCII.GetString(Resp2);
 
                     CastInfoEvent(("Main entry-point: 0x" + Entry.ToString("X5")), ActivityType.DownloadingFlash);
                     CastInfoEvent(("Version string 1: " + str1), ActivityType.DownloadingFlash);
@@ -6632,19 +6623,18 @@ namespace TrionicCANLib.API
 
         private bool LeaveRecoveryBe()
         {
-            if (formatBootPartition && formatSystemPartitions)
-            {
-                DialogResult result = DialogResult.No;
-                result = MessageBox.Show("Do you REALLY want to write a new boot partition?",
-                "Final Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+            DialogResult result = DialogResult.No;
 
-                if (result == DialogResult.Yes)
-                {
-                    CastInfoEvent("Warning, boot partition will be formated", ActivityType.ErasingFlash);
-                    return false;
-                }
-                CastInfoEvent("Skipped format of boot partition", ActivityType.ErasingFlash);
+            result = MessageBox.Show("Do you REALLY want to write a new boot partition?!",
+                "Point of no return", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+
+            if (result == DialogResult.Yes)
+            {
+                CastInfoEvent("Warning, boot partition will be formated", ActivityType.ErasingFlash);
+                return false;
             }
+
+            CastInfoEvent("Skipped format of boot partition", ActivityType.ErasingFlash);
             return true;
         }
 
@@ -6654,6 +6644,7 @@ namespace TrionicCANLib.API
             string filename = (string)workEvent.Argument;
             BlockManager bm = new BlockManager();
             bm.SetFilename(filename);
+            byte start;
 
             byte toerase = 0;
             byte placeholder = 3;
@@ -6669,7 +6660,14 @@ namespace TrionicCANLib.API
 
             CastProgressReadEvent(0);
 
-            for (byte i = 1; i < 10; i++)
+            if ((formatBootPartition && formatSystemPartitions) || z22se)
+                start = 1;
+            else if (formatSystemPartitions || device == EcuByte_MCP)
+                start = 2;
+            else
+                start = 5;
+            
+            for (byte i = start; i < 10; i++)
             {
                 // Store bit location and reset status
                 int shift = 1 << (i - 1);
@@ -6696,7 +6694,7 @@ namespace TrionicCANLib.API
                     if (!verificationproc)
                     {
                         // Special case. Override automatic selection of boot if the the user so choose.
-                        if (i == 1 && !identical)
+                        if (i == 1 && !identical && !z22se)
                             identical = LeaveRecoveryBe();
 
                         // MCP requires a few more checks..
@@ -6762,25 +6760,6 @@ namespace TrionicCANLib.API
 
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
 
-            // Damn broken bins..
-            if (!formatSystemPartitions && !z22se && !verificationproc && device != EcuByte_MCP && ((formatmask & 0xF) > 0))
-            {
-                // Mask off system partitions and re-count number of partitions to mess with.
-                toerase = 0;
-                formatmask &= 0x1F0;
-
-                CastInfoEvent(("Patching mask to exclude system partitions"), ActivityType.ConvertingFile);
-                logger.Debug("(Legion) Patched out system partitions");
-
-                for (byte i = 4; i < 9; i++)
-                {
-                    if (((formatmask >> i) & 0x1) > 0)
-                    {
-                        CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
-                        toerase++;
-                    }
-                }
-            }
             if (toerase > 0)
                 CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
 
@@ -6862,7 +6841,7 @@ namespace TrionicCANLib.API
 
             if (formatmask > 0)
             {
-                if (SendrequestDownload(Device, false))
+                if (SendrequestDownload(Device, false, true))
                 {
                     _needRecovery = true;
                     CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
@@ -6882,7 +6861,6 @@ namespace TrionicCANLib.API
                                 for (int i = 0; i < 5; i++)
                                     CastInfoEvent("FLASH upload completed but the co-processor could not be married!", ActivityType.FinishedFlashing);
 
-                            LegionIsAlive = false;
                             _needRecovery = false;
                             Send0120();
                         }
@@ -7240,7 +7218,7 @@ namespace TrionicCANLib.API
                 try
                 {
                     // Byteswap mcp
-                    if (lastAddress == 0x040100)
+                    /*if (lastAddress == 0x040100)
                     {
                         CastInfoEvent("Byteswapping..", ActivityType.ConvertingFile);
                         for (int i=0; i<0x40100; i+=2)
@@ -7250,7 +7228,7 @@ namespace TrionicCANLib.API
                             buf[i + 1] = temp;
                         }
                         CastInfoEvent("Done!", ActivityType.ConvertingFile);
-                    }
+                    }*/
                     
                     // Compare checksum-32 
                     for (int i = 0; i < lastAddress; i++)
@@ -7289,7 +7267,6 @@ namespace TrionicCANLib.API
 
             // Loader will never exit on its own. Tell it to 
             Send0120();
-            LegionIsAlive = false;
             SupportAutoskip = false; // Make sure to restore tags in case the user decides to do something that requires another loader 
 
             return;
