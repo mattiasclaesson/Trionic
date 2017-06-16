@@ -3852,7 +3852,7 @@ namespace TrionicCANLib.API
             }
 
             ulong rxdata = m_canListener.waitMessage(timeoutP2ct).getData();
-            if (rxdata == 0x0000000000000030)
+            if (getCanData(rxdata, 0) == 0x30)
             {
                 //2020202020202021
                 //0020202020202022
@@ -3879,11 +3879,22 @@ namespace TrionicCANLib.API
                 msg.setData(cmd);
                 m_canListener.setupWaitMessage(0x7E8);
                 canUsbDevice.sendMessage(msg);
-                // wait for ack
-                //0000000000907B02
 
                 rxdata = m_canListener.waitMessage(timeoutP2ct).getData();
-                if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x90)
+                // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
+                if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B && getCanData(rxdata, 3) == 0x78) 
+                {
+                    // wait for ack
+                    //0000000000907B02
+                    rxdata = m_canListener.waitMessage(timeoutP2ct).getData();
+                    if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x90)
+                    {
+                        return true;
+                    }
+                }
+                // wait for ack
+                //0000000000907B02
+                else if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == 0x90)
                 {
                     return true;
                 }
@@ -6799,7 +6810,7 @@ namespace TrionicCANLib.API
 
                 if (success)
                 {
-                    CastInfoEvent("Successfully married the co-processor", ActivityType.UploadingFlash);
+                    CastInfoEvent("successfuly married the co-processor", ActivityType.UploadingFlash);
                     // Print firmware version just for reference
                     PrintMCPVer();
                 }

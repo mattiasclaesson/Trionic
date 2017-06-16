@@ -173,7 +173,7 @@ namespace TrionicCANFlasher
             }
             else if(ecu == ECU.MOTRONIC96)
             {
-                tbVIN.Hide();
+                tbVIN.Show();
                 cbCab.Hide();
                 cbSAI.Hide();
                 cbOutput.Hide();

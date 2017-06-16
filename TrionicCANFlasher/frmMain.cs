@@ -1458,7 +1458,7 @@ namespace TrionicCANFlasher
                         {
                             if(trionic7.SetE85Percentage((int)pi.E85))
                             {
-                                AddLogItem("Set fields successfull, E85Percentage:" + pi.E85);
+                                AddLogItem("Set fields successful, E85Percentage:" + pi.E85);
                             }
                             else
                             {
@@ -1527,7 +1527,7 @@ namespace TrionicCANFlasher
                             {
                                 if (trionic8.SetPI01(pi.Convertible, pi.SAI, pi.Highoutput, pi.Biopower, pi.DiagnosticType, pi.ClutchStart, pi.TankType))
                                 {
-                                    AddLogItem("Set fields successfull");
+                                    AddLogItem("Set fields successful");
                                 }
                                 else
                                 {
@@ -1544,7 +1544,7 @@ namespace TrionicCANFlasher
                         {
                             if(trionic8.SetVIN(pi.VIN))
                             {
-                                AddLogItem("Set fields successfull, VIN:" + pi.VIN);
+                                AddLogItem("Set fields successful, VIN:" + pi.VIN);
                             }
                             else
                             {
@@ -1556,7 +1556,7 @@ namespace TrionicCANFlasher
                         {
                             if(trionic8.SetTopSpeed(pi.TopSpeed))
                             {
-                                AddLogItem("Set fields successfull, TopSpeed:" + pi.TopSpeed);
+                                AddLogItem("Set fields successful, TopSpeed:" + pi.TopSpeed);
                             }
                             else
                             {
@@ -1568,7 +1568,7 @@ namespace TrionicCANFlasher
                         {
                             if(trionic8.SetE85Percentage(pi.E85))
                             {
-                                AddLogItem("Set fields successfull, E85Percentage:" + pi.E85);
+                                AddLogItem("Set fields successful, E85Percentage:" + pi.E85);
                             }
                             else
                             {
@@ -1580,7 +1580,7 @@ namespace TrionicCANFlasher
                         {
                             if(trionic8.SetOilQuality(pi.Oil))
                             {
-                                AddLogItem("Set fields successfull, OilQuality:" + pi.Oil);
+                                AddLogItem("Set fields successful, OilQuality:" + pi.Oil);
                             }
                             else
                             {
@@ -1609,17 +1609,32 @@ namespace TrionicCANFlasher
                     int topspeed = trionic8.GetTopSpeed();
                     pi.TopSpeed = topspeed;
 
+                    string vin = trionic8.GetVehicleVIN();
+                    pi.VIN = vin;
+
                     if (pi.ShowDialog() == DialogResult.OK)
                     {
                         if (!pi.TopSpeed.Equals(topspeed))
                         {
                             if(trionic8.SetTopSpeed(pi.TopSpeed))
                             {
-                                AddLogItem("Set fields successfull, TopSpeed:" + pi.TopSpeed);
+                                AddLogItem("Set fields successful, TopSpeed:" + pi.TopSpeed);
                             }
                             else
                             {
                                 AddLogItem("Set fields failed, TopSpeed:" + pi.TopSpeed);
+                            }
+                        }
+
+                        if (!pi.VIN.Equals(vin))
+                        {
+                            if (trionic8.ProgramVIN(pi.VIN))
+                            {
+                                AddLogItem("Set fields successful, VIN:" + pi.VIN);
+                            }
+                            else
+                            {
+                                AddLogItem("Set fields failed, VIN:" + pi.VIN);
                             }
                         }
                     }
