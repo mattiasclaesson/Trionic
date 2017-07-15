@@ -6222,7 +6222,7 @@ namespace TrionicCANLib.API
                 if (canUsbDevice is CANELM327Device)
                     LegionIDemand(0, 100, out success);
                 else
-                    LegionIDemand(0, 1200, out success);
+                    LegionIDemand(0, 1350, out success);
             }
             else
                 LegionIDemand(0, 2000, out success);
@@ -6370,10 +6370,7 @@ namespace TrionicCANLib.API
         // TODO: Expand this function to verify if installed version is compatible with the main software
         private void PrintMCPVer()
         {
-            // int Entry = 0;
             bool success;
-            // bool success2;
-            // byte[] Resp1 = new byte[8];
             byte[] Resp2 = new byte[10];
 
             // Start the secondary loader if required
@@ -6383,32 +6380,20 @@ namespace TrionicCANLib.API
             {
                 CastInfoEvent(("MCP Firmware information"), ActivityType.DownloadingFlash);
 
-                // Fetch string 1 and 2
-                // byte[] resp1 = readDataByLocalIdentifier(true, EcuByte_MCP, 0x8000, 0x80, out success2);
                 byte[] resp2 = readDataByLocalIdentifier(true, EcuByte_MCP, 0x8100, 0x80, out success);
 
-                if (success/* && success2*/)
+                if (success)
                 {
-                    // Entry = resp1[0] << 24 | resp1[1] << 16 | resp1[2] << 8 | resp1[3];
                     for (int i = 0; i < 10; i ++)
                     {
                         Resp2[i] = resp2[0xC + i];
-
-                        // if (i < 8)
-                        //    Resp1[i] = resp1[0x4 + i];
                     }
 
-                    //string str1 = Encoding.ASCII.GetString(Resp1);
                     string str2 = Encoding.ASCII.GetString(Resp2);
-
-                    // CastInfoEvent(("Main entry-point: 0x" + Entry.ToString("X5")), ActivityType.DownloadingFlash);
-                    // CastInfoEvent(("Version string 1: " + str1), ActivityType.DownloadingFlash);
                     CastInfoEvent(("Version string: " + str2), ActivityType.DownloadingFlash);
                 }
                 else
                 {
-                    // CastInfoEvent(("Main entry-point: FAIL!"), ActivityType.DownloadingFlash);
-                    // CastInfoEvent(("Version string 1: FAIL!"), ActivityType.DownloadingFlash);
                     CastInfoEvent(("Version string: FAIL!"), ActivityType.DownloadingFlash);
                 }
             }
@@ -6427,11 +6412,10 @@ namespace TrionicCANLib.API
                 byte[] resp = LegionIDemand(device, i, out success);
                 if (success)
                 {
-                    // Tried this using two long/ulong's; Let's just say it didn't like it even with casts (Scrambled data).
                     int mdlolo = (resp[12] << 24 | resp[13] << 16 | resp[14] << 8 | resp[15]);
-                    int mdlohi = (resp[8] << 24 | resp[9] << 16 | resp[10] << 8 | resp[11]);
-                    int mdhilo = (resp[4] << 24 | resp[5] << 16 | resp[6] << 8 | resp[7]);
-                    int mdhihi = (resp[0] << 24 | resp[1] << 16 | resp[2] << 8 | resp[3]);
+                    int mdlohi = (resp[ 8] << 24 | resp[ 9] << 16 | resp[10] << 8 | resp[11]);
+                    int mdhilo = (resp[ 4] << 24 | resp[ 5] << 16 | resp[ 6] << 8 | resp[ 7]);
+                    int mdhihi = (resp[ 0] << 24 | resp[ 1] << 16 | resp[ 2] << 8 | resp[ 3]);
 
                     CastInfoEvent(("Part " + i.ToString("X1") + ": " + mdhihi.ToString("X8") + mdhilo.ToString("X8") + mdlohi.ToString("X8") + mdlolo.ToString("X8")), ActivityType.DownloadingFlash);
                 }
@@ -6460,6 +6444,10 @@ namespace TrionicCANLib.API
             // 01: Partition 1.
             // ..
             // 09: Partition 9.
+            // Oddballs:
+            // 10: Read from 0x00000 to last address of binary + 512 bytes
+            // 11: Read from 0x04000 to last address of binary + 512 bytes
+            // 12: Read from 0x20000 to last address of binary + 512 bytes
 
             // command 03: Trionic 8 MCP; md5.
             // wish:
@@ -6630,6 +6618,7 @@ namespace TrionicCANLib.API
             return buf;
         }
 
+        // Throw a warning if the user has selected format boot and it is different
         private bool LeaveRecoveryBe()
         {
             DialogResult result = DialogResult.No;
@@ -6647,6 +6636,43 @@ namespace TrionicCANLib.API
             return true;
         }
 
+        // Compare md5 of 0x0, 0x4000 or 0x20000 to last address of binary.
+        private void CompareRegmd5(DoWorkEventArgs workEvent)
+        {
+            string filename = (string)workEvent.Argument;
+            BlockManager bm = new BlockManager();
+            bm.SetFilename(filename);
+            byte[] Locmd5dbuf = new byte[16];
+            byte[] Remd5dbuf = new byte[16];
+            byte Partition;
+            bool success;
+
+            if ((formatBootPartition && formatSystemPartitions))
+                Partition = 10;
+            else if (formatSystemPartitions)
+                Partition = 11;
+            else
+                Partition = 12;
+
+            Locmd5dbuf = bm.GetSelectedmd5(Partition);
+            Remd5dbuf = LegionIDemand(2, Partition, out success);
+
+            if (success)
+            {
+                for (byte a = 0; a < 16; a++)
+                {
+                    if (Locmd5dbuf[a] != Remd5dbuf[a])
+                        success = false;
+                }
+
+                if (success)
+                    formatmask = 0;
+
+                CastInfoEvent("Done!", ActivityType.ConvertingFile);
+            }
+        }
+
+        /// Compare md5 of selected partition
         // Nts: Clean this function. There are several ways it could fail
         private bool ComparePartmd5(DoWorkEventArgs workEvent, byte device, bool verificationproc, bool z22se)
         {
@@ -6686,7 +6712,7 @@ namespace TrionicCANLib.API
                 // Verification: Only fetch md5 of written partitions.
                 if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verificationproc)
                 {
-                    Locmd5dbuf = bm.GetRegmd5(placeholder, i);
+                    Locmd5dbuf = bm.GetPartitionmd5(placeholder, i);
                     Remd5dbuf = LegionIDemand(placeholder, i, out success);
                 }
 
@@ -6863,7 +6889,6 @@ namespace TrionicCANLib.API
             // Init session and start loader 
             if (!StartCommon(Device, z22se))
             {
-
                 _stallKeepAlive = false;
                 workEvent.Result = false;
                 return;
@@ -6875,17 +6900,47 @@ namespace TrionicCANLib.API
 
             if (formatmask > 0)
             {
+                // Patch in additional partitions to make sure everything after the last used address contains 0xFF's
+                if (Device == EcuByte_T8 && !z22se)
+                {
+                    // ..
+                    uint FormatAbove = bm.GetLasAddress();
+                    if(FormatAbove < 0x100000)
+                        formatmask |= 0x100; // Partition 9
+                    if(FormatAbove < 0x0C0000)
+                        formatmask |= 0x080; // Partition 8
+                    if (FormatAbove < 0x080000)
+                        formatmask |= 0x040; // Partition 7
+                    if (FormatAbove < 0x060000)
+                        formatmask |= 0x020; // Partition 6
+                    if (FormatAbove < 0x040000)
+                        formatmask |= 0x010; // Partition 5
+                    // CastInfoEvent("Mask: " + formatmask.ToString("X3"), ActivityType.UploadingFlash);
+                }
+
+                // Request format of selected partitions.
                 if (SendrequestDownload(Device, false, true))
                 {
+                    // CastInfoEvent("Verifying erased partitions..", ActivityType.StartErasingFlash);
+                    // ComparePartmd5(workEvent, Device, false, z22se);
+
                     _needRecovery = true;
                     CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
 
-                    success = ProgramFlashLeg(EndAddress, bm, Device);
+                    if(Device == EcuByte_T8 && !z22se)
+                        success = ProgramFlashLeg((int)bm.GetLasAddress(), bm, Device);
+                    else
+                        success = ProgramFlashLeg(EndAddress, bm, Device);
 
                     if (success)
                     {
                         CastInfoEvent("Verifying md5..", ActivityType.UploadingFlash);
-                        ComparePartmd5(workEvent, Device, true, z22se);
+
+                        if (Device != EcuByte_T8 || z22se)
+                            ComparePartmd5(workEvent, Device, true, z22se);
+                        else
+                            CompareRegmd5(workEvent);
+
                         if (formatmask == 0)
                         {
                             // It won't touch md5 on z22s
@@ -6920,7 +6975,6 @@ namespace TrionicCANLib.API
                     _needRecovery = false;
                     _stallKeepAlive = false;
                     CastInfoEvent("Failed to erase FLASH", ActivityType.FinishedErasingFlash);
-                    // Send0120(); 
                     CastInfoEvent("Session ended but the bootloader is still active;", ActivityType.FinishedFlashing);
                     CastInfoEvent("You could try again", ActivityType.FinishedFlashing);
                     workEvent.Result = false;
@@ -6945,7 +6999,7 @@ namespace TrionicCANLib.API
             workEvent.Result = true;
         }
 
-        //// Sister function to ProgramFlashLeg()
+        /// Sister function to ProgramFlashLeg()
         // Figure out whether or not to write a certain address range.
         private bool Erasedregion(int address, byte device)
         {
@@ -6986,6 +7040,33 @@ namespace TrionicCANLib.API
             return false;
         }
 
+        /// Another sister function to ProgramFlashLeg()
+        // Show usable information during flashing
+        // Note: Will return true if it's worth trying again or false if the fault is of critical nature.
+        private bool ReasonForRetry(byte response)
+        {
+            /// TransferData level 0x10 errors
+            // 0x10: Generic error; Traffic
+            // 0x11: Checksum mismatch
+            // 0x12: Package missing
+            // 0x13: Did not expect transfer
+            // 0x14: Address out of range
+            // 0x15: Address alignment
+            // 0x16: Unknown device ID      
+
+            /// TransferData level 0x30 errors
+            // 0x30: Generic error; Write
+            // 0x31: Tried too many times
+            // 0x32: SPI I/O error (MCP<->Main communication malfunction)
+            // 0x33: Still writing (Waiting for buffer to be released)
+            // 0x34: VPP stuck
+
+
+            CastInfoEvent("Reason: " + response.ToString("X2") , ActivityType.UploadingFlash);
+
+            return true;
+        }
+
 
         private bool ProgramFlashLeg(int End, BlockManager bm, byte device)
         {
@@ -7002,7 +7083,7 @@ namespace TrionicCANLib.API
             bool byteswapped = false;
 
             // Early MCP dumps were byteswapped..
-            if (End == 0x40100)
+            if (device == EcuByte_MCP)
                 byteswapped = bm.mcpswapped();
 
             while (blockNumber <= lastBlockNumber)
@@ -7082,6 +7163,10 @@ namespace TrionicCANLib.API
                         ulong data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
                         if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                         {
+
+                            // if (!ReasonForRetry(getCanData(data, 3)))
+                            //    return false;
+
                             // The elm-hacks makes it hard to catch this in time so the next best thing is to start over.
                             // As it is right now the loader will also force the host to start over from 0 since it's pointless to continue
                             /*if ((getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x12) && Retries<20)

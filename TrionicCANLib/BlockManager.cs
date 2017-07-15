@@ -82,6 +82,14 @@ namespace TrionicCANLib
             return (lastAddress - 0x020000) / 0xEA;
         }
 
+        // Determine last address for md5-verification after flashing Trionic 8; main
+        public uint GetLasAddress()
+        {
+            // Add another 512 bytes to include header region (with margin)!!!
+            // Note; Legion is hardcoded to also add 512 bytes. -Do not change!
+            return (uint)((int)filebytes[0x020141] << 16 | (int)filebytes[0x020142] << 8 | (int)filebytes[0x020143]) + 0x200;
+        }
+
         // Legion hacks
         public bool mcpswapped()
         {
@@ -128,7 +136,7 @@ namespace TrionicCANLib
             return array;
         }
 
-
+        // Check if a whole block will be filled with 0xFF (So that it can be skipped)
         public bool FFblock(int address, int size)
         {
             int count = 0;
@@ -149,6 +157,7 @@ namespace TrionicCANLib
             return false;
         }
 
+        // Generate checksum-32 of file
         public uint GetChecksum32()
         {
             checksum32 = 0;
@@ -160,7 +169,7 @@ namespace TrionicCANLib
             return checksum32;
         }
 
-
+        // Partition table of Trionic 8; Main
         private uint[] T8parts = 
         {
             0x000000, // Boot
@@ -174,23 +183,40 @@ namespace TrionicCANLib
             0x0C0000, // APP
             0x100000  // End
         };
-        // Find a better place for this!
-        public byte[] GetRegmd5(uint device, uint partition)
-        {
-            /*     0- 3FFF ( 16K) (Boot)
-             *  4000- 5FFF (  8K) (NVDM)
-             *  6000- 7FFF (  8K) (NVDM)
-             *  8000-1FFFF ( 96K) (HWIO)
-             * 20000-3FFFF (128K) (APP)
-             * 40000-5FFFF (128K) (APP)
-             * 60000-7FFFF (128K) (APP)
-             * 80000-BFFFF (256K) (APP)
-             * C0000-FFFFF (256K) (APP) */
 
-            uint start=0;
-            uint end=0;
+        // Generate md5 of 0x0, 0x4000 or 0x20000 to last address of binary.
+        public byte[] GetSelectedmd5(byte Partition)
+        {
             byte[] hash = new byte[16];
+            uint end = GetLasAddress();
+            uint Start;
+
+            if (Partition == 10)
+                Start = 0;
+            else if (Partition == 11)
+                Start = 0x004000;
+            else
+                Start = 0x020000;
+
+            System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
+            md5.Initialize();
+            byte[] buf = new byte[end - Start];
+            uint e = 0;
+
+            for (uint i = Start; i < end; i++)
+                buf[e++] = filebytes[i];
+            
+            hash = md5.ComputeHash(buf);
+            return hash;
+        }
+
+        // Generate md5 of selected partition
+        public byte[] GetPartitionmd5(uint device, uint partition)
+        {
             bool byteswapped = false;
+            byte[] hash = new byte[16]; 
+            uint start = 0;
+            uint end = 0;
 
             if (partition < 10)
             {
