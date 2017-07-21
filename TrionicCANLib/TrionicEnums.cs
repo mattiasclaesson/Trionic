@@ -37,7 +37,9 @@ namespace TrionicCANLib.API
         [Description("Just4Trionic")]
         JUST4TRIONIC,
         [Description("Kvaser")]
-        KVASER
+        KVASER,
+        [Description("J2534")]
+        J2534
     };
 
     public enum ECU : int

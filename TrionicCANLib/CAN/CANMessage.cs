@@ -160,6 +160,19 @@ namespace TrionicCANLib.CAN
             return msg;
         }
 
+        public byte[] getHeaderAndData()
+        {
+            byte[] msg = new byte[m_length+4];
+            msg[2] = (byte)(m_id >> 8);
+            msg[3] = (byte)m_id;
+
+            for (uint i = 0; i < m_length; i++)
+            {
+                msg[i+4] = getCanData(i);
+            }
+            return msg;
+        }
+
         public CANMessage Clone()
         {
             return new CANMessage(m_id, m_timestamp, m_flags, m_length, m_data);

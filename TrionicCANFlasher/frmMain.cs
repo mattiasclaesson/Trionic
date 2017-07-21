@@ -429,7 +429,8 @@ namespace TrionicCANFlasher
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL)
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.J2534)
             {
                 cbAdapter.Enabled = enable;
             }
@@ -1279,19 +1280,16 @@ namespace TrionicCANFlasher
 
         void trionicCan_onWriteProgress(object sender, ITrionic.WriteProgressEventArgs e)
         {
-            logger.Trace("trionicCan_onWriteProgress" + e.Percentage);
             UpdateProgressStatus(e.Percentage);
         }
 
         void trionicCan_onCanInfo(object sender, ITrionic.CanInfoEventArgs e)
         {
-            logger.Trace("trionicCan_onCanInfo");
             UpdateFlashStatus(e);
         }
 
         void trionicCan_onReadProgress(object sender, ITrionic.ReadProgressEventArgs e)
         {
-            logger.Trace("trionicCan_onReadProgress");
             UpdateProgressStatus(e.Percentage);
         }
 
@@ -1391,7 +1389,6 @@ namespace TrionicCANFlasher
         {
             try
             {
-                logger.Trace("UpdateFlashStatus");
                 Invoke(m_DelegateUpdateStatus, e);
             }
             catch (Exception ex)
@@ -1402,7 +1399,6 @@ namespace TrionicCANFlasher
 
         private void updateProgress(int percentage)
         {
-            logger.Trace("updateProgress" + percentage);
             if (progressBar1.Value != percentage)
             {
                 progressBar1.Value = percentage;
@@ -1417,7 +1413,6 @@ namespace TrionicCANFlasher
         {
             try
             {
-                logger.Trace("UpdateProgressStatus " + percentage);
                 Invoke(m_DelegateProgressStatus, percentage);
             }
             catch (Exception e)

@@ -68,6 +68,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\FTD2XX_NET.dll</HintPath>
     </Reference>
+    <Reference Include="J2534DotNet">
+      <HintPath>..\Libs\J2534DotNet.dll</HintPath>
+    </Reference>
     <Reference Include="LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\LibUsbDotNet.dll</HintPath>
@@ -95,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bootloader_legion.cs" />
+    <Compile Include="CAN\J2534CANDevice.cs" />
     <Compile Include="Checksum\ChecksumT8.cs" />
     <Compile Include="Checksum\ChecksumResult.cs" />
     <Compile Include="FileTools.cs" />

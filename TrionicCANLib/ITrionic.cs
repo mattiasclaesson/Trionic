@@ -112,6 +112,10 @@ namespace TrionicCANLib.API
                 {
                     return KvaserCANDevice.GetAdapterNames();
                 }
+                else if (adapterType == CANBusAdapter.J2534)
+                {
+                    return J2534CANDevice.GetAdapterNames();
+                }
             }
             catch(Exception ex)
             {
