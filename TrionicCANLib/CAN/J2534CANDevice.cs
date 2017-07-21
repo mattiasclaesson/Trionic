@@ -189,7 +189,7 @@ namespace TrionicCANLib.CAN
         {
             m_endThread = true;
 
-            Thread.Sleep(1000);
+            Thread.Sleep(1200);
             try
             {
                 m_status = passThru.PassThruClose(m_deviceId);
