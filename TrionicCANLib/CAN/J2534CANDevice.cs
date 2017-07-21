@@ -190,7 +190,11 @@ namespace TrionicCANLib.CAN
             m_endThread = true;
 
             Thread.Sleep(1000);
-            m_status = passThru.PassThruClose(m_deviceId);
+            try
+            {
+                m_status = passThru.PassThruClose(m_deviceId);
+            }
+            catch { }
             if (m_status != J2534Err.STATUS_NOERROR)
             {
                 return CloseResult.CloseError;
