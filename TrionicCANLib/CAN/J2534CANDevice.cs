@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Runtime.InteropServices;
-using canlibCLSNET;
 using NLog;
-using TrionicCANLib.API;
 using J2534DotNet;
 
 namespace TrionicCANLib.CAN
@@ -17,6 +15,7 @@ namespace TrionicCANLib.CAN
     {
         private readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
+        bool m_deviceIsOpen = false;
         Thread m_readThread;
         readonly Object m_synchObject = new Object();
         bool m_endThread;
@@ -40,8 +39,6 @@ namespace TrionicCANLib.CAN
                 m_forcedBaudrate = value;
             }
         }
-
-        public int ChannelNumber { get; set; }
 
         // not supported by J2534
         public override float GetADCValue(uint channel)
@@ -142,6 +139,11 @@ namespace TrionicCANLib.CAN
         /// returned.</returns>
         override public OpenResult open()
         {
+            if (isOpen())
+            {
+                close();
+            }
+
             m_deviceId = 0;
             m_status = passThru.PassThruOpen(IntPtr.Zero, ref m_deviceId);
             if (m_status != J2534Err.STATUS_NOERROR)
@@ -178,6 +180,7 @@ namespace TrionicCANLib.CAN
             {
                 m_readThread.Start();
             }
+            m_deviceIsOpen = true;
             return OpenResult.OK;
         }
 
@@ -187,11 +190,13 @@ namespace TrionicCANLib.CAN
         /// <returns>CloseResult.OK on success, otherwise CloseResult.CloseError.</returns>
         override public CloseResult close()
         {
+            m_deviceIsOpen = false;
             m_endThread = true;
 
             Thread.Sleep(1200);
             try
             {
+                m_status = passThru.PassThruDisconnect(m_channelId);
                 m_status = passThru.PassThruClose(m_deviceId);
             }
             catch { }
@@ -211,7 +216,7 @@ namespace TrionicCANLib.CAN
         /// <returns>true if the device is open, otherwise false.</returns>
         override public bool isOpen()
         {
-            return true;
+            return m_deviceIsOpen;
         }
 
         /// <summary>
@@ -221,6 +226,10 @@ namespace TrionicCANLib.CAN
         /// <returns>true on success, othewise false.</returns>
         override protected bool sendMessageDevice(CANMessage a_message)
         {
+            if (m_endThread)
+            {
+                return false;
+            }
             byte[] msg = a_message.getHeaderAndData();
             
             PassThruMsg txMsg = new PassThruMsg();
