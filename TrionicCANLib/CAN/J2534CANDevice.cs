@@ -58,12 +58,13 @@ namespace TrionicCANLib.CAN
             availableJ2534Devices = J2534Detect.ListDevices();
 
             // List available devices
-            string[] names = new string[availableJ2534Devices.Count];
+            string[] all = new string[availableJ2534Devices.Count];
+            List<string> names = new List<string>();
             for (int i = 0; i < availableJ2534Devices.Count; i++)
             {
                 if (availableJ2534Devices[i].IsCANSupported)
                 {
-                    names[i] = availableJ2534Devices[i].Name;
+                    names.Add(availableJ2534Devices[i].Name);
                     logger.Debug(String.Format("Found device with CAN support {0}", availableJ2534Devices[i].Name));
                 }
                 else
@@ -71,7 +72,7 @@ namespace TrionicCANLib.CAN
                     logger.Debug(String.Format("Skipped device without CAN support {0}", availableJ2534Devices[i].Name));
                 }
             }
-            return names;
+            return names.ToArray();
         }
 
         public override void SetSelectedAdapter(string adapter)
