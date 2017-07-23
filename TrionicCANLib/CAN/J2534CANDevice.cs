@@ -191,23 +191,22 @@ namespace TrionicCANLib.CAN
         /// <returns>CloseResult.OK on success, otherwise CloseResult.CloseError.</returns>
         override public CloseResult close()
         {
-            m_deviceIsOpen = false;
-            m_endThread = true;
-
-            Thread.Sleep(1200);
-            try
+            if (m_deviceIsOpen)
             {
+                m_deviceIsOpen = false;
+                m_endThread = true;
+
+                Thread.Sleep(1200);
+
                 m_status = passThru.PassThruDisconnect(m_channelId);
                 m_status = passThru.PassThruClose(m_deviceId);
-            }
-            catch { }
-            if (m_status != J2534Err.STATUS_NOERROR)
-            {
-                return CloseResult.CloseError;
-            }
+                if (m_status != J2534Err.STATUS_NOERROR)
+                {
+                    return CloseResult.CloseError;
+                }
 
-            passThru.FreeLibrary();
-
+                passThru.FreeLibrary();
+            }
             return CloseResult.OK;
         }
 
