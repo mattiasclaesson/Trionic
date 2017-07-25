@@ -172,7 +172,7 @@ namespace TrionicCANLib
         // Partition table of Trionic 8; Main
         private uint[] T8parts = 
         {
-            0x000000, // Boot
+            0x000000, // Boot (0)
             0x004000, // NVDM
             0x006000, // NVDM
             0x008000, // HWIO
@@ -181,84 +181,49 @@ namespace TrionicCANLib
             0x060000, // APP
             0x080000, // APP
             0x0C0000, // APP
-            0x100000  // End
+            0x100000, // End (9)
+
+            0x000000, // Special cases for range-md5 instead of partitions
+            0x004000,
+            0x020000
         };
 
-        // Generate md5 of 0x0, 0x4000 or 0x20000 to last address of binary.
-        public byte[] GetSelectedmd5(byte Partition)
-        {
-            byte[] hash = new byte[16];
-            uint end = GetLasAddress();
-            uint Start;
-
-            if (Partition == 10)
-                Start = 0;
-            else if (Partition == 11)
-                Start = 0x004000;
-            else
-                Start = 0x020000;
-
-            System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
-            md5.Initialize();
-            byte[] buf = new byte[end - Start];
-            uint e = 0;
-
-            for (uint i = Start; i < end; i++)
-                buf[e++] = filebytes[i];
-            
-            hash = md5.ComputeHash(buf);
-            return hash;
-        }
-
-        // Generate md5 of selected partition
+        // Generate md5 of selected partition/region
         public byte[] GetPartitionmd5(uint device, uint partition)
         {
+            uint start = 0, e = 0, end = 0x40100;
+            byte[] hash = new byte[16];
             bool byteswapped = false;
-            byte[] hash = new byte[16]; 
-            uint start = 0;
-            uint end = 0;
-
-            if (partition < 10)
+            
+            // Trionic 8, Main
+            if (partition < 13 && device == 6)
             {
-                // Trionic 8, Main
-                if (device == 2)
+                if (partition > 0)
                 {
-                    if (partition > 0)
-                    {
-                        start = T8parts[partition - 1];
-                        end = T8parts[partition];
-                    }
-                    else
-                        end = T8parts[9];
-                }
-                // Trionic 8; MCP
-                else if (device == 3)
-                {
-                    byteswapped = mcpswapped();
-                    if (partition > 0 && partition < 9)
-                    {
-                        end = partition << 15;
-                        start = end - 0x8000;
-                    }
-                    else if (partition == 0)
-                        end = 0x40100;
-
-                    else if (partition == 9)
-                    {
-                        start = 0x40000;
-                        end = 0x40100;
-                    }
+                    start = (partition < 10) ? T8parts[partition - 1] : T8parts[partition];
+                    end   = (partition < 10) ? T8parts[partition    ] : GetLasAddress();
                 }
                 else
-                    return hash;
+                    end = T8parts[9];
+            }
+            // Trionic 8; MCP
+            else if (partition < 10 && device == 5)
+            {
+                byteswapped = mcpswapped();
+                if (partition > 0)
+                {
+                    end   = (partition == 9) ? (uint)0x40100 : (partition << 15);
+                    start = (partition == 9) ? (uint)0x40000 : (end - 0x8000);
+                }
             }
             else
                 return hash;
 
+            byte[] buf = new byte[end - start];
+
             System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
             md5.Initialize();
-            byte[] buf = new byte[end-start];
-            uint e = 0;
+
             if (!byteswapped)
             {
                 for (uint i = start; i < end; i++)
@@ -268,13 +233,12 @@ namespace TrionicCANLib
             {
                 for (uint i = start; i < end; i+=2)
                 {
-                    buf[e] = filebytes[i + 1];
-                    buf[e + 1] = filebytes[i];
-                    e +=2;
+                    buf[e++] = filebytes[i + 1];
+                    buf[e++] = filebytes[i];
                 }
             }
-            hash = md5.ComputeHash(buf);
-            return hash;
+
+            return md5.ComputeHash(buf);
 
         }
 

@@ -6658,7 +6658,8 @@ namespace TrionicCANLib.API
             else
                 Partition = 12;
 
-            Locmd5dbuf = bm.GetSelectedmd5(Partition);
+            Locmd5dbuf = bm.GetPartitionmd5(EcuByte_T8, Partition);
+            //Locmd5dbuf = bm.GetSelectedmd5(Partition);
             Remd5dbuf = LegionIDemand(2, Partition, out success);
 
             if (success)
@@ -6716,7 +6717,7 @@ namespace TrionicCANLib.API
                 // Verification: Only fetch md5 of written partitions.
                 if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verificationproc)
                 {
-                    Locmd5dbuf = bm.GetPartitionmd5(placeholder, i);
+                    Locmd5dbuf = bm.GetPartitionmd5(device, i);
                     Remd5dbuf = LegionIDemand(placeholder, i, out success);
                 }
 
