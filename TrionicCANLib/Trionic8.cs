@@ -6684,22 +6684,25 @@ namespace TrionicCANLib.API
             string filename = (string)workEvent.Argument;
             BlockManager bm = new BlockManager();
             bm.SetFilename(filename);
+
+            byte[] Locmd5dbuf = new byte[16];
+            byte[] Remd5dbuf  = new byte[16];
+            bool success      = false;
+            bool identical    = true;
+            byte placeholder  = 3;
+            byte toerase      = 0;
             byte start;
 
-            byte toerase = 0;
-            byte placeholder = 3;
+            CastProgressReadEvent(0);
 
             if (device == EcuByte_T8)
                 placeholder = 2;
 
-            byte[] Locmd5dbuf = new byte[16];
-            byte[] Remd5dbuf = new byte[16];
-
+            // Reset partition bitmask if this is not a verification procedure.
             if (!verificationproc)
                 formatmask = 0;
 
-            CastProgressReadEvent(0);
-
+            // Determine where to start by checking current device and selected regions
             if ((formatBootPartition && formatSystemPartitions) || z22se)
                 start = 1;
             else if (formatSystemPartitions || device == EcuByte_MCP)
@@ -6711,8 +6714,8 @@ namespace TrionicCANLib.API
             {
                 // Store bit location and reset status
                 int shift = 1 << (i - 1);
-                bool success = false;
-                
+                success   = false;
+
                 // Normal operation: Fetch md5 of every partition.
                 // Verification: Only fetch md5 of written partitions.
                 if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verificationproc)
@@ -6724,7 +6727,7 @@ namespace TrionicCANLib.API
                 if (success)
                 {
                     // Compare both md5's
-                    bool identical = true;
+                    identical = true;
                     for (byte a = 0; a < 16; a++)
                     {
                         if (Locmd5dbuf[a] != Remd5dbuf[a])
@@ -6738,15 +6741,11 @@ namespace TrionicCANLib.API
                             identical = LeaveRecoveryBe();
 
                         // MCP requires a few more checks..
-                        if (device == 5)
+                        if (device == EcuByte_MCP)
                         {
                             // Catch dangerous situation; ALWAYS select shadow and only deselect it if partition 1 is not to be written.
                             if (i == 9)
-                            {
-                                identical = false;
-                                if ((formatmask & 1) == 0)
-                                    identical = true;
-                            }
+                                identical = (formatmask & 1) == 1 ? false : true;
 
                             // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
                             if (!z22se && i == 7)
