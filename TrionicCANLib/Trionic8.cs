@@ -2771,6 +2771,8 @@ namespace TrionicCANLib.API
                         retData[i] = 0xFF;
 
                     Blockstoskip = getCanData(data, 3);
+
+                    logger.Debug("Skipping: " + (length*Blockstoskip).ToString() + " bytes");
                     return retData;
                 }
             }
