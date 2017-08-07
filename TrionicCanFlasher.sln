@@ -37,7 +37,6 @@ Global
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|Any CPU.ActiveCfg = Release
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|Any CPU.Build.0 = Release
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|x86.ActiveCfg = Release
-		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|x86.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
