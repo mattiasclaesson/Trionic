@@ -112,31 +112,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_F1AEE1D0AEFF11C787AEC46C06417DBF"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_D42D3477D8D2384CECF37D5EA679190F"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_788CD0B4D54DDFA1DD325A7E543A21B4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_7747543A6C6FB526E50E3C76BEF28F10"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5879D9CF7D1DBAFFFF4A4322A269CC00"
+        "OwnerKey" = "8:_7CACF0603656C794259DD5162980944A"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -148,7 +124,31 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_7CACF0603656C794259DD5162980944A"
+        "OwnerKey" = "8:_5879D9CF7D1DBAFFFF4A4322A269CC00"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_7747543A6C6FB526E50E3C76BEF28F10"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_788CD0B4D54DDFA1DD325A7E543A21B4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_D42D3477D8D2384CECF37D5EA679190F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_F1AEE1D0AEFF11C787AEC46C06417DBF"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -263,11 +263,6 @@
             "AssemblyAsmDisplayName" = "8:canusbdrv_net, Version=2.0.0.1, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
-                    "_5879D9CF7D1DBAFFFF4A4322A269CC00"
-                    {
-                    "Name" = "8:canusbdrv_net.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:canusbdrv_net.dll"
             "TargetName" = "8:"
@@ -294,11 +289,6 @@
             "AssemblyAsmDisplayName" = "8:FTD2XX_NET, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_7747543A6C6FB526E50E3C76BEF28F10"
-                    {
-                    "Name" = "8:FTD2XX_NET.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:FTD2XX_NET.dll"
             "TargetName" = "8:"
@@ -325,11 +315,6 @@
             "AssemblyAsmDisplayName" = "8:LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_788CD0B4D54DDFA1DD325A7E543A21B4"
-                    {
-                    "Name" = "8:LibUsbDotNet.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:LibUsbDotNet.dll"
             "TargetName" = "8:"
@@ -356,11 +341,6 @@
             "AssemblyAsmDisplayName" = "8:NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_7CACF0603656C794259DD5162980944A"
-                    {
-                    "Name" = "8:NLog.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:NLog.dll"
             "TargetName" = "8:"
@@ -407,11 +387,6 @@
             "AssemblyAsmDisplayName" = "8:canlibCLSNET, Version=8.14.384.1, Culture=neutral, PublicKeyToken=bb7f2cd46200de24, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
-                    "_C4BD42520AFF43C457B1F6D462F382F8"
-                    {
-                    "Name" = "8:canlibCLSNET.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:canlibCLSNET.dll"
             "TargetName" = "8:"
@@ -438,11 +413,6 @@
             "AssemblyAsmDisplayName" = "8:combilib-net, Version=1.0.5571.38176, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
-                    "_D42D3477D8D2384CECF37D5EA679190F"
-                    {
-                    "Name" = "8:combilib-net.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:combilib-net.dll"
             "TargetName" = "8:"
@@ -469,11 +439,6 @@
             "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.38.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
-                    "_F1AEE1D0AEFF11C787AEC46C06417DBF"
-                    {
-                    "Name" = "8:TrionicCANLib.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:TrionicCANLib.dll"
             "TargetName" = "8:"
@@ -549,15 +514,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{0CECEDF5-C9A4-416F-9395-704547EC1920}"
-        "PackageCode" = "8:{DA500FD9-E5E3-4A24-A65B-7D94F7FF22D3}"
+        "ProductCode" = "8:{77DB69C5-BFDB-4D71-8C9C-BD1954D99423}"
+        "PackageCode" = "8:{831EC2A6-607B-4B0A-92AE-EED01DF4E2B1}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.1.51"
+        "ProductVersion" = "8:0.1.52"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://www.txsuite.org"
