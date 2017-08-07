@@ -6,16 +6,16 @@ pushd SetupCANFlash\Release\
 "C:\Program Files\7-Zip\7z.exe" a -tzip TrionicCANFlash.zip TrionicCANFlash.* setup.exe
 popd
 
-mkdir C:\users\mattias\Delivery\TrionicCANFlasher\%SetupCANFlash.version%
-xcopy SetupCANFlash\version.bat C:\users\mattias\Delivery\TrionicCANFlasher\%SetupCANFlash.version%\
-xcopy SetupCANFlash\Release\TrionicCANFlash.msi C:\users\mattias\Delivery\TrionicCANFlasher\%SetupCANFlash.version%\
-xcopy SetupCANFlash\Release\TrionicCANFlash.md5 C:\users\mattias\Delivery\TrionicCANFlasher\%SetupCANFlash.version%\
-xcopy SetupCANFlash\Release\TrionicCANFlash.zip C:\users\mattias\Delivery\TrionicCANFlasher\%SetupCANFlash.version%\
-xcopy SetupCANFlash\Release\setup.exe C:\users\mattias\Delivery\TrionicCANFlasher\%SetupCANFlash.version%\
+mkdir z:\TrionicCANFlasher\%SetupCANFlash.version%
+xcopy SetupCANFlash\version.bat z:\TrionicCANFlasher\%SetupCANFlash.version%\
+xcopy SetupCANFlash\Release\TrionicCANFlash.msi z:\TrionicCANFlasher\%SetupCANFlash.version%\
+xcopy SetupCANFlash\Release\TrionicCANFlash.md5 z:\TrionicCANFlasher\%SetupCANFlash.version%\
+xcopy SetupCANFlash\Release\TrionicCANFlash.zip z:\TrionicCANFlasher\%SetupCANFlash.version%\
+xcopy SetupCANFlash\Release\setup.exe z:\TrionicCANFlasher\%SetupCANFlash.version%\
 
 
-echo ^<?xml version="1.0" encoding="utf-8"?^>  > C:\users\mattias\Delivery\TrionicCANFlasher\version.xml
-echo ^<canflasher version="%SetupCANFlash.version%"/^> >> C:\users\mattias\Delivery\TrionicCANFlasher\version.xml
+echo ^<?xml version="1.0" encoding="utf-8"?^>  > z:\TrionicCANFlasher\version.xml
+echo ^<canflasher version="%SetupCANFlash.version%"/^> >> z:\TrionicCANFlasher\version.xml
 
 echo ----------------------------------------------------
 git changes
