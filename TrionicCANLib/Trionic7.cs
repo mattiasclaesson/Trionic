@@ -514,17 +514,17 @@ namespace TrionicCANLib.API
             return false;
         }
 
-        public byte[] ReadMapfromSRAM(SymbolHelper sh, bool showProgress)
+        public byte[] ReadMapfromSRAM(long startAddress, int length, bool showProgress)
         {
-            byte[] completedata = new byte[sh.Length];
+            byte[] completedata = new byte[length];
             try
             {
                 byte[] data;
                 int m_nrBytes = 64;
                 int m_nrOfReads = 0;
                 int m_nrOfRetries = 0;
-                m_nrOfReads = sh.Length / m_nrBytes;
-                if (((sh.Length) % 64) > 0) m_nrOfReads++;
+                m_nrOfReads = length / m_nrBytes;
+                if (((length) % 64) > 0) m_nrOfReads++;
                 int bytecount = 0;
                 KWPHandler.getInstance().requestSequrityAccess(false);
                 for (int readcount = 0; readcount < m_nrOfReads; readcount++)
@@ -535,7 +535,7 @@ namespace TrionicCANLib.API
                     }
 
                     m_nrOfRetries = 0;
-                    int addresstoread = (int)sh.Start_address + (readcount * m_nrBytes);
+                    int addresstoread = (int)startAddress + (readcount * m_nrBytes);
                     logger.Debug("Reading 64 bytes from address: " + addresstoread.ToString("X6"));
 
                     while (!KWPHandler.getInstance().sendReadRequest((uint)(addresstoread), 64) && m_nrOfRetries < 20)
