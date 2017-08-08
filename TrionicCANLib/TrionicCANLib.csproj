@@ -112,7 +112,6 @@
     <Compile Include="ITrionic.cs" />
     <Compile Include="Md5Tools.cs" />
     <Compile Include="FlashReadArguments.cs" />
-    <Compile Include="SymbolHelper.cs" />
     <Compile Include="BitTools.cs" />
     <Compile Include="BlockManager.cs" />
     <Compile Include="Bootloader.cs" />

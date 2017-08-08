@@ -599,7 +599,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
         "ProductCode" = "8:{E67E8818-6394-436C-9375-1F099C0D7E1D}"
-        "PackageCode" = "8:{F6FF6317-ED0D-4E91-AC31-BF430EEB6EC1}"
+        "PackageCode" = "8:{CA7FECF4-BFAA-4232-8E8B-844FCEB52D68}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -1148,7 +1148,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_3C87B40D8D4F4B188624286CF0A35439"
             {
-            "SourcePath" = "8:..\\TrionicCANFlasher\\obj\\x86\\Debug\\TrionicCANFlasher.exe"
+            "SourcePath" = "8:..\\TrionicCANFlasher\\obj\\x86\\Release\\TrionicCANFlasher.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"

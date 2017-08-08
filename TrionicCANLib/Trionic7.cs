@@ -6,7 +6,6 @@ using System.Threading;
 using TrionicCANLib.CAN;
 using TrionicCANLib.KWP;
 using TrionicCANLib.Flasher;
-using CommonSuite;
 using NLog;
 
 namespace TrionicCANLib.API
