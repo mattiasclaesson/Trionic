@@ -476,8 +476,8 @@ namespace TrionicCANFlasher
                 btnReadSRAM.Enabled = false;
 
                 // These are handled differently than the rest; Only enable if "enable" and their corresponding dependency is set
-                cbFormatBootPartition.Enabled    = enable ? cbFormatSystemPartitions.Checked : false;
                 cbFormatSystemPartitions.Enabled = enable ? cbUseLegionBootloader.Checked : false;
+                cbFormatBootPartition.Enabled    = enable ? cbFormatSystemPartitions.Checked : false;
             }
 
             // Always disable
