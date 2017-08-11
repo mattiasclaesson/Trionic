@@ -97,7 +97,7 @@ namespace TrionicCANLib.CAN
             CANMessage canMessage = new CANMessage();
             StringBuilder receiveText = new StringBuilder();
 
-            Console.WriteLine("readMessages started");
+            logger.Debug("readMessages started");
             while (true)
             {
                 receiveDataSemaphore.WaitOne();
@@ -106,7 +106,7 @@ namespace TrionicCANLib.CAN
                 {
                     if (m_endThread)
                     {
-                        Console.WriteLine("readMessages ended");
+                        logger.Debug("readMessages ended");
                         return;
                     }
                 }
@@ -148,7 +148,6 @@ namespace TrionicCANLib.CAN
                                 else if (rxMessage.StartsWith("NO DATA"))
                                 {
                                     logger.Debug("NO DATA");
-                                    Console.WriteLine("NO DATA");
                                 }
                                 else if (rxMessage.Length == 19) // is it a valid line
                                 {
@@ -166,9 +165,9 @@ namespace TrionicCANLib.CAN
                                             receivedMessage(canMessage);
                                         }
                                     }
-                                    catch (Exception)
+                                    catch (Exception e)
                                     {
-                                        //Console.WriteLine("MSG: " + rxMessage);
+                                        logger.Debug(e, rxMessage);
                                     }
                                 }
                                  //disable whitespace logging
@@ -660,7 +659,7 @@ namespace TrionicCANLib.CAN
             }
             start = Environment.TickCount - start;
             logger.Debug(string.Format("Got {0} responses in {1} ms", 1000, start));
-            Console.WriteLine(string.Format("Got {0} responses in {1} ms", 1000, start));
+            logger.Debug(string.Format("Got {0} responses in {1} ms", 1000, start));
         }
 
         private void RunLoggingBenchmark()

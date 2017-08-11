@@ -4,6 +4,7 @@ using System.Text;
 using System.IO.Ports;
 using System.Threading;
 using TrionicCANLib.CAN;
+using NLog;
 
 namespace TrionicCANLib.KWP
 {
@@ -12,6 +13,7 @@ namespace TrionicCANLib.KWP
 
         bool m_deviceIsOpen = false;
         SerialPort m_serialPort = new SerialPort();
+        private Logger logger = LogManager.GetCurrentClassLogger();
 
         private int m_baseBaudrate = 38400;
         public int BaseBaudrate
@@ -248,7 +250,6 @@ namespace TrionicCANLib.KWP
                     str = m_serialPort.ReadTo(">");
                     m_serialPort.Write("ATAT2\r");   //Automatic timing
                     str = m_serialPort.ReadTo(">");
-                    string localStr = "";
                     if (detectedRate == 115200)  //Try setting the speed to 2Mbit
                     {
                         m_serialPort.Write("ATBRT28\r"); //Set baudrate timeout 200 ms
@@ -264,7 +265,7 @@ namespace TrionicCANLib.KWP
                                 m_serialPort.BaudRate = 2000000;
                                 m_serialPort.Open();
                             }
-                            catch (UnauthorizedAccessException e)
+                            catch (UnauthorizedAccessException)
                             {
                                 //AddToSerialTrace("exception" + e.ToString());
                                 return false;
@@ -279,7 +280,7 @@ namespace TrionicCANLib.KWP
                                 {
                                     string elmVersion = m_serialPort.ReadExisting();
                                     //AddToSerialTrace("elmVersion:" + elmVersion);
-                                    Console.WriteLine("elmVersion: " + elmVersion);
+                                    logger.Debug("elmVersion: " + elmVersion);
                                     if (elmVersion.Length > 5)
                                     {
                                         gotVersion = true;
@@ -294,7 +295,7 @@ namespace TrionicCANLib.KWP
                                 m_serialPort.Write("\r");
                                 answer = m_serialPort.ReadTo(">");
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
                                 //Could not connect at 2Mbit
                                 m_serialPort.BaudRate = 115200;
@@ -369,7 +370,7 @@ namespace TrionicCANLib.KWP
                             m_serialPort.Close();
                         }
                     }
-                    catch (Exception x)
+                    catch (Exception)
                     {
                         //logger.Debug("ELM372Device DetectInitialPortSpeedAndReset" + x.Message);
                         m_serialPort.Close();

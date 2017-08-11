@@ -16,7 +16,7 @@ using System.Management;
 // Example of how to use:
 //  foreach (COMPortInfo comPort in COMPortInfo.GetCOMPortsInfo())
 //  {
-//      Console.WriteLine(string.Format("{0} – {1}", comPort.Name, comPort.Description));
+//      logger.Debug(string.Format("{0} – {1}", comPort.Name, comPort.Description));
 //  }
 
 namespace TrionicCANLib.WMI

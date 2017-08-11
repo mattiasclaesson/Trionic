@@ -132,14 +132,14 @@ namespace TrionicCANLib.KWP
             {
                 lock (m_lockObject)
                 {
-                    Console.WriteLine("******* KWPCANDevice: m_CanDevice set");
+                    logger.Debug("******* KWPCANDevice: m_CanDevice set");
 
                     m_canDevice = a_canDevice;
                 }
             }
             else
             {
-                Console.WriteLine("KWPCANDevice, candevice was already set");
+                logger.Debug("KWPCANDevice, candevice was already set");
             }
         }
 
@@ -149,23 +149,23 @@ namespace TrionicCANLib.KWP
         /// <returns>True if the device was opened, otherwise false.</returns>
         public override bool open()
         {
-            Console.WriteLine("******* KWPCANDevice: Opening KWPCANDevice");
+            logger.Debug("******* KWPCANDevice: Opening KWPCANDevice");
 
             bool retVal = false;
-            Console.WriteLine("Opening m_canDevice");
+            logger.Debug("Opening m_canDevice");
             lock (m_lockObject)
             {
-                Console.WriteLine("Lock passed: Opening m_canDevice");
+                logger.Debug("Lock passed: Opening m_canDevice");
                 if (m_canDevice.open() == OpenResult.OK)
                 {
-                    Console.WriteLine("Adding listener");
+                    logger.Debug("Adding listener");
                     m_canDevice.addListener(m_kwpCanListener);
                     retVal = true;
                 }
                 else
                     retVal = false;
             }
-            Console.WriteLine("return value = " + retVal.ToString());
+            logger.Debug("return value = " + retVal.ToString());
             return retVal;
         }
 
@@ -192,7 +192,7 @@ namespace TrionicCANLib.KWP
         /// <returns>True if the device was closed, otherwise false.</returns>
         public override bool close()
         {
-            Console.WriteLine("******* KWPCANDevice: Closing KWPCANDevice");
+            logger.Debug("******* KWPCANDevice: Closing KWPCANDevice");
 
             bool retVal = false;
             lock (m_lockObject)

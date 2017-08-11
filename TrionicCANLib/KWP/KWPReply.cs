@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NLog;
 
 namespace TrionicCANLib.KWP
 {
@@ -9,6 +10,7 @@ namespace TrionicCANLib.KWP
     /// </summary>
     public class KWPReply
     {
+        private Logger logger = LogManager.GetCurrentClassLogger();
         byte[] m_reply;
         uint m_nrOfPid;
 
@@ -24,7 +26,7 @@ namespace TrionicCANLib.KWP
             m_reply = a_reply;
             if (m_reply == null)
             {
-                Console.WriteLine("Reply was NULL");
+                logger.Debug("Reply was NULL");
             }
             m_nrOfPid = a_nrOfPid;
         }

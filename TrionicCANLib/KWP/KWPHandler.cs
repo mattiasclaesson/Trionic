@@ -35,7 +35,7 @@ namespace TrionicCANLib.KWP
         private Mutex m_requestMutex = new Mutex();
         private TimerCallback timerDelegate;
         private System.Threading.Timer stateTimer;
-        private Logger logger = LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Constructor.
@@ -43,14 +43,14 @@ namespace TrionicCANLib.KWP
         /// <param name="a_kwpDevice">IKWPDevice to be used by KWPHandler.</param>
         public static void setKWPDevice(IKWPDevice a_kwpDevice)
         {
-            Console.WriteLine("******* KWPHandler: KWP device set");
+            logger.Debug("******* KWPHandler: KWP device set");
             m_kwpDevice = a_kwpDevice;
         }
 
         public static KWPHandler getInstance()
         {
             if (m_kwpDevice == null)
-                Console.WriteLine("KWPDevice not set.");
+                logger.Debug("KWPDevice not set.");
             if (m_instance == null)
                 m_instance = new KWPHandler();
             return m_instance;
@@ -90,7 +90,7 @@ namespace TrionicCANLib.KWP
         {
             if (m_kwpDevice.isOpen() && !m_suspendAlivePolling)
             {
-                Console.WriteLine("Sending keep alive");
+                logger.Debug("Sending keep alive");
                 sendUnknownRequest();
             }
         }
@@ -111,7 +111,7 @@ namespace TrionicCANLib.KWP
         /// <returns>true on success, otherwise false.</returns>
         public bool openDevice()
         {
-            Console.WriteLine("******* KWPHandler: Opening kwpDevice");
+            logger.Debug("******* KWPHandler: Opening kwpDevice");
 
             return m_kwpDevice.open();
         }
@@ -122,7 +122,7 @@ namespace TrionicCANLib.KWP
         /// <returns>true on success, otherwise false.</returns>
         public bool closeDevice()
         {
-            Console.WriteLine("******* KWPHandler: Closing kwpDevice");
+            logger.Debug("******* KWPHandler: Closing kwpDevice");
 
             if(m_kwpDevice != null)
                 return m_kwpDevice.close();
@@ -161,16 +161,16 @@ namespace TrionicCANLib.KWP
             byte[] data = new byte[1];
             data[0] = (byte)0x00;
             KWPRequest req = new KWPRequest(0x11, 0x01, data);
-            Console.WriteLine(req.ToString());
+            logger.Debug(req.ToString());
             result = sendRequest(req, out reply);
             if (reply.getMode() == 0x51)
             {
-                Console.WriteLine("Reset Success: " + reply.ToString());
+                logger.Debug("Reset Success: " + reply.ToString());
                 return true;
             }
             else if (reply.getMode() == 0x7F)
             {
-                Console.WriteLine("Reset Failed: " + reply.ToString());
+                logger.Debug("Reset Failed: " + reply.ToString());
             }
             return false;
         }
@@ -185,9 +185,9 @@ namespace TrionicCANLib.KWP
             //data[1] = (byte)0x00;
             //data[2] = (byte)0x00;
             KWPRequest req = new KWPRequest(0x12, Convert.ToByte(frameNumber), data);
-            Console.WriteLine(req.ToString());
+            logger.Debug(req.ToString());
             result = sendRequest(req, out reply);
-            Console.WriteLine(reply.ToString());
+            logger.Debug(reply.ToString());
             return true;
         }
 
@@ -211,9 +211,9 @@ namespace TrionicCANLib.KWP
             // 1 Current code - present at time of request
             // 0 Maturing/intermittent code - insufficient data to consider as a malfunction
             KWPRequest req = new KWPRequest(0x18 , 0x02); // Request Diagnostic Trouble Codes by Status
-            Console.WriteLine(req.ToString());
+            logger.Debug(req.ToString());
             result = sendRequest(req, out reply);
-            Console.WriteLine(reply.ToString());
+            logger.Debug(reply.ToString());
             // J2190
             // Multiple Mode $58 response messages may be reported to a single request, depending on the number of diagnostic 
             // trouble codes stored in the module. Each response message will report up to three DTCs for
@@ -224,7 +224,7 @@ namespace TrionicCANLib.KWP
             {
                 if (reply.getPid() == 0x00)
                 {
-                    Console.WriteLine("No DTC's");
+                    logger.Debug("No DTC's");
                     list.Add("No DTC's");
                     return true;
                 }
@@ -278,9 +278,9 @@ namespace TrionicCANLib.KWP
             //data[1] = (byte)0xFF;
             //data[2] = (byte)0x00;
             KWPRequest req = new KWPRequest(0x14, (byte)(dtccode >> 8), data);
-            Console.WriteLine(req.ToString());
+            logger.Debug(req.ToString());
             result = sendRequest(req, out reply);
-            Console.WriteLine(reply.ToString());
+            logger.Debug(reply.ToString());
             return true;
         }
 
@@ -294,9 +294,9 @@ namespace TrionicCANLib.KWP
             //data[1] = (byte)0xFF;
             //data[2] = (byte)0x00;
             KWPRequest req = new KWPRequest(0x14, 0xFF, data);
-            Console.WriteLine(req.ToString());
+            logger.Debug(req.ToString());
             result = sendRequest(req, out reply);
-            Console.WriteLine(reply.ToString());
+            logger.Debug(reply.ToString());
             return true;
         }
 
@@ -315,9 +315,9 @@ namespace TrionicCANLib.KWP
             byte[] key = new byte[2];
             // Send a seed request.
             KWPRequest requestForKey = new KWPRequest(0x27, 0x05);
-            Console.WriteLine("requestSequrityAccessLevel " + a_method.ToString() +  " request for key: " + requestForKey.ToString());
+            logger.Debug("requestSequrityAccessLevel " + a_method.ToString() +  " request for key: " + requestForKey.ToString());
             result = sendRequest(requestForKey, out reply);
-            Console.WriteLine("requestSequrityAccessLevel " + a_method.ToString() + " request for key result: " + reply.ToString());
+            logger.Debug("requestSequrityAccessLevel " + a_method.ToString() + " request for key result: " + reply.ToString());
 
             if (result != KWPResult.OK)
                 return false;
@@ -331,25 +331,25 @@ namespace TrionicCANLib.KWP
                 key = calculateKey(seed, 1);
             // Send key reply.
             KWPRequest sendKeyRequest = new KWPRequest(0x27, 0x06, key);
-            Console.WriteLine("requestSequrityAccessLevel " + a_method.ToString() +  " send Key request: " + sendKeyRequest.ToString());
+            logger.Debug("requestSequrityAccessLevel " + a_method.ToString() +  " send Key request: " + sendKeyRequest.ToString());
             result = sendRequest(sendKeyRequest, out reply);
-            Console.WriteLine("requestSequrityAccessLevel " + a_method.ToString() + " send Key reply: " + reply.ToString());
+            logger.Debug("requestSequrityAccessLevel " + a_method.ToString() + " send Key reply: " + reply.ToString());
             if (result != KWPResult.OK)
             {
-                Console.WriteLine("Security access request was not send");
+                logger.Debug("Security access request was not send");
                 return false;
             }
 
             //Check if sequrity was granted.
-            Console.WriteLine("Mode: " + reply.getMode().ToString("X2"));
-            Console.WriteLine("Data: " + reply.getData()[0].ToString("X2"));
+            logger.Debug("Mode: " + reply.getMode().ToString("X2"));
+            logger.Debug("Data: " + reply.getData()[0].ToString("X2"));
             if ((reply.getMode() == 0x67) && (reply.getData()[0] == 0x34)) // WAS [0]
             {
-                Console.WriteLine("Security access granted: " + a_method.ToString());
+                logger.Debug("Security access granted: " + a_method.ToString());
                 return true;
             }
 
-            Console.WriteLine("Security access was not granted: " + reply.ToString());
+            logger.Debug("Security access was not granted: " + reply.ToString());
             return false;
         }
 
@@ -450,7 +450,7 @@ namespace TrionicCANLib.KWP
             }
             else if (reply.getMode() == 0x7F && reply.getPid() == 0x21 && reply.getLength() == 3)
             {
-                Console.WriteLine(TranslateErrorCode(reply.getData()[0]));
+                logger.Debug(TranslateErrorCode(reply.getData()[0]));
             }
             r_level = 0;
             return KWPResult.NOK;
@@ -476,7 +476,7 @@ namespace TrionicCANLib.KWP
             }
             else if(reply.getMode() == 0x7F && reply.getPid() == 0x3B && reply.getLength() == 3)
             {
-                Console.WriteLine(TranslateErrorCode(reply.getData()[0]));
+                logger.Debug(TranslateErrorCode(reply.getData()[0]));
             }
 
             return KWPResult.NOK;
@@ -629,18 +629,18 @@ namespace TrionicCANLib.KWP
             KWPRequest req = new KWPRequest(0x31, 0x50, a_data);
             
             result = sendRequest(req, out reply);
-            Console.WriteLine("Erase(1) " + reply.ToString());
+            logger.Debug("Erase(1) " + reply.ToString());
             /*if (result != KWPResult.OK)
                 return result;
             System.Threading.Thread.Sleep(10000);
             result = sendRequest(new KWPRequest(0x31, 0x53, a_data), out reply);
-            Console.WriteLine("Erase(2:" + i.ToString() + ") " + reply.ToString());
+            logger.Debug("Erase(2:" + i.ToString() + ") " + reply.ToString());
             */
             if (result != KWPResult.OK)
                 return result;
 
             result = sendRequest(new KWPRequest(0x3E, 0x50), out reply2); // tester present???
-            Console.WriteLine("reply on exit " + reply2.ToString());
+            logger.Debug("reply on exit " + reply2.ToString());
 
             return result;
         }
@@ -664,14 +664,14 @@ namespace TrionicCANLib.KWP
             //PID = 0x52
             //Expected result is 0x71
             result = sendRequest(new KWPRequest(0x31, 0x52), out reply);
-            Console.WriteLine("Erase(1) " + reply.ToString());
+            logger.Debug("Erase(1) " + reply.ToString());
             if (result != KWPResult.OK)
                 return result;
             while (reply.getMode() != 0x71) 
             {
                 System.Threading.Thread.Sleep(1000);
                 result = sendRequest(new KWPRequest(0x31, 0x52), out reply);
-                Console.WriteLine("Erase(2:" + i.ToString() + ") " + reply.ToString());
+                logger.Debug("Erase(2:" + i.ToString() + ") " + reply.ToString());
                 if (i++ > 15) return KWPResult.Timeout;
             }
             if (result != KWPResult.OK) 
@@ -683,14 +683,14 @@ namespace TrionicCANLib.KWP
             //Expected result is 0x71
             i = 0;
             result = sendRequest(new KWPRequest(0x31, 0x53), out reply2);
-            Console.WriteLine("Erase(3) " + reply2.ToString());
+            logger.Debug("Erase(3) " + reply2.ToString());
             if (result != KWPResult.OK)
                 return result;
             while (reply2.getMode() != 0x71)
             {
                 System.Threading.Thread.Sleep(1000);
                 result = sendRequest(new KWPRequest(0x31, 0x53), out reply2);
-                Console.WriteLine("Erase(4:" + i.ToString() + ") " + reply2.ToString());
+                logger.Debug("Erase(4:" + i.ToString() + ") " + reply2.ToString());
                 if (i++ > 20) return KWPResult.Timeout;
             }
 
@@ -698,7 +698,7 @@ namespace TrionicCANLib.KWP
             //Mode = 0x3E
             //Expected result is 0x7E
             result = sendRequest(new KWPRequest(0x3E, 0x53), out reply2);
-            Console.WriteLine("Erase(5) " + reply2.ToString());
+            logger.Debug("Erase(5) " + reply2.ToString());
 
             return result;
         }
@@ -798,7 +798,7 @@ namespace TrionicCANLib.KWP
         public KWPResult sendUnknownRequest()
         {
             logger.Trace("sendUnknownRequest");
-            //Console.WriteLine("sendUnknownRequest");
+            //logger.Debug("sendUnknownRequest");
             KWPReply reply = new KWPReply();
             KWPResult result;
 
@@ -931,7 +931,7 @@ namespace TrionicCANLib.KWP
                 {
                     result = KWPResult.Timeout;
                     logger.Trace("Got wrong response on sendRequest in setSymbolRequest, len = " + reply.getLength().ToString("D2"));
-                    Console.WriteLine("Got wrong response on sendRequest in setSymbolRequest, len = " + reply.getLength().ToString("D2"));
+                    logger.Debug("Got wrong response on sendRequest in setSymbolRequest, len = " + reply.getLength().ToString("D2"));
                 }
             }
             if (result == KWPResult.OK)
@@ -941,7 +941,7 @@ namespace TrionicCANLib.KWP
             else
             {
                 logger.Trace("setSymbolRequest timed out");
-                Console.WriteLine("setSymbolRequest timed out");
+                logger.Debug("setSymbolRequest timed out");
                 return false;
             }
         }
@@ -976,19 +976,19 @@ namespace TrionicCANLib.KWP
             {
                 requestString += b.ToString("X2") + " ";
             }
-            Console.WriteLine(requestString);
+            logger.Debug(requestString);
             // end dump to console
-            Console.WriteLine("SymbolNumberAndData length: " + symbolNumberAndData.Length.ToString("X8"));
+            logger.Debug("SymbolNumberAndData length: " + symbolNumberAndData.Length.ToString("X8"));
             KWPRequest t_request = new KWPRequest(0x3D, /*0x81, */symbolNumberAndData);
-            Console.WriteLine(t_request.ToString());
+            logger.Debug(t_request.ToString());
             result = sendRequest(t_request, out reply);
             if (result != KWPResult.OK)
             {
-                Console.WriteLine("Result != KWPResult.OK");
+                logger.Debug("Result != KWPResult.OK");
                 return false;
             }
-            Console.WriteLine("Result = " + reply.getData()[0].ToString("X2"));
-            Console.WriteLine("Result-total = " + reply.ToString());
+            logger.Debug("Result = " + reply.getData()[0].ToString("X2"));
+            logger.Debug("Result-total = " + reply.ToString());
             if (reply.getData()[0] == 0x7D)
             {
                 return true;
@@ -1030,19 +1030,19 @@ namespace TrionicCANLib.KWP
             {
                 requestString += b.ToString("X2") + " ";
             }
-            Console.WriteLine(requestString);
+            logger.Debug(requestString);
             // end dump to console
-            Console.WriteLine("SymbolNumberAndData length: " + symbolNumberAndData.Length.ToString("X8"));
+            logger.Debug("SymbolNumberAndData length: " + symbolNumberAndData.Length.ToString("X8"));
             KWPRequest t_request = new KWPRequest(0x3D, 0x80, symbolNumberAndData);
-            Console.WriteLine(t_request.ToString());
+            logger.Debug(t_request.ToString());
             result = sendRequest(t_request, out reply);
             if (result != KWPResult.OK)
             {
-                Console.WriteLine("Result != KWPResult.OK");
+                logger.Debug("Result != KWPResult.OK");
                 return false;
             }
-            Console.WriteLine("Result = " + reply.getData()[0].ToString("X2"));
-            Console.WriteLine("Resulttotal = " + reply.ToString());
+            logger.Debug("Result = " + reply.getData()[0].ToString("X2"));
+            logger.Debug("Resulttotal = " + reply.ToString());
             if (reply.getData()[0] == 0x7D)
             {
                 return true;
@@ -1084,18 +1084,18 @@ namespace TrionicCANLib.KWP
             {
                 requestString += b.ToString("X2") + " ";
             }
-            Console.WriteLine(requestString);
+            logger.Debug(requestString);
             // end dump to console
-            Console.WriteLine("SymbolNumberAndData length: " + symbolNumberAndData.Length.ToString("X8"));
+            logger.Debug("SymbolNumberAndData length: " + symbolNumberAndData.Length.ToString("X8"));
             KWPRequest t_request = new KWPRequest(0x3D, 0x80, symbolNumberAndData);
-            Console.WriteLine(t_request.ToString());
+            logger.Debug(t_request.ToString());
             result = sendRequest(t_request, out reply);
             if (result != KWPResult.OK)
             {
-                Console.WriteLine("Result != KWPResult.OK");
+                logger.Debug("Result != KWPResult.OK");
                 return false;
             }
-            Console.WriteLine("Result = " + reply.getData()[0].ToString("X2"));
+            logger.Debug("Result = " + reply.getData()[0].ToString("X2"));
             if (reply.getData()[0] == 0x7D)
             {
                 return true;
@@ -1172,7 +1172,7 @@ namespace TrionicCANLib.KWP
             KWPReply reply = new KWPReply();
             RequestResult result;
             a_reply = new KWPReply();
-            //Console.WriteLine("Checking KWP device open");
+            //logger.Debug("Checking KWP device open");
             if (!m_kwpDevice.isOpen())
                 return KWPResult.DeviceNotConnected;
 
@@ -1200,7 +1200,7 @@ namespace TrionicCANLib.KWP
                 else
                 {
                     logger.Trace("Error in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
-                    Console.WriteLine("Error in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
+                    logger.Debug("Error in KWPHandler::sendRequest: " + result.ToString() + " " + retry.ToString());
                 }
             }
             m_requestMutex.ReleaseMutex();
@@ -1222,7 +1222,7 @@ namespace TrionicCANLib.KWP
             KWPReply reply = new KWPReply();
             RequestResult result;
             a_reply = new KWPReply();
-            //Console.WriteLine("Checking KWP device open");
+            //logger.Debug("Checking KWP device open");
             if (!m_kwpDevice.isOpen())
                 return KWPResult.DeviceNotConnected;
 
