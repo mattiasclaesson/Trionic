@@ -53,6 +53,14 @@ namespace TrionicCANLib.API
             }
         }
 
+        protected ECU m_ECU = ECU.TRIONIC8;
+
+        public ECU ECU
+        {
+            get { return m_ECU; }
+            set { m_ECU = value; }
+        }
+
         public bool isOpen()
         {
             if (canUsbDevice != null)

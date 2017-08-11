@@ -289,7 +289,6 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.ECU = ECU.MOTRONIC96;
                             if (trionic8.openDevice(false))
                             {
                                 string calibrationset = trionic8.GetCalibrationSet();
@@ -588,7 +587,6 @@ namespace TrionicCANFlasher
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
                                 trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                                trionic8.ECU = ECU.MOTRONIC96;
                                 if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);
@@ -1030,6 +1028,30 @@ namespace TrionicCANFlasher
         private void SetGenericOptions(ITrionic trionic)
         {
             trionic.OnlyPBus = cbOnlyPBus.Checked;
+
+            switch(cbxEcuType.SelectedIndex)
+            {
+                case (int)ECU.TRIONIC7:
+                    trionic.ECU = ECU.TRIONIC7;
+                    break;
+                case (int)ECU.TRIONIC8:
+                    trionic.ECU = ECU.TRIONIC8;
+                    break;
+                case (int)ECU.TRIONIC8_MCP:
+                    trionic.ECU = ECU.TRIONIC8_MCP;
+                    break;
+                case (int)ECU.Z22SEMain_LEG:
+                    trionic.ECU = ECU.Z22SEMain_LEG;
+                    break;
+                case (int)ECU.Z22SEMCP_LEG:
+                    trionic.ECU = ECU.Z22SEMCP_LEG;
+                    break;
+                case (int)ECU.MOTRONIC96:
+                    trionic.ECU = ECU.MOTRONIC96;
+                    break;
+                default:
+                    break;
+            }
 
             switch (cbxAdapterType.SelectedIndex)
             {
@@ -1596,7 +1618,6 @@ namespace TrionicCANFlasher
                 EnableUserInput(false);
                 AddLogItem("Opening connection");
                 trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                trionic8.ECU = ECU.MOTRONIC96;
                 if (trionic8.openDevice(true))
                 {
                     EditParameters pi = new EditParameters();
@@ -1660,7 +1681,6 @@ namespace TrionicCANFlasher
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
                                 trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                                trionic8.ECU = ECU.MOTRONIC96;
                                 if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);

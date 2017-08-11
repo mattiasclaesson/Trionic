@@ -39,14 +39,6 @@ namespace TrionicCANLib.API
         static public byte EcuByte_MCP = 5;
         static public byte EcuByte_T8 = 6;
 
-        private ECU m_ECU = ECU.TRIONIC8;
-
-        public ECU ECU
-        {
-            get { return m_ECU; }
-            set { m_ECU = value; }
-        }
-
         public AccessLevel SecurityLevel
         {
             get { return _securityLevel; }
