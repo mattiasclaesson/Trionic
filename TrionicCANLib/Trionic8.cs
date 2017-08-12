@@ -351,7 +351,7 @@ namespace TrionicCANLib.API
                         SeedToKey s2k = new SeedToKey();
 
                         byte[] key = new byte[2];
-                        if (m_ECU == ECU.TRIONIC8)
+                        if (m_ECU == ECU.TRIONIC8 || m_ECU == ECU.TRIONIC8_MCP || m_ECU == ECU.Z22SEMain_LEG || m_ECU == ECU.Z22SEMCP_LEG)
                         {
                             key = s2k.calculateKey(seed, _securityLevel);
                         }

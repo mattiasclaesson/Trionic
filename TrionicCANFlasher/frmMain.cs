@@ -176,20 +176,15 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP)
                         {
-                            /*ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName);
-                            if (checksum != ChecksumResult.Ok)
-                            {
-                                AddLogItem("Checksum check failed: " + checksum);
-                                return;
-                            }*/
-
                             SetGenericOptions(trionic8);
 
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
-                            trionic8.FormatSystemPartitions = cbFormatSystemPartitions.Checked;
+                            
+                            trionic8.FormatSystemPartitions = true; // This is undefined in mcp.
+                            trionic8.FormatBootPartition    = cbFormatBootPartition.Checked;
+
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -212,20 +207,16 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG)
                         {
-                            /*
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName);
-                            if (checksum != ChecksumResult.Ok)
-                            {
-                                AddLogItem("Checksum check failed: " + checksum);
-                                return;
-                            }*/
-
                             SetGenericOptions(trionic8);
 
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = true; // Do _NOT_ make this an option. It works in a completely different way than trionic 8..
+                            
+                            // Do _NOT_ make these an option. It works in a completely different way than trionic 8..
+                            trionic8.FormatSystemPartitions = true;
+                            trionic8.FormatBootPartition    = true;
+
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -248,20 +239,15 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
                         {
-                            /*ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName);
-                            if (checksum != ChecksumResult.Ok)
-                            {
-                                AddLogItem("Checksum check failed: " + checksum);
-                                return;
-                            }*/
-
                             SetGenericOptions(trionic8);
 
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
-                            trionic8.FormatSystemPartitions = cbFormatSystemPartitions.Checked;
+                            
+                            trionic8.FormatSystemPartitions = true; // This is undefined in mcp.
+                            trionic8.FormatBootPartition    = cbFormatBootPartition.Checked;
+
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
