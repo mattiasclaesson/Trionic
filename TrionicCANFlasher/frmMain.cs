@@ -231,7 +231,7 @@ namespace TrionicCANFlasher
                             }
                             else
                             {
-                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                AddLogItem("Unable to connect to Z22SE ECU");
                                 trionic8.Cleanup();
                                 EnableUserInput(true);
                                 AddLogItem("Connection terminated");
@@ -262,7 +262,7 @@ namespace TrionicCANFlasher
                             }
                             else
                             {
-                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                AddLogItem("Unable to connect to Z22SE ECU");
                                 trionic8.Cleanup();
                                 EnableUserInput(true);
                                 AddLogItem("Connection terminated");
@@ -308,7 +308,7 @@ namespace TrionicCANFlasher
                             }
                             else
                             {
-                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                AddLogItem("Unable to connect to ME9.6 ECU");
                                 trionic8.Cleanup();
                                 EnableUserInput(true);
                                 AddLogItem("Connection terminated");
@@ -489,6 +489,11 @@ namespace TrionicCANFlasher
                     cbFormatSystemPartitions.Enabled = false;
                 }
 
+                if (cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
+                {
+                    cbUseLegionBootloader.Enabled = false;
+                }
+
                 btnRestoreT8.Enabled = false;
                 btnReadSRAM.Enabled = false;
 
@@ -588,7 +593,7 @@ namespace TrionicCANFlasher
                                 }
                                 else
                                 {
-                                    AddLogItem("Unable to connect to Trionic 8 ECU");
+                                    AddLogItem("Unable to connect to ME9.6 ECU");
                                     trionic8.Cleanup();
                                     EnableUserInput(true);
                                     AddLogItem("Connection terminated");
@@ -643,7 +648,7 @@ namespace TrionicCANFlasher
                                 }
                                 else
                                 {
-                                    AddLogItem("Unable to connect to Trionic 8 ECU");
+                                    AddLogItem("Unable to connect to Z22SE ECU");
                                     trionic8.Cleanup();
                                     EnableUserInput(true);
                                     AddLogItem("Connection terminated");
@@ -670,7 +675,7 @@ namespace TrionicCANFlasher
                                 }
                                 else
                                 {
-                                    AddLogItem("Unable to connect to Trionic 8 ECU");
+                                    AddLogItem("Unable to connect to Z22SE ECU");
                                     trionic8.Cleanup();
                                     EnableUserInput(true);
                                     AddLogItem("Connection terminated");
@@ -983,7 +988,7 @@ namespace TrionicCANFlasher
                             }
                             else
                             {
-                                AddLogItem("Unable to connect to Trionic 8 ECU");
+                                AddLogItem("Unable to connect to ME9.6 ECU");
                                 trionic8.Cleanup();
                                 EnableUserInput(true);
                                 AddLogItem("Connection terminated");
@@ -1682,7 +1687,7 @@ namespace TrionicCANFlasher
                                 }
                                 else
                                 {
-                                    AddLogItem("Unable to connect to Trionic 8 ECU");
+                                    AddLogItem("Unable to connect to ME9.6 ECU");
                                     trionic8.Cleanup();
                                     EnableUserInput(true);
                                     AddLogItem("Connection terminated");
