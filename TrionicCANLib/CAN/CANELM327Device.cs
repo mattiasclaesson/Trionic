@@ -149,6 +149,27 @@ namespace TrionicCANLib.CAN
                                 {
                                     logger.Debug("NO DATA");
                                 }
+                                else if (rxMessage.Length == 19) // is it a valid line
+                                {
+                                    try
+                                    {
+                                        rxMessage.Replace(" ", "");//remove all whitespaces
+                                        uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
+                                        if (acceptMessageId(id))
+                                        {
+                                            canMessage.setID(id);
+                                            canMessage.setLength(8); // TODO: alter to match data
+                                            //canMessage.setData(0x0000000000000000); // reset message content
+                                            canMessage.setData(ExtractDataFromString(rxMessage));
+
+                                            receivedMessage(canMessage);
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        logger.Debug(e, rxMessage);
+                                    }
+                                }
                                 else if (rxMessage.Length > 2) // is it a valid line
                                 {
                                     // logger.Debug("Accepted Length: " + rxMessage.Length);
@@ -168,9 +189,8 @@ namespace TrionicCANLib.CAN
                                         if (acceptMessageId(id))
                                         {
                                             canMessage.setID(id);
-                                            canMessage.setLength(len); // TODO: alter to match data
-                                            //canMessage.setData(0x0000000000000000); // reset message content
-                                            canMessage.setData(ExtractDataFromString(len, rxMessage));
+                                            canMessage.setLength(len);
+                                            canMessage.setData(ExtractDataFromString2(len, rxMessage));
                                             receivedMessage(canMessage);
                                         }
                                     }
@@ -598,24 +618,28 @@ namespace TrionicCANLib.CAN
         /// </summary>
         /// <param name="rxMessage">String message, i.e. 7E8 10 15 41 00 BE 3F B8 13  (to be verified)</param>
         /// <returns></returns>
-        private static ulong ExtractDataFromString(byte bytesToRead, string rxMessage)
+        private static ulong ExtractDataFromString(string rxMessage)
         {
-            // Already done
-            // rxMessage.Replace(" ", "");
+            rxMessage.Replace(" ", "");
+            byte bytesToRead = Convert.ToByte(rxMessage.Substring(3, 2), 16);
+            ulong data = bytesToRead;
+            bytesToRead = Math.Min(bytesToRead, (byte)7);
+            for (int i = 0; i < bytesToRead; i++)
+            {
+                ulong tmp = Convert.ToByte(rxMessage.Substring(5 + i * 2, 2), 16);
+                tmp <<= ((i + 1) * 8);
+                data |= tmp;
+            }
+            return data;
+        }
 
-            // This is not bytes to read?
-            // byte bytesToRead = Convert.ToByte(rxMessage.Substring(3, 2), 16);
-            // ulong data = bytesToRead;
-            // bytesToRead = Math.Min(bytesToRead, (byte)7);
+        private static ulong ExtractDataFromString2(byte bytesToRead, string rxMessage)
+        {
             ulong data = 0;
-
             for (int i = 0; i < bytesToRead; i++)
             {
                 ulong tmp = Convert.ToByte(rxMessage.Substring(3 + i * 2, 2), 16);
                 tmp <<= ((i) * 8);
-                
-                // ulong tmp = Convert.ToByte(rxMessage.Substring(5 + i * 2, 2), 16);
-                // tmp <<= ((i+1) * 8);
                 data |= tmp;
             }
             return data;
