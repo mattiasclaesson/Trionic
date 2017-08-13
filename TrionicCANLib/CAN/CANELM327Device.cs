@@ -149,19 +149,28 @@ namespace TrionicCANLib.CAN
                                 {
                                     logger.Debug("NO DATA");
                                 }
-                                else if (rxMessage.Length == 19) // is it a valid line
+                                else if (rxMessage.Length > 2) // is it a valid line
                                 {
+                                    // logger.Debug("Accepted Length: " + rxMessage.Length);
                                     try
                                     {
                                         rxMessage.Replace(" ", "");//remove all whitespaces
+                                        
+                                        byte len = (byte)(rxMessage.Length - 3);
+                                        
+                                        // Paranoid check.. ?
+                                        if ((len&1)==1)
+                                            len++;
+                                        len /= 2;
+
                                         uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
+                                        
                                         if (acceptMessageId(id))
                                         {
                                             canMessage.setID(id);
-                                            canMessage.setLength(8); // TODO: alter to match data
+                                            canMessage.setLength(len); // TODO: alter to match data
                                             //canMessage.setData(0x0000000000000000); // reset message content
-                                            canMessage.setData(ExtractDataFromString(rxMessage));
-
+                                            canMessage.setData(ExtractDataFromString(len, rxMessage));
                                             receivedMessage(canMessage);
                                         }
                                     }
@@ -173,7 +182,7 @@ namespace TrionicCANLib.CAN
                                  //disable whitespace logging
                                 if (rxMessage.Length > 0)
                                 {
-                                    logger.Debug("SERRX: " + rxMessage);
+                                    logger.Debug("SERRX: " + rxMessage + " Len:" + rxMessage.Length);
                                 }
                             }
                         }
@@ -589,16 +598,24 @@ namespace TrionicCANLib.CAN
         /// </summary>
         /// <param name="rxMessage">String message, i.e. 7E8 10 15 41 00 BE 3F B8 13  (to be verified)</param>
         /// <returns></returns>
-        private static ulong ExtractDataFromString(string rxMessage)
+        private static ulong ExtractDataFromString(byte bytesToRead, string rxMessage)
         {
-            rxMessage.Replace(" ", "");
-            byte bytesToRead = Convert.ToByte(rxMessage.Substring(3, 2), 16);
-            ulong data = bytesToRead;
-            bytesToRead = Math.Min(bytesToRead, (byte)7);
+            // Already done
+            // rxMessage.Replace(" ", "");
+
+            // This is not bytes to read?
+            // byte bytesToRead = Convert.ToByte(rxMessage.Substring(3, 2), 16);
+            // ulong data = bytesToRead;
+            // bytesToRead = Math.Min(bytesToRead, (byte)7);
+            ulong data = 0;
+
             for (int i = 0; i < bytesToRead; i++)
             {
-                ulong tmp = Convert.ToByte(rxMessage.Substring(5 + i * 2, 2), 16);
-                tmp <<= ((i + 1) * 8);
+                ulong tmp = Convert.ToByte(rxMessage.Substring(3 + i * 2, 2), 16);
+                tmp <<= ((i) * 8);
+                
+                // ulong tmp = Convert.ToByte(rxMessage.Substring(5 + i * 2, 2), 16);
+                // tmp <<= ((i+1) * 8);
                 data |= tmp;
             }
             return data;
