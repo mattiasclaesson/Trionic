@@ -25,6 +25,7 @@ namespace TrionicCANFlasher
     {
         readonly Trionic8 trionic8 = new Trionic8();
         readonly Trionic7 trionic7 = new Trionic7();
+        readonly Trionic5 trionic5 = new Trionic5();
         DateTime dtstart;
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
@@ -97,7 +98,8 @@ namespace TrionicCANFlasher
                 result = MessageBox.Show("Attach a charger. Turn key to ON wait a few seconds, turn to LOCK. Wait 15 to 20 seconds then initiate the flash operation in car.",
                 "Critical Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
             }
-            if (result == DialogResult.Cancel)
+            // Trionic 5 is complex. Skip dialog until a sutitable one has been written
+            if (result == DialogResult.Cancel && cbxEcuType.SelectedIndex != (int)ECU.TRIONIC5)
             {
                 return;
             }
@@ -108,7 +110,37 @@ namespace TrionicCANFlasher
                 {
                     if (checkFileSize(ofd.FileName))
                     {
-                        if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+                        if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+                        {
+                            ChecksumResult checksum = ChecksumT5.VerifyChecksum(ofd.FileName);
+                            if (checksum != ChecksumResult.Ok)
+                            {
+                                AddLogItem("Checksum check failed: " + checksum);
+                                return;
+                            }
+                            SetGenericOptions(trionic5);
+
+                            AddLogItem("Opening connection");
+                            EnableUserInput(false);
+                            if (trionic5.openDevice())
+                            {
+                                Thread.Sleep(1000);
+                                AddLogItem("Update FLASH content");
+                                Application.DoEvents();
+                                dtstart = DateTime.Now;
+                                trionic5.WriteFlash(ofd.FileName);
+                                trionic5.Cleanup();
+                                EnableUserInput(true);
+                            }
+                            else
+                            {
+                                AddLogItem("Unable to connect to Trionic 5 ECU");
+                                trionic5.Cleanup();
+                                EnableUserInput(true);
+                                AddLogItem("Connection terminated");
+                            }
+                        }
+                        else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
                             SetGenericOptions(trionic7);
                             trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
@@ -337,8 +369,11 @@ namespace TrionicCANFlasher
          
             TimeSpan ts = DateTime.Now - dtstart;
             AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+            {
+                trionic5.Cleanup();
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 trionic7.Cleanup();
             }
@@ -357,6 +392,14 @@ namespace TrionicCANFlasher
         bool checkFileSize(string fileName)
         {
             FileInfo fi = new FileInfo(fileName);
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+            {
+                if (fi.Length != 0x20000 && fi.Length != 0x40000)
+                {
+                    AddLogItem("Not a trionic 5 file");
+                    return false;
+                }
+            }
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 if (fi.Length != FileT7.Length)
@@ -442,7 +485,23 @@ namespace TrionicCANFlasher
             {
                 cbUseFlasherOnDevice.Enabled = false;
             }
+            // Always disable
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+            {
+                cbUseLegionBootloader.Enabled    = false;
+                cbFormatSystemPartitions.Enabled = false;
+                cbFormatBootPartition.Enabled    = false;
 
+                btnReadECUcalibration.Enabled = false;
+                btnReadSRAM.Enabled           = false;
+                btnReadDTC.Enabled            = false;
+
+                btnEditParameters.Enabled = false;
+                // btnGetECUInfo.Enabled     = false;
+
+                btnRecoverECU.Enabled = false;
+                btnRestoreT8.Enabled  = false;
+            }
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
@@ -480,7 +539,7 @@ namespace TrionicCANFlasher
             {
                 btnReadDTC.Enabled = false;
                 btnReadECUcalibration.Enabled = false;
-                // Bootloader handles recovery, if at all possible on MCP.
+                // Bootloader handles recovery, if at all possible, on MCP.
                 btnRecoverECU.Enabled = false;
 
                 if (cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG)
@@ -512,7 +571,36 @@ namespace TrionicCANFlasher
                     {
                         if (Path.GetFileName(sfd.FileName) != string.Empty)
                         {
-                            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+                            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+                            {
+                                SetGenericOptions(trionic5);
+
+                                AddLogItem("Opening connection");
+                                EnableUserInput(false);
+
+                                if (trionic5.openDevice())
+                                {
+                                    Thread.Sleep(1000);
+                                    dtstart = DateTime.Now;
+                                    AddLogItem("Acquiring FLASH content");
+                                    Application.DoEvents();
+                                    BackgroundWorker bgWorker;
+                                    bgWorker = new BackgroundWorker();
+
+                                    bgWorker.DoWork += new DoWorkEventHandler(trionic5.DumpECU);
+
+                                    bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                                    bgWorker.RunWorkerAsync(sfd.FileName);
+                                }
+                                else
+                                {
+                                    AddLogItem("Unable to connect to Trionic 5 ECU");
+                                    trionic5.Cleanup();
+                                    AddLogItem("Connection closed");
+                                    EnableUserInput(true);
+                                }
+                            }
+                            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetGenericOptions(trionic7);
                                 trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
@@ -693,6 +781,30 @@ namespace TrionicCANFlasher
 
         private void btnGetEcuInfo_Click(object sender, EventArgs e)
         {
+
+
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+            {
+                SetGenericOptions(trionic5);
+
+                AddLogItem("Opening connection");
+                EnableUserInput(false);
+
+                if (trionic5.openDevice())
+                {
+                    Thread.Sleep(1000);
+                    AddLogItem("Aquiring ECU info");
+                    Application.DoEvents();
+                    trionic5.GetECUInfo(true);
+                }
+                else
+                {
+                    AddLogItem("Unable to connect to Trionic 5 ECU");
+                }
+                trionic5.Cleanup();
+                AddLogItem("Connection closed");
+                EnableUserInput(true);
+            }
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
@@ -1013,6 +1125,7 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("FormatBootPartition", cbFormatBootPartition.Checked);
             trionic8.Cleanup();
             trionic7.Cleanup();
+            trionic5.Cleanup();
             System.Windows.Forms.Application.Exit();
         }
 
@@ -1022,6 +1135,9 @@ namespace TrionicCANFlasher
 
             switch(cbxEcuType.SelectedIndex)
             {
+                case (int)ECU.TRIONIC5:
+                    trionic.ECU = ECU.TRIONIC5;
+                    break;
                 case (int)ECU.TRIONIC7:
                     trionic.ECU = ECU.TRIONIC7;
                     break;
@@ -1090,6 +1206,10 @@ namespace TrionicCANFlasher
             // get additional info from registry if available
             LoadRegistrySettings();
             CheckRegistryFTDI();
+
+            trionic5.onReadProgress += trionicCan_onReadProgress;
+            trionic5.onWriteProgress += trionicCan_onWriteProgress;
+            trionic5.onCanInfo += trionicCan_onCanInfo;
 
             trionic7.onReadProgress += trionicCan_onReadProgress;
             trionic7.onWriteProgress += trionicCan_onWriteProgress;
@@ -1783,8 +1903,27 @@ namespace TrionicCANFlasher
                 // Force logging on
                 LogManager.EnableLogging();
                 dtstart = DateTime.Now;
+                if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+                {
+                    SetGenericOptions(trionic5);
 
-                if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+                    EnableUserInput(false);
+                    btnLogData.Enabled = true;
+                    AddLogItem("Opening connection");
+                    if (trionic5.openDevice())
+                    {
+                        StartBGWorkerLog(trionic5);
+                        btnLogData.Text = "Stop";
+                    }
+                    else
+                    {
+                        // Reset logging to setting
+                        UpdateLogManager();
+                        btnLogData.Text = "Log Data";
+                        EnableUserInput(true);
+                    }
+                }
+                else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                 {
                     SetGenericOptions(trionic7);
                     trionic7.UseFlasherOnDevice = false;

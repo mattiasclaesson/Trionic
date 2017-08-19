@@ -99,6 +99,7 @@
   <ItemGroup>
     <Compile Include="Bootloader_legion.cs" />
     <Compile Include="CAN\J2534CANDevice.cs" />
+    <Compile Include="Checksum\ChecksumT5.cs" />
     <Compile Include="Checksum\ChecksumT8.cs" />
     <Compile Include="Checksum\ChecksumResult.cs" />
     <Compile Include="FileTools.cs" />
@@ -124,6 +125,7 @@
     <Compile Include="CAN\ICANListener.cs" />
     <Compile Include="CAN\Just4TrionicDevice.cs" />
     <Compile Include="CAN\LPCCANDevice.cs" />
+    <Compile Include="Trionic5.cs" />
     <Compile Include="Trionic7.cs" />
     <Compile Include="flasher\IFlasher.cs" />
     <Compile Include="flasher\T7CombiFlasher.cs" />

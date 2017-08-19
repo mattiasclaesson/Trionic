@@ -10,6 +10,7 @@ namespace TrionicCANLib.Checksum
         Ok,
         InvalidFileLength,
         Layer1Failed,
-        Layer2Failed
+        Layer2Failed,
+        Invalid
     };
 }

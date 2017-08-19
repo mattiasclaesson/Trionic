@@ -20,8 +20,11 @@ namespace TrionicCANLib.CAN
     /// 
     public class CANUSBDevice : ICANDevice
     {
-        public const string CAN_BAUD_BTR_33K = "0x8B:0x2F"; // 33 kbit/s SAAB GMLAN
-        public const string CAN_BAUD_BTR_47K = "0xcb:0x9a"; // 47,6 kbit/s SAAB T7 I-bus
+        public const string CAN_BAUD_BTR_33K  = "0x8B:0x2F"; //  33,333 kbit/s SAAB GMLAN
+        public const string CAN_BAUD_BTR_47K  = "0xcb:0x9a"; //  47,619 kbit/s SAAB T7 I-bus
+        public const string CAN_BAUD_BTR_615K = "0x40:0x37"; // 615,384 kbit/s SAAB Trionic 5 P-bus (69% Sampling)
+//      public const string CAN_BAUD_BTR_615K = "0x00:0x28"; // 615,384 kbit/s SAAB Trionic 5 P-bus (75% Sampling)
+        
 
         static uint m_deviceHandle = 0;
         Thread m_readThread;
@@ -165,7 +168,7 @@ namespace TrionicCANLib.CAN
             }
             Thread.Sleep(200);
 
-            if (!UseOnlyPBus)
+            if (!UseOnlyPBus && TrionicECU != ECU.TRIONIC5)
             {
                 logger.Debug("Lawicel.CANUSB.canusb_Open()");
                 if (TrionicECU == ECU.TRIONIC7)
@@ -201,14 +204,29 @@ namespace TrionicCANLib.CAN
             close();
             m_endThread = false;
 
-            //I bus wasn't connected.
-            //Check if P bus is connected
-            logger.Debug("Lawicel.CANUSB.canusb_Open()");
-            m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
-            Lawicel.CANUSB.CAN_BAUD_500K,
-            Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
-            Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
-            Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
+
+            if (TrionicECU == ECU.TRIONIC5)
+            {
+                logger.Debug("Lawicel.CANUSB.canusb_Open()");
+                m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
+                    CAN_BAUD_BTR_615K, // T5, P-BUS
+                    Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
+                    Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
+                    Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
+            }
+            else
+            {
+                //I bus wasn't connected.
+                //Check if P bus is connected
+                logger.Debug("Lawicel.CANUSB.canusb_Open()");
+                m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
+                Lawicel.CANUSB.CAN_BAUD_500K,
+                Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
+                Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
+                Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
+            }
+
+
             if (m_deviceHandle == 0x00000000)
             {
                 return OpenResult.OpenError;

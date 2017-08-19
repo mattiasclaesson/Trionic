@@ -433,13 +433,69 @@ namespace TrionicCANLib.CAN
                     WriteToSerialAndWait("AT FC SD 30 00 01\r"); //set the flow control content
                     WriteToSerialAndWait("AT FC SM 1\r"); //enable custom flow control
                     */
-
                     //WriteToSerialAndWait("AT PPS\r"); //display all programmed parameters                    
                     answer = WriteToSerialAndWait("ATAT2\r");  //aggresive timing adoption, should reduce time wasted for not coming response
                     answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (custom generated PCI byte - SingleFrame, FirstFrame, ConsecutiveFrame, FlowControl)
                     logger.Debug("OPEN: ATCAF0 response:" + answer);
+
+                    if (TrionicECU == ECU.TRIONIC5)
+                    {
+                        answer = WriteToSerialAndWait("STI\r");
+                        logger.Debug("String : " + answer);
+                        byte Index = 6;
+                        uint Version;
+
+                        if (!answer.StartsWith("STN"))
+                        {
+                            return OpenResult.OpenError;
+                        }
+                        else
+                        {
+                            do
+                            {
+                                if (answer.Substring(Index, 1) == "v" || answer.Substring(Index, 1) == "V")
+                                    break;
+                            }
+                            while (++Index < 16);
+
+                            if (Index > 15)
+                                return OpenResult.OpenError;
+
+                            // We're way over version four!
+                            if (answer.Substring(Index + 2, 1) != ".")
+                            {
+                                logger.Debug("Ooops?" + answer);
+
+                                if (!PrepforTrionic5())
+                                    return OpenResult.OpenError;
+                            }
+                            else
+                            {
+                                // STN1110 v4.2.1
+                                if (answer.Substring(Index + 4, 1) != ".")
+                                {
+                                    logger.Debug("Ooops?" + answer);
+
+                                    if (!PrepforTrionic5())
+                                        return OpenResult.OpenError;
+                                }
+                                else
+                                {
+                                    Version = Convert.ToUInt32(answer.Substring(Index + 1, 1), 16) << 8 |
+                                        Convert.ToUInt32(answer.Substring(Index + 3, 1), 16);
+
+                                    logger.Debug("Version: " + Version.ToString("X4"));
+
+                                    if (Version < 0x402 || !PrepforTrionic5())
+                                        return OpenResult.OpenError;
+                                }
+                            }
+                        }
+                    }
+
                     answer = WriteToSerialAndWait("0102030405060708 0\r", 1,">"); //check if device supports 8bytes + response count
                     supports8ByteResponse = (answer != null);
+
 
                     receiveData = true;
                     sendDataSempahore.WaitOne(0);
@@ -452,6 +508,25 @@ namespace TrionicCANLib.CAN
 
             return OpenResult.OpenError;
         }
+
+        // STN11xx experimental on Trionic 5
+        private bool PrepforTrionic5()
+        {
+            
+            // 625 Kbit/s @75% with VERY relaxed timings to compansate for the BTR error. This is the best I could do
+            // 8101FC
+            string answer = WriteToSerialAndWait("STCTR 8104B9\r");
+            logger.Debug("STCTR: " + answer);
+            answer = WriteToSerialAndWait("STCTRR\r");
+            answer = WriteToSerialAndWait("ATAL\r");   // Allow reception of >7 byte packages
+            WriteToSerialAndWait("ATCFC0\r"); // Flow control OFF
+            answer = WriteToSerialAndWait("ATAR\r");   // Automatic reception
+            answer = WriteToSerialAndWait("ATMA\r");   // Monitor EVERYTHING!
+            answer = WriteToSerialAndWait("ATCSM1\r");   // Monitor EVERYTHING!
+
+            return true;
+        }
+
 
         /// <summary>
         /// Detects the port speed, resets the interface, then detects the speed again

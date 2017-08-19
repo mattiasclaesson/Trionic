@@ -23,7 +23,9 @@ namespace TrionicCANLib.API
         FinishedDownloadingFlash,
         StartDownloadingFooter,
         DownloadingFooter,
-        FinishedDownloadingFooter
+        FinishedDownloadingFooter,
+        CalculatingChecksum,
+        QueryingECUTypeInfo
     }
     
     public enum CANBusAdapter : int
@@ -44,6 +46,7 @@ namespace TrionicCANLib.API
 
     public enum ECU : int
     {
+        TRIONIC5,
         TRIONIC7,
         TRIONIC8,
         MOTRONIC96,
