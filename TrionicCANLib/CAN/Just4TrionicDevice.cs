@@ -193,7 +193,7 @@ namespace TrionicCANLib.CAN
                 m_serialPort.Write("o\r");          // 'open' Just4trionic CAN interface
                 Thread.Sleep(10);
 
-                if (!UseOnlyPBus)
+                if (!UseOnlyPBus && TrionicECU != ECU.TRIONIC5)
                 {
                     m_serialPort.Write("s0\r");         // Set Just4trionic CAN speed to 47,619 bits (I-BUS)
                     Thread.Sleep(10);
@@ -233,14 +233,23 @@ namespace TrionicCANLib.CAN
                     }
                 }
 
-                m_serialPort.Write("s1\r");         // Set Just4trionic CAN speed to 500 kbits (P-BUS)
+                if (TrionicECU == ECU.TRIONIC5)
+                {
+                    m_serialPort.Write("s2\r");         // Set Just4trionic CAN speed to 615,384 bits (T5-SFI)
+                    logger.Debug("Connected to CAN at 615,384 kbits speed");
+                }
+                else
+                {
+                    m_serialPort.Write("s1\r");         // Set Just4trionic CAN speed to 500,000 kbits (P-BUS)
+                    logger.Debug("Connected to CAN at 500,000 kbits speed");
+                }
+                
                 Thread.Sleep(10);
                 Flush();                       // Flush 'junk' in serial port buffers
 
                 try
                 {
                     m_serialPort.ReadLine();
-                    logger.Debug("Connected to CAN at 500 kbits speed");
                     CastInformationEvent("Connected to CAN P-BUS using " + port);
 
                     if (m_readThread != null)
@@ -252,8 +261,12 @@ namespace TrionicCANLib.CAN
                     m_endThread = false; // reset for next tries :)
                     if (m_readThread.ThreadState == ThreadState.Unstarted)
                         m_readThread.Start();
-                    
-                    if (TrionicECU == ECU.TRIONIC7)
+
+                    if (TrionicECU == ECU.TRIONIC5)
+                    {
+                        m_serialPort.Write("f5\r");         // Set Just4trionic filter to allow only Trionic 5 messages
+                    }
+                    else if (TrionicECU == ECU.TRIONIC7)
                     {
                         m_serialPort.Write("f7\r");         // Set Just4trionic filter to allow only Trionic 7 messages
                     }
