@@ -23,6 +23,8 @@ namespace TrionicCANLib.CAN
         public const byte CAN_BAUD_BTR_33K_btr1 = 0x2F;
         public const byte CAN_BAUD_BTR_47K_btr0 = 0xcb; // 47,6 kbit/s SAAB T7 I-bus
         public const byte CAN_BAUD_BTR_47K_btr1 = 0x9a;
+        public const byte CAN_BAUD_BTR_615K_btr0 = 0x40; // 615 kbit/s SAAB T5
+        public const byte CAN_BAUD_BTR_615K_btr1 = 0x37;
 
         Thread m_readThread;
         readonly Object m_synchObject = new Object();
@@ -60,18 +62,28 @@ namespace TrionicCANLib.CAN
         {
             Canlib.canInitializeLibrary();
 
-            //List available channels
             int nrOfChannels;
             Canlib.canGetNumberOfChannels(out nrOfChannels);
-            string[] names = new string[nrOfChannels];
-            object o = new object();
+            List<string> names = new List<string>();
+            object channelName = new object();
+            object channelCapabilities = new object();
             for (int i = 0; i < nrOfChannels; i++)
             {
-                Canlib.canGetChannelData(i, Canlib.canCHANNELDATA_CHANNEL_NAME, out o);
-                names[i] = o.ToString();
-                logger.Debug(string.Format("canlibCLSNET.Canlib.canGetChannelData({0}, canlibCLSNET.Canlib.canCHANNELDATA_CHANNEL_NAME, {1})", i, o));
+                Canlib.canGetChannelData(i, Canlib.canCHANNELDATA_CHANNEL_NAME, out channelName);
+                Canlib.canGetChannelData(i, Canlib.canCHANNELDATA_CHANNEL_CAP, out channelCapabilities);
+
+                uint capability = (uint)channelCapabilities;
+                if ((capability & Canlib.canCHANNEL_CAP_VIRTUAL) != Canlib.canCHANNEL_CAP_VIRTUAL)
+                {
+                    names.Add(channelName.ToString());
+                    logger.Debug(String.Format("Found channel {0}", channelName));
+                }
+                else
+                {
+                    logger.Debug(String.Format("Skipped channel {0}", channelName));
+                }
             }
-            return names;
+            return names.ToArray();
         }
 
         public override void SetSelectedAdapter(string adapter)
@@ -90,8 +102,7 @@ namespace TrionicCANLib.CAN
                 }
             }
 
-            // Default to channel 0
-            ChannelNumber = 0;
+            throw new Exception(String.Format("Channel {0} cannot be selected", adapter));
         }
 
         /// <summary>
@@ -156,7 +167,6 @@ namespace TrionicCANLib.CAN
         {
             Canlib.canInitializeLibrary();
 
-            //Check if bus is connected
             if (isOpen())
             {
                 close();
@@ -164,43 +174,36 @@ namespace TrionicCANLib.CAN
             Thread.Sleep(200);
             m_readThread = new Thread(readMessages) { Name = "KvaserCANDevice.m_readThread" };
 
+            if (TrionicECU == ECU.TRIONIC5)
+            {
+                OpenChannelWithParamsC200(out handleWrite, CAN_BAUD_BTR_615K_btr0, CAN_BAUD_BTR_615K_btr1);
+                OpenChannelWithParamsC200(out handleRead, CAN_BAUD_BTR_615K_btr0, CAN_BAUD_BTR_615K_btr1);
+
+                if (handleWrite < 0 || handleRead < 0)
+                {
+                    return OpenResult.OpenError;
+                }
+
+                logger.Debug("P bus connected");
+                m_endThread = false;
+                if (m_readThread.ThreadState == ThreadState.Unstarted)
+                {
+                    m_readThread.Start();
+                }
+                return OpenResult.OK;
+            }
+
             if (!UseOnlyPBus)
             {
                 if (TrionicECU == ECU.TRIONIC7)
                 {
-                    logger.Debug("handle1 = canlibCLSNET.Canlib.canOpenChannel()");
-                    handleWrite = Canlib.canOpenChannel(ChannelNumber, Canlib.canOPEN_ACCEPT_VIRTUAL);
-                    logger.Debug("canlibCLSNET.Canlib.canSetBusParams(handleWrite)");
-                    Canlib.canStatus statusSetParam1 = Canlib.canSetBusParamsC200(handleWrite, CAN_BAUD_BTR_47K_btr0, CAN_BAUD_BTR_47K_btr1);
-                    logger.Debug("canlibCLSNET.Canlib.canBusOn(handleWrite)");
-                    Canlib.canStatus statusOn1 = Canlib.canBusOn(handleWrite);
-                    Canlib.canIoCtl(handleWrite, Canlib.canIOCTL_SET_LOCAL_TXECHO, 0);
-                    //
-                    logger.Debug("handle2 = canlibCLSNET.Canlib.canOpenChannel()");
-                    handleRead = Canlib.canOpenChannel(ChannelNumber, Canlib.canOPEN_ACCEPT_VIRTUAL);
-                    logger.Debug("canlibCLSNET.Canlib.canSetBusParams(handleRead)");
-                    Canlib.canStatus statusSetParam2 = Canlib.canSetBusParamsC200(handleWrite, CAN_BAUD_BTR_47K_btr0, CAN_BAUD_BTR_47K_btr1);
-                    logger.Debug("canlibCLSNET.Canlib.canBusOn(handleRead)");
-                    Canlib.canStatus statusOn2 = Canlib.canBusOn(handleRead);
-                    Canlib.canIoCtl(handleRead, Canlib.canIOCTL_SET_LOCAL_TXECHO, 0);
+                    OpenChannelWithParamsC200(out handleWrite, CAN_BAUD_BTR_47K_btr0, CAN_BAUD_BTR_47K_btr1);
+                    OpenChannelWithParamsC200(out handleRead, CAN_BAUD_BTR_47K_btr0, CAN_BAUD_BTR_47K_btr1);
                 }
                 else if (TrionicECU == ECU.TRIONIC8)
                 {
-                    logger.Debug("handle1 = canlibCLSNET.Canlib.canOpenChannel()");
-                    handleWrite = Canlib.canOpenChannel(ChannelNumber, Canlib.canOPEN_ACCEPT_VIRTUAL);
-                    logger.Debug("canlibCLSNET.Canlib.canSetBusParams(handleWrite)");
-                    Canlib.canStatus statusSetParam1 = Canlib.canSetBusParamsC200(handleWrite, CAN_BAUD_BTR_33K_btr0, CAN_BAUD_BTR_33K_btr1);
-                    logger.Debug("canlibCLSNET.Canlib.canBusOn(handleWrite)");
-                    Canlib.canStatus statusOn1 = Canlib.canBusOn(handleWrite);
-                    Canlib.canIoCtl(handleWrite, Canlib.canIOCTL_SET_LOCAL_TXECHO, 0);
-                    //
-                    logger.Debug("handle2 = canlibCLSNET.Canlib.canOpenChannel()");
-                    handleRead = Canlib.canOpenChannel(ChannelNumber, Canlib.canOPEN_ACCEPT_VIRTUAL);
-                    logger.Debug("canlibCLSNET.Canlib.canSetBusParams(handleRead)");
-                    Canlib.canStatus statusSetParam2 = Canlib.canSetBusParamsC200(handleWrite, CAN_BAUD_BTR_33K_btr0, CAN_BAUD_BTR_33K_btr1);
-                    logger.Debug("canlibCLSNET.Canlib.canBusOn(handleRead)");
-                    Canlib.canStatus statusOn2 = Canlib.canBusOn(handleRead);
-                    Canlib.canIoCtl(handleRead, Canlib.canIOCTL_SET_LOCAL_TXECHO, 0);
+                    OpenChannelWithParamsC200(out handleWrite, CAN_BAUD_BTR_33K_btr0, CAN_BAUD_BTR_33K_btr1);
+                    OpenChannelWithParamsC200(out handleRead, CAN_BAUD_BTR_33K_btr0, CAN_BAUD_BTR_33K_btr1);
                 }
 
                 if (handleWrite < 0 || handleRead < 0)
@@ -209,6 +212,7 @@ namespace TrionicCANLib.CAN
                 }
 
                 logger.Debug("I bus connected");
+                m_endThread = false;
                 if (m_readThread.ThreadState == ThreadState.Unstarted)
                 {
                     m_readThread.Start();
@@ -216,36 +220,43 @@ namespace TrionicCANLib.CAN
                 return OpenResult.OK;
             }
 
-            m_endThread = false;
-
-            //Check if P bus is connected
-            logger.Debug("handle1 = canlibCLSNET.Canlib.canOpenChannel()");
-            handleWrite = Canlib.canOpenChannel(ChannelNumber, Canlib.canOPEN_ACCEPT_VIRTUAL);
-            logger.Debug("canlibCLSNET.Canlib.canSetBusParams(handleWrite)");
-            Canlib.canStatus statusSetParamWrite = Canlib.canSetBusParams(handleWrite, Canlib.canBITRATE_500K, 0, 0, 0, 0, 0);
-            logger.Debug("canlibCLSNET.Canlib.canBusOn(handleWrite)");
-            Canlib.canStatus statusOnWrite = Canlib.canBusOn(handleWrite);
-            Canlib.canIoCtl(handleWrite, Canlib.canIOCTL_SET_LOCAL_TXECHO, 0);
-            //
-            logger.Debug("handle2 = canlibCLSNET.Canlib.canOpenChannel()");
-            handleRead = Canlib.canOpenChannel(ChannelNumber, Canlib.canOPEN_ACCEPT_VIRTUAL);
-            logger.Debug("canlibCLSNET.Canlib.canSetBusParams(handleRead)");
-            Canlib.canStatus statusSetParamRead = Canlib.canSetBusParams(handleRead, Canlib.canBITRATE_500K, 0, 0, 0, 0, 0);
-            logger.Debug("canlibCLSNET.Canlib.canBusOn(handleRead)");
-            Canlib.canStatus statusOnRead = Canlib.canBusOn(handleRead);
-            Canlib.canIoCtl(handleRead, Canlib.canIOCTL_SET_LOCAL_TXECHO, 0);
-
+            OpenChannel(out handleWrite, Canlib.canBITRATE_500K);
+            OpenChannel(out handleRead, Canlib.canBITRATE_500K);
+            
             if (handleWrite < 0 || handleRead < 0)
             {
                 return OpenResult.OpenError;
             }
 
             logger.Debug("P bus connected");
+            m_endThread = false;
             if (m_readThread.ThreadState == ThreadState.Unstarted)
             {
                 m_readThread.Start();
             }
             return OpenResult.OK;
+        }
+
+        private void OpenChannelWithParamsC200(out int hnd, byte btr0, byte btr1)
+        {
+            logger.Debug("hnd = canlibCLSNET.Canlib.canOpenChannel()");
+            hnd = Canlib.canOpenChannel(ChannelNumber, 0);
+            logger.Debug("canlibCLSNET.Canlib.canSetBusParams(hnd)");
+            Canlib.canStatus statusSetParam = Canlib.canSetBusParamsC200(hnd, btr0, btr1);
+            logger.Debug("canlibCLSNET.Canlib.canBusOn(hnd)");
+            Canlib.canStatus statusOn = Canlib.canBusOn(hnd);
+            Canlib.canIoCtl(hnd, Canlib.canIOCTL_SET_LOCAL_TXECHO, 0);
+        }
+
+        private void OpenChannel(out int hnd, int bitrate)
+        {
+            logger.Debug("hnd = canlibCLSNET.Canlib.canOpenChannel()");
+            hnd = Canlib.canOpenChannel(ChannelNumber, 0);
+            logger.Debug("canlibCLSNET.Canlib.canSetBusParams(hnd)");
+            Canlib.canStatus statusSetParam = Canlib.canSetBusParams(hnd, bitrate, 0, 0, 0, 0, 0);
+            logger.Debug("canlibCLSNET.Canlib.canBusOn(hnd)");
+            Canlib.canStatus statusOn = Canlib.canBusOn(hnd);
+            Canlib.canIoCtl(hnd, Canlib.canIOCTL_SET_LOCAL_TXECHO, 0);
         }
 
         /// <summary>
