@@ -155,7 +155,14 @@ namespace TrionicCANLib.CAN
             m_readThread = new Thread(readMessages) { Name = "J2534CANDevice.m_readThread" };
             m_endThread = false;
 
-            m_status = passThru.PassThruConnect(m_deviceId, ProtocolID.CAN, ConnectFlag.NONE, BaudRate.CAN_500000, ref m_channelId);
+            if (TrionicECU == API.ECU.TRIONIC5)
+            {
+                m_status = passThru.PassThruConnect(m_deviceId, ProtocolID.CAN, ConnectFlag.NONE, BaudRate.CAN_615000, ref m_channelId);
+            }
+            else
+            {
+                m_status = passThru.PassThruConnect(m_deviceId, ProtocolID.CAN, ConnectFlag.NONE, BaudRate.CAN_500000, ref m_channelId);
+            }
             if (J2534Err.STATUS_NOERROR != m_status)
             {
                 return OpenResult.OpenError;
