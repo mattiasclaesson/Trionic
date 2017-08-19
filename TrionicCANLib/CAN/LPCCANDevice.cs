@@ -136,7 +136,6 @@ public class LPCCANDevice : ICANDevice
                     logger.Debug("Trying I-bus connection @47619");
                     if (!try_bitrate(47619, false))
                     {
-                        open = false;
                         logger.Debug("Failed to open I-bus canchannel");
 
                         logger.Debug("Trying P-bus connection @500000");
