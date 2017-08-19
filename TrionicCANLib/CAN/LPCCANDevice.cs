@@ -10,6 +10,10 @@ using System.Diagnostics;
 using Combi;
 using NLog;
 
+// Trionic 5 patch
+using TrionicCANLib.API;
+
+
 namespace TrionicCANLib.CAN
 {
 
@@ -113,48 +117,53 @@ public class LPCCANDevice : ICANDevice
     {
         try
         {
+            Boolean open = true;
+
             // connect to adapter
             logger.Debug("Connecting LPCCanDevice");
             connect();
             logger.Debug("Connected LPCCanDevice");
 
-            // try listening on I-bus first
-            if (!UseOnlyPBus && try_bitrate(47619, false))
+            if (TrionicECU == ECU.TRIONIC5)
             {
-                // got traffic
-                logger.Debug("I-bus connected");
+                logger.Debug("Trying P-bus connection @615000");
+                open = try_bitrate(615000, false);
+            }
+            else if (TrionicECU == ECU.TRIONIC7)
+            {
+                if (!UseOnlyPBus)
+                {
+                    logger.Debug("Trying I-bus connection @47619");
+                    if (!try_bitrate(47619, false))
+                    {
+                        open = false;
+                        logger.Debug("Failed to open I-bus canchannel");
 
-                return OpenResult.OK;
+                        logger.Debug("Trying P-bus connection @500000");
+                        open = try_bitrate(500000, false);
+                    }
+                }
+                else
+                {
+                    logger.Debug("Trying P-bus connection @500000");
+                    open = try_bitrate(500000, false);
+                }
+            }
+            else
+            {
+                logger.Debug("Trying P-bus connection @500000");
+                open = try_bitrate(500000, false);
             }
 
-            logger.Debug("Trying P-bus connection");
-
-            // try P-bus next
-            if (!try_bitrate(500000, false))
+            if (!open)
             {
-                // give up
                 logger.Debug("Failed to open canchannel");
                 combi.Close();
                 return OpenResult.OpenError;
             }
-            logger.Debug("Canchannel opened");
-            
-            if (read_thread != null)
-            {
-                try
-                {
-                    read_thread.Abort();
-                }
-                catch (Exception tE)
-                {
-                    logger.Debug("Failed to abort thread: " + tE.Message);
-                }
-            }
-            term_requested = false;
-            read_thread = new Thread(read_messages); // move here to ensure a new thread is started
-            read_thread.Name = "LPCCANDevice.read_thread";
-            read_thread.Start();
-            return OpenResult.OK;        
+
+            PrepareThread();
+            return OpenResult.OK;
         }
 
         catch (Exception E)
@@ -164,8 +173,28 @@ public class LPCCANDevice : ICANDevice
             close();
 
             // adapter not present
-            return OpenResult.OpenError;            
+            return OpenResult.OpenError;
         }
+    }
+
+    private void PrepareThread()
+    {
+        logger.Debug("Canchannel opened");
+        if (read_thread != null)
+        {
+            try
+            {
+                read_thread.Abort();
+            }
+            catch (Exception tE)
+            {
+                logger.Debug("Failed to abort thread: " + tE.Message);
+            }
+        }
+        term_requested = false;
+        read_thread = new Thread(read_messages); // move here to ensure a new thread is started
+        read_thread.Name = "LPCCANDevice.read_thread";
+        read_thread.Start();
     }
 
     //---------------------------------------------------------------------------------------------
