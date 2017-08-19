@@ -5115,8 +5115,7 @@ namespace TrionicCANLib.API
                 else
                 {
                     // Send this information as a data frame to make elm behave
-                    
-                    bool success = false;
+                    bool success;
                     byte[] formatbuf = readDataByLocalIdentifier(LegionMode, 0xF0, 0, 4, out success);
                     if (success)
                     {
@@ -5124,7 +5123,6 @@ namespace TrionicCANLib.API
                         // Check if the loader missed the request, we should see a number higher than 0 in byte[7] ( Byte[3] after it has been read by readDataByLocalIdentifier() )
                         if (Firstpass)
                         {
-                            CastInfoEvent(string.Format("Erasing device {0}.. ", formatbuf[3]), ActivityType.ErasingFlash);
                             if (formatbuf[3] != PCI)
                             {
                                 Thread.Sleep(5);
@@ -5133,18 +5131,15 @@ namespace TrionicCANLib.API
                                 CastInfoEvent("Wrong response. Resending request.. ", ActivityType.ErasingFlash);
                             }
                             else
+                            {
+                                CastInfoEvent(string.Format("Erasing device {0}.. ", formatbuf[3]), ActivityType.ErasingFlash);
                                 Firstpass = false;
+                            }
                         }
                         else
                         {
                             // Avoid confusion; Don't show the response if it's 1
                             if (formatbuf[3] > 1) {
-
-/*                              if (progress > 100)
-                                    progress = 0;
-
-                                CastProgressReadEvent(progress);
-                                progress += 25;*/
 
                                 eraseCount++;
                                 string info = "";
@@ -5155,7 +5150,6 @@ namespace TrionicCANLib.API
                             }
                             if (formatbuf[3] == 1)
                             {
-                                // CastProgressReadEvent(100);
                                 if (eraseSw.Elapsed.Minutes == 0)
                                 {
                                     CastInfoEvent(String.Format("Erase completed after {0} seconds", eraseSw.Elapsed.Seconds), ActivityType.ErasingFlash);
@@ -6896,6 +6890,7 @@ namespace TrionicCANLib.API
             CastInfoEvent("Comparing md5 for selective erase..", ActivityType.StartErasingFlash);
             ComparePartmd5(workEvent, Device, false, z22se);
 
+            // formatmask = 0xFE;
             if (formatmask > 0)
             {
                 // Patch in additional partitions to make sure everything after the last used address contains 0xFF's
@@ -6919,6 +6914,7 @@ namespace TrionicCANLib.API
                 // Request format of selected partitions.
                 if (SendrequestDownload(Device, false, true))
                 {
+                    // formatmask = 0;
                     // CastInfoEvent("Verifying erased partitions..", ActivityType.StartErasingFlash);
                     // ComparePartmd5(workEvent, Device, false, z22se);
 
