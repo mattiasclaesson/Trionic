@@ -440,57 +440,8 @@ namespace TrionicCANLib.CAN
 
                     if (TrionicECU == ECU.TRIONIC5 || (TrionicECU == ECU.TRIONIC7 && !UseOnlyPBus))
                     {
-                        answer = WriteToSerialAndWait("STI\r");
-                        logger.Debug("String : " + answer);
-                        byte Index = 6;
-                        uint Version;
-
-                        if (!answer.StartsWith("STN"))
-                        {
+                        if (!PrepCustomBTR())
                             return OpenResult.OpenError;
-                        }
-                        else
-                        {
-                            do
-                            {
-                                if (answer.Substring(Index, 1) == "v" || answer.Substring(Index, 1) == "V")
-                                    break;
-                            }
-                            while (++Index < 16);
-
-                            if (Index > 15)
-                                return OpenResult.OpenError;
-
-                            // We're way over version four!
-                            if (answer.Substring(Index + 2, 1) != ".")
-                            {
-                                logger.Debug("Ooops?" + answer);
-
-                                if (!PrepforTrionic5())
-                                    return OpenResult.OpenError;
-                            }
-                            else
-                            {
-                                // STN1110 v4.2.1
-                                if (answer.Substring(Index + 4, 1) != ".")
-                                {
-                                    logger.Debug("Ooops?" + answer);
-
-                                    if (!PrepforTrionic5())
-                                        return OpenResult.OpenError;
-                                }
-                                else
-                                {
-                                    Version = Convert.ToUInt32(answer.Substring(Index + 1, 1), 16) << 8 |
-                                        Convert.ToUInt32(answer.Substring(Index + 3, 1), 16);
-
-                                    logger.Debug("Version: " + Version.ToString("X4"));
-
-                                    if (Version < 0x402 || !PrepforTrionic5())
-                                        return OpenResult.OpenError;
-                                }
-                            }
-                        }
                     }
 
                     answer = WriteToSerialAndWait("0102030405060708 0\r", 1,">"); //check if device supports 8bytes + response count
@@ -510,9 +461,54 @@ namespace TrionicCANLib.CAN
         }
 
         // STN11xx experimental on Trionic 5
-        private bool PrepforTrionic5()
+        private bool PrepCustomBTR()
         {
+            byte Index = 6;
             string answer;
+            uint Version;
+
+            answer = WriteToSerialAndWait("STI\r");
+            logger.Debug("String : " + answer);
+
+            if (!answer.StartsWith("STN"))
+            {
+                return false;
+            }
+            else
+            {
+                do
+                {
+                    if (answer.Substring(Index, 1) == "v" || answer.Substring(Index, 1) == "V")
+                        break;
+                }
+                while (++Index < 16);
+
+                if (Index > 15)
+                    return false;
+
+                // We're way over version four!
+                if (answer.Substring(Index + 2, 1) != ".")
+                {
+                    logger.Debug("Ooops?" + answer);
+                }
+                else
+                {
+                    if (answer.Substring(Index + 4, 1) != ".")
+                    {
+                        logger.Debug("Ooops?" + answer);
+                    }
+                    else
+                    {
+                        Version = Convert.ToUInt32(answer.Substring(Index + 1, 1), 16) << 8 |
+                                  Convert.ToUInt32(answer.Substring(Index + 3, 1), 16);
+
+                        logger.Debug("Version: " + Version.ToString("X4"));
+
+                        if (Version < 0x402)
+                            return false;
+                    }
+                }
+            }
 
             if (TrionicECU == ECU.TRIONIC5)
             {
