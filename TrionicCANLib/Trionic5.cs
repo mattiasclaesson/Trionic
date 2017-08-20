@@ -62,9 +62,6 @@ using System.Diagnostics;
 using TrionicCANLib.Checksum;
 
 
-
-
-
 using System.Linq;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -244,12 +241,12 @@ S9035000AC";
 
         private ECUType DetermineECU()
         {
-            byte[] footer = getECUFooter();
             byte[] chiptypes = GetChipTypes();
+            byte[] footer    = getECUFooter();
+            string flashzize = "256 kB";
 
             string romoffset = getIdentifierFromFooter(footer, ECUIdentifier.ROMoffset);
 
-            string flashzize = "256 kB";
             switch (chiptypes[0])
             {
                 case 0xB8:      // Intel/CSI/OnSemi 28F512
@@ -2010,6 +2007,8 @@ S9035000AC";
 
                 while ((start + bytesread) < 0x80000)
                 {
+                    Application.DoEvents();
+
                     // read a section of 0x80 bytes from the BIN file and keep it in a buffer to send to the T5 ECU
                     byte[] bytes = new byte[0x80];
                     // something has gone wrong if we cannot read another 0x80 bytes!!
@@ -2279,15 +2278,39 @@ S9035000AC";
                         buffer[length - 6 + j] = buffer2[j];
                 }
 
-                // Todo: Check if dump is correct!
+                bool ValidDump = true;
+
+                // I don't trust the checksum-calculation on t5.2 yet those are ignored
+                if (length == 0x40000)
+                {
+                    CastInfoEvent("Validating dump..", ActivityType.CalculatingChecksum);
+
+                    if (!VerifyChecksum())
+                    {
+                        CastInfoEvent("Bootloader indicates ECU has a broken bin. Use dump with extreme caution", ActivityType.CalculatingChecksum);
+                    }
+                    else if (!ChecksumT5.ValidateDump(buffer, length == 0x40000 ? true : false))
+                    {
+                        CastInfoEvent("It seems this dump is broken. Not saving file..", ActivityType.CalculatingChecksum);
+                        ValidDump = false;
+                    }
+                }
+
                 ExitBootloader();
+
+                if (ValidDump)
+                {
+                    CastInfoEvent("Saving file", ActivityType.CalculatingChecksum);
+                    File.WriteAllBytes(filename, buffer);
+                    Md5Tools.WriteMd5HashFromByteBuffer(filename, buffer);
+                    workEvent.Result = true;
+                }
+
                 CastInfoEvent("Finished downloading flash from ECU", ActivityType.FinishedDownloadingFlash);
                 CastProgressWriteEvent(100);
                 CastBytesTransmitted((int)length);
 
-                File.WriteAllBytes(filename, buffer);
-                Md5Tools.WriteMd5HashFromByteBuffer(filename, buffer);
-                workEvent.Result = true;
+
             }
             else
             {

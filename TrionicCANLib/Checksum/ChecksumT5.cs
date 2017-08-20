@@ -27,8 +27,8 @@ namespace TrionicCANLib.Checksum
 
         public static ChecksumResult VerifyChecksum(string filename)
         {
-            FileInfo fi     = new FileInfo(filename);
-            long len        = fi.Length;
+            FileInfo fi = new FileInfo(filename);
+            long len    = fi.Length;
 
             // Verify file lenth
             if (len != 0x20000 && len != 0x40000)
@@ -41,57 +41,50 @@ namespace TrionicCANLib.Checksum
                 Localbuffer[len - 2] <<  8 | Localbuffer[len - 1]);
 
             // Console.WriteLine("Read checksum: " + ReadSum.ToString("X8"));
-
-            // Check normal Trionic 5.2
-            if (len == 0x20000)
+            // Console.WriteLine("Determining index by size");
+            if (!ChecksumMatch(Localbuffer, ReadSum, FindEndmarker(Localbuffer, (byte)(len>>18))))
             {
-                if (!ChecksumMatch(filename, ReadSum, 0, FindEndmarker(filename, 0)))
+                // Console.WriteLine("Trying doubled T5.2");
+                if (!ChecksumMatch(Localbuffer, ReadSum, FindEndmarker(Localbuffer, 0)))
                     return ChecksumResult.Invalid;
-            }
-            else
-            {
-                // Console.WriteLine("Calculating as normal T5.5");
-                if (!ChecksumMatch(filename, ReadSum, 0, FindEndmarker(filename, 1)))
-                {
-                    // Console.WriteLine("Fail!");
-                    // Console.WriteLine("Calculating as doubled T5.2");
-                    if (!ChecksumMatch(filename, ReadSum, 0x20000, FindEndmarker(filename, 0)))
-                        return ChecksumResult.Invalid;
-                }
             }
             
             return ChecksumResult.Ok;
         }
 
-        private static bool ChecksumMatch(string filename, uint Sum, uint Start, uint End)
+
+        public static bool ValidateDump(byte[] Bufr, bool IsT55)
         {
-            FileInfo fi = new FileInfo(filename);
-            byte[] Bufr = FileTools.readdatafromfile(filename, (int)Start, (int)(End - Start));
-            uint CalcS  = 0;
+            long len = IsT55 ? 0x40000 : 0x20000;
+            uint ReadSum = (uint)(
+                Bufr[len - 4] << 24 | Bufr[len - 3] << 16 |
+                Bufr[len - 2] << 8  | Bufr[len - 1]);
 
-            for (uint i = 0; i < (End - Start); i++)
-            {
-                CalcS += Bufr[i];
-            }
-
-            if (Sum == CalcS)
-                return true;
-
-            return false;
+            return  ChecksumMatch(Bufr, ReadSum, FindEndmarker(Bufr, (byte)(len>>18)));
         }
 
-        private static uint FindEndmarker(string filename, byte index)
-        {
-            FileInfo fi = new FileInfo(filename);
-            uint len    = (uint)fi.Length;
-            byte[] Bufr = FileTools.readdatafromfile(filename, 0, (int)len);
 
-            for (uint i = len - 112; i > 3; i--)
+
+
+        private static bool ChecksumMatch(byte[] Bufr, uint Sum, uint End)
+        {
+            for (uint i = 0; i < End; i++)
+            {
+                Sum -= Bufr[i];
+            }
+
+            return (Sum & 0xFFFFFFFF) == 0 ? true : false;
+        }
+
+        private static uint FindEndmarker(byte[] Bufr, byte index)
+        {
+            uint len = (index == 1 ? (uint)0x40000 : 0x20000);
+
+            for (uint i = (len - 112); i > 3; i--)
             {
                 if (T5markers[index, 3] == Bufr[  i  ] && T5markers[index, 2] == Bufr[i - 1] &&
                     T5markers[index, 1] == Bufr[i - 2] && T5markers[index, 0] == Bufr[i - 3])
                 {
-                    // Console.WriteLine("Found marker at: " + i.ToString("X10"));
                     return i + (uint)(index == 1? 1 : 5);
                 }
             }
