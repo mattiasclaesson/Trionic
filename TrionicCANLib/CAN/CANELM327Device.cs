@@ -438,7 +438,7 @@ namespace TrionicCANLib.CAN
                     answer = WriteToSerialAndWait("ATCAF0\r");   //Can formatting OFF (custom generated PCI byte - SingleFrame, FirstFrame, ConsecutiveFrame, FlowControl)
                     logger.Debug("OPEN: ATCAF0 response:" + answer);
 
-                    if (TrionicECU == ECU.TRIONIC5)
+                    if (TrionicECU == ECU.TRIONIC5 || (TrionicECU == ECU.TRIONIC7 && !UseOnlyPBus))
                     {
                         answer = WriteToSerialAndWait("STI\r");
                         logger.Debug("String : " + answer);
@@ -512,18 +512,24 @@ namespace TrionicCANLib.CAN
         // STN11xx experimental on Trionic 5
         private bool PrepforTrionic5()
         {
-            
-            // 625 Kbit/s @75% with VERY relaxed timings to compansate for the BTR error. This is the best I could do
-            // 8101FC
-            string answer = WriteToSerialAndWait("STCTR 8104B9\r");
-            logger.Debug("STCTR: " + answer);
-            answer = WriteToSerialAndWait("STCTRR\r");
-            answer = WriteToSerialAndWait("ATAL\r");   // Allow reception of >7 byte packages
-            WriteToSerialAndWait("ATCFC0\r"); // Flow control OFF
-            answer = WriteToSerialAndWait("ATAR\r");   // Automatic reception
-            answer = WriteToSerialAndWait("ATMA\r");   // Monitor EVERYTHING!
-            answer = WriteToSerialAndWait("ATCSM1\r");   // Monitor EVERYTHING!
+            string answer;
 
+            if (TrionicECU == ECU.TRIONIC5)
+            {
+                // 625 Kbit/s @75% with VERY relaxed timings to compansate for the BTR error. This is the best I could do
+                // 8101FC
+                answer = WriteToSerialAndWait("STCTR 8104B9\r");
+                logger.Debug("STCTR: " + answer);
+                answer = WriteToSerialAndWait("STCTRR\r");
+                answer = WriteToSerialAndWait("ATAL\r");   // Allow reception of >7 byte packages
+                WriteToSerialAndWait("ATCFC0\r"); // Flow control OFF
+                answer = WriteToSerialAndWait("ATAR\r");   // Automatic reception
+                answer = WriteToSerialAndWait("ATMA\r");   // Monitor EVERYTHING!
+                answer = WriteToSerialAndWait("ATCSM1\r");   // Monitor EVERYTHING!
+            }
+            else if (TrionicECU == ECU.TRIONIC7 && !UseOnlyPBus)
+                answer = WriteToSerialAndWait("STCTR 290284\r");
+            
             return true;
         }
 
