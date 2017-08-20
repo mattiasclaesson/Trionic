@@ -116,7 +116,20 @@ namespace TrionicCANFlasher
                             if (checksum != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);
-                                return;
+
+                                // I found different markers in a few t5.2 bins so a reliable calculation is not possible
+                                // ask the user if she/he is felling lucky with those.
+                                FileInfo fi = new FileInfo(ofd.FileName);
+                                if (fi.Length == 0x20000)
+                                {
+                                    result = MessageBox.Show("Checksum-calculation for Trionic 5.2 is unreliable\n Are you certain this binary is healthy?",
+                                    "Checksum error!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+
+                                    if (result != DialogResult.Yes)
+                                        return;
+                                }
+                                else
+                                    return;
                             }
                             SetGenericOptions(trionic5);
 

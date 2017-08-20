@@ -16,9 +16,14 @@ namespace TrionicCANLib.Checksum
 
         private static byte[,] T5markers = new byte[2, 4]
         {
-            {0x00, 0x07, 0xED, 0x2A}, // T5.2 marker (Scan from 1FF90 and down)
+            {0x19, 0x0A, 0x4E, 0xF9}, // T5.2 marker (Scan from 1FF90 and down)
             {0x4E, 0xFA, 0xFB, 0xCC}  // T5.5 marker (Scan from 3FF90 and down)
         };
+
+        // Trionic 5.2 markers in different bins:
+        // 19 0A 4E F9 00 07 EA 90
+        // 19 0A 4E F9 00 07 E9 EA
+        // 19 0A 4E F9 00 07 ED 2A
 
         public static ChecksumResult VerifyChecksum(string filename)
         {
@@ -87,7 +92,7 @@ namespace TrionicCANLib.Checksum
                     T5markers[index, 1] == Bufr[i - 2] && T5markers[index, 0] == Bufr[i - 3])
                 {
                     // Console.WriteLine("Found marker at: " + i.ToString("X10"));
-                    return i + 1;
+                    return i + (uint)(index == 1? 1 : 5);
                 }
             }
             // Console.WriteLine("NO MARKER !!!");
