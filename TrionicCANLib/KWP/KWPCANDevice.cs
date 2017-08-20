@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using TrionicCANLib.CAN;
-using TrionicCANLib.API;
 using NLog;
-
+using TrionicCANLib.API;
 
 namespace TrionicCANLib.KWP
 {
@@ -71,7 +69,6 @@ namespace TrionicCANLib.KWP
     {
         private Object m_lockObject = new Object();
         private ICANDevice m_canDevice;
-        private ITrionic itrionic;
         KWPCANListener m_kwpCanListener = new KWPCANListener();
         private Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -252,7 +249,6 @@ namespace TrionicCANLib.KWP
         {
             uint row;
             uint all_rows = row = nrOfRowsToSend(a_request.getData());
-            bool ibus = !m_canDevice.UseOnlyPBus;
 
             m_kwpCanListener.setupWaitMessage(0x258);
 
@@ -268,10 +264,6 @@ namespace TrionicCANLib.KWP
                 {
                     msg.elmExpectedResponses = row == 1 ? 1 : 0; // on last message (expect 1 reply)
                 }
-
-                if (ibus)
-                    Thread.Sleep(4);
-
                 if (!m_canDevice.sendMessage(msg))
                 {
                     r_reply = new KWPReply();

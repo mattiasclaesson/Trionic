@@ -328,6 +328,9 @@ public class LPCCANDevice : ICANDevice
             frame.is_extended = 0;
             frame.is_remote = 0;
 
+            if (!UseOnlyPBus)
+                Thread.Sleep(4);
+
             combi.CAN_SendMessage(ref frame);
             return true;
         }
