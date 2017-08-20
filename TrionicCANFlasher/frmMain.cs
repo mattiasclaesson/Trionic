@@ -122,7 +122,7 @@ namespace TrionicCANFlasher
                                 FileInfo fi = new FileInfo(ofd.FileName);
                                 if (fi.Length == 0x20000)
                                 {
-                                    result = MessageBox.Show("Checksum-calculation for Trionic 5.2 is unreliable\n Are you certain this binary is healthy?",
+                                    result = MessageBox.Show("Checksum-calculation for Trionic 5.2 is unreliable.\n\nAre you certain this is a healthy binary?",
                                     "Checksum error!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
 
                                     if (result != DialogResult.Yes)
