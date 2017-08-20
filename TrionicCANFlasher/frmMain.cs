@@ -156,7 +156,7 @@ namespace TrionicCANFlasher
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
                             SetGenericOptions(trionic7);
-                            trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
+                            trionic7.UseFlasherOnDevice = cbOnlyPBus.Checked ? cbUseFlasherOnDevice.Checked : false;
 
                             AddLogItem("Opening connection");
                             EnableUserInput(false);
@@ -616,7 +616,7 @@ namespace TrionicCANFlasher
                             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetGenericOptions(trionic7);
-                                trionic7.UseFlasherOnDevice = cbUseFlasherOnDevice.Checked;
+                                trionic7.UseFlasherOnDevice = cbOnlyPBus.Checked ? cbUseFlasherOnDevice.Checked : false;
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);
