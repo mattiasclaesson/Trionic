@@ -501,19 +501,17 @@ namespace TrionicCANFlasher
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
             {
-                cbUseLegionBootloader.Enabled    = false;
-                cbFormatSystemPartitions.Enabled = false;
-                cbFormatBootPartition.Enabled    = false;
+                // Disable Legion features
+                cbUseLegionBootloader.Enabled = 
+                cbFormatSystemPartitions.Enabled =
+                cbFormatBootPartition.Enabled = false;
 
+                cbOnlyPBus.Enabled            = false;
                 btnReadECUcalibration.Enabled = false;
-                btnReadSRAM.Enabled           = false;
                 btnReadDTC.Enabled            = false;
-
-                btnEditParameters.Enabled = false;
-                // btnGetECUInfo.Enabled     = false;
-
-                btnRecoverECU.Enabled = false;
-                btnRestoreT8.Enabled  = false;
+                btnEditParameters.Enabled     = false;
+                btnRecoverECU.Enabled         = false;
+                btnRestoreT8.Enabled          = false;
             }
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
@@ -969,7 +967,36 @@ namespace TrionicCANFlasher
 
         private void btnReadSRAM_Click(object sender, EventArgs e)
         {
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+            {
+                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
+                {
+                    if (sfd.ShowDialog() == DialogResult.OK)
+                    {
+                        SetGenericOptions(trionic5);
+
+                        AddLogItem("Opening connection");
+                        EnableUserInput(false);
+
+                        if (trionic5.openDevice())
+                        {
+                            Thread.Sleep(1000);
+                            AddLogItem("Aquiring snapshot");
+                            Application.DoEvents();
+                            dtstart = DateTime.Now;
+                            trionic5.DumpSRAMContent(sfd.FileName);
+                        }
+                        else
+                        {
+                            AddLogItem("Unable to connect to Trionic 5 ECU");
+                        }
+                        trionic5.Cleanup();
+                        EnableUserInput(true);
+                        AddLogItem("Connection terminated");
+                    }
+                }
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
                 {

@@ -664,7 +664,7 @@ S9035000AC";
             return result;
         }
 
-
+        // Todo: ? Make this abort if something is wrong. Flasher gets stuck when ECU is not responding
         public byte[] readRAM(ushort address, uint length)
         {
             lock (this)
@@ -672,9 +672,10 @@ S9035000AC";
                 byte[] buffer = new byte[length];
                 byte[] buffer2 = new byte[6];
 
-                // maybe we need to clear the receive buffer of the can interface first
-
-                //m_canDevice.clearReceiveBuffer();
+                // AFAIK this is only required on CombiAdapter but it doesn't hurt to do it on all;
+                // ECU will for some reason wait until a device is connected to send its boot-up message.
+                // Then again it's not really useful to dump sram after the ecu has been powercycled so this is only here as a precation...
+                m_canListener.FlushQueue();
 
                 address = (ushort)(address + 5);
                 uint num = length / 6;
@@ -684,6 +685,9 @@ S9035000AC";
                 }
                 for (int i = 0; i < num; i++)
                 {
+                    // Not being able to move the application windows while it's working is suprisingly annoying!
+                    Application.DoEvents();
+
                     buffer2 = this.sendReadCommand(address);
                     address = (ushort)(address + 6);
                     for (int j = 0; j < 6; j++)
@@ -2309,8 +2313,6 @@ S9035000AC";
                 CastInfoEvent("Finished downloading flash from ECU", ActivityType.FinishedDownloadingFlash);
                 CastProgressWriteEvent(100);
                 CastBytesTransmitted((int)length);
-
-
             }
             else
             {

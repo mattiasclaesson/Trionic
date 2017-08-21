@@ -52,19 +52,15 @@ namespace TrionicCANLib.Checksum
             return ChecksumResult.Ok;
         }
 
-
         public static bool ValidateDump(byte[] Bufr, bool IsT55)
         {
             long len = IsT55 ? 0x40000 : 0x20000;
             uint ReadSum = (uint)(
                 Bufr[len - 4] << 24 | Bufr[len - 3] << 16 |
-                Bufr[len - 2] << 8  | Bufr[len - 1]);
+                Bufr[len - 2] <<  8 | Bufr[len - 1]);
 
             return  ChecksumMatch(Bufr, ReadSum, FindEndmarker(Bufr, (byte)(len>>18)));
         }
-
-
-
 
         private static bool ChecksumMatch(byte[] Bufr, uint Sum, uint End)
         {
