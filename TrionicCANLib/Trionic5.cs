@@ -250,21 +250,16 @@ S9035000AC";
             switch (chiptypes[0])
             {
                 case 0xB8:      // Intel/CSI/OnSemi 28F512
+                case 0x5D:      // Atmel 29C512
                 case 0x25:      // AMD 28F512
                     flashzize = "128 kB";
                     break;
-                case 0x5D:      // Atmel 29C512
-                    flashzize = "128 kB";
-                    break;
+                case 0xD5:      // Atmel 29C010
+                case 0xB5:      // SST 39F010
                 case 0xB4:      // Intel/CSI/OnSemi 28F010
                 case 0xA7:      // AMD 28F010
-                    break;
-                case 0x20:      // AMD/ST 29F010
                 case 0xA4:      // AMIC 29F010
-                    break;
-                case 0xD5:      // Atmel 29C010
-                    break;
-                case 0xB5:      // SST 39F010
+                case 0x20:      // AMD/ST 29F010
                     break;
                 default:
                     flashzize = "Unknown";
@@ -303,7 +298,6 @@ S9035000AC";
             return 0;
         }
 
-        // Todo: A lot...
         public void WriteFlash(string a_fileName)
         {
             UploadBootLoader();
@@ -868,7 +862,7 @@ S9035000AC";
                         logger.Debug("Couldn't send message");
 
                     response = m_canListener.waitMessage(100);
-                    cmd = 0;
+                    msg.setID(0);
                 } while (response.getID() == 0 && --ret > 0);
             }
             else
@@ -977,7 +971,7 @@ S9035000AC";
                         logger.Debug("Couldn't send message");
 
                     response = m_canListener.waitMessage(100);
-
+                    msg.setID(0);
                 } while (response.getID() == 0 && --ret > 0);
             }
             else
@@ -1458,7 +1452,7 @@ S9035000AC";
                         logger.Debug("Couldn't send message");
 
                     response = m_canListener.waitMessage(100);
-                    cmd = 0;
+                    msg.setID(0);
                 } while (response.getID() == 0 && --ret > 0);
             }
             else

@@ -512,9 +512,10 @@ namespace TrionicCANLib.CAN
 
             if (TrionicECU == ECU.TRIONIC5)
             {
-                // 625 Kbit/s @75% with VERY relaxed timings to compansate for the BTR error. This is the best I could do
-                // 8101FC
-                answer = WriteToSerialAndWait("STCTR 8104B9\r");
+                // 625 Kbit/s @69% with VERY relaxed timings to compansate for the BTR error. This is the best I could do
+                // 8101FC //87,50, 3 Samples
+                // 8104B9 //68,75, 1 Sample
+                answer = WriteToSerialAndWait("STCTR 8104F9\r");
                 logger.Debug("STCTR: " + answer);
                 answer = WriteToSerialAndWait("STCTRR\r");
                 answer = WriteToSerialAndWait("ATAL\r");   // Allow reception of >7 byte packages
