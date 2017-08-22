@@ -120,7 +120,7 @@ namespace TrionicCANFlasher
                                 // I found different markers in a few t5.2 bins so a reliable calculation is not possible
                                 // ask the user if she/he is felling lucky with those.
                                 FileInfo fi = new FileInfo(ofd.FileName);
-                                if (fi.Length == 0x20000)
+                                if (fi.Length == FileT5.LengthT52)
                                 {
                                     result = MessageBox.Show("Checksum-calculation for Trionic 5.2 is unreliable.\n\nAre you certain this is a healthy binary?",
                                     "Checksum error!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
@@ -407,7 +407,7 @@ namespace TrionicCANFlasher
             FileInfo fi = new FileInfo(fileName);
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
             {
-                if (fi.Length != 0x20000 && fi.Length != 0x40000)
+                if (fi.Length != FileT5.LengthT52 && fi.Length != FileT5.LengthT55)
                 {
                     AddLogItem("Not a trionic 5 file");
                     return false;

@@ -30,7 +30,7 @@ namespace TrionicCANLib.Checksum
             FileInfo fi = new FileInfo(filename);
             long len    = fi.Length;
 
-            // Verify file lenth
+            // Verify file length
             if (len != 0x20000 && len != 0x40000)
                 return ChecksumResult.InvalidFileLength;
 
@@ -84,6 +84,7 @@ namespace TrionicCANLib.Checksum
                     return i + (uint)(index == 1? 1 : 5);
                 }
             }
+
             // Console.WriteLine("NO MARKER !!!");
             return 0;
         }

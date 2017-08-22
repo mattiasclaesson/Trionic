@@ -106,6 +106,7 @@
     <Compile Include="EnumHelper.cs" />
     <Compile Include="CAN\KvaserCANDevice.cs" />
     <Compile Include="Firmware\FileME96.cs" />
+    <Compile Include="Firmware\FileT5.cs" />
     <Compile Include="Firmware\FileT7.cs" />
     <Compile Include="Firmware\FileT8.cs" />
     <Compile Include="Firmware\FileT8mcp.cs" />
