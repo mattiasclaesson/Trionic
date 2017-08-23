@@ -2,18 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using TrionicCANLib.Firmware;
 
 namespace TrionicCANLib
 {
     public class BlockManager
     {
-        private uint checksum32 = 0;
         private int _blockNumber = 0;
-
-        // Legion mod
         private long Len = 0;
-
-
 
         private string _filename = string.Empty;
         byte[] filebytes = null;
@@ -23,9 +19,8 @@ namespace TrionicCANLib
             if (File.Exists(filename))
             {
                 FileInfo fi = new FileInfo(filename);
-                // Legion mod
-                // if (fi.Length == 0x100000) 
-                if (fi.Length == 0x100000 || fi.Length == 0x40100)
+
+                if (fi.Length == FileT8.Length || fi.Length == FileT8mcp.Length)
                 {
                     Len = fi.Length; 
                     _filename = filename;
@@ -160,17 +155,16 @@ namespace TrionicCANLib
         // Generate checksum-32 of file
         public uint GetChecksum32()
         {
-            checksum32 = 0;
-            long i;
+            uint checksum32 = 0;
 
-            for (i = 0; i < Len; i++)
+            for (uint i = 0; i < Len; i++)
                 checksum32 += (byte)filebytes[i];
 
             return checksum32;
         }
 
         // Partition table of Trionic 8; Main
-        private uint[] T8parts = 
+        private static uint[] T8parts = 
         {
             0x000000, // Boot (0)
             0x004000, // NVDM
@@ -239,9 +233,6 @@ namespace TrionicCANLib
             }
 
             return md5.ComputeHash(buf);
-
         }
-
-
     }
 }
