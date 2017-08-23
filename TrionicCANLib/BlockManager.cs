@@ -88,7 +88,8 @@ namespace TrionicCANLib
         // Legion hacks
         public bool mcpswapped()
         {
-            if (filebytes[0] == 0x08 && filebytes[1] == 0x00 & filebytes[2] == 0x00 & filebytes[3] == 0x20)
+            if (filebytes[0] == 0x08 && filebytes[1] == 0x00 &&
+                filebytes[2] == 0x00 && filebytes[3] == 0x20)
                 return true;
 
             return false;
@@ -98,11 +99,9 @@ namespace TrionicCANLib
             _blockNumber = block;
             int address = _blockNumber * 0x80;
 
-
             byte[] buffer = new byte[0x80];
             byte[] array = new byte[0x88];
 
-            
             if (byteswapped)
             {
                 for (int byteCount = 0; byteCount < 0x80; byteCount+=2)
