@@ -132,7 +132,13 @@ namespace TrionicCANLib.API
                 m_canListener = new CANListener();
             }
             canUsbDevice.addListener(m_canListener);
-            canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x645, 0x7E0, 0x7E8, 0x311, 0x5E8 };
+            canUsbDevice.AcceptOnlyMessageIds = new List<uint>
+            {
+                0x011, 0x311,        // Recovery
+                0x245, 0x545, 0x645, // CIM
+                0x7E0, 0x7E8,        // ECU
+                0x5E8,               // E85, VIN, DTC
+            };
         }
 
         override public void SetSelectedAdapter(string adapter)
