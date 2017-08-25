@@ -592,11 +592,35 @@ namespace TrionicCANLib.CAN
         private void InitializeMessageFilters()
         {
             uint filter = 0xFFF;
+            uint mask   = 0x000;
+            uint len    = 0;
+            uint cnt    = 0;
+
             foreach (var id in AcceptOnlyMessageIds)
             {
                 filter &= id;
+                logger.Debug("Adding ID: " + id.ToString("X3") + " to filter");
+                len++;
             }
-            SetupCANFilter(AcceptOnlyMessageIds[0].ToString("X3"), filter.ToString("X3"));
+
+            for (byte e = 0; e < 11; e++)
+            {
+                cnt = 0;
+                foreach (var id in AcceptOnlyMessageIds)
+                {
+                    if ((id & (1 << e)) > 0)
+                        cnt++;
+                }
+
+                if (cnt == 0 || cnt == len)
+                    mask |= (uint)(1 << e);
+            }
+
+            // logger.Debug("Filter: " + filter.ToString("X3"));
+            // logger.Debug("Mask:   " + mask.ToString("X3"));
+
+            SetupCANFilter(filter.ToString("X3"), mask.ToString("X3"));
+            // SetupCANFilter(AcceptOnlyMessageIds[0].ToString("X3"), filter.ToString("X3"));
         }
 
         public void Flush()
