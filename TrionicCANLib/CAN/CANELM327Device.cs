@@ -170,7 +170,8 @@ namespace TrionicCANLib.CAN
                                         logger.Debug(e, rxMessage);
                                     }
                                 }
-                                else if (rxMessage.Length > 2) // is it a valid line
+                                // Catch weird message-lengths from Z22SE
+                                else if (rxMessage.StartsWith("7E8") && rxMessage.Length > 6)
                                 {
                                     // logger.Debug("Accepted Length: " + rxMessage.Length);
                                     try
@@ -199,7 +200,7 @@ namespace TrionicCANLib.CAN
                                         logger.Debug(e, rxMessage);
                                     }
                                 }
-                                 //disable whitespace logging
+                                //disable whitespace logging
                                 if (rxMessage.Length > 0)
                                 {
                                     logger.Debug("SERRX: " + rxMessage + " Len:" + rxMessage.Length);
