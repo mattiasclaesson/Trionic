@@ -179,9 +179,7 @@ namespace TrionicCANLib.CAN
                                         uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
 
                                         byte len = (byte)(rxMessage.Length - 3);
-                                        if ((len&1)==1)
-                                            len++;
-                                        len /= 2;
+                                        len = (byte)(((len&1) == 1 ? len + 1 : len) / 2);
 
                                         if (acceptMessageId(id) && len <= 8)
                                         {

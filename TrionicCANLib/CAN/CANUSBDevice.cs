@@ -480,7 +480,7 @@ namespace TrionicCANLib.CAN
                 logger.Debug("Adding id: " + id.ToString("X4") + " to acceptance filters");
             }
 
-            // Store setting of RTR  in mask
+            // Store setting of RTR in mask
             mask |= (uint)(RTR ? 1 : 0) << 4;
 
             // Remove bits set to ignore by AcceptanceCode
@@ -488,6 +488,30 @@ namespace TrionicCANLib.CAN
 
             logger.Debug("Configured acceptance code: " + code.ToString("X8"));
             logger.Debug("Configured acceptance mask: " + mask.ToString("X8"));
+
+            // TODO: Remove when done!
+            // VerifyFilterIntegrity(code, mask);
+
+        }
+
+        /// <summary>
+        /// Debug; count number of IDs that gets through
+        /// </summary>
+        /// <returns></returns>
+        private void VerifyFilterIntegrity(uint code, uint mask)
+        {
+            uint AM  = ~(mask >> 5);
+            uint AC  =  (code << 3) >> 8;
+            uint cnt = 0;
+
+            for (uint i = 0; i <= 0x7FF; i++)
+            {
+                if ((i & AM) == AC)
+                {
+                    cnt++;
+                }
+            }
+            logger.Debug("Currently letting through: " + cnt + " IDs");
         }
     }
 }
