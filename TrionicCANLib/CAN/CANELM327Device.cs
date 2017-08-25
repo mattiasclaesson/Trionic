@@ -173,21 +173,17 @@ namespace TrionicCANLib.CAN
                                 // Catch weird message-lengths from Z22SE
                                 else if (rxMessage.StartsWith("7E8") && rxMessage.Length > 6)
                                 {
-                                    // logger.Debug("Accepted Length: " + rxMessage.Length);
                                     try
                                     {
                                         rxMessage.Replace(" ", "");//remove all whitespaces
-                                        
+                                        uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
+
                                         byte len = (byte)(rxMessage.Length - 3);
-                                        
-                                        // Paranoid check.. ?
                                         if ((len&1)==1)
                                             len++;
                                         len /= 2;
 
-                                        uint id = Convert.ToUInt32(rxMessage.Substring(0, 3), 16);
-                                        
-                                        if (acceptMessageId(id))
+                                        if (acceptMessageId(id) && len <= 8)
                                         {
                                             canMessage.setID(id);
                                             canMessage.setLength(len);
