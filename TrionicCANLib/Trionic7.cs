@@ -77,7 +77,15 @@ namespace TrionicCANLib.API
                 canUsbDevice.TrionicECU = ECU.TRIONIC7;
                 canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
                 canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
-                canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x258,0x238 }; //t7suite
+                // canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x258,0x238 }; //t7suite
+                canUsbDevice.AcceptOnlyMessageIds = new List<uint>
+                { 
+                    0x258, 0x238,
+
+                    // Certain adapters applies filter and mask to outgoing messages too
+                    0x220, 0x240, 
+                    0x266
+                };
             }
 
             if (adapterType == CANBusAdapter.ELM327 && m_ELM327Kline)
