@@ -168,6 +168,20 @@ namespace TrionicCANLib.CAN
             }
             Thread.Sleep(200);
 
+
+            // Note: setting these parameters in here means that tcanflash becomes unable to monitor all traffic with the logging feature.
+            // Unfortunately canusb requires these parameters to be set AFTER the channel has been initialized but BEFORE it is open so setting them the same way as elm does is probably not possible..?
+
+            // Default to "Allow all"
+            uint AcceptanceCode = 0x00000000;
+            uint AcceptanceMask = 0xFFFFFFFF;
+
+            // if (!Monitor)
+            {
+                CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
+            }
+
+
             if (!UseOnlyPBus && TrionicECU != ECU.TRIONIC5)
             {
                 logger.Debug("Lawicel.CANUSB.canusb_Open()");
@@ -175,16 +189,16 @@ namespace TrionicCANLib.CAN
                 {
                     m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
                         CAN_BAUD_BTR_47K, // T7 i-bus
-                        Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
-                        Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
+                        AcceptanceCode,
+                        AcceptanceMask,
                         Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
                 }
                 else if (TrionicECU == ECU.TRIONIC8)
                 {
                     m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
                         CAN_BAUD_BTR_33K, // GMLAN
-                        Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
-                        Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
+                        AcceptanceCode,
+                        AcceptanceMask,
                         Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
                 }
 
@@ -210,8 +224,8 @@ namespace TrionicCANLib.CAN
                 logger.Debug("Lawicel.CANUSB.canusb_Open()");
                 m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
                     CAN_BAUD_BTR_615K, // T5, P-BUS
-                    Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
-                    Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
+                    AcceptanceCode,
+                    AcceptanceMask,
                     Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
             }
             else
@@ -221,8 +235,8 @@ namespace TrionicCANLib.CAN
                 logger.Debug("Lawicel.CANUSB.canusb_Open()");
                 m_deviceHandle = Lawicel.CANUSB.canusb_Open(SelectedAdapter,
                 Lawicel.CANUSB.CAN_BAUD_500K,
-                Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL,
-                Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL,
+                AcceptanceCode,
+                AcceptanceMask,
                 Lawicel.CANUSB.CANUSB_FLAG_TIMESTAMP);
             }
 
@@ -231,7 +245,7 @@ namespace TrionicCANLib.CAN
             {
                 return OpenResult.OpenError;
             }
-            
+
             logger.Debug("P bus connected");
             m_readThread = new Thread(readMessages) { Name = "CANUSBDevice.m_readThread" };
             if (m_readThread.ThreadState == ThreadState.Unstarted)
@@ -445,6 +459,35 @@ namespace TrionicCANLib.CAN
             }
             logger.Debug("sendSessionRequest: FALSE");
             return false;
+        }
+
+        /// <summary>
+        /// Calculates desired acceptance settings.
+        /// </summary>
+        /// <returns></returns>
+        private void CalcAcceptanceFilters(out uint code, out uint mask)
+        {
+            code = 0xFFFFFFFF;
+            mask = 0x00000000;
+
+            // Remote frames.. Are they used?
+            bool RTR = false;
+
+            foreach (var id in AcceptOnlyMessageIds)
+            {
+                code &= (id >> 3) << 8;
+                mask |= (id << 5);
+                logger.Debug("Adding id: " + id.ToString("X4") + " to acceptance filters");
+            }
+
+            // Store setting of RTR  in mask
+            mask |= (uint)(RTR ? 1 : 0) << 4;
+
+            // Remove bits set to ignore by AcceptanceCode
+            mask &= ~code;
+
+            logger.Debug("Configured acceptance code: " + code.ToString("X8"));
+            logger.Debug("Configured acceptance mask: " + mask.ToString("X8"));
         }
     }
 }
