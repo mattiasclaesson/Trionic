@@ -186,7 +186,7 @@ S9035000AC";
                 m_canListener = new CANListener();
             }
             canUsbDevice.addListener(m_canListener);
-            canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x00c, 0, 0, 0, 0 };
+            canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x005, 0x006, 0x00c };
         }
 
         override public void SetSelectedAdapter(string adapter)
