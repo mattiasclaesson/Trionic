@@ -281,7 +281,6 @@ namespace TrionicCANLib.CAN
         /// <summary>
         /// Calculates required mask and filter settings from the list of IDs
         /// </summary>
-        /// <param name="IdBits">Number of bits in an id to care about</param>
         /// <returns>8-byte array where 0-3 is mask and 4-7 is filter</returns>
         private byte[] calcMaskandFilter()
         {
