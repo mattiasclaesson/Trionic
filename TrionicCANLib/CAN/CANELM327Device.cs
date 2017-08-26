@@ -416,6 +416,8 @@ namespace TrionicCANLib.CAN
                 {
                     m_deviceIsOpen = true;
 
+                    // InitializeMessageFilters();
+
                     answer = WriteToSerialAndWait("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
 
                     logger.Debug("OPEN: ATH1 response: " + answer);
@@ -514,10 +516,10 @@ namespace TrionicCANLib.CAN
                 logger.Debug("STCTR: " + answer);
                 answer = WriteToSerialAndWait("STCTRR\r");
                 answer = WriteToSerialAndWait("ATAL\r");   // Allow reception of >7 byte packages
-                WriteToSerialAndWait("ATCFC0\r"); // Flow control OFF
+                WriteToSerialAndWait("ATCFC0\r");          // Flow control OFF
                 answer = WriteToSerialAndWait("ATAR\r");   // Automatic reception
                 answer = WriteToSerialAndWait("ATMA\r");   // Monitor EVERYTHING!
-                answer = WriteToSerialAndWait("ATCSM1\r");   // Monitor EVERYTHING!
+                answer = WriteToSerialAndWait("ATCSM1\r"); // Monitor EVERYTHING!
             }
             else if (TrionicECU == ECU.TRIONIC7 && !UseOnlyPBus)
                 answer = WriteToSerialAndWait("STCTR 290284\r");
@@ -591,37 +593,21 @@ namespace TrionicCANLib.CAN
         /// </summary>
         private void InitializeMessageFilters()
         {
-            uint filter = 0xFFF;
-            uint mask   = 0x000;
-            uint len    = 0;
-            uint cnt    = 0;
+            uint filt = 0xFFF;
+            uint mask = 0x000;
 
             foreach (var id in AcceptOnlyMessageIds)
             {
-                filter &= id;
+                filt &= id;
+                mask |= id;
                 logger.Debug("Adding id: " + id.ToString("X4") + " to acceptance filters");
-                len++;
             }
+            mask = (~mask & 0x7FF) | filt;
 
-            for (byte e = 0; e < 11; e++)
-            {
-                cnt = 0;
-                foreach (var id in AcceptOnlyMessageIds)
-                {
-                    if ((id & (1 << e)) > 0)
-                        cnt++;
-                }
-
-                if (cnt == 0 || cnt == len)
-                {
-                    mask |= (uint)(1 << e);
-                }
-            }
-
-            // logger.Debug("Configured acceptance code: " + filter.ToString("X3"));
+            // logger.Debug("Configured acceptance code: " + filt.ToString("X3"));
             // logger.Debug("Configured acceptance mask: " + mask.ToString("X3"));
 
-            SetupCANFilter(filter.ToString("X3"), mask.ToString("X3"));
+            SetupCANFilter(filt.ToString("X3"), mask.ToString("X3"));
             // SetupCANFilter(AcceptOnlyMessageIds[0].ToString("X3"), filter.ToString("X3"));
         }
 
