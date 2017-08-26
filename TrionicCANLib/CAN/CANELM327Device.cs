@@ -599,7 +599,7 @@ namespace TrionicCANLib.CAN
             foreach (var id in AcceptOnlyMessageIds)
             {
                 filter &= id;
-                logger.Debug("Adding ID: " + id.ToString("X3") + " to filter");
+                logger.Debug("Adding id: " + id.ToString("X4") + " to acceptance filters");
                 len++;
             }
 
@@ -613,11 +613,13 @@ namespace TrionicCANLib.CAN
                 }
 
                 if (cnt == 0 || cnt == len)
+                {
                     mask |= (uint)(1 << e);
+                }
             }
 
-            // logger.Debug("Filter: " + filter.ToString("X3"));
-            // logger.Debug("Mask:   " + mask.ToString("X3"));
+            // logger.Debug("Configured acceptance code: " + filter.ToString("X3"));
+            // logger.Debug("Configured acceptance mask: " + mask.ToString("X3"));
 
             SetupCANFilter(filter.ToString("X3"), mask.ToString("X3"));
             // SetupCANFilter(AcceptOnlyMessageIds[0].ToString("X3"), filter.ToString("X3"));

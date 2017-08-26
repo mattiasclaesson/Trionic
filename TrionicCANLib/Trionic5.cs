@@ -238,7 +238,10 @@ S9035000AC";
             return symbolTable;
         }
 
-
+        /// <summary>
+        /// Determine current ECU
+        /// </summary>
+        /// <returns>Type of ECU or unknown</returns>
         private ECUType DetermineECU()
         {
             byte[] chiptypes = GetChipTypes();

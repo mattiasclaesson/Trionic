@@ -475,8 +475,8 @@ namespace TrionicCANLib.CAN
 
             foreach (var id in AcceptOnlyMessageIds)
             {
-                code &= (id >> 3) << 8;
-                mask |= (id << 5);
+                code &= (id << 5)&0xFFE0;
+                mask |=  id << 5;
                 logger.Debug("Adding id: " + id.ToString("X4") + " to acceptance filters");
             }
 
@@ -501,7 +501,7 @@ namespace TrionicCANLib.CAN
         private void VerifyFilterIntegrity(uint code, uint mask)
         {
             uint AM  = ~(mask >> 5);
-            uint AC  =  (code << 3) >> 8;
+            uint AC  =   code >> 5;
             uint cnt = 0;
 
             for (uint i = 0; i <= 0x7FF; i++)

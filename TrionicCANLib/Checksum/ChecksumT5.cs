@@ -25,6 +25,11 @@ namespace TrionicCANLib.Checksum
         // 19 0A 4E F9 00 07 E9 EA
         // 19 0A 4E F9 00 07 ED 2A
 
+        /// <summary>
+        /// Validates a binary before flashing
+        /// </summary>
+        /// <param name="filename">filename to flash</param>
+        /// <returns>ChecksumResult.Ok if checksum is correct</returns>
         public static ChecksumResult VerifyChecksum(string filename)
         {
             FileInfo fi = new FileInfo(filename);
@@ -52,6 +57,12 @@ namespace TrionicCANLib.Checksum
             return ChecksumResult.Ok;
         }
 
+        /// <summary>
+        /// Validates a dumped binary
+        /// </summary>
+        /// <param name="Bufr">buffered copy of current binary</param>
+        /// <param name="IsT55">true for trionic 5.5, false for 5.2</param>
+        /// <returns>Checksum match true or false</returns>
         public static bool ValidateDump(byte[] Bufr, bool IsT55)
         {
             long len = IsT55 ? 0x40000 : 0x20000;
@@ -62,6 +73,13 @@ namespace TrionicCANLib.Checksum
             return  ChecksumMatch(Bufr, ReadSum, FindEndmarker(Bufr, (byte)(len>>18)));
         }
 
+        /// <summary>
+        /// Verifies stored checksum against a calculated one
+        /// </summary>
+        /// <param name="Bufr">buffered copy of current binary</param>
+        /// <param name="Sum">calculated checksum</param>
+        /// <param name="End">where to end checksum32 calculations</param>
+        /// <returns>Checksum match true or false</returns>
         private static bool ChecksumMatch(byte[] Bufr, uint Sum, uint End)
         {
             for (uint i = 0; i < End; i++)
@@ -72,6 +90,12 @@ namespace TrionicCANLib.Checksum
             return (Sum & 0xFFFFFFFF) == 0 ? true : false;
         }
 
+        /// <summary>
+        /// Scans binary for an endmarker
+        /// </summary>
+        /// <param name="Bufr">buffered copy of current binary</param>
+        /// <param name="index">1 for trionic 5.5, 0 for 5.2</param>
+        /// <returns>Last address of binary + 1</returns>
         private static uint FindEndmarker(byte[] Bufr, byte index)
         {
             uint len = (index == 1 ? (uint)0x40000 : 0x20000);

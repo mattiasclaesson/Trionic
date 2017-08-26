@@ -130,7 +130,12 @@ namespace TrionicCANLib
             return array;
         }
 
-        // Check if a whole block will be filled with 0xFF (So that it can be skipped)
+        /// <summary>
+        /// Scan a defined block for 0xFF
+        /// </summary>
+        /// <param name="address">Where current block starts</param>
+        /// <param name="size">Size of block</param>
+        /// <returns>True if everything is 0xFF, otherwise false</returns>
         public bool FFblock(int address, int size)
         {
             int count = 0;
@@ -181,7 +186,12 @@ namespace TrionicCANLib
             0x020000
         };
 
-        // Generate md5 of selected partition/region
+        /// <summary>
+        /// Generate md5 of selected partition/region
+        /// </summary>
+        /// <param name="device">6 for main flash, 5 for MCP flash</param>
+        /// <param name="partition">Partition/Region to generate md5 from</param>
+        /// <returns>16-byte array of calculated md5</returns>
         public byte[] GetPartitionmd5(uint device, uint partition)
         {
             uint start = 0, e = 0, end = 0x40100;
