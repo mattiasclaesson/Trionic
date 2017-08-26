@@ -5134,6 +5134,12 @@ namespace TrionicCANLib.API
                                 Thread.Sleep(5);
                                 msg.setData(cmd);
                                 m_canListener.setupWaitMessage(0x7E8);
+
+                                if (!canUsbDevice.sendMessage(msg))
+                                {
+                                    CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                                    return false;
+                                }
                                 CastInfoEvent("Wrong response. Resending request.. ", ActivityType.ErasingFlash);
                             }
                             else
