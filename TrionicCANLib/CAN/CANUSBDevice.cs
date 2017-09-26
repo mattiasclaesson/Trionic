@@ -178,7 +178,7 @@ namespace TrionicCANLib.CAN
 
             // if (!Monitor)
             {
-                CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
+                // CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
             }
 
             if (!UseOnlyPBus && TrionicECU != ECU.TRIONIC5)
