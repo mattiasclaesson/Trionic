@@ -6640,6 +6640,30 @@ namespace TrionicCANLib.API
             return true;
         }
 
+        // Throw a warning if the user has selected format sys and it is different
+        private bool LeaveNVDMBe()
+        {
+            DialogResult result = DialogResult.No;
+
+            result = MessageBox.Show("Do you REALLY want to flash new VIN and key data?!",
+                "Point of no return", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+
+            if (result == DialogResult.Yes)
+            {
+                CastInfoEvent("Warning, NVDM will be formated", ActivityType.ErasingFlash);
+                return false;
+            }
+
+            CastInfoEvent("Skipped format of NVDM partitions", ActivityType.ErasingFlash);
+            return true;
+        }
+
+
+
+
+
+
+
         // Compare md5 of 0x0, 0x4000 or 0x20000 to last address of binary.
         private void CompareRegmd5(DoWorkEventArgs workEvent)
         {
@@ -6692,6 +6716,7 @@ namespace TrionicCANLib.API
             byte placeholder  = 3;
             byte toerase      = 0;
             byte start;
+            bool nvdm = true;
 
             CastProgressReadEvent(0);
 
@@ -6736,9 +6761,17 @@ namespace TrionicCANLib.API
 
                     if (!verificationproc)
                     {
-                        // Special case. Override automatic selection of boot if the the user so choose.
-                        if (i == 1 && !identical && !z22se)
-                            identical = LeaveRecoveryBe();
+                        if (!identical && (i < 4) && !z22se)
+                        {
+                            // Special case. Override automatic selection of boot if the the user so choose.
+                            if (i == 1)
+                                identical = LeaveRecoveryBe();
+                            // Special case. Override automatic selection of NVDM 1 and 2 if the the user so choose.
+                            else if (i == 2 && device == EcuByte_T8)
+                                nvdm = identical = LeaveNVDMBe();
+                            else if (i == 3 && device == EcuByte_T8)
+                                identical = nvdm;
+                        }
 
                         // MCP requires a few more checks..
                         if (device == EcuByte_MCP)
