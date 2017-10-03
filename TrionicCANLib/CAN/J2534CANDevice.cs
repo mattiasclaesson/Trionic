@@ -177,8 +177,10 @@ namespace TrionicCANLib.CAN
                 logger.Debug("Decoded mask:   " + Mask.ToString("X8"));
             }
 
-            PassThruMsg maskMsg    = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { Acp[3], Acp[2], Acp[1], Acp[0] });
-            PassThruMsg patternMsg = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { Acp[7], Acp[6], Acp[5], Acp[4] });
+            //PassThruMsg maskMsg    = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { Acp[3], Acp[2], Acp[1], Acp[0] });
+            //PassThruMsg patternMsg = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { Acp[7], Acp[6], Acp[5], Acp[4] });
+            PassThruMsg maskMsg = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { 0x00, 0x00, 0x00, 0x00 });
+            PassThruMsg patternMsg = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { 0x00, 0x00, 0x00, 0x00 });
             int filterId = 0;
             m_status = passThru.PassThruStartMsgFilter(
                 m_channelId,
@@ -187,6 +189,12 @@ namespace TrionicCANLib.CAN
                 patternMsg.ToIntPtr(),
                 IntPtr.Zero,
                 ref filterId);
+            if (J2534Err.STATUS_NOERROR != m_status)
+            {
+                return OpenResult.OpenError;
+            }
+
+            m_status = passThru.PassThruIoctl(m_channelId, (int)Ioctl.CLEAR_RX_BUFFER, IntPtr.Zero, IntPtr.Zero);
             if (J2534Err.STATUS_NOERROR != m_status)
             {
                 return OpenResult.OpenError;
@@ -323,6 +331,7 @@ namespace TrionicCANLib.CAN
                 if ((i & mask) == code)
                 {
                     cnt++;
+                    //logger.Debug(String.Format("Currently letting through ID: {0:X3}",i));
                 }
             }
             logger.Debug("Currently letting through: " + cnt + " IDs");
