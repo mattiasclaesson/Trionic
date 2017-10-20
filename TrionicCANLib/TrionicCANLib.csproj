@@ -68,7 +68,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\FTD2XX_NET.dll</HintPath>
     </Reference>
-    <Reference Include="J2534DotNet">
+    <Reference Include="J2534DotNet, Version=1.0.1.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\J2534DotNet.dll</HintPath>
     </Reference>
     <Reference Include="LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL">

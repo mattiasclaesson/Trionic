@@ -213,7 +213,13 @@ namespace TrionicCANLib.CAN
 
         protected bool acceptMessageId(uint msgId)
         {
-            return m_AcceptedMessageIds == null ? true : m_AcceptedMessageIds.Contains(msgId);
+            bool accept = m_AcceptedMessageIds == null ? true : m_AcceptedMessageIds.Contains(msgId);
+            if (!accept)
+            {
+                logger.Debug(String.Format("Skipped message with id= {0:X3}", msgId));
+            }
+
+            return accept;
         }
 
         abstract public int ForcedBaudrate

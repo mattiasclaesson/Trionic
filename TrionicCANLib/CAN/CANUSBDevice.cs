@@ -173,14 +173,13 @@ namespace TrionicCANLib.CAN
             // Unfortunately canusb requires these parameters to be set AFTER the channel has been initialized but BEFORE it is open so setting them the same way as elm does is probably not possible..?
 
             // Default to "Allow all"
-            uint AcceptanceCode = 0x00000000;
-            uint AcceptanceMask = 0xFFFFFFFF;
+            uint AcceptanceCode = Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL;
+            uint AcceptanceMask = Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL;
 
             // if (!Monitor)
             {
                 CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
             }
-
 
             if (!UseOnlyPBus && TrionicECU != ECU.TRIONIC5)
             {
@@ -467,51 +466,38 @@ namespace TrionicCANLib.CAN
         /// <returns></returns>
         private void CalcAcceptanceFilters(out uint code, out uint mask)
         {
-            code = 0xFFFFFFFF;
-            mask = 0x00000000;
-
-            // Remote frames.. Are they used?
-            bool RTR = false;
+            uint acpFilt = 0xFFFF;
+            uint acpMask = 0x0000;
 
             foreach (var id in AcceptOnlyMessageIds)
             {
-                code &= (id << 5)&0xFFE0;
-                mask |=  id << 5;
-                logger.Debug("Adding id: " + id.ToString("X4") + " to acceptance filters");
+                acpFilt &= id;
+                acpMask |= id;
             }
+            acpMask = acpMask ^ acpFilt;
 
-            // Store setting of RTR in mask
-            mask |= (uint)(RTR ? 1 : 0) << 4;
+            logger.Debug("Filter: " + acpFilt.ToString("X8"));
+            logger.Debug("Mask:   " + acpMask.ToString("X8"));
 
-            // Remove bits set to ignore by AcceptanceCode
-            mask &= ~code;
+            byte filtDigit1 = (byte)((acpFilt >> 8) & 0x7);
+            byte filtDigit2 = (byte)((acpFilt >> 4) & 0xF);
+            byte filtDigit3 = (byte)(acpFilt        & 0xF);
 
-            logger.Debug("Configured acceptance code: " + code.ToString("X8"));
-            logger.Debug("Configured acceptance mask: " + mask.ToString("X8"));
+            byte maskDigit1 = (byte)((acpMask >> 8) & 0x7);
+            byte maskDigit2 = (byte)((acpMask >> 4) & 0xF);
+            byte maskDigit3 = (byte)(acpMask        & 0xF);
 
-            // TODO: Remove when done!
-            // VerifyFilterIntegrity(code, mask);
+            byte[] ACR = new byte[2];
+            byte[] AMR = new byte[2];
+            ACR[0] = (byte)(filtDigit1 << 5 | filtDigit2 << 1 | filtDigit3 >> 3);
+            AMR[0] = (byte)(maskDigit1 << 5 | maskDigit2 << 1 | maskDigit3 >> 3);
+            ACR[1] = (byte)(filtDigit3 << 5);
+            AMR[1] = (byte)(filtDigit3 << 5);
+            ACR[1] |= 0x1F; // RTR X + Data code XXXX
+            AMR[1] |= 0x1F; // RTR + Data mask
 
-        }
-
-        /// <summary>
-        /// Debug; count number of IDs that gets through
-        /// </summary>
-        /// <returns></returns>
-        private void VerifyFilterIntegrity(uint code, uint mask)
-        {
-            uint AM  = ~(mask >> 5);
-            uint AC  =   code >> 5;
-            uint cnt = 0;
-
-            for (uint i = 0; i <= 0x7FF; i++)
-            {
-                if ((i & AM) == AC)
-                {
-                    cnt++;
-                }
-            }
-            logger.Debug("Currently letting through: " + cnt + " IDs");
+            code = (uint)(ACR[1] << 24 | ACR[0] << 16 | ACR[1] << 8 | ACR[0]);
+            mask = (uint)(AMR[1] << 24 | AMR[0] << 16 | AMR[1] << 8 | AMR[0]);
         }
     }
 }

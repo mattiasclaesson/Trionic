@@ -26,6 +26,9 @@ namespace TrionicCANLib.CAN
         public const byte CAN_BAUD_BTR_615K_btr0 = 0x40; // 615 kbit/s SAAB T5
         public const byte CAN_BAUD_BTR_615K_btr1 = 0x37;
 
+        uint code = 0xFFF;
+        uint mask = 0x000;
+
         Thread m_readThread;
         readonly Object m_synchObject = new Object();
         bool m_endThread;
@@ -171,6 +174,20 @@ namespace TrionicCANLib.CAN
             {
                 close();
             }
+
+            foreach (var id in AcceptOnlyMessageIds)
+            {
+                code &= id;
+                mask |= id;
+            }
+
+            mask = (~mask & 0x7FF) | code;
+
+            logger.Debug("code: " + code.ToString("X8"));
+            logger.Debug("mask:   " + mask.ToString("X8"));
+
+            VerifyFilterIntegrity(code, mask);
+
             Thread.Sleep(200);
             m_readThread = new Thread(readMessages) { Name = "KvaserCANDevice.m_readThread" };
 
@@ -178,6 +195,7 @@ namespace TrionicCANLib.CAN
             {
                 OpenChannelWithParamsC200(out handleWrite, CAN_BAUD_BTR_615K_btr0, CAN_BAUD_BTR_615K_btr1);
                 OpenChannelWithParamsC200(out handleRead, CAN_BAUD_BTR_615K_btr0, CAN_BAUD_BTR_615K_btr1);
+                Canlib.canSetAcceptanceFilter(handleRead, (int)code, (int)mask, 0);
 
                 if (handleWrite < 0 || handleRead < 0)
                 {
@@ -199,11 +217,13 @@ namespace TrionicCANLib.CAN
                 {
                     OpenChannelWithParamsC200(out handleWrite, CAN_BAUD_BTR_47K_btr0, CAN_BAUD_BTR_47K_btr1);
                     OpenChannelWithParamsC200(out handleRead, CAN_BAUD_BTR_47K_btr0, CAN_BAUD_BTR_47K_btr1);
+                    Canlib.canSetAcceptanceFilter(handleRead, (int)code, (int)mask, 0);
                 }
                 else if (TrionicECU == ECU.TRIONIC8)
                 {
                     OpenChannelWithParamsC200(out handleWrite, CAN_BAUD_BTR_33K_btr0, CAN_BAUD_BTR_33K_btr1);
                     OpenChannelWithParamsC200(out handleRead, CAN_BAUD_BTR_33K_btr0, CAN_BAUD_BTR_33K_btr1);
+                    Canlib.canSetAcceptanceFilter(handleRead, (int)code, (int)mask, 0);
                 }
 
                 if (handleWrite < 0 || handleRead < 0)
@@ -222,6 +242,7 @@ namespace TrionicCANLib.CAN
 
             OpenChannel(out handleWrite, Canlib.canBITRATE_500K);
             OpenChannel(out handleRead, Canlib.canBITRATE_500K);
+            Canlib.canSetAcceptanceFilter(handleRead, (int)code, (int)mask, 0);
             
             if (handleWrite < 0 || handleRead < 0)
             {
@@ -350,6 +371,25 @@ namespace TrionicCANLib.CAN
         {
             canMsg = new CANMessage();
             return 0;
+        }
+
+        /// <summary>
+        /// Debug; count number of IDs that gets through
+        /// </summary>
+        /// <returns></returns>
+        private void VerifyFilterIntegrity(uint code, uint mask)
+        {
+            uint cnt = 0;
+
+            for (uint i = 0; i < 0x800; i++)
+            {
+                if (((code ^ i) & mask) == 0)
+                {
+                    cnt++;
+                    logger.Debug(String.Format("Currently letting through ID: {0:X3}", i));
+                }
+            }
+            logger.Debug("Currently letting through: " + cnt + " IDs");
         }
     }
 }

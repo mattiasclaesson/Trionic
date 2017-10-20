@@ -168,17 +168,32 @@ namespace TrionicCANLib.CAN
                 return OpenResult.OpenError;
             }
 
-            byte[] Acp = calcMaskandFilter();
-            {
-                uint Mask = (uint)(Acp[3] << 24 | Acp[2] << 16 | Acp[1] << 8 | Acp[0]);
-                uint Filt = (uint)(Acp[7] << 24 | Acp[6] << 16 | Acp[5] << 8 | Acp[4]);
+            uint acpFilt = 0xFFFF;
+            uint acpMask = 0x0000;
 
-                logger.Debug("Decoded filter: " + Filt.ToString("X8"));
-                logger.Debug("Decoded mask:   " + Mask.ToString("X8"));
+            foreach (var id in AcceptOnlyMessageIds)
+            {
+                acpFilt &= id;
+                acpMask |= id;
+            }
+            acpMask = (~acpMask & 0x7FF) | acpFilt;
+
+            logger.Debug("Filter: " + acpFilt.ToString("X8"));
+            logger.Debug("Mask:   " + acpMask.ToString("X8"));
+
+            byte[] maskBytes = new byte[4];
+            byte[] patternBytes = new byte[4];
+
+            for (int i = 0; i < 4; i++)
+            {
+                maskBytes[i] = (byte)(acpMask >> (i * 8));
+                patternBytes[i] = (byte)(acpFilt >> (i * 8));
             }
 
-            PassThruMsg maskMsg    = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { Acp[3], Acp[2], Acp[1], Acp[0] });
-            PassThruMsg patternMsg = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { Acp[7], Acp[6], Acp[5], Acp[4] });
+            //PassThruMsg maskMsg    = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, maskBytes);
+            //PassThruMsg patternMsg = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, patternBytes);
+            PassThruMsg maskMsg = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { 0x00, 0x00, 0x00, 0x00 });
+            PassThruMsg patternMsg = new PassThruMsg(ProtocolID.CAN, TxFlag.NONE, new byte[] { 0x00, 0x00, 0x00, 0x00 });
             int filterId = 0;
             m_status = passThru.PassThruStartMsgFilter(
                 m_channelId,
@@ -187,6 +202,12 @@ namespace TrionicCANLib.CAN
                 patternMsg.ToIntPtr(),
                 IntPtr.Zero,
                 ref filterId);
+            if (J2534Err.STATUS_NOERROR != m_status)
+            {
+                return OpenResult.OpenError;
+            }
+
+            m_status = passThru.PassThruIoctl(m_channelId, (int)Ioctl.CLEAR_RX_BUFFER, IntPtr.Zero, IntPtr.Zero);
             if (J2534Err.STATUS_NOERROR != m_status)
             {
                 return OpenResult.OpenError;
@@ -276,56 +297,6 @@ namespace TrionicCANLib.CAN
         {
             canMsg = new CANMessage();
             return 0;
-        }
-
-        /// <summary>
-        /// Calculates required mask and filter settings from the list of IDs
-        /// </summary>
-        /// <returns>8-byte array where 0-3 is mask and 4-7 is filter</returns>
-        private byte[] calcMaskandFilter()
-        {
-            byte[] Acp   = new byte[8];
-            uint acpFilt = 0xFFFFFFFF;
-            uint acpMask = 0x00000000;
-
-            foreach (var id in AcceptOnlyMessageIds)
-            {
-                acpFilt &= id;
-                acpMask |= id;
-                logger.Debug("Adding id: " + id.ToString("X4") + " to acceptance filters");
-            }
-            acpMask = (~acpMask & 0x1FFFFFFF) | acpFilt;
-
-            logger.Debug("Filter: " + acpFilt.ToString("X8"));
-            logger.Debug("Mask:   " + acpMask.ToString("X8"));
-
-            for (int i = 0; i < 4; i++)
-            {
-                Acp[i + 4] = (byte)(acpFilt >> (i * 8));
-                Acp[  i  ] = (byte)(acpMask >> (i * 8));
-            }
-
-            VerifyFilterIntegrity(acpFilt, acpMask);
-
-            return Acp;
-        }
-
-        /// <summary>
-        /// Debug; count number of IDs that gets through
-        /// </summary>
-        /// <returns></returns>
-        private void VerifyFilterIntegrity(uint code, uint mask)
-        {
-            uint cnt    = 0;
-
-            for (uint i = 0; i < 0x800; i++)
-            {
-                if ((i & mask) == code)
-                {
-                    cnt++;
-                }
-            }
-            logger.Debug("Currently letting through: " + cnt + " IDs");
         }
     }
 }
