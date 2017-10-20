@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+
+  <?define ProductVersion="0.1.55" ?>
+  <?define UpgradeCode="{9B523E43-7324-4DF0-A1DE-8493B57D1915}"?>
+  <?define Manufacturer="MattiasC"?>
+  <?define ProductCode="{A0851927-E31F-4B81-B36A-B3FCAE06B135}"?>
+  <?define PackageCode="{8EF49AAF-4B58-4FF4-AAB7-F5DC80E94EB1}"?>
+
+    <Product Id="$(var.ProductCode)" Name="TrionicCANFlash" Language="1033" Version="$(var.ProductVersion)" Codepage="1252" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)">
+      <Package Id="$(var.PackageCode)" Compressed="yes" InstallerVersion="300" Languages="1033" Manufacturer="$(var.Manufacturer)" Platform="x86" />
+      <MediaTemplate EmbedCab="yes"/>
+      <Directory Id="TARGETDIR" Name="SourceDir">
+        <Directory Id="ProgramFilesFolder">
+          <Directory Id="ManufacturerFolder" Name="!(bind.property.Manufacturer)">
+            <Directory Id="INSTALLFOLDER" Name="!(bind.property.ProductName)" />
+          </Directory>
+        </Directory>
+        <Directory Id="DesktopFolder" ShortSourceName="USER'S~1" SourceName="User's Desktop" />
+        <Directory Id="ProgramMenuFolder" ShortSourceName="USER'S~2" SourceName="User's Programs Menu" />
+      </Directory>
+
+      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+      <UIRef Id="WixUI_InstallDir" />
+      <WixVariable Id="WixUILicenseRtf" Value="disclaimer.rtf" />
+
+      <PropertyRef Id="NETFRAMEWORK40FULL"/>
+      <Condition Message="This application requires .NET Framework 4.0. Please install the .NET Framework then run this installer again.">
+        <![CDATA[Installed OR NETFRAMEWORK40FULL]]>
+      </Condition>
+
+      <DirectoryRef Id="TARGETDIR">
+        <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" Language="0"/>
+      </DirectoryRef>
+      <Feature Id="VCRedist" Title="Visual C++ 10.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+        <MergeRef Id="VCRedist"/>
+      </Feature>
+
+      <DirectoryRef Id="INSTALLFOLDER">
+          <Component Id="C__20AC3B9A12D8AC1C1D5B737FE25DC999" Guid="{B59C48B4-7E97-5D0A-9ACB-143622AFD27F}">
+            <File Id="_20AC3B9A12D8AC1C1D5B737FE25DC999" Name="J2534DotNet.dll" KeyPath="yes" ShortName="J2534D~1.DLL" Assembly=".net" AssemblyManifest="_20AC3B9A12D8AC1C1D5B737FE25DC999" AssemblyApplication="_20AC3B9A12D8AC1C1D5B737FE25DC999" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__5879D9CF7D1DBAFFFF4A4322A269CC00" Guid="{62B588EB-8D92-47B7-084A-932DA6DAC7E8}">
+            <File Id="_5879D9CF7D1DBAFFFF4A4322A269CC00" Name="canusbdrv_net.dll" KeyPath="yes" ShortName="CANUSB~1.DLL" Assembly=".net" AssemblyManifest="_5879D9CF7D1DBAFFFF4A4322A269CC00" AssemblyApplication="_5879D9CF7D1DBAFFFF4A4322A269CC00" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__7747543A6C6FB526E50E3C76BEF28F10" Guid="{3355FA6C-24CB-A63C-0B05-1AA797B7D29D}">
+            <File Id="_7747543A6C6FB526E50E3C76BEF28F10" Name="FTD2XX_NET.dll" KeyPath="yes" ShortName="FTD2XX~1.DLL" Assembly=".net" AssemblyManifest="_7747543A6C6FB526E50E3C76BEF28F10" AssemblyApplication="_7747543A6C6FB526E50E3C76BEF28F10" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__788CD0B4D54DDFA1DD325A7E543A21B4" Guid="{C60B19D0-7A2A-43A6-08AC-CD9F56D09614}">
+            <File Id="_788CD0B4D54DDFA1DD325A7E543A21B4" Name="LibUsbDotNet.dll" KeyPath="yes" ShortName="LIBUSB~1.DLL" Assembly=".net" AssemblyManifest="_788CD0B4D54DDFA1DD325A7E543A21B4" AssemblyApplication="_788CD0B4D54DDFA1DD325A7E543A21B4" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__B5DC073439314F0DA72A64C061D825FD" Guid="{10516D4A-F47B-9CC3-D9A8-C2C4A3E2C1E5}">
+            <File Id="_B5DC073439314F0DA72A64C061D825FD" Name="NLog.dll" KeyPath="yes" ShortName="NLOG.DLL" Assembly=".net" AssemblyManifest="_B5DC073439314F0DA72A64C061D825FD" AssemblyApplication="_B5DC073439314F0DA72A64C061D825FD" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__B69D594B59284F939B1F4A00C77E172B" Guid="{56C181B9-C96B-B0B6-B0E8-6F7C99515820}">
+            <File Id="_B69D594B59284F939B1F4A00C77E172B" Name="TrionicCanFlasher.ico" KeyPath="yes" ShortName="TRIONI~1.ICO" DiskId="1" Source="$(var.TrionicCANFlasher.ProjectDir)" />
+          </Component>
+          <Component Id="C__C4BD42520AFF43C457B1F6D462F382F8" Guid="{11D20A4D-510D-A58A-9E78-5087CBBFD7EB}">
+            <File Id="_C4BD42520AFF43C457B1F6D462F382F8" Name="canlibCLSNET.dll" KeyPath="yes" ShortName="CANLIB~1.DLL" Assembly=".net" AssemblyManifest="_C4BD42520AFF43C457B1F6D462F382F8" AssemblyApplication="_C4BD42520AFF43C457B1F6D462F382F8" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__D42D3477D8D2384CECF37D5EA679190F" Guid="{937CB6BA-6386-CF07-43DA-CCCFBA7ED351}">
+            <File Id="_D42D3477D8D2384CECF37D5EA679190F" Name="combilib-net.dll" KeyPath="yes" ShortName="COMBIL~1.DLL" Assembly=".net" AssemblyManifest="_D42D3477D8D2384CECF37D5EA679190F" AssemblyApplication="_D42D3477D8D2384CECF37D5EA679190F" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__F1AEE1D0AEFF11C787AEC46C06417DBF" Guid="{764F0091-61E6-FAF2-18E4-4C2D3AA2F819}">
+            <File Id="_F1AEE1D0AEFF11C787AEC46C06417DBF" Name="TrionicCANLib.dll" KeyPath="yes" ShortName="TRIONI~1.DLL" Assembly=".net" AssemblyManifest="_F1AEE1D0AEFF11C787AEC46C06417DBF" AssemblyApplication="_F1AEE1D0AEFF11C787AEC46C06417DBF" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__BD738AAED71DCCEED60CC945A97E1099" Guid="{14C60897-F939-7A8E-9F97-A250ABFB14C2}">
+            <File Id="_BD738AAED71DCCEED60CC945A97E1099" Name="TrionicCANFlasher.exe" KeyPath="yes" ShortName="TRIONI~1.EXE" Assembly=".net" AssemblyManifest="_BD738AAED71DCCEED60CC945A97E1099" AssemblyApplication="_BD738AAED71DCCEED60CC945A97E1099" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+            <Shortcut Id="_462E17F4E4DB47539FD54ED69225D749" Directory="ProgramMenuFolder" Name="TrionicCANFlasher" ShortName="TRIONI~1" Icon="Icon_TrionicCanFlasher.ico" IconIndex="0" Show="normal" WorkingDirectory="TARGETDIR" Advertise="yes" />
+            <Shortcut Id="_49AB8AD443174DEFB4E14140B3272AE1" Directory="DesktopFolder" Name="TrionicCANFlasher" ShortName="TRIONI~2" Icon="Icon_TrionicCanFlasher.ico" IconIndex="0" Show="normal" WorkingDirectory="TARGETDIR" Advertise="yes" />
+          </Component>
+          <Component Id="C__FEF78C8F0A75A86AF2313796A1E8A0BA" Guid="{72110202-120B-14A2-E099-86511AC29C31}">
+            <File Id="_FEF78C8F0A75A86AF2313796A1E8A0BA" Name="TrionicCANFlasher.exe.config" KeyPath="yes" ShortName="TRIONI~1.CON" DiskId="1" Source="$(var.TrionicCANFlasher.TargetDir)" />
+          </Component>
+          <Component Id="C__0BB9AB952839205DEED7192D9540E67B" Guid="{EAAD23A3-CDE7-D05A-64BF-192C93DAB7BD}">
+            <File Id="_0BB9AB952839205DEED7192D9540E67B" Name="canlib32.dll" KeyPath="yes" ShortName="CANLIB32.DLL" DiskId="1" Source="$(var.TrionicCANFlasher.ProjectDir)" />
+          </Component>
+          <Component Id="C__21D618ECFDF47B3A7851892103E533D9" Guid="{57F98542-4E87-5D5A-3FEB-3F3F5258E0DE}">
+            <File Id="_21D618ECFDF47B3A7851892103E533D9" Name="NLog.config" KeyPath="yes" ShortName="NLOG~1.CON" DiskId="1" Source="$(var.TrionicCANFlasher.ProjectDir)" />
+          </Component>
+          <Component Id="C__FF6CD27F19E4A6A89505A3B50E1D9D98" Guid="{DA123D50-7C0E-C193-287E-E1F6F4812D5E}">
+            <File Id="_FF6CD27F19E4A6A89505A3B50E1D9D98" Name="TrionicCanFlasher.pdf" KeyPath="yes" ShortName="TRIONI~1.PDF" DiskId="1" Source="$(var.TrionicCANFlasher.ProjectDir)" />
+          </Component>
+        </DirectoryRef>
+        <Feature Id="DefaultFeature" ConfigurableDirectory="INSTALLFOLDER" Level="1">
+            <ComponentRef Id="C__20AC3B9A12D8AC1C1D5B737FE25DC999" Primary="yes" />
+            <ComponentRef Id="C__5879D9CF7D1DBAFFFF4A4322A269CC00" Primary="yes" />
+            <ComponentRef Id="C__7747543A6C6FB526E50E3C76BEF28F10" Primary="yes" />
+            <ComponentRef Id="C__788CD0B4D54DDFA1DD325A7E543A21B4" Primary="yes" />
+            <ComponentRef Id="C__B5DC073439314F0DA72A64C061D825FD" Primary="yes" />
+            <ComponentRef Id="C__B69D594B59284F939B1F4A00C77E172B" />
+            <ComponentRef Id="C__C4BD42520AFF43C457B1F6D462F382F8" Primary="yes" />
+            <ComponentRef Id="C__D42D3477D8D2384CECF37D5EA679190F" Primary="yes" />
+            <ComponentRef Id="C__F1AEE1D0AEFF11C787AEC46C06417DBF" Primary="yes" />
+            <ComponentRef Id="C__BD738AAED71DCCEED60CC945A97E1099" Primary="yes" />
+            <ComponentRef Id="C__FEF78C8F0A75A86AF2313796A1E8A0BA" />
+            <ComponentRef Id="C__0BB9AB952839205DEED7192D9540E67B" />
+            <ComponentRef Id="C__21D618ECFDF47B3A7851892103E533D9" />
+            <ComponentRef Id="C__FF6CD27F19E4A6A89505A3B50E1D9D98" />
+        </Feature>
+      
+        <Icon Id="Icon_TrionicCanFlasher.ico" SourceFile="$(var.TrionicCANFlasher.ProjectDir)TrionicCanFlasher.ico" />
+        <Property Id="ARPPRODUCTICON" Value="Icon_TrionicCanFlasher.ico" />
+        <MajorUpgrade
+          DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit."
+        />
+    </Product>
+</Wix>

@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrionicCANLib", "TrionicCAN
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SetupCANFlash", "SetupCANFlash\SetupCANFlash.vdproj", "{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}"
 EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SetupCANFlasher", "SetupCANFlasher\SetupCANFlasher.wixproj", "{3D666E41-0263-4EFC-9B80-743CCE5494D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,12 @@ Global
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|Any CPU.ActiveCfg = Release
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|Any CPU.Build.0 = Release
 		{C3CB3D93-F5A8-4C61-B929-5F89E6B8AC0B}.Release|x86.ActiveCfg = Release
+		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Debug|x86.ActiveCfg = Debug|x86
+		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Debug|x86.Build.0 = Debug|x86
+		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Release|Any CPU.ActiveCfg = Release|x86
+		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Release|x86.ActiveCfg = Release|x86
+		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
