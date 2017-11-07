@@ -7,6 +7,6 @@ namespace TrionicCANLib.Firmware
 {
     public class FileT7 : IBaseFile
     {
-        static public int Length = 0x80000;
+        static public uint Length = 0x80000;
     }
 }

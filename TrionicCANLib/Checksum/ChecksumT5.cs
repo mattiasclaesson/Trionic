@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using NLog;
-using TrionicCANLib;
 using TrionicCANLib.Firmware;
-using System.Windows.Forms;
 
 namespace TrionicCANLib.Checksum
 {
     public class ChecksumT5
     {
-        static private Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
         private static byte[,] T5markers = new byte[2, 4]
         {
@@ -36,8 +33,10 @@ namespace TrionicCANLib.Checksum
             long len    = fi.Length;
 
             // Verify file length
-            if (len != 0x20000 && len != 0x40000)
+            if (len != FileT5.LengthT52 && len != FileT5.LengthT55)
+            {
                 return ChecksumResult.InvalidFileLength;
+            }
 
             byte[] Localbuffer = FileTools.readdatafromfile(filename, 0, (int) len);
 
@@ -45,13 +44,15 @@ namespace TrionicCANLib.Checksum
                 Localbuffer[len - 4] << 24 | Localbuffer[len - 3] << 16 |
                 Localbuffer[len - 2] <<  8 | Localbuffer[len - 1]);
 
-            // Console.WriteLine("Read checksum: " + ReadSum.ToString("X8"));
-            // Console.WriteLine("Determining index by size");
+            logger.Debug("Read checksum: " + ReadSum.ToString("X8"));
+            logger.Debug("Determining index by size");
             if (!ChecksumMatch(Localbuffer, ReadSum, FindEndmarker(Localbuffer, (byte)(len>>18))))
             {
-                // Console.WriteLine("Trying doubled T5.2");
+                logger.Debug("Trying doubled T5.2");
                 if (!ChecksumMatch(Localbuffer, ReadSum, FindEndmarker(Localbuffer, 0)))
+                {
                     return ChecksumResult.Invalid;
+                }
             }
             
             return ChecksumResult.Ok;
@@ -65,12 +66,12 @@ namespace TrionicCANLib.Checksum
         /// <returns>Checksum match true or false</returns>
         public static bool ValidateDump(byte[] Bufr, bool IsT55)
         {
-            long len = IsT55 ? 0x40000 : 0x20000;
+            long len = IsT55 ? FileT5.LengthT55 : FileT5.LengthT52;
             uint ReadSum = (uint)(
                 Bufr[len - 4] << 24 | Bufr[len - 3] << 16 |
                 Bufr[len - 2] <<  8 | Bufr[len - 1]);
 
-            return  ChecksumMatch(Bufr, ReadSum, FindEndmarker(Bufr, (byte)(len>>18)));
+            return ChecksumMatch(Bufr, ReadSum, FindEndmarker(Bufr, (byte)(len>>18)));
         }
 
         /// <summary>
@@ -98,7 +99,7 @@ namespace TrionicCANLib.Checksum
         /// <returns>Last address of binary + 1</returns>
         private static uint FindEndmarker(byte[] Bufr, byte index)
         {
-            uint len = (index == 1 ? (uint)0x40000 : 0x20000);
+            uint len = (index == 1 ? FileT5.LengthT55 : FileT5.LengthT52);
 
             for (uint i = (len - 112); i > 3; i--)
             {
@@ -109,7 +110,7 @@ namespace TrionicCANLib.Checksum
                 }
             }
 
-            // Console.WriteLine("NO MARKER !!!");
+            logger.Debug("NO MARKER !!!");
             return 0;
         }
     }
