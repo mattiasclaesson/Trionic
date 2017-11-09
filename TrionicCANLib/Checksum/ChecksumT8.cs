@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using NLog;
-using TrionicCANLib;
 using TrionicCANLib.Firmware;
-using System.Windows.Forms;
 
 namespace TrionicCANLib.Checksum
 {
     public class ChecksumT8
     {
-        static private Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
         public static ChecksumResult VerifyChecksum(string filename)
         {
@@ -24,7 +21,7 @@ namespace TrionicCANLib.Checksum
 
             logger.Debug("Checksum area offset: " + checksumAreaOffset.ToString("X8"));
             byte[] hash = CalculateLayer1ChecksumMD5(filename, checksumAreaOffset);
-            // compare hash to bytes after checksumareaoffset
+            // compare hash to bytes after checksum areaoffset
             byte[] layer1checksuminfile = FileTools.readdatafromfile(filename, checksumAreaOffset + 2, 16);
             if (!CompareByteArray(hash, layer1checksuminfile))
             {
@@ -83,12 +80,6 @@ namespace TrionicCANLib.Checksum
 
             byte[] data = FileTools.readdatafromfile(filename, 0x20000, len);
             byte[] hash = md5.ComputeHash(data);
-            /*            foreach (byte b in hash)
-                        {
-                            byte bcalc = b;
-                            Console.Write(" " + b.ToString("X2"));
-                        }
-                        logger.Debug("");*/
             byte[] finalhash = new byte[hash.Length];
 
             for (int i = 0; i < hash.Length; i++)
@@ -99,10 +90,6 @@ namespace TrionicCANLib.Checksum
                 finalhash[i] = bcalc;
             }
 
-            /*foreach (byte b in finalhash)
-            {
-                Console.Write(" " + b.ToString("X2"));
-            }*/
             return finalhash;
 
         }
@@ -176,9 +163,8 @@ So, 0x101 byte buffer with first byte ignored (convention)
                 b += 0xD6;
                 b ^= 0x21;
                 coded_buffer[i] = b;
-                //Console.Write(b.ToString("X2") + " ");
             }
-            //logger.Debug("");
+
             byte[] complete_file = FileTools.readdatafromfile(filename, 0, 0x100000);
             int index = 0;
             bool chk_found = false;
