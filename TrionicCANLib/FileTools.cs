@@ -62,14 +62,14 @@ namespace TrionicCANLib
 
                     // TODO: mattias add TransactionEntry in projectTransactionLog
                     // implement as event?
+
+                    return true;
                 }
                 catch (Exception E)
                 {
                     MessageBox.Show("Failed to write to binary. Is it read-only? Details: " + E.Message);
                     logger.Debug(E.Message);
-                    return false;
                 }
-                return true;
             }
             return false;
         }

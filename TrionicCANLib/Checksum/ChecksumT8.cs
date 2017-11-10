@@ -11,7 +11,9 @@ namespace TrionicCANLib.Checksum
     {
         private readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public static ChecksumResult VerifyChecksum(string filename, bool autocorrect)
+        public delegate bool ChecksumUpdate(string layer, string filechecksum, string realchecksum);
+
+        public static ChecksumResult VerifyChecksum(string filename, bool autocorrect, ChecksumUpdate updateChecksum)
         {
             int checksumAreaOffset = GetChecksumAreaOffset(filename);
             if (checksumAreaOffset > FileT8.Length)
@@ -34,14 +36,28 @@ namespace TrionicCANLib.Checksum
                 }
                 else
                 {
-                    // TODO: mattias register UI callback/event
-                    // input Layer=1 or 2, FileChecksum, RealChecksum
-                    // output true/false if update should be done
-                    return ChecksumResult.Layer1Failed;
+                    string filechecksum = string.Empty;
+                    string realchecksum = string.Empty;
+                    for (int i = 0; i < layer1checksuminfile.Length; i++)
+                    {
+                        filechecksum += layer1checksuminfile[i].ToString("X2") + " ";
+                        realchecksum += hash[i].ToString("X2") + " ";
+                    }
+                    if(updateChecksum("Checksum validation Layer 1", filechecksum, realchecksum))
+                    {
+                        if (!FileTools.savedatatobinary(checksumAreaOffset + 2, 16, hash, filename))
+                        {
+                            return ChecksumResult.UpdateFailed;
+                        }
+                    }
+                    else
+                    {
+                        return ChecksumResult.Layer1Failed;
+                    }
                 }
             }
 
-            return CalculateLayer2Checksum(filename, checksumAreaOffset, autocorrect);
+            return CalculateLayer2Checksum(filename, checksumAreaOffset, autocorrect, updateChecksum);
         }
 
         static private int GetChecksumAreaOffset(string filename)
@@ -116,7 +132,7 @@ namespace TrionicCANLib.Checksum
             return retval;
         }
 
-        static private ChecksumResult CalculateLayer2Checksum(string filename, int OffsetLayer2, bool autocorrect)
+        static private ChecksumResult CalculateLayer2Checksum(string filename, int OffsetLayer2, bool autocorrect, ChecksumUpdate updateChecksum)
         {
             ChecksumResult result = ChecksumResult.Layer2Failed;
             uint checksum0 = 0;
@@ -179,27 +195,20 @@ namespace TrionicCANLib.Checksum
                             logger.Debug("Layer 2 checksum was invalid, should be updated!");
                             if (autocorrect)
                             {
-                                byte[] checksum_to_file = new byte[4];
-                                checksum_to_file[0] = Convert.ToByte((checksum0 >> 24) & 0x000000FF);
-                                checksum_to_file[1] = Convert.ToByte((checksum0 >> 16) & 0x000000FF);
-                                checksum_to_file[2] = Convert.ToByte((checksum0 >> 8) & 0x000000FF);
-                                checksum_to_file[3] = Convert.ToByte((checksum0) & 0x000000FF);
-                                checksum_to_file[0] = Convert.ToByte(((checksum_to_file[0] ^ 0x21) - (byte)0xD6) & 0x000000FF);
-                                checksum_to_file[1] = Convert.ToByte(((checksum_to_file[1] ^ 0x21) - (byte)0xD6) & 0x000000FF);
-                                checksum_to_file[2] = Convert.ToByte(((checksum_to_file[2] ^ 0x21) - (byte)0xD6) & 0x000000FF);
-                                checksum_to_file[3] = Convert.ToByte(((checksum_to_file[3] ^ 0x21) - (byte)0xD6) & 0x000000FF);
-                                if (!FileTools.savedatatobinary(index + OffsetLayer2 + 1, 4, checksum_to_file, filename))
-                                {
-                                    result = ChecksumResult.UpdateFailed;
-                                }
-                                result = ChecksumResult.Ok;
+                                result = UpdateLayer2(filename, OffsetLayer2, checksum0, index);
                             }
                             else
                             {
-                                // TODO: mattias register UI callback/event
-                                // input Layer=1 or 2, FileChecksum, RealChecksum
-                                // output true/false if update should be done
-                                result = ChecksumResult.Layer2Failed;
+                                string filechecksum = sum0.ToString("X8");
+                                string realchecksum = checksum0.ToString("X8");
+                                if (updateChecksum("Checksum validation Layer 2", filechecksum, realchecksum))
+                                {
+                                    result = UpdateLayer2(filename, OffsetLayer2, checksum0, index);
+                                }
+                                else
+                                {
+                                    result = ChecksumResult.Layer2Failed;
+                                }
                             }
                         }
                         else
@@ -214,6 +223,29 @@ namespace TrionicCANLib.Checksum
             if (!chk_found)
             {
                 logger.Debug("Layer 2 checksum could not be calculated [ file incompatible ]");
+            }
+            return result;
+        }
+
+        private static ChecksumResult UpdateLayer2(string filename, int OffsetLayer2, uint checksum0, int index)
+        {
+            ChecksumResult result;
+            byte[] checksum_to_file = new byte[4];
+            checksum_to_file[0] = Convert.ToByte((checksum0 >> 24) & 0x000000FF);
+            checksum_to_file[1] = Convert.ToByte((checksum0 >> 16) & 0x000000FF);
+            checksum_to_file[2] = Convert.ToByte((checksum0 >> 8) & 0x000000FF);
+            checksum_to_file[3] = Convert.ToByte((checksum0) & 0x000000FF);
+            checksum_to_file[0] = Convert.ToByte(((checksum_to_file[0] ^ 0x21) - (byte)0xD6) & 0x000000FF);
+            checksum_to_file[1] = Convert.ToByte(((checksum_to_file[1] ^ 0x21) - (byte)0xD6) & 0x000000FF);
+            checksum_to_file[2] = Convert.ToByte(((checksum_to_file[2] ^ 0x21) - (byte)0xD6) & 0x000000FF);
+            checksum_to_file[3] = Convert.ToByte(((checksum_to_file[3] ^ 0x21) - (byte)0xD6) & 0x000000FF);
+            if (FileTools.savedatatobinary(index + OffsetLayer2 + 1, 4, checksum_to_file, filename))
+            {
+                result = ChecksumResult.Ok;
+            }
+            else
+            {
+                result = ChecksumResult.UpdateFailed;
             }
             return result;
         }

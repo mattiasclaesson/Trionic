@@ -76,10 +76,12 @@ namespace TrionicCANLib.API
         private System.Timers.Timer tmr = new System.Timers.Timer(2000);
         private Stopwatch sw = new Stopwatch();
         private Stopwatch eraseSw = new Stopwatch();
+        public ChecksumT8.ChecksumUpdate m_ChecksumUpdate;
 
         public Trionic8()
         {
-            tmr.Elapsed += new System.Timers.ElapsedEventHandler(tmr_Elapsed);
+            tmr.Elapsed += tmr_Elapsed;
+            m_ChecksumUpdate = updateChecksum;
         }
 
         void tmr_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -4854,7 +4856,7 @@ namespace TrionicCANLib.API
                 {
                     File.WriteAllBytes(filename, buf);
                     Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
-                    ChecksumResult checksum = ChecksumT8.VerifyChecksum(filename, false);
+                    ChecksumResult checksum = ChecksumT8.VerifyChecksum(filename, false, m_ChecksumUpdate);
                     if (checksum != ChecksumResult.Ok)
                     {
                         CastInfoEvent("Checksum check failed: " + checksum, ActivityType.ConvertingFile);
@@ -4877,6 +4879,16 @@ namespace TrionicCANLib.API
                 workEvent.Result = false;
             }
             return;
+        }
+
+        private bool updateChecksum(string layer, string filechecksum, string realchecksum)
+        {
+            CastInfoEvent(layer, ActivityType.ConvertingFile);
+            CastInfoEvent("File Checksum: " + filechecksum, ActivityType.ConvertingFile);
+            CastInfoEvent("Real Checksum: " + realchecksum, ActivityType.ConvertingFile);
+
+            // Danger do not ever change return to true
+            return false;
         }
 
         public byte[] ReadSRAMSnapshot()

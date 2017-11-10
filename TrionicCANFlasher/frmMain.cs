@@ -29,6 +29,7 @@ namespace TrionicCANFlasher
         DateTime dtstart;
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
+        public ChecksumT8.ChecksumUpdate m_ChecksumUpdate;
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
         msiupdater m_msiUpdater;
         BackgroundWorker bgworkerLogCanData;
@@ -41,6 +42,7 @@ namespace TrionicCANFlasher
             InitializeComponent();
             m_DelegateUpdateStatus = updateStatusInBox;
             m_DelegateProgressStatus = updateProgress;
+            m_ChecksumUpdate = updateChecksum;
             SetupListboxWrapping();
             EnableUserInput(true);
         }
@@ -178,7 +180,7 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked);
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ChecksumUpdate);
                             if (checksum != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);
@@ -1903,7 +1905,7 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked);
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ChecksumUpdate);
                             if (checksum != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);
@@ -2034,8 +2036,8 @@ namespace TrionicCANFlasher
                 WorkerReportsProgress = true,
                 WorkerSupportsCancellation = true
             };
-            bgworkerLogCanData.DoWork += new DoWorkEventHandler(trionic.LogCANData);
-            bgworkerLogCanData.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+            bgworkerLogCanData.DoWork += trionic.LogCANData;
+            bgworkerLogCanData.RunWorkerCompleted += bgWorker_RunWorkerCompleted;
             bgworkerLogCanData.RunWorkerAsync();
         }
 
@@ -2049,6 +2051,16 @@ namespace TrionicCANFlasher
         {
             cbFormatSystemPartitions.Enabled = cbUseLegionBootloader.Checked;
             cbFormatBootPartition.Enabled = cbFormatSystemPartitions.Checked;
+        }
+
+        private bool updateChecksum(string layer, string filechecksum, string realchecksum)
+        {
+            AddLogItem(layer);
+            AddLogItem("File Checksum: " + filechecksum);
+            AddLogItem("Real Checksum: " + realchecksum);
+
+            // TODO: mattias, frmChecksum but using WinForms
+            return false;
         }
     }
 }
