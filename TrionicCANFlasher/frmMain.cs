@@ -37,8 +37,8 @@ namespace TrionicCANFlasher
         public frmMain()
         {
             Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
-            Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            Application.ThreadException += Application_ThreadException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             InitializeComponent();
             m_DelegateUpdateStatus = updateStatusInBox;
             m_DelegateProgressStatus = updateProgress;
@@ -794,8 +794,6 @@ namespace TrionicCANFlasher
 
         private void btnGetEcuInfo_Click(object sender, EventArgs e)
         {
-
-
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
             {
                 SetGenericOptions(trionic5);
@@ -818,7 +816,7 @@ namespace TrionicCANFlasher
                 AddLogItem("Connection closed");
                 EnableUserInput(true);
             }
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
                 trionic7.UseFlasherOnDevice = false;
