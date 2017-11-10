@@ -11,7 +11,7 @@ namespace TrionicCANLib.Checksum
     {
         private readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public static ChecksumResult VerifyChecksum(string filename)
+        public static ChecksumResult VerifyChecksum(string filename, bool autocorrect)
         {
             int checksumAreaOffset = GetChecksumAreaOffset(filename);
             if (checksumAreaOffset > FileT8.Length)
@@ -25,15 +25,23 @@ namespace TrionicCANLib.Checksum
             byte[] layer1checksuminfile = FileTools.readdatafromfile(filename, checksumAreaOffset + 2, 16);
             if (!CompareByteArray(hash, layer1checksuminfile))
             {
-                return ChecksumResult.Layer1Failed;
-            }
-            
-            if (!CalculateLayer2Checksum(filename, checksumAreaOffset))
-            {
-                return ChecksumResult.Layer2Failed;
+                if (autocorrect)
+                {
+                    if (!FileTools.savedatatobinary(checksumAreaOffset + 2, 16, hash, filename))
+                    {
+                        return ChecksumResult.UpdateFailed;
+                    }
+                }
+                else
+                {
+                    // TODO: mattias register UI callback/event
+                    // input Layer=1 or 2, FileChecksum, RealChecksum
+                    // output true/false if update should be done
+                    return ChecksumResult.Layer1Failed;
+                }
             }
 
-            return ChecksumResult.Ok;
+            return CalculateLayer2Checksum(filename, checksumAreaOffset, autocorrect);
         }
 
         static private int GetChecksumAreaOffset(string filename)
@@ -56,21 +64,21 @@ namespace TrionicCANLib.Checksum
         static private byte[] CalculateLayer1ChecksumMD5(string filename, int OffsetLayer1)
         {
             /*
-1.	calculate checksum pointer
-2.	Checksum is 2 level based on Message Digest 5 algorithm
-3.	Pointer = @ 0x20140 and is a 4 byte pointer
-4.	Use MD5 to make 16 bytes digest from any string
-5.	name checksum pointer CHPTR
-6.	checksum area 1 ranges from 20000h to CHPTR – 20000h- 1
-7.	Create an MD5 hash from this string (20000h – (CHPTR – 20000h – 1))
-    a.	MD5Init(Context)
-    b.	MD5Update(Context, buffer, size)
-    c.	MD5Final(Context, Md5Seed)
-    d.	sMd5Seed = MD5Print(Md5Seed)
-    e.	sMd5Seed = 16 bytes hex, so 32 bytes.
-    f.	Now crypt sMd5Seed: xor every byte with 21h, then substract D6h (minus)
-    g.	These 16 bytes are from CHPTR + 2 in the bin!!!! This is checksum level 1 !!
-             * */
+            1.	calculate checksum pointer
+            2.	Checksum is 2 level based on Message Digest 5 algorithm
+            3.	Pointer = @ 0x20140 and is a 4 byte pointer
+            4.	Use MD5 to make 16 bytes digest from any string
+            5.	name checksum pointer CHPTR
+            6.	checksum area 1 ranges from 20000h to CHPTR – 20000h- 1
+            7.	Create an MD5 hash from this string (20000h – (CHPTR – 20000h – 1))
+                a.	MD5Init(Context)
+                b.	MD5Update(Context, buffer, size)
+                c.	MD5Final(Context, Md5Seed)
+                d.	sMd5Seed = MD5Print(Md5Seed)
+                e.	sMd5Seed = 16 bytes hex, so 32 bytes.
+                f.	Now crypt sMd5Seed: xor every byte with 21h, then substract D6h (minus)
+                g.	These 16 bytes are from CHPTR + 2 in the bin!!!! This is checksum level 1 !!
+                         * */
             System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
 
             int len = OffsetLayer1 - 0x20000;//- 1;
@@ -94,36 +102,6 @@ namespace TrionicCANLib.Checksum
 
         }
 
-        static private Int64 CalculateLayer1Checksum(string filename, int OffsetLayer1)
-        {
-            Int64 chkLayer1 = 0;
-            //20000 to B5058 (?)
-            FileStream fsread = new FileStream(filename, FileMode.Open, FileAccess.Read);
-            int byteCount = OffsetLayer1 - 0x20000;
-            using (BinaryReader br = new BinaryReader(fsread))
-            {
-                fsread.Seek(0x20000, SeekOrigin.Begin);
-                // addition
-                Int64 _tempValue = 0;
-                for (int tel = 0; tel < byteCount; tel += 8)
-                {
-                    _tempValue = 0;
-                    _tempValue = Convert.ToInt64(br.ReadByte()) * 256 * 256 * 256 * 256 * 256 * 256 * 256;
-                    _tempValue += Convert.ToInt64(br.ReadByte()) * 256 * 256 * 256 * 256 * 256 * 256;
-                    _tempValue += Convert.ToInt64(br.ReadByte()) * 256 * 256 * 256 * 256 * 256;
-                    _tempValue += Convert.ToInt64(br.ReadByte()) * 256 * 256 * 256 * 256;
-                    _tempValue += Convert.ToInt64(br.ReadByte()) * 256 * 256 * 256;
-                    _tempValue += Convert.ToInt64(br.ReadByte()) * 256 * 256;
-                    _tempValue += Convert.ToInt64(br.ReadByte()) * 256;
-                    _tempValue += Convert.ToInt64(br.ReadByte());
-                    chkLayer1 += _tempValue;
-                }
-            }
-            fsread.Close();
-
-            return chkLayer1;
-        }
-
         static private bool CompareByteArray(byte[] arr1, byte[] arr2)
         {
             bool retval = true;
@@ -138,9 +116,9 @@ namespace TrionicCANLib.Checksum
             return retval;
         }
 
-        static private bool CalculateLayer2Checksum(string filename, int OffsetLayer2)
+        static private ChecksumResult CalculateLayer2Checksum(string filename, int OffsetLayer2, bool autocorrect)
         {
-            bool Layer2ChecksumValid = false;
+            ChecksumResult result = ChecksumResult.Layer2Failed;
             uint checksum0 = 0;
             uint checksum1 = 0;
             uint sum0 = 0;
@@ -148,13 +126,13 @@ namespace TrionicCANLib.Checksum
             uint partial_address = 0;
             uint x = 0;
             /*
-Get 0x100 byte buffer from CHPTR – CHPTR + 0xFF
-Because level 1 is in that area level1 must be correct first
-Prepare coded_buffer (0x100 buffer from chptr) with loop: coded_buffer(x) = (buffer (x) + 0xD6) xor 0x21 
-(add 0xd6 to every byte of buffer, then xor it by 0x21)
-[ 1 indexed, not 0 indexed ]
-So, 0x101 byte buffer with first byte ignored (convention)
-             * */
+            Get 0x100 byte buffer from CHPTR – CHPTR + 0xFF
+            Because level 1 is in that area level1 must be correct first
+            Prepare coded_buffer (0x100 buffer from chptr) with loop: coded_buffer(x) = (buffer (x) + 0xD6) xor 0x21 
+            (add 0xd6 to every byte of buffer, then xor it by 0x21)
+            [ 1 indexed, not 0 indexed ]
+            So, 0x101 byte buffer with first byte ignored (convention)
+                         * */
             byte[] coded_buffer = FileTools.readdatafromfile(filename, OffsetLayer2, 0x100);
 
             for (int i = 0; i < coded_buffer.Length; i++)
@@ -198,11 +176,35 @@ So, 0x101 byte buffer with first byte ignored (convention)
                         }
                         if (checksum0 != sum0)
                         {
-                            Layer2ChecksumValid = false;
+                            logger.Debug("Layer 2 checksum was invalid, should be updated!");
+                            if (autocorrect)
+                            {
+                                byte[] checksum_to_file = new byte[4];
+                                checksum_to_file[0] = Convert.ToByte((checksum0 >> 24) & 0x000000FF);
+                                checksum_to_file[1] = Convert.ToByte((checksum0 >> 16) & 0x000000FF);
+                                checksum_to_file[2] = Convert.ToByte((checksum0 >> 8) & 0x000000FF);
+                                checksum_to_file[3] = Convert.ToByte((checksum0) & 0x000000FF);
+                                checksum_to_file[0] = Convert.ToByte(((checksum_to_file[0] ^ 0x21) - (byte)0xD6) & 0x000000FF);
+                                checksum_to_file[1] = Convert.ToByte(((checksum_to_file[1] ^ 0x21) - (byte)0xD6) & 0x000000FF);
+                                checksum_to_file[2] = Convert.ToByte(((checksum_to_file[2] ^ 0x21) - (byte)0xD6) & 0x000000FF);
+                                checksum_to_file[3] = Convert.ToByte(((checksum_to_file[3] ^ 0x21) - (byte)0xD6) & 0x000000FF);
+                                if (!FileTools.savedatatobinary(index + OffsetLayer2 + 1, 4, checksum_to_file, filename))
+                                {
+                                    result = ChecksumResult.UpdateFailed;
+                                }
+                                result = ChecksumResult.Ok;
+                            }
+                            else
+                            {
+                                // TODO: mattias register UI callback/event
+                                // input Layer=1 or 2, FileChecksum, RealChecksum
+                                // output true/false if update should be done
+                                result = ChecksumResult.Layer2Failed;
+                            }
                         }
                         else
                         {
-                            Layer2ChecksumValid = true;
+                            result = ChecksumResult.Ok;
                         }
                         chk_found = true;
                     }
@@ -213,7 +215,7 @@ So, 0x101 byte buffer with first byte ignored (convention)
             {
                 logger.Debug("Layer 2 checksum could not be calculated [ file incompatible ]");
             }
-            return Layer2ChecksumValid;
+            return result;
         }
     }
 }

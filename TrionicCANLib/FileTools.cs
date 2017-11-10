@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using NLog;
+using System.Windows.Forms;
 
 namespace TrionicCANLib
 {
     class FileTools
     {
-        private static Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
         public static byte[] readdatafromfile(string filename, int address, int length)
         {
@@ -38,6 +38,40 @@ namespace TrionicCANLib
                 logger.Debug(E.Message);
             }
             return retval;
+        }
+
+        public static bool savedatatobinary(int address, int length, byte[] data, string filename)
+        {
+            if (address > 0 && address < Firmware.FileT8.Length) // TODO: mattias support other firmwares
+            {
+                try
+                {
+                    using (FileStream fsi1 = File.OpenWrite(filename))
+                    {
+                        BinaryWriter bw1 = new BinaryWriter(fsi1);
+                        fsi1.Position = address;
+                        for (int i = 0; i < length; i++)
+                        {
+                            bw1.Write((byte)data.GetValue(i));
+                        }
+                        fsi1.Flush();
+                        bw1.Close();
+                        fsi1.Close();
+                        fsi1.Dispose();
+                    }
+
+                    // TODO: mattias add TransactionEntry in projectTransactionLog
+                    // implement as event?
+                }
+                catch (Exception E)
+                {
+                    MessageBox.Show("Failed to write to binary. Is it read-only? Details: " + E.Message);
+                    logger.Debug(E.Message);
+                    return false;
+                }
+                return true;
+            }
+            return false;
         }
     }
 }

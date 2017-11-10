@@ -4854,7 +4854,7 @@ namespace TrionicCANLib.API
                 {
                     File.WriteAllBytes(filename, buf);
                     Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
-                    ChecksumResult checksum = ChecksumT8.VerifyChecksum(filename);
+                    ChecksumResult checksum = ChecksumT8.VerifyChecksum(filename, false);
                     if (checksum != ChecksumResult.Ok)
                     {
                         CastInfoEvent("Checksum check failed: " + checksum, ActivityType.ConvertingFile);

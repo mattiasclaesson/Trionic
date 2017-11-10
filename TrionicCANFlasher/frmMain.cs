@@ -29,7 +29,7 @@ namespace TrionicCANFlasher
         DateTime dtstart;
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
-        private Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
         msiupdater m_msiUpdater;
         BackgroundWorker bgworkerLogCanData;
 
@@ -178,7 +178,7 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName);
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked);
                             if (checksum != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);
@@ -1163,6 +1163,7 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("UseLegionBootloader", cbUseLegionBootloader.Checked);
             SaveRegistrySetting("FormatSystemPartitions", cbFormatSystemPartitions.Checked);
             SaveRegistrySetting("FormatBootPartition", cbFormatBootPartition.Checked);
+            SaveRegistrySetting("AutoChecksum", cbAutoChecksum.Checked);
             trionic8.Cleanup();
             trionic7.Cleanup();
             trionic5.Cleanup();
@@ -1386,6 +1387,11 @@ namespace TrionicCANFlasher
                             {
                                 cbFormatBootPartition.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
+                            else if (a == "AutoChecksum")
+                            {
+                                cbAutoChecksum.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                            }
+                            
                         }
                         catch (Exception e)
                         {
@@ -1897,7 +1903,7 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName);
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked);
                             if (checksum != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);

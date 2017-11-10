@@ -57,6 +57,7 @@
             this.cbFormatBootPartition = new System.Windows.Forms.CheckBox();
             this.cbUseLegionBootloader = new System.Windows.Forms.CheckBox();
             this.cbFormatSystemPartitions = new System.Windows.Forms.CheckBox();
+            this.cbAutoChecksum = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -86,9 +87,9 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(12, 405);
+            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar1.Location = new System.Drawing.Point(12, 426);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(648, 23);
             this.progressBar1.TabIndex = 23;
@@ -117,15 +118,15 @@
             // 
             // listBoxLog
             // 
-            this.listBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.listBoxLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxLog.Font = new System.Drawing.Font("Courier New", 8.25F);
             this.listBoxLog.FormattingEnabled = true;
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(648, 382);
+            this.listBoxLog.Size = new System.Drawing.Size(648, 396);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
@@ -394,11 +395,23 @@
             this.cbFormatSystemPartitions.UseVisualStyleBackColor = true;
             this.cbFormatSystemPartitions.CheckedChanged += new System.EventHandler(this.cbFormatSystemPartitions_CheckedChanged);
             // 
+            // cbAutoChecksum
+            // 
+            this.cbAutoChecksum.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbAutoChecksum.AutoSize = true;
+            this.cbAutoChecksum.Location = new System.Drawing.Point(863, 435);
+            this.cbAutoChecksum.Name = "cbAutoChecksum";
+            this.cbAutoChecksum.Size = new System.Drawing.Size(136, 17);
+            this.cbAutoChecksum.TabIndex = 72;
+            this.cbAutoChecksum.Text = "Auto update checksum";
+            this.cbAutoChecksum.UseVisualStyleBackColor = true;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1023, 440);
+            this.ClientSize = new System.Drawing.Size(1023, 461);
+            this.Controls.Add(this.cbAutoChecksum);
             this.Controls.Add(this.cbFormatSystemPartitions);
             this.Controls.Add(this.cbUseLegionBootloader);
             this.Controls.Add(this.cbFormatBootPartition);
@@ -469,6 +482,7 @@
         private System.Windows.Forms.CheckBox cbFormatBootPartition;
         private System.Windows.Forms.CheckBox cbUseLegionBootloader;
         private System.Windows.Forms.CheckBox cbFormatSystemPartitions;
+        private System.Windows.Forms.CheckBox cbAutoChecksum;
     }
 }
 

@@ -30,7 +30,7 @@
       </Condition>
 
       <DirectoryRef Id="TARGETDIR">
-        <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" Language="0"/>
+        <Merge Id="VCRedist" SourceFile="C:\Program Files\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" Language="0"/>
       </DirectoryRef>
       <Feature Id="VCRedist" Title="Visual C++ 10.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
         <MergeRef Id="VCRedist"/>
