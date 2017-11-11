@@ -599,7 +599,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
         "ProductCode" = "8:{5324AB9D-E232-4390-BD09-15D4DD670809}"
-        "PackageCode" = "8:{BD315A0F-76AB-4AB9-BE23-F592D6FE383A}"
+        "PackageCode" = "8:{51BBE522-B8D5-454B-94D1-357B486E8A88}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"

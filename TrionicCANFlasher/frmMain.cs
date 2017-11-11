@@ -2057,8 +2057,10 @@ namespace TrionicCANFlasher
             AddLogItem("File Checksum: " + filechecksum);
             AddLogItem("Real Checksum: " + realchecksum);
 
-            // TODO: mattias, frmChecksum but using WinForms
-            return false;
+            using (frmChecksum frm = new frmChecksum() { Layer = layer, FileChecksum = filechecksum, RealChecksum = realchecksum })
+            {
+                return frm.ShowDialog() == DialogResult.OK ? true : false;
+            }
         }
     }
 }

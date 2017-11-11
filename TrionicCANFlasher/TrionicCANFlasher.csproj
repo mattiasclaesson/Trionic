@@ -101,6 +101,12 @@
     <Compile Include="EditParameters.Designer.cs">
       <DependentUpon>EditParameters.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmChecksum.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmChecksum.Designer.cs">
+      <DependentUpon>frmChecksum.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmUpdateAvailable.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -118,6 +124,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="EditParameters.resx">
       <DependentUpon>EditParameters.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmChecksum.resx">
+      <DependentUpon>frmChecksum.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
