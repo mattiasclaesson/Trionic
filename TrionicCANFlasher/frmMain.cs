@@ -530,7 +530,6 @@ namespace TrionicCANFlasher
             {
                 // Always disable
                 btnReadECUcalibration.Enabled = false;
-                btnReadSRAM.Enabled = false;
 
                 // These are handled differently than the rest; Only enable if "enable" and their corresponding dependency is set
                 cbFormatSystemPartitions.Enabled = enable ? cbUseLegionBootloader.Checked : false;
@@ -967,11 +966,11 @@ namespace TrionicCANFlasher
 
         private void btnReadSRAM_Click(object sender, EventArgs e)
         {
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+            using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
             {
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
+                if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    if (sfd.ShowDialog() == DialogResult.OK)
+                    if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
                     {
                         SetGenericOptions(trionic5);
 
@@ -984,7 +983,7 @@ namespace TrionicCANFlasher
                             AddLogItem("Aquiring snapshot");
                             Application.DoEvents();
                             dtstart = DateTime.Now;
-                            trionic5.DumpSRAMContent(sfd.FileName);
+                            trionic5.GetSRAMSnapshot(sfd.FileName);
                         }
                         else
                         {
@@ -994,14 +993,8 @@ namespace TrionicCANFlasher
                         EnableUserInput(true);
                         AddLogItem("Connection terminated");
                     }
-                }
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
-                {
-                    if (sfd.ShowDialog() == DialogResult.OK)
-                    {
+                    else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+                    {    
                         SetGenericOptions(trionic7);
                         trionic7.UseFlasherOnDevice = false;
 
@@ -1010,8 +1003,6 @@ namespace TrionicCANFlasher
 
                         if (trionic7.openDevice())
                         {
-                            // check reading status periodically
-
                             Thread.Sleep(1000);
                             AddLogItem("Aquiring snapshot");
                             Application.DoEvents();
@@ -1026,49 +1017,29 @@ namespace TrionicCANFlasher
                         EnableUserInput(true);
                         AddLogItem("Connection terminated");
                     }
-                }
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "SRAM snapshots|*.RAM" })
-                {
-                    if (sfd.ShowDialog() == DialogResult.OK)
+                    else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                     {
                         SetGenericOptions(trionic8);
 
                         EnableUserInput(false);
                         AddLogItem("Opening connection");
-                        trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                        if (trionic8.openDevice(false))
+                        trionic8.SecurityLevel = AccessLevel.AccessLevelFD;
+                        if (trionic8.openDevice(true))
                         {
                             Thread.Sleep(1000);
                             dtstart = DateTime.Now;
                             AddLogItem("Aquiring snapshot");
                             Application.DoEvents();
-                            byte[] snapshot = trionic8.getSRAMSnapshot();
-                            byte[] snapshot5000 = trionic8.ReadSRAMSnapshot();
-                            byte[] total = new byte[0x008000];
-                            snapshot.CopyTo(total, 0);
-                            snapshot5000.CopyTo(total, 0x5000);
-                            try
-                            {
-                                File.WriteAllBytes(sfd.FileName, total);
-                                AddLogItem("Snapshot done");
-                            }
-                            catch (Exception ex)
-                            {
-                                AddLogItem("Could not write file... " + ex.Message);
-                            }
-                            TimeSpan ts = DateTime.Now - dtstart;
-                            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                            BackgroundWorker bgWorker;
+                            bgWorker = new BackgroundWorker();
+                            bgWorker.DoWork += new DoWorkEventHandler(trionic8.GetSRAMSnapshot);
+                            bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+                            bgWorker.RunWorkerAsync(sfd.FileName);
                         }
                         else
                         {
                             AddLogItem("Unable to connect to Trionic 8 ECU");
                         }
-                        trionic8.Cleanup();
-                        EnableUserInput(true);
-                        AddLogItem("Connection terminated");
                     }
                 }
             }

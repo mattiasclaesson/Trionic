@@ -2554,29 +2554,32 @@ namespace TrionicCANLib.API
             //logger.Debug("received KA: " + response.getCanData(1).ToString("X2"));
         }
 
-        public byte[] getSRAMSnapshot()
+        public void GetSRAMSnapshot(object sender, DoWorkEventArgs workEvent)
         {
-            bool success = false;
+            BackgroundWorker bw = sender as BackgroundWorker;
+            string filename = (string)workEvent.Argument;
+        
+            bool result = false;
             int retryCount = 0;
-
-            _stallKeepAlive = true;
             int startAddress = 0x100000;
             int blockSize = 0x40;
             int bufpnt = 0;
             int saved_progress = 0;
-            byte[] buf = new byte[0x7000];
-            success = false;
-            //for (int i = 0; i < buf.Length/blockSize; i++)
+            byte[] buf = new byte[0x8000];
+
+            _stallKeepAlive = true;
+
             while (bufpnt < buf.Length - 1)
             {
                 if (!canUsbDevice.isOpen())
                 {
                     _stallKeepAlive = false;
-                    return buf;
+                    workEvent.Result = false;
+                    return;
                 }
 
-                byte[] readbuf = readMemory(startAddress, blockSize, out success);
-                if (success)
+                byte[] readbuf = readMemory(startAddress, blockSize, out result);
+                if (result)
                 {
 
                     if (readbuf.Length == blockSize)
@@ -2586,7 +2589,7 @@ namespace TrionicCANLib.API
                             buf[bufpnt++] = readbuf[j];
                         }
                     }
-                    int percentage = (int)((float)(bufpnt * 85) / (float)buf.Length);
+                    int percentage = (int)((float)100 * bufpnt / (float)buf.Length);
                     if (percentage > saved_progress)
                     {
                         CastProgressReadEvent(percentage);
@@ -2597,19 +2600,38 @@ namespace TrionicCANLib.API
                 }
                 else
                 {
-                    CastInfoEvent("Frame dropped, retrying", ActivityType.DownloadingFlash);
+                    CastInfoEvent("Frame dropped, retrying", ActivityType.DownloadingSRAM);
                     retryCount++;
                     if (retryCount == maxRetries)
                     {
-                        CastInfoEvent("Failed to download SRAM content", ActivityType.ConvertingFile);
+                        CastInfoEvent("Failed to download SRAM content", ActivityType.DownloadingSRAM);
                         _stallKeepAlive = false;
-                        return buf;
+                        workEvent.Result = false;
                     }
                 }
                 SendKeepAlive();
             }
+
             _stallKeepAlive = false;
-            return buf;
+
+            if (buf != null)
+            {
+                try
+                {
+                    File.WriteAllBytes(filename, buf);
+                    CastInfoEvent("Snapshot done", ActivityType.DownloadingSRAM);
+                    workEvent.Result = true;
+                }
+                catch (Exception ex)
+                {
+                    CastInfoEvent("Could not write file... " + ex.Message, ActivityType.DownloadingSRAM);
+                    workEvent.Result = false;
+                }
+            }
+            else
+            {
+                workEvent.Result = false;
+            }
         }
 
         private byte getCanData(ulong m_data, uint a_index)
@@ -4891,138 +4913,6 @@ namespace TrionicCANLib.API
             return false;
         }
 
-        public byte[] ReadSRAMSnapshot()
-        {
-            _stallKeepAlive = true;
-            bool success = false;
-            int retryCount = 0;
-            int startAddress = 0x107000;
-            int blockSize = 0x80; // defined in bootloader... keep it that way!
-            int bufpnt = 0;
-            byte[] buf = new byte[0x001000];
-            int blockCount = 0;
-            int saved_progress = 0;
-            SendKeepAlive();
-            sw.Reset();
-            sw.Start();
-            CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
-
-            StartSession10();
-            CastInfoEvent("Requesting mandatory data", ActivityType.UploadingBootloader);
-
-            RequestECUInfo(0x90);
-            RequestECUInfo(0x97);
-            RequestECUInfo(0x92);
-            RequestECUInfo(0xB4);
-            RequestECUInfo(0xC1);
-            RequestECUInfo(0xC2);
-            RequestECUInfo(0xC3);
-            RequestECUInfo(0xC4);
-            RequestECUInfo(0xC5);
-            RequestECUInfo(0xC6);
-            Send0120();
-            Thread.Sleep(1000);
-
-            StartSession1081();
-
-            StartSession10();
-            CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
-            SendShutup();
-            SendA2();
-            SendA5();
-            SendA503();
-            Thread.Sleep(500);
-            SendKeepAlive();
-            _securityLevel = AccessLevel.AccessLevel01;
-            CastInfoEvent("Requesting security access", ActivityType.UploadingBootloader);
-            RequestSecurityAccess(500);
-            Thread.Sleep(500);
-            CastInfoEvent("Uploading bootloader", ActivityType.UploadingBootloader);
-            UploadBootloaderRead();
-            CastInfoEvent("Starting bootloader", ActivityType.UploadingBootloader);
-            // start bootloader in ECU
-            Thread.Sleep(500);
-            StartBootloader(0x102460);
-            SendKeepAlive();
-            Thread.Sleep(500);
-
-            CastInfoEvent("Downloading snapshot", ActivityType.DownloadingFlash);
-
-
-
-            // now start sending commands:
-            //06 21 80 00 00 00 00 00 
-            // response: 
-            //10 82 61 80 00 10 0C 00 // 4 bytes data already
-
-            //for (int i = 0; i < buf.Length / blockSize; i++)
-            while (startAddress < 0x108000)
-            {
-                if (!canUsbDevice.isOpen())
-                {
-                    _stallKeepAlive = false;
-                    return buf;
-                }
-                byte[] readbuf = readDataByLocalIdentifier(false, 6, startAddress, blockSize, out success);
-                if (success)
-                {
-                    if (readbuf.Length == blockSize)
-                    {
-                        for (int j = 0; j < blockSize; j++)
-                        {
-                            buf[bufpnt++] = readbuf[j];
-                        }
-                    }
-                    //string infoStr = "Address: " + startAddress.ToString("X8"); //+ " ";
-                    int percentage = (int)((float)(bufpnt * 100) / (float)buf.Length);
-                    if (percentage > saved_progress)
-                    {
-                        CastProgressReadEvent(percentage);
-                        saved_progress = percentage;
-                    }
-                    startAddress += blockSize;
-                    retryCount = 0;
-                }
-                else
-                {
-                    CastInfoEvent("Frame dropped, retrying " + startAddress.ToString("X8") + " " + retryCount.ToString(), ActivityType.DownloadingFlash);
-                    retryCount++;
-                    // read all available message from the bus now
-
-                    for (int i = 0; i < 10; i++)
-                    {
-                        CANMessage response = new CANMessage();
-                        ulong data = 0;
-                        response = new CANMessage();
-                        response = m_canListener.waitMessage(10);
-                        data = response.getData();
-                    }
-
-
-
-                    if (retryCount == maxRetries)
-                    {
-                        CastInfoEvent("Failed to download FLASH content", ActivityType.ConvertingFile);
-                        _stallKeepAlive = false;
-                        return buf;
-                    }
-                }
-                blockCount++;
-                if (sw.ElapsedMilliseconds > 3000) // once every 3 seconds
-                //if ((blockCount % 10) == 0)
-                {
-                    sw.Stop();
-                    sw.Reset();
-                    SendKeepAlive();
-                    sw.Start();
-                }
-
-            }
-            sw.Stop();
-            _stallKeepAlive = false;
-            return buf;
-        }
-
         private bool SendrequestDownload(byte PCI, bool recoveryMode, bool LegionMode)
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
@@ -5360,7 +5250,7 @@ namespace TrionicCANLib.API
                     retryCount++;
                     if (retryCount == maxRetries)
                     {
-                        CastInfoEvent("Failed to download SRAM content", ActivityType.ConvertingFile);
+                        CastInfoEvent("Failed to download Flash content", ActivityType.ConvertingFile);
                         _stallKeepAlive = false;
                         workEvent.Result = false;
                         return;

@@ -2085,7 +2085,7 @@ S9035000AC";
         /// Dumps the SRAM content to a binary file
         /// </summary>
         /// <param name="filename"></param>
-        public void DumpSRAMContent(string filename)
+        public void GetSRAMSnapshot(string filename)
         {
             //read 256 bytes per cycle in a loop until 0x8000 is read
             //this will enable a progress bar when downloading SRAM

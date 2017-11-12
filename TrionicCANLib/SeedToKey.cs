@@ -8,7 +8,7 @@ namespace TrionicCANLib
     {
         AccessLevel01,
         AccessLevelFB,
-        AccessLevelFD
+        AccessLevelFD // Highest access level
     }
 
     public class SeedToKey
@@ -32,25 +32,6 @@ namespace TrionicCANLib
                 key ^= 0x8749;
                 key += 0x06D3;
                 key ^= 0xCFDF;
-            }
-            returnKey[0] = (byte)((key >> 8) & 0xFF);
-            returnKey[1] = (byte)(key & 0xFF);
-            return returnKey;
-        }
-
-        public byte[] calculateKey(byte[] a_seed, bool basicAccess)
-        {
-            int seed = a_seed[0] << 8 | a_seed[1];
-            int key = 0;
-            byte[] returnKey = new byte[2];
-            key = convertSeed(seed);
-            if (!basicAccess)
-            {
-                // this does not apply to method 1
-                key /= 3;
-                key ^= 0x8749;
-                key += 2767;
-                key ^= 0x81BF;
             }
             returnKey[0] = (byte)((key >> 8) & 0xFF);
             returnKey[1] = (byte)(key & 0xFF);
