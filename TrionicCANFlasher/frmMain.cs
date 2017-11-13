@@ -890,15 +890,15 @@ namespace TrionicCANFlasher
                         string rawPI01;
                         trionic8.GetPI01(out convertible, out sai, out highoutput, out biopower, out diagnosticType, out clutchStart, out tankType, out rawPI01);
 
-                        AddLogItem("PI 0x01         : Cab:" + convertible + " SAI:" + sai + " HighOutput:" + highoutput + " Biopower:" + biopower + " DiagnosticType:" + diagnosticType + " ClutchStart:" + clutchStart + " TankType:" + tankType + " rawValues: " + rawPI01);
-                        AddLogItem("PI 0x03         : " + trionic8.GetPI03());
-                        AddLogItem("PI 0x04         : " + trionic8.GetPI04());
-                        AddLogItem("PI 0x07         : " + trionic8.GetPI07());
-                        AddLogItem("PI 0x2E         : " + trionic8.GetPI2E());
-                        AddLogItem("PI 0xB9         : " + trionic8.GetPIB9());
-                        AddLogItem("PI 0x24         : " + trionic8.GetPI24());
-                        AddLogItem("PI 0xA0         : " + trionic8.GetPIA0());
-                        AddLogItem("PI 0x96         : " + trionic8.GetPI96());
+                        logger.Debug("PI 0x01         : Cab:" + convertible + " SAI:" + sai + " HighOutput:" + highoutput + " Biopower:" + biopower + " DiagnosticType:" + diagnosticType + " ClutchStart:" + clutchStart + " TankType:" + tankType + " rawValues: " + rawPI01);
+                        logger.Debug("PI 0x03         : " + trionic8.GetPI03());
+                        logger.Debug("PI 0x04         : " + trionic8.GetPI04());
+                        logger.Debug("PI 0x07         : " + trionic8.GetPI07());
+                        logger.Debug("PI 0x2E         : " + trionic8.GetPI2E());
+                        logger.Debug("PI 0xB9         : " + trionic8.GetPIB9());
+                        logger.Debug("PI 0x24         : " + trionic8.GetPI24());
+                        logger.Debug("PI 0xA0         : " + trionic8.GetPIA0());
+                        logger.Debug("PI 0x96         : " + trionic8.GetPI96());
                         
                         // On a non biopower bin this request seem to poison the session, do it last always!
                         AddLogItem("E85                       : " + trionic8.GetE85Percentage().ToString("F2") + " %");
