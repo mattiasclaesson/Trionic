@@ -749,7 +749,7 @@ namespace TrionicCANLib.CAN
             }
         }
 
-        public override bool IsBusy
+        private bool IsBusy
         {
             get
             {
@@ -769,7 +769,6 @@ namespace TrionicCANLib.CAN
             set
             {
                 m_AcceptedMessageIds = value;
-                //InitializeMessageFilters(); //this should setup the ELM to monitor all possible these addresses
             }
         }
 
@@ -801,7 +800,7 @@ namespace TrionicCANLib.CAN
 
         }
 
-        public override void SendControlCommand(string msg)
+        void SendControlCommand(string msg)
         {
             SendControlMessage(msg, true);
         }

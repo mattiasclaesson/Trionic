@@ -241,32 +241,12 @@ namespace TrionicCANLib.CAN
         }
 
         /// <summary>
-        /// This indicates that interface is busy. Used only by ELM327 for now
-        /// </summary>
-        public virtual bool IsBusy
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Setups can filter. Used by ELM327 implementation only
         /// </summary>
         /// <param name="canAddress">Can address(i.e. 7E8)</param>
         /// <param name="canMask">Can mask (i.e. DFF with 7E8 should allow to get both 7E8 and 5E8 responses). 
         /// If set to 000, then all the can traffic will be visible to ELM</param>
         public virtual void SetupCANFilter(string canAddress, string canMask) { }
-
-        /// <summary>
-        /// sends control command (like ATST)
-        /// </summary>
-        /// <param name="cmd">The command with \r like "ATST01\r"</param>
-        public virtual void SendControlCommand(string cmd)
-        {
-
-        }
 
         #endregion ELM327 specific
     }
