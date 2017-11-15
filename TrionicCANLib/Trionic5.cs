@@ -73,6 +73,8 @@ namespace TrionicCANLib.API
 {
     public class Trionic5 : ITrionic
     {
+        static public List<uint> FilterIdECU = new List<uint> { 0x005, 0x006, 0x00c };
+
         private Logger logger = LogManager.GetCurrentClassLogger();
         private System.Timers.Timer tmr = new System.Timers.Timer(2000);
         private CANListener m_canListener;
@@ -186,7 +188,7 @@ S9035000AC";
                 m_canListener = new CANListener();
             }
             canUsbDevice.addListener(m_canListener);
-            canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x005, 0x006, 0x00c };
+            canUsbDevice.AcceptOnlyMessageIds = FilterIdECU;
         }
 
         override public void SetSelectedAdapter(string adapter)

@@ -416,7 +416,7 @@ namespace TrionicCANLib.CAN
                 {
                     m_deviceIsOpen = true;
 
-                    // InitializeMessageFilters();
+                    InitializeMessageFilters();
 
                     answer = WriteToSerialAndWait("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
 
@@ -604,11 +604,10 @@ namespace TrionicCANLib.CAN
             }
             mask = (~mask & 0x7FF) | filt;
 
-            // logger.Debug("Configured acceptance code: " + filt.ToString("X3"));
-            // logger.Debug("Configured acceptance mask: " + mask.ToString("X3"));
+            logger.Debug("Configured acceptance code: " + filt.ToString("X3"));
+            logger.Debug("Configured acceptance mask: " + mask.ToString("X3"));
 
             SetupCANFilter(filt.ToString("X3"), mask.ToString("X3"));
-            // SetupCANFilter(AcceptOnlyMessageIds[0].ToString("X3"), filter.ToString("X3"));
         }
 
         public void Flush()
@@ -757,7 +756,7 @@ namespace TrionicCANLib.CAN
             }
         }
 
-        public override void SetupCANFilter(string canAddress, string canMask)
+        private void SetupCANFilter(string canAddress, string canMask)
         {
             SendControlCommand(string.Format("AT CF {0} \r", canAddress));
             SendControlCommand(string.Format("AT CM {0} \r", canMask));

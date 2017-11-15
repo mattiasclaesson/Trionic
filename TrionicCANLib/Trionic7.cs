@@ -11,7 +11,10 @@ using NLog;
 namespace TrionicCANLib.API
 {
     public class Trionic7 : ITrionic
-    {   
+    {
+        static public List<uint> FilterIdECU = new List<uint> { 0x258, 0x238,
+                                                                0x220, 0x240, 0x266 }; // Certain adapters applies filter and mask to outgoing messages too
+
         private IKWPDevice kwpDevice;
         private KWPHandler kwpHandler;
         private IFlasher flash;
@@ -77,15 +80,7 @@ namespace TrionicCANLib.API
                 canUsbDevice.TrionicECU = ECU.TRIONIC7;
                 canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
                 canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
-                // canUsbDevice.AcceptOnlyMessageIds = new List<uint> { 0x258,0x238 }; //t7suite
-                canUsbDevice.AcceptOnlyMessageIds = new List<uint>
-                { 
-                    0x258, 0x238,
-
-                    // Certain adapters applies filter and mask to outgoing messages too
-                    0x220, 0x240, 
-                    0x266
-                };
+                canUsbDevice.AcceptOnlyMessageIds = FilterIdECU;
             }
 
             if (adapterType == CANBusAdapter.ELM327 && m_ELM327Kline)

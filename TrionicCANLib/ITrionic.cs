@@ -264,6 +264,11 @@ namespace TrionicCANLib.API
             }
         }
 
+        public void SetCANFilterIds(List<uint> list)
+        {
+            canUsbDevice.AcceptOnlyMessageIds = list;
+        }
+
         public void LogCANData(object sender, DoWorkEventArgs workEvent)
         {
             BackgroundWorker bw = sender as BackgroundWorker;

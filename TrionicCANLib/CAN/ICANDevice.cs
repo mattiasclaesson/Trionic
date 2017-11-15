@@ -240,14 +240,6 @@ namespace TrionicCANLib.CAN
         {
         }
 
-        /// <summary>
-        /// Setups can filter. Used by ELM327 implementation only
-        /// </summary>
-        /// <param name="canAddress">Can address(i.e. 7E8)</param>
-        /// <param name="canMask">Can mask (i.e. DFF with 7E8 should allow to get both 7E8 and 5E8 responses). 
-        /// If set to 000, then all the can traffic will be visible to ELM</param>
-        public virtual void SetupCANFilter(string canAddress, string canMask) { }
-
         #endregion ELM327 specific
     }
 }

@@ -39,6 +39,10 @@ namespace TrionicCANLib.API
         static public byte EcuByte_MCP = 5;
         static public byte EcuByte_T8 = 6;
 
+        static public List<uint> FilterIdECU = new List<uint> { 0x7E0, 0x7E8, 0x5E8 };
+        static public List<uint> FilterIdRecovery = new List<uint> { 0x011, 0x311, 0x7E0, 0x7E8, 0x5E8 };
+        static public List<uint> FilterIdCIM = new List<uint> { 0x245, 0x545, 0x645 };
+
         public AccessLevel SecurityLevel
         {
             get { return _securityLevel; }
@@ -134,13 +138,7 @@ namespace TrionicCANLib.API
                 m_canListener = new CANListener();
             }
             canUsbDevice.addListener(m_canListener);
-            canUsbDevice.AcceptOnlyMessageIds = new List<uint>
-            {
-                0x011, 0x311,        // Recovery
-                0x245, 0x545, 0x645, // CIM
-                0x7E0, 0x7E8,        // ECU
-                0x5E8,               // E85, VIN, DTC
-            };
+            canUsbDevice.AcceptOnlyMessageIds = FilterIdECU;
         }
 
         override public void SetSelectedAdapter(string adapter)
@@ -1120,7 +1118,7 @@ namespace TrionicCANLib.API
             CANMessage msg = new CANMessage(0x7E0, 0, 4); 
             ulong cmd = 0x000000007A01AA03;// <dpid=7A> <level=sendOneResponse> <service=AA> <length>
             msg.setData(cmd);
-            m_canListener.setupWaitMessage(0x5E8);
+            m_canListener.setupWaitMessage(0x7E8, 0x5E8);
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
@@ -1135,11 +1133,10 @@ namespace TrionicCANLib.API
                 retval = Convert.ToInt32(response.getCanData(2));
             }
             // Negative Response 0x7F Service <nrsi> <service> <returncode>
-            // Bug: this is never handled because its sent with id=0x7E8
             else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xAA)
             {
                 string info = TranslateErrorCode(response.getCanData(3));
-                CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                logger.Debug("Error, cannot get optional E85%: " + info);
             }
             return retval;
         }
@@ -1172,10 +1169,10 @@ namespace TrionicCANLib.API
                 retval = true;
             }
             // Negative Response 0x7F Service <nrsi> <service> <returncode>
-            // Bug: this is never handled because negative response its sent with id=0x7E8
             else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0xAE)
             {
-                CastInfoEvent("Error: " + TranslateErrorCode(getCanData(rxdata, 3)), ActivityType.ConvertingFile);
+                string info = TranslateErrorCode(getCanData(rxdata, 3));
+                logger.Debug("Error, cannot set optional E85%: " + info);
             }
             return retval;
         }
@@ -1227,7 +1224,7 @@ namespace TrionicCANLib.API
             // 62 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
             CANMessage msg62 = new CANMessage(0x7E0, 0, 4);
             msg62.setData(0x000000006201AA03);
-            m_canListener.setupWaitMessage(0x5E8);
+            m_canListener.setupWaitMessage(0x7E8, 0x5E8);
             CastInfoEvent("Wait for response 5E8 62 00 00", ActivityType.ConvertingFile);
             if (!canUsbDevice.sendMessage(msg62))
             {
@@ -1256,7 +1253,7 @@ namespace TrionicCANLib.API
             // 02 DPID + 01 sendOneResponse + $AA ReadDataByPacketIdentifier
             CANMessage msg = new CANMessage(0x7E0, 0, 4);
             msg.setData(0x000000000201AA03);
-            m_canListener.setupWaitMessage(0x5E8);
+            m_canListener.setupWaitMessage(0x7E8, 0x5E8);
             CastInfoEvent("Wait for response 5E8 02 02", ActivityType.ConvertingFile);
             if (!canUsbDevice.sendMessage(msg))
             {
@@ -3125,13 +3122,6 @@ namespace TrionicCANLib.API
 
         public string[] ReadDTC()
         {
-            // test code
-            //ulong c = 0x0000006F00070181;//81 01 07 00 6F 00 00 00
-            //ulong c = 0x000000FD00220181; //81 01 22 00 FD 00 00 00
-            //CANMessage test = new CANMessage();
-            //test.setData(c);
-            //AddToCanTrace(GetDtcDescription(test));
-
             // send message to read DTC
             StartSession10();
 
@@ -3153,8 +3143,7 @@ namespace TrionicCANLib.API
             CANMessage msg = new CANMessage(0x7E0, 0, 4);
             msg.setData(cmd);
             msg.elmExpectedResponses = 15;
-            m_canListener.setupWaitMessage(0x7E8,0x5e8);
-            canUsbDevice.SetupCANFilter("7E8", "DFF"); // Mask will allow 7E8 and 5E8
+            m_canListener.setupWaitMessage(0x7E8, 0x5E8);
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
@@ -3173,7 +3162,7 @@ namespace TrionicCANLib.API
             if (response.getID() == 0x5E8 && response.getCanData(0) == 0x81)
             {
                 // Now wait for all DTCs
-                m_canListener.setupWaitMessage(0x5E8);
+                m_canListener.setupWaitMessage(0x7E8, 0x5E8);
 
                 bool more_errors = addDTC(response);
 
@@ -3187,9 +3176,9 @@ namespace TrionicCANLib.API
             // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
             else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0xA9 && response.getCanData(3) == 0x78) 
             {
-                //CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                logger.Debug("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
                 // Now wait for all DTCs
-                m_canListener.setupWaitMessage(0x5E8);
+                m_canListener.setupWaitMessage(0x7E8, 0x5E8);
 
                 bool more_errors = true;
                 while (more_errors)
@@ -3221,7 +3210,6 @@ namespace TrionicCANLib.API
             msg.setData(cmd);
             msg.elmExpectedResponses = 15;
             m_canListener.setupWaitMessage(0x7E8);
-            canUsbDevice.SetupCANFilter("7E8", "000");
             if (!canUsbDevice.sendMessage(msg))
             {
                 CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
@@ -4397,8 +4385,6 @@ namespace TrionicCANLib.API
             logger.Debug("DataID: " + diagDataID);
             if (diagDataID == string.Empty)
             {
-                canUsbDevice.SetupCANFilter("7E8", "000");
-                //canUsbDevice.SetAutomaticFlowControl(false);
                 BlockManager bm = new BlockManager();
                 bm.SetFilename(filename);
 
