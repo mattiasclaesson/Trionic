@@ -331,12 +331,25 @@ namespace TrionicCANFlasher
                                 }
                                 else
                                 {
+                                    bool flash = true;
                                     // Check that the basefile version is matched with beginning of calibrationset
                                     string basefileInfo = FileME96.getFileInfo(ofd.FileName);
 
-                                    if (basefileInfo.Contains(calibrationset.Substring(0, 4)))
+                                    if (!basefileInfo.Contains(calibrationset.Substring(0, 4)))
                                     {
-                                        // flash
+                                        AddLogItem("Basefile and file to write is not compatible " + basefileInfo + " and " + calibrationset);
+
+                                        result = MessageBox.Show("Check that basefile version is matching calibration\n\nAre you certain this file is the same basefile as the ECU?",
+                                        "Basefile check failed!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+
+                                        if (result == DialogResult.No)
+                                        {
+                                            flash = false;
+                                        }
+                                    }
+
+                                    if (flash)
+                                    {
                                         Thread.Sleep(1000);
                                         dtstart = DateTime.Now;
                                         AddLogItem("Update FLASH content");
@@ -349,7 +362,10 @@ namespace TrionicCANFlasher
                                     }
                                     else
                                     {
-                                        AddLogItem("Basefile and file to write is not compatible " + basefileInfo + " and " + calibrationset);
+                                        AddLogItem("Flash operation aborted");
+                                        trionic8.Cleanup();
+                                        EnableUserInput(true);
+                                        AddLogItem("Connection terminated");
                                     }
                                 }
                             }
@@ -469,6 +485,7 @@ namespace TrionicCANFlasher
             btnReadECUcalibration.Enabled = enable;
             btnRestoreT8.Enabled = enable;
             btnLogData.Enabled = enable;
+            cbAutoChecksum.Enabled = enable;
 
             if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
@@ -514,16 +531,18 @@ namespace TrionicCANFlasher
                 btnEditParameters.Enabled     = false;
                 btnRecoverECU.Enabled         = false;
                 btnRestoreT8.Enabled          = false;
+                cbAutoChecksum.Enabled        = false;
             }
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                btnRecoverECU.Enabled = false;
-                btnReadECUcalibration.Enabled = false;
-                btnRestoreT8.Enabled = false;
-                cbUseLegionBootloader.Enabled = false;
-                cbFormatBootPartition.Enabled = false;
+                btnRecoverECU.Enabled            = false;
+                btnReadECUcalibration.Enabled    = false;
+                btnRestoreT8.Enabled             = false;
+                cbUseLegionBootloader.Enabled    = false;
+                cbFormatBootPartition.Enabled    = false;
                 cbFormatSystemPartitions.Enabled = false;
+                cbAutoChecksum.Enabled           = false;
             }
 
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
@@ -541,9 +560,11 @@ namespace TrionicCANFlasher
             {
                 btnReadSRAM.Enabled = false;
                 btnRestoreT8.Enabled = false;
+                btnRecoverECU.Enabled = false;
                 cbUseLegionBootloader.Enabled = false;
                 cbFormatBootPartition.Enabled = false;
                 cbFormatSystemPartitions.Enabled = false;
+                cbAutoChecksum.Enabled = false;
             }
             
             // Always disable
@@ -570,6 +591,7 @@ namespace TrionicCANFlasher
 
                 btnGetECUInfo.Enabled = false;
                 btnEditParameters.Enabled = false;
+                cbAutoChecksum.Enabled = false;
             }
         }
 
@@ -1057,6 +1079,7 @@ namespace TrionicCANFlasher
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
                             SetGenericOptions(trionic8);
+                            trionic8.SetCANFilterIds(Trionic8.FilterIdRecovery);
 
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
@@ -1085,33 +1108,6 @@ namespace TrionicCANFlasher
                             else
                             {
                                 AddLogItem("Unable to connect to Trionic 8 ECU");
-                                trionic8.Cleanup();
-                                EnableUserInput(true);
-                                AddLogItem("Connection terminated");
-                            }
-                        }
-                        else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
-                        {
-                            SetGenericOptions(trionic8);
-
-                            EnableUserInput(false);
-                            AddLogItem("Opening connection");
-                            trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            if (trionic8.openDevice(false))
-                            {
-                                Thread.Sleep(1000);
-                                dtstart = DateTime.Now;
-                                AddLogItem("Recovering ECU");
-                                Application.DoEvents();
-                                BackgroundWorker bgWorker;
-                                bgWorker = new BackgroundWorker();
-                                bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashME96);
-                                bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                bgWorker.RunWorkerAsync(ofd.FileName);
-                            }
-                            else
-                            {
-                                AddLogItem("Unable to connect to ME9.6 ECU");
                                 trionic8.Cleanup();
                                 EnableUserInput(true);
                                 AddLogItem("Connection terminated");
