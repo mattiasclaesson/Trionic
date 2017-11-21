@@ -11,9 +11,7 @@ namespace TrionicCANLib.Checksum
     {
         private readonly static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public delegate bool ChecksumUpdate(string layer, string filechecksum, string realchecksum);
-
-        public static ChecksumResult VerifyChecksum(string filename, bool autocorrect, ChecksumUpdate updateChecksum)
+        public static ChecksumResult VerifyChecksum(string filename, bool autocorrect, ChecksumDelegate.ChecksumUpdate delegateShouldUpdate)
         {
             int checksumAreaOffset = GetChecksumAreaOffset(filename);
             if (checksumAreaOffset > FileT8.Length)
@@ -43,7 +41,7 @@ namespace TrionicCANLib.Checksum
                         filechecksum += layer1checksuminfile[i].ToString("X2") + " ";
                         realchecksum += hash[i].ToString("X2") + " ";
                     }
-                    if(updateChecksum("Checksum validation Layer 1", filechecksum, realchecksum))
+                    if(delegateShouldUpdate("Checksum validation Layer 1", filechecksum, realchecksum))
                     {
                         if (!FileTools.savedatatobinary(checksumAreaOffset + 2, 16, hash, filename))
                         {
@@ -57,7 +55,7 @@ namespace TrionicCANLib.Checksum
                 }
             }
 
-            return CalculateLayer2Checksum(filename, checksumAreaOffset, autocorrect, updateChecksum);
+            return CalculateLayer2Checksum(filename, checksumAreaOffset, autocorrect, delegateShouldUpdate);
         }
 
         static private int GetChecksumAreaOffset(string filename)
@@ -132,7 +130,7 @@ namespace TrionicCANLib.Checksum
             return retval;
         }
 
-        static private ChecksumResult CalculateLayer2Checksum(string filename, int OffsetLayer2, bool autocorrect, ChecksumUpdate updateChecksum)
+        static private ChecksumResult CalculateLayer2Checksum(string filename, int OffsetLayer2, bool autocorrect, ChecksumDelegate.ChecksumUpdate delegateShouldUpdate)
         {
             ChecksumResult result = ChecksumResult.Layer2Failed;
             uint checksum0 = 0;
@@ -172,7 +170,7 @@ namespace TrionicCANLib.Checksum
                     if (matrix_dimension >= 0x020000)
                     {
                         checksum0 = 0;
-                        x = partial_address /*+ 1*/;
+                        x = partial_address;
                         while (x < (matrix_dimension - 4))
                         {
                             checksum0 = checksum0 + (uint)complete_file[x];
@@ -180,7 +178,7 @@ namespace TrionicCANLib.Checksum
                         }
                         checksum0 = checksum0 + (uint)complete_file[matrix_dimension - 1];
                         checksum1 = 0;
-                        x = partial_address /*+ 1*/;
+                        x = partial_address;
                         while (x < (matrix_dimension - 4))
                         {
                             checksum1 = checksum1 + (uint)complete_file[x] * 0x01000000 + (uint)complete_file[x + 1] * 0x10000 + (uint)complete_file[x + 2] * 0x100 + (uint)complete_file[x + 3];
@@ -201,7 +199,7 @@ namespace TrionicCANLib.Checksum
                             {
                                 string filechecksum = sum0.ToString("X8");
                                 string realchecksum = checksum0.ToString("X8");
-                                if (updateChecksum("Checksum validation Layer 2", filechecksum, realchecksum))
+                                if (delegateShouldUpdate("Checksum validation Layer 2", filechecksum, realchecksum))
                                 {
                                     result = UpdateLayer2(filename, OffsetLayer2, checksum0, index);
                                 }

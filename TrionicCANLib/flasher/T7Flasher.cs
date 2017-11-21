@@ -6,6 +6,7 @@ using System.Threading;
 using NLog;
 using System.Security.Cryptography;
 using System.Text;
+using TrionicCANLib.Checksum;
 
 namespace TrionicCANLib.Flasher
 {
@@ -33,6 +34,8 @@ namespace TrionicCANLib.Flasher
         {
             m_kwpHandler = a_kwpHandler;
         }
+
+        public ChecksumDelegate.ChecksumUpdate m_ShouldUpdateChecksum;
 
         /// <summary>
         /// Constructor for T7Flasher.
@@ -254,7 +257,18 @@ namespace TrionicCANLib.Flasher
                 }
                 fileStream.Close();
                 logger.Debug("Closed file");
-                Md5Tools.WriteMd5Hash(md5Hash, m_fileName);
+
+                ChecksumResult checksumResult = ChecksumT7.VerifyChecksum(m_fileName, ChecksumT7.DO_NOT_AUTOCORRECT, ChecksumT7.DO_NOT_AUTOFIXFOOTER, m_ShouldUpdateChecksum);
+                if (checksumResult != ChecksumResult.Ok)
+                {
+                    if (File.Exists(m_fileName))
+                        File.Delete(m_fileName);
+                    NotifyStatusChanged(this, new StatusEventArgs("Checksum check failed"));
+                }
+                else
+                {
+                    Md5Tools.WriteMd5Hash(md5Hash, m_fileName);
+                }
             }
 
             m_kwpHandler.sendDataTransferExitRequest();

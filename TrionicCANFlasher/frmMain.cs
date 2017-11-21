@@ -29,7 +29,7 @@ namespace TrionicCANFlasher
         DateTime dtstart;
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
-        public ChecksumT8.ChecksumUpdate m_ChecksumUpdate;
+        public ChecksumDelegate.ChecksumUpdate m_ShouldUpdateChecksum;
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
         msiupdater m_msiUpdater;
         BackgroundWorker bgworkerLogCanData;
@@ -42,7 +42,7 @@ namespace TrionicCANFlasher
             InitializeComponent();
             m_DelegateUpdateStatus = updateStatusInBox;
             m_DelegateProgressStatus = updateProgress;
-            m_ChecksumUpdate = updateChecksum;
+            m_ShouldUpdateChecksum = updateChecksum;
             SetupListboxWrapping();
             EnableUserInput(true);
         }
@@ -114,10 +114,10 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
                         {
-                            ChecksumResult checksum = ChecksumT5.VerifyChecksum(ofd.FileName);
-                            if (checksum != ChecksumResult.Ok)
+                            ChecksumResult checksumResult = ChecksumT5.VerifyChecksum(ofd.FileName);
+                            if (checksumResult != ChecksumResult.Ok)
                             {
-                                AddLogItem("Checksum check failed: " + checksum);
+                                AddLogItem("Checksum check failed: " + checksumResult);
 
                                 // I found different markers in a few t5.2 bins so a reliable calculation is not possible
                                 // ask the user if she/he is felling lucky with those.
@@ -157,6 +157,13 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
+                            ChecksumResult checksumResult = ChecksumT7.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, ChecksumT7.DO_NOT_AUTOFIXFOOTER, m_ShouldUpdateChecksum); // TODO: mattias, add AutoFixFooter to settings?
+                            if (checksumResult != ChecksumResult.Ok)
+                            {
+                                AddLogItem("Checksum check failed: " + checksumResult);
+                                return;
+                            }
+
                             SetGenericOptions(trionic7);
                             trionic7.UseFlasherOnDevice = cbOnlyPBus.Checked ? cbUseFlasherOnDevice.Checked : false;
 
@@ -180,10 +187,10 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ChecksumUpdate);
-                            if (checksum != ChecksumResult.Ok)
+                            ChecksumResult checksumResult = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ShouldUpdateChecksum);
+                            if (checksumResult != ChecksumResult.Ok)
                             {
-                                AddLogItem("Checksum check failed: " + checksum);
+                                AddLogItem("Checksum check failed: " + checksumResult);
                                 return;
                             }
 
@@ -542,7 +549,6 @@ namespace TrionicCANFlasher
                 cbUseLegionBootloader.Enabled    = false;
                 cbFormatBootPartition.Enabled    = false;
                 cbFormatSystemPartitions.Enabled = false;
-                cbAutoChecksum.Enabled           = false;
             }
 
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
@@ -1870,7 +1876,7 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ChecksumUpdate);
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ShouldUpdateChecksum);
                             if (checksum != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);

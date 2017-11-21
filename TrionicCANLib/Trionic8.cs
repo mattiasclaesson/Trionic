@@ -80,12 +80,12 @@ namespace TrionicCANLib.API
         private System.Timers.Timer tmr = new System.Timers.Timer(2000);
         private Stopwatch sw = new Stopwatch();
         private Stopwatch eraseSw = new Stopwatch();
-        public ChecksumT8.ChecksumUpdate m_ChecksumUpdate;
+        public ChecksumDelegate.ChecksumUpdate m_ShouldUpdateChecksum;
 
         public Trionic8()
         {
             tmr.Elapsed += tmr_Elapsed;
-            m_ChecksumUpdate = updateChecksum;
+            m_ShouldUpdateChecksum = updateChecksum;
         }
 
         void tmr_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -4864,10 +4864,10 @@ namespace TrionicCANLib.API
                 {
                     File.WriteAllBytes(filename, buf);
                     Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
-                    ChecksumResult checksum = ChecksumT8.VerifyChecksum(filename, false, m_ChecksumUpdate);
-                    if (checksum != ChecksumResult.Ok)
+                    ChecksumResult checksumResult = ChecksumT8.VerifyChecksum(filename, false, m_ShouldUpdateChecksum);
+                    if (checksumResult != ChecksumResult.Ok)
                     {
-                        CastInfoEvent("Checksum check failed: " + checksum, ActivityType.ConvertingFile);
+                        CastInfoEvent("Checksum check failed: " + checksumResult, ActivityType.ConvertingFile);
                         workEvent.Result = false;
                     }
                     else

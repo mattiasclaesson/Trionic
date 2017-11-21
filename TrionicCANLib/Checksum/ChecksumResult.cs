@@ -11,6 +11,9 @@ namespace TrionicCANLib.Checksum
         Layer1Failed,
         Layer2Failed,
         Invalid,
-        UpdateFailed
+        UpdateFailed,
+        ChecksumFWFailed,
+        ChecksumF2Failed,
+        ChecksumFBFailed
     };
 }
