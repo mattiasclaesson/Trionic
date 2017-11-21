@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
 
-  <?define ProductVersion="0.1.55" ?>
+  <?define ProductVersion="0.1.56" ?>
   <?define UpgradeCode="{9B523E43-7324-4DF0-A1DE-8493B57D1915}"?>
   <?define Manufacturer="MattiasC"?>
-  <?define ProductCode="{A0851927-E31F-4B81-B36A-B3FCAE06B135}"?>
+  <?define ProductCode="{18EA27B8-6DEC-4FEA-838D-126EFC9F6AF2}"?>
   <?define PackageCode="{8EF49AAF-4B58-4FF4-AAB7-F5DC80E94EB1}"?>
 
     <Product Id="$(var.ProductCode)" Name="TrionicCANFlash" Language="1033" Version="$(var.ProductVersion)" Codepage="1252" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)">
@@ -30,7 +30,7 @@
       </Condition>
 
       <DirectoryRef Id="TARGETDIR">
-        <Merge Id="VCRedist" SourceFile="C:\Program Files\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" Language="0"/>
+        <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" Language="0"/>
       </DirectoryRef>
       <Feature Id="VCRedist" Title="Visual C++ 10.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
         <MergeRef Id="VCRedist"/>
