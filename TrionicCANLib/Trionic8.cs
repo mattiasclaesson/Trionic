@@ -6546,12 +6546,6 @@ namespace TrionicCANLib.API
             return true;
         }
 
-
-
-
-
-
-
         // Compare md5 of 0x0, 0x4000 or 0x20000 to last address of binary.
         private void CompareRegmd5(DoWorkEventArgs workEvent)
         {
@@ -6656,7 +6650,11 @@ namespace TrionicCANLib.API
                                 identical = LeaveRecoveryBe();
                             // Special case. Override automatic selection of NVDM 1 and 2 if the the user so choose.
                             else if (i == 2 && device == EcuByte_T8)
+                            {
                                 nvdm = identical = LeaveNVDMBe();
+                                // And make sure the verification-code knows what's up...
+                                formatSystemPartitions = !nvdm;
+                            }
                             else if (i == 3 && device == EcuByte_T8)
                                 identical = nvdm;
                         }
