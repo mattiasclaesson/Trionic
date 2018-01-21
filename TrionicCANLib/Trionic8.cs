@@ -5168,12 +5168,13 @@ namespace TrionicCANLib.API
 
             _stallKeepAlive = true;
             bool success = false;
+            bool readSecondary = end == 0x280000;
             int retryCount = 0;
             int startAddress = start;
             int range = end - start;
             int blockSize = 0x80; // defined in bootloader... keep it that way!
             int bufpnt = startAddress;
-            byte[] buf = new byte[0x200000];
+            byte[] buf = new byte[0x280000];
             // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
             for (int i = 0; i < buf.Length; i++)
             {
@@ -5213,7 +5214,6 @@ namespace TrionicCANLib.API
                 Thread.Sleep(1);
                 if (success)
                 {
-
                     if (readbuf.Length == blockSize)
                     {
                         for (int j = 0; j < blockSize; j++)
@@ -5242,6 +5242,14 @@ namespace TrionicCANLib.API
                         return;
                     }
                 }
+
+                // Handle address gap between main and secondary OS
+                if (readSecondary && bufpnt == 0x1F0000)
+                {
+                    bufpnt = 0x200000;
+                    startAddress = 0x400000;
+                }
+
                 SendKeepAlive();
             }
             _stallKeepAlive = false;
@@ -5521,7 +5529,13 @@ namespace TrionicCANLib.API
         private bool SendrequestDownloadME96(bool recoveryMode)
         {
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
+            //      no enc/no compress
+            //      |  MSB numberofbytes
+            //      |  |     LSB
+            //      |  |     |  -- --
             //05 34 00 01 E0 00 00 00
+            // 0x01E000=122 880 bytes
+            // 0x180000=1 572 864 bytes
             ulong cmd = 0x000000E001003405;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);

@@ -712,7 +712,7 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    FlashReadArguments args = new FlashReadArguments() { FileName = sfd.FileName, start = 0, end = 0x200000 };
+                                    FlashReadArguments args = new FlashReadArguments() { FileName = sfd.FileName, start = 0, end = 0x280000 };
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
