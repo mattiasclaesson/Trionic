@@ -73,7 +73,7 @@ namespace TrionicCANLib.API
 {
     public class Trionic5 : ITrionic
     {
-        static public List<uint> FilterIdECU = new List<uint> { 0x005, 0x006, 0x00c };
+        static public List<uint> FilterIdECU = new List<uint> { 0x005, 0x006, 0x00c, 0x00 };
 
         private Logger logger = LogManager.GetCurrentClassLogger();
         private System.Timers.Timer tmr = new System.Timers.Timer(2000);
