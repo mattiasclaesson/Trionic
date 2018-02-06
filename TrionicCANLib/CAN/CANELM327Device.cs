@@ -512,17 +512,17 @@ namespace TrionicCANLib.CAN
                 // 625 Kbit/s @69% with VERY relaxed timings to compansate for the BTR error. This is the best I could do
                 // 8101FC //87,50, 3 Samples
                 // 8104B9 //68,75, 1 Sample
-                answer = WriteToSerialAndWait("STCTR 8104F9\r");
-                logger.Debug("STCTR: " + answer);
-                answer = WriteToSerialAndWait("STCTRR\r");
-                answer = WriteToSerialAndWait("ATAL\r");   // Allow reception of >7 byte packages
+                // 8104F9
+                WriteToSerialAndWait("STCTR 8101FC\r");
+                WriteToSerialAndWait("STCTRR\r");
+                WriteToSerialAndWait("ATAL\r");   // Allow reception of >7 byte packages
                 WriteToSerialAndWait("ATCFC0\r");          // Flow control OFF
-                answer = WriteToSerialAndWait("ATAR\r");   // Automatic reception
-                answer = WriteToSerialAndWait("ATMA\r");   // Monitor EVERYTHING!
-                answer = WriteToSerialAndWait("ATCSM1\r"); // Monitor EVERYTHING!
+                WriteToSerialAndWait("ATAR\r");   // Automatic reception
+                WriteToSerialAndWait("ATMA\r");   // Monitor EVERYTHING!
+                WriteToSerialAndWait("ATCSM1\r"); // Monitor EVERYTHING!
             }
             else if (TrionicECU == ECU.TRIONIC7 && !UseOnlyPBus)
-                answer = WriteToSerialAndWait("STCTR 290284\r");
+                WriteToSerialAndWait("STCTR 290284\r");
             
             return true;
         }
