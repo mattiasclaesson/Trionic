@@ -8,6 +8,7 @@ namespace TrionicCANLib.Firmware
     public class FileME96 : IBaseFile
     {
         static public uint Length = 0x200000;
+        static public uint LengthComplete = 0x280000;
 
         static public string getFileInfo(string filename) 
         {

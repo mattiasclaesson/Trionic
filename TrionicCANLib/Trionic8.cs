@@ -5167,7 +5167,7 @@ namespace TrionicCANLib.API
             int retryCount = 0;
             int startAddress = start;
             int range = end - start;
-            int blockSize = 0x80; // defined in bootloader... keep it that way!
+            int blockSize = 0x80;
             int bufpnt = startAddress;
             byte[] buf = new byte[0x280000];
             // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
@@ -5452,7 +5452,10 @@ namespace TrionicCANLib.API
         public void WriteFlashME96(object sender, DoWorkEventArgs workEvent)
         {
             BackgroundWorker bw = sender as BackgroundWorker;
-            string filename = (string)workEvent.Argument;
+            FlashReadArguments args = (FlashReadArguments)workEvent.Argument;
+            string filename = args.FileName;
+            int start = args.start;
+            int end = args.end;
 
             if (!canUsbDevice.isOpen()) return;
             _needRecovery = false;
@@ -5491,7 +5494,7 @@ namespace TrionicCANLib.API
                 _needRecovery = true;
                 SendShutup();
                 CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
-                bool success = ProgramFlashME96(filename);
+                bool success = ProgramFlashME96(filename, start, end);
 
                 if (success)
                     CastInfoEvent("FLASH upload completed", ActivityType.ConvertingFile);
@@ -5530,8 +5533,9 @@ namespace TrionicCANLib.API
             //      |  |     |  -- --
             //05 34 00 01 E0 00 00 00
             // 0x01E000=122 880 bytes
+            //ulong cmd = 0x000000E001003405;
             // 0x180000=1 572 864 bytes
-            ulong cmd = 0x000000E001003405;
+            ulong cmd = 0x0000000018003405;
             msg.setData(cmd);
             m_canListener.setupWaitMessage(0x7E8);
             if (!canUsbDevice.sendMessage(msg))
@@ -5608,17 +5612,16 @@ namespace TrionicCANLib.API
             return true;
         }
 
-        private bool ProgramFlashME96(string filename)
+        private bool ProgramFlashME96(string filename, int start, int end)
         {
-            int startAddress = 0x1C2000;
-            int start = startAddress;
-            int end = 0x1E0000;
+            int startAddress = start;
             int range = end - start;
             int blockSize = 0xF8;
             int bufsize = 0xFF;
             int bufpnt = startAddress;
             int saved_progress = 0;
             byte[] filebytes = File.ReadAllBytes(filename);
+            bool writeSecondary = (end == 0x280000 && filebytes.Length == 0x280000);
 
             while (bufpnt < end)
             {
@@ -5707,6 +5710,13 @@ namespace TrionicCANLib.API
                 sw.Stop();
 
                 startAddress += blockSize;
+
+                // Handle address gap between main and secondary OS
+                if (writeSecondary && bufpnt == 0x1F0000)
+                {
+                    bufpnt = 0x200000;
+                    startAddress = 0x400000;
+                }
             }
             CastProgressWriteEvent(100);
             return true;
@@ -5714,6 +5724,7 @@ namespace TrionicCANLib.API
 
         private bool SendTransferDataME96(int length, int address, uint waitforResponseID, byte firstByteToSend )
         {
+            logger.Debug("SendTransferDataME96 address:" + address.ToString("X"));
             CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
             ulong cmd = 0x0000000000360010; // 0x36 = transferData
             ulong addressHigh = (uint)address & 0x0000000000FF0000;
