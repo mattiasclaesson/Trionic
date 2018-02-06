@@ -327,20 +327,24 @@ namespace TrionicCANFlasher
                                 {
                                     bool flash = true;
                                     // Check that the basefile version is matched with beginning of calibrationset
-                                    string basefileInfo = FileME96.getFileInfo(ofd.FileName);
+                                    //string basefileInfo = FileME96.getFileInfo(ofd.FileName);
 
-                                    if (!basefileInfo.Contains(calibrationset.Substring(0, 4)))
-                                    {
-                                        AddLogItem("Basefile and file to write is not compatible " + basefileInfo + " and " + calibrationset);
+                                    //if (!basefileInfo.Contains(calibrationset.Substring(0, 4)))
+                                    //{
+                                    //    AddLogItem("Basefile and file to write is not compatible " + basefileInfo + " and " + calibrationset);
 
-                                        result = MessageBox.Show("Check that basefile version is matching calibration\n\nAre you certain this file is the same basefile as the ECU?",
-                                        "Basefile check failed!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                                    //    result = MessageBox.Show("Check that basefile version is matching calibration\n\nAre you certain this file is the same basefile as the ECU?",
+                                    //    "Basefile check failed!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
 
-                                        if (result == DialogResult.No)
-                                        {
-                                            flash = false;
-                                        }
-                                    }
+                                    //    if (result == DialogResult.No)
+                                    //    {
+                                    //        flash = false;
+                                    //    }
+                                    //}
+
+                                    // calib only
+                                    //int start = 0x1C2000;
+                                    //int end = 0x1E0000;
 
                                     if (flash)
                                     {
@@ -348,11 +352,12 @@ namespace TrionicCANFlasher
                                         dtstart = DateTime.Now;
                                         AddLogItem("Update FLASH content");
                                         Application.DoEvents();
+                                        FlashReadArguments args = new FlashReadArguments() { FileName = ofd.FileName, start = 0x40000, end = 0x280000 };
                                         BackgroundWorker bgWorker;
                                         bgWorker = new BackgroundWorker();
                                         bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashME96);
                                         bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-                                        bgWorker.RunWorkerAsync(ofd.FileName);
+                                        bgWorker.RunWorkerAsync(args);
                                     }
                                     else
                                     {
@@ -443,7 +448,7 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
             {
-                if (fi.Length != FileME96.Length)
+                if (fi.Length != FileME96.Length && fi.Length != FileME96.LengthComplete)
                 {
                     AddLogItem("Not a Motronic ME9.6 file");
                     return false;

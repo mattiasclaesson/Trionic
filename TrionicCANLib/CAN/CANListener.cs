@@ -13,6 +13,8 @@ namespace TrionicCANLib.CAN
     /// </summary>
     class CANListener : ICANListener
     {
+        private const int QUEUE_SIZE = 128;
+
         private Logger logger = LogManager.GetCurrentClassLogger();
         private uint m_waitMsgID = 0;
         private uint m_additionalWaitMsgID = 0;
@@ -50,6 +52,7 @@ namespace TrionicCANLib.CAN
 
         public CANMessage waitMessage(int a_timeout)
         {
+            logger.Debug("waitMessage");
             sw.Reset();
             sw.Start();
             CANMessage retMsg = new CANMessage();
@@ -136,16 +139,18 @@ namespace TrionicCANLib.CAN
 
         public override void FlushQueue()
         {
-            _queue = new CANMessage[128]; //32 might be a bit too little when some thread stops (i.e. the one that writes the log). 
+            logger.Debug("FlushQueue");
+            _queue = new CANMessage[QUEUE_SIZE];
             _receiveMessageIndex = 0;
             _readMessageIndex = 0;
         }
 
         override public void handleMessage(CANMessage a_message)
         {
+            logger.Debug("handleMessage");
             if (_queue == null)
             {
-                _queue = new CANMessage[32];
+                _queue = new CANMessage[QUEUE_SIZE];
                 _receiveMessageIndex = 0;
                 _readMessageIndex = 0;
             }
@@ -191,6 +196,7 @@ namespace TrionicCANLib.CAN
         /// </summary>
         public void ClearQueue()
         {
+            logger.Debug("ClearQueue");
             _readMessageIndex = _receiveMessageIndex;
         }
     }
