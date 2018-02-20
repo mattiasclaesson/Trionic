@@ -6554,15 +6554,12 @@ namespace TrionicCANLib.API
         private bool FetchPartitionmd5(DoWorkEventArgs workEvent, byte device)
         {
             bool success = false;
-            byte placeholder = 3;
-            if (device == EcuByte_T8)
-                placeholder = 2;
 
-            CastInfoEvent("Fetching md5..", ActivityType.DownloadingFlash);
+            CastProgressReadEvent(0);
 
             for (byte i = 0; i < 9; i++)
             {
-                byte[] resp = LegionIDemand(placeholder, (uint)(i + 1), out success);
+                byte[] resp = LegionIDemand(device == EcuByte_MCP ? (uint)3 : 2, (uint)(i + 1), out success);
 
                 if (!success)
                     return false;
@@ -6689,9 +6686,6 @@ namespace TrionicCANLib.API
             bm.SetFilename(filename);
 
             bool success = false;
-            byte placeholder = 3;
-            if (device == EcuByte_T8)
-                placeholder = 2;
 
             CastProgressReadEvent(0);
 
@@ -6701,7 +6695,7 @@ namespace TrionicCANLib.API
                 bool Identical = true;
 
                 // Fetch md5 from both locations
-                byte[] RemoteMD = LegionIDemand(placeholder, (uint) i, out success);
+                byte[] RemoteMD = LegionIDemand(device == EcuByte_MCP ? (uint) 3 : 2, (uint) i, out success);
                 byte[] LocalMD  = bm.GetPartitionmd5(device, i);
 
                 // Could not fetch remote md5; Abort!
@@ -6831,9 +6825,8 @@ namespace TrionicCANLib.API
                 return;
             }
 
-            CastInfoEvent("Comparing md5 for selective erase..", ActivityType.StartErasingFlash);
-
             // Fetch md5 of all partitions
+            CastInfoEvent("Comparing md5 for selective erase..", ActivityType.StartErasingFlash);
             if (!FetchPartitionmd5(workEvent, Device))
             {
                 CastInfoEvent("Could not fetch md5!", ActivityType.StartErasingFlash);
@@ -6913,7 +6906,6 @@ namespace TrionicCANLib.API
 
                     CastInfoEvent("Session ended", ActivityType.FinishedFlashing);
                     sw.Stop();
-
                 }
                 else
                 {
