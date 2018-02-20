@@ -4904,13 +4904,8 @@ namespace TrionicCANLib.API
             CANMessage msg = new CANMessage(0x7E0, 0, 7);
             //06 34 01 00 00 00 00 00
             //ulong cmd = 0x0000000000013406;
-            ulong cmd;
-            ulong tmp = ((formatmask & 0xff) << 8 | (formatmask >> 8) & 0xFF); 
-            if (formatmask==0 || !LegionMode) 
-                cmd = 0x0000000000013400;
-            else
-                cmd = (tmp) << 40 | 0x13400;
-
+            ulong tmp = ((formatmask & 0xff) << 8 | (formatmask >> 8) & 0xFF);
+            ulong cmd = LegionMode ? tmp << 40 | ((~tmp) & 0xFFFF) << 24 | 0x13400 : 0x0000000000013400;
             cmd += PCI;
 
             msg.setData(cmd);
@@ -6129,6 +6124,7 @@ namespace TrionicCANLib.API
                     LegionIDemand(0, 100, out success);
                 else
                     LegionIDemand(0, 1350, out success);
+                    // LegionIDemand(0, 150, out success);
             }
             else
                 LegionIDemand(0, 2000, out success);
@@ -6307,29 +6303,6 @@ namespace TrionicCANLib.API
                 CastInfoEvent(("Could not start the secondary loader to retreive version!"), ActivityType.DownloadingFlash);
         }
 
-        // Test; Read md5 of full flash, partition 1, partition 2..
-        private bool PrintLegmd5(byte device)
-        {
-            bool success = false;
-            CastInfoEvent("Remote md5: ", ActivityType.DownloadingFlash);
-
-            for (byte i = 1; i < 10; i++)
-            {
-                byte[] resp = LegionIDemand(device, i, out success);
-                if (success)
-                {
-                    int mdlolo = (resp[12] << 24 | resp[13] << 16 | resp[14] << 8 | resp[15]);
-                    int mdlohi = (resp[ 8] << 24 | resp[ 9] << 16 | resp[10] << 8 | resp[11]);
-                    int mdhilo = (resp[ 4] << 24 | resp[ 5] << 16 | resp[ 6] << 8 | resp[ 7]);
-                    int mdhihi = (resp[ 0] << 24 | resp[ 1] << 16 | resp[ 2] << 8 | resp[ 3]);
-
-                    CastInfoEvent(("Part " + i.ToString("X1") + ": " + mdhihi.ToString("X8") + mdhilo.ToString("X8") + mdlohi.ToString("X8") + mdlolo.ToString("X8")), ActivityType.DownloadingFlash);
-                }
-                else
-                    return false;
-            }
-            return true;
-        }
 
         // Let's stick to silly names
         // Needs fixing; Try and read several packets in case the first one is a reply from something else
@@ -6367,27 +6340,6 @@ namespace TrionicCANLib.API
 
             // command 05: Marry secondary processor
             // wish: None, just wish.           
-
-            // command 0xFF: Report stats.
-            // wish: TBD
-            // Return:
-            // Byte[ 0]: TBD
-            // Byte[ 1]: TBD
-            // Byte[ 2]: TBD
-            // Byte[ 3]: TBD
-            // Byte[ 4]: TBD
-            // Byte[ 5]: TBD
-            // Byte[ 6]: TBD
-            // Byte[ 7]: TBD
-            // Byte[ 8]: TBD
-            // Byte[ 9]: TBD
-            // Byte[10]: TBD
-            // Byte[11]: TBD
-            // Byte[12]: TBD
-            // Byte[13]: TBD
-            // Byte[14]: TBD
-            // Byte[15]: TBD
-
 
             success = false;
             int Retries = 0;
@@ -6427,7 +6379,6 @@ namespace TrionicCANLib.API
                 }
                 else
                 {
-
                     // Settings correctly received.
                     if (command == 0 && getCanData(data, 3) == 1)
                     {
@@ -6468,7 +6419,6 @@ namespace TrionicCANLib.API
                         success = true;
                         return buf;
                     }
-
 
                     // MCP marriage
                     if (command == 5)
@@ -6512,7 +6462,6 @@ namespace TrionicCANLib.API
                         CastInfoEvent("Bootloader did what it could and failed. Sorry", ActivityType.ConvertingFile);
                         return buf;
                     }
-
                 }
 
                 Thread.Sleep(50);
@@ -6568,18 +6517,15 @@ namespace TrionicCANLib.API
             bm.SetFilename(filename);
             byte[] Locmd5dbuf = new byte[16];
             byte[] Remd5dbuf = new byte[16];
-            byte Partition;
+            byte Partition = 12;
             bool success;
 
             if ((formatBootPartition && formatSystemPartitions))
                 Partition = 10;
             else if (formatSystemPartitions)
                 Partition = 11;
-            else
-                Partition = 12;
 
             Locmd5dbuf = bm.GetPartitionmd5(EcuByte_T8, Partition);
-            //Locmd5dbuf = bm.GetSelectedmd5(Partition);
             Remd5dbuf = LegionIDemand(2, Partition, out success);
 
             if (success)
@@ -6597,137 +6543,130 @@ namespace TrionicCANLib.API
             }
         }
 
-        /// Compare md5 of selected partition
-        // Nts: Clean this function. There are several ways it could fail
-        private bool ComparePartmd5(DoWorkEventArgs workEvent, byte device, bool verificationproc, bool z22se)
+        private byte[,] Partitionhashes = new byte[9,16];
+
+        /// <summary>
+        /// Fetch md5 of all partitions and store them in a local array
+        /// </summary>
+        /// <param name="workEvent"></param>
+        /// <param name="device">Which device to hash</param>
+        /// <returns>True as long as md5 could be fetched</returns>
+        private bool FetchPartitionmd5(DoWorkEventArgs workEvent, byte device)
+        {
+            bool success = false;
+            byte placeholder = 3;
+            if (device == EcuByte_T8)
+                placeholder = 2;
+
+            CastInfoEvent("Fetching md5..", ActivityType.DownloadingFlash);
+
+            for (byte i = 0; i < 9; i++)
+            {
+                byte[] resp = LegionIDemand(placeholder, (uint)(i + 1), out success);
+
+                if (!success)
+                    return false;
+
+                for (byte m = 0; m < 16; m++)
+                {
+                    Partitionhashes[i, m] = resp[m];
+                }
+                CastProgressReadEvent((int)((i * 100) / (float)8));
+            }
+
+ /*         for (byte i = 0; i < 9; i++)
+            {
+                int mdlolo = (Partitionhashes[i,12] << 24 | Partitionhashes[i,13] << 16 | Partitionhashes[i,14] << 8 | Partitionhashes[i,15]);
+                int mdlohi = (Partitionhashes[i, 8] << 24 | Partitionhashes[i, 9] << 16 | Partitionhashes[i,10] << 8 | Partitionhashes[i,11]);
+                int mdhilo = (Partitionhashes[i, 4] << 24 | Partitionhashes[i, 5] << 16 | Partitionhashes[i, 6] << 8 | Partitionhashes[i, 7]);
+                int mdhihi = (Partitionhashes[i, 0] << 24 | Partitionhashes[i, 1] << 16 | Partitionhashes[i, 2] << 8 | Partitionhashes[i, 3]);
+
+                CastInfoEvent(("Part " + i.ToString("X1") + ": " + mdhihi.ToString("X8") + mdhilo.ToString("X8") + mdlohi.ToString("X8") + mdlolo.ToString("X8")), ActivityType.DownloadingFlash);
+            }*/
+            return true;
+        }
+
+        /// <summary>
+        /// Compare fetched hashes against file. Tag prtitions acordingly
+        /// </summary>
+        /// <param name="workEvent"></param>
+        /// <param name="device">Device to compare</param>
+        /// <param name="z22se">Z22SE shall not skip boot or recovery partitions</param>
+        private void DeterminePartitionmask(DoWorkEventArgs workEvent, byte device, bool z22se)
         {
             string filename = (string)workEvent.Argument;
             BlockManager bm = new BlockManager();
             bm.SetFilename(filename);
 
-            byte[] Locmd5dbuf = new byte[16];
-            byte[] Remd5dbuf  = new byte[16];
-            bool success      = false;
-            bool identical    = true;
-            byte placeholder  = 3;
-            byte toerase      = 0;
-            byte start;
-            bool nvdm = true;
-
-            CastProgressReadEvent(0);
-
-            if (device == EcuByte_T8)
-                placeholder = 2;
-
-            // Reset partition bitmask if this is not a verification procedure.
-            if (!verificationproc)
-                formatmask = 0;
+            byte toerase = 0;
+            byte start   = 5;
+            bool nvdm    = true;
+            formatmask   = 0;
 
             // Determine where to start by checking current device and selected regions
             if ((formatBootPartition && formatSystemPartitions) || z22se)
                 start = 1;
             else if (formatSystemPartitions || device == EcuByte_MCP)
                 start = 2;
-            else
-                start = 5;
-            
+
             for (byte i = start; i < 10; i++)
             {
-                // Store bit location and reset status
-                int shift = 1 << (i - 1);
-                success   = false;
+                // Store bit location
+                uint shift = (uint)(1 << (i - 1));
+                bool identical = true;
 
-                // Normal operation: Fetch md5 of every partition.
-                // Verification: Only fetch md5 of written partitions.
-                if ((((formatmask >> (i - 1)) & 0x1) > 0) || !verificationproc)
+                // Fetch partition md5
+                byte[] Locmd5dbuf = bm.GetPartitionmd5(device, i);
+                
+                // Compare both md5's
+                for (byte a = 0; a < 16; a++)
                 {
-                    Locmd5dbuf = bm.GetPartitionmd5(device, i);
-                    Remd5dbuf = LegionIDemand(placeholder, i, out success);
+                    if (Locmd5dbuf[a] != Partitionhashes[i - 1, a])
+                        identical = false;
                 }
 
-                if (success)
+                if (!identical && (i < 4) && !z22se)
                 {
-                    // Compare both md5's
-                    identical = true;
-                    for (byte a = 0; a < 16; a++)
+                    // Special case. Override automatic selection of boot if the the user so choose.
+                    if (i == 1)
+                        identical = LeaveRecoveryBe();
+
+                    // Special case. Override automatic selection of NVDM 1 and 2 if the the user so choose.
+                    else if (i == 2 && device == EcuByte_T8)
                     {
-                        if (Locmd5dbuf[a] != Remd5dbuf[a])
-                            identical = false;
+                        nvdm = identical = LeaveNVDMBe();
+
+                        // And make sure the verification-code knows what's up...
+                        formatSystemPartitions = !nvdm;
                     }
-
-                    if (!verificationproc)
-                    {
-                        if (!identical && (i < 4) && !z22se)
-                        {
-                            // Special case. Override automatic selection of boot if the the user so choose.
-                            if (i == 1)
-                                identical = LeaveRecoveryBe();
-                            // Special case. Override automatic selection of NVDM 1 and 2 if the the user so choose.
-                            else if (i == 2 && device == EcuByte_T8)
-                            {
-                                nvdm = identical = LeaveNVDMBe();
-                                // And make sure the verification-code knows what's up...
-                                formatSystemPartitions = !nvdm;
-                            }
-                            else if (i == 3 && device == EcuByte_T8)
-                                identical = nvdm;
-                        }
-
-                        // MCP requires a few more checks..
-                        if (device == EcuByte_MCP)
-                        {
-                            // Catch dangerous situation; ALWAYS select shadow and only deselect it if partition 1 is not to be written.
-                            if (i == 9)
-                                identical = (formatmask & 1) == 1 ? false : true;
-
-                            // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
-                            if (!z22se && i == 7)
-                                identical = true;
-                        }
-                        
-                        // Add partition to bitmask
-                        if (!identical)
-                        {
-                            formatmask += (uint)shift;
-                            CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
-                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Tagged for erase and write"));
-                            toerase++;
-                        }
-                        else
-                        {
-                            // CastInfoEvent(("Partition " + i.ToString("X1") + ": Identical / Skipping"), ActivityType.ConvertingFile);
-                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Identical / Skipping"));
-                        }
-
-                    }
-                    // Verifying written partitions
-                    else
-                    {   // Remove partition from bitmask
-                        if (identical)
-                        {
-                            formatmask -= (uint)shift;
-                            // CastInfoEvent(("Partition " + i.ToString("X1") + ": Verified"), ActivityType.ConvertingFile);
-                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Verified"));
-                        }
-                        else
-                        {
-                            CastInfoEvent(("Partition " + i.ToString("X1") + ": VERIFICATION ERROR!"), ActivityType.ConvertingFile);
-                            logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": VERIFICATION ERROR!"));
-                        }
-                    }
+                    else if (i == 3 && device == EcuByte_T8)
+                        identical = nvdm;
                 }
-                // Add failure-mechanism
+
+                // MCP requires a few more checks..
+                if (device == EcuByte_MCP)
+                {
+                    // Catch dangerous situation; ALWAYS select shadow and only deselect it if partition 1 is not to be written.
+                    if (i == 9)
+                        identical = (formatmask & 1) == 1 ? false : true;
+
+                    // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
+                    if (!z22se && i == 7)
+                        identical = true;
+                }
+
+                // Add partition to bitmask
+                if (!identical)
+                {
+                    formatmask |= (uint)shift;
+                    CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
+                    logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Tagged for erase and write"));
+                    toerase++;
+                }
                 else
-                    ;
-
-                CastProgressReadEvent((int)((i * 100) / (float)9));
-            }
-            
-            // Yes. Do NOT power off!!
-            if (verificationproc && ((formatmask & 1) > 0 || ((formatmask & 0x101) > 0 && device == EcuByte_MCP)))
-            {
-                for (int i = 0; i < 5; i++)
-                    CastInfoEvent(("Do NOT power cycle the ECU!"), ActivityType.ConvertingFile);
+                {
+                    logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Identical / Skipping"));
+                }
             }
 
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
@@ -6736,30 +6675,105 @@ namespace TrionicCANLib.API
                 CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
 
             logger.Debug(("(Legion) Partition erase bitmask:" + formatmask.ToString("X3")));
-
-            return false;
         }
 
-        
-        // I intend to either A: Remove this one and use md5 for everything or B: rewrite command to let the user select address range 
-        private bool RequestChecksum32_Legion(byte Region, out int csum32)
+        /// <summary>
+        /// Fetch md5 of every partition yet again. Compare unwritten ones against previously fetched hashes. Written ones against file.
+        /// </summary>
+        /// <param name="workEvent"></param>
+        /// <returns>..</returns>
+        private bool VerifyFlashIntegrity(DoWorkEventArgs workEvent, byte device)
         {
+            string filename = (string)workEvent.Argument;
+            BlockManager bm = new BlockManager();
+            bm.SetFilename(filename);
+
             bool success = false;
-            csum32 = 0;
-            byte[] framedata = new byte[4];
+            byte placeholder = 3;
+            if (device == EcuByte_T8)
+                placeholder = 2;
 
-            if (Region == 6)
-                framedata = LegionIDemand(1, 0, out success);
-            else if (Region == 5)
-                framedata = LegionIDemand(1, 1, out success);
+            CastProgressReadEvent(0);
 
-            if (success)
+            for (byte i = 1; i < 10; i++)
             {
-                csum32 = (framedata[0] << 24 | framedata[1] << 16 | framedata[2] << 8 | framedata[3]);
-                return true;
-            }
-            return false;
+                uint shift = (uint)(1 << (i -1));
+                bool Identical = true;
 
+                // Fetch md5 from both locations
+                byte[] RemoteMD = LegionIDemand(placeholder, (uint) i, out success);
+                byte[] LocalMD  = bm.GetPartitionmd5(device, i);
+
+                // Could not fetch remote md5; Abort!
+                if (!success)
+                    return false;
+
+                // Verify written data.
+                if (((formatmask >> (i-1)) & 1) > 0)
+                {
+                    for (byte a = 0; a < 16; a++)
+                    {
+                        if (RemoteMD[a] != LocalMD[a])
+                            Identical = false;
+                    }
+
+                    if (Identical)
+                    {
+                        formatmask &= ~shift;
+                        logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Verified"));
+                    }
+
+                    else
+                    {
+                        logger.Debug(("(Legion) Written partition " + i.ToString("X1") + ": VERIFICATION ERROR!"));
+                        CastInfoEvent(("Written partition " + i.ToString("X1") + ": VERIFICATION ERROR!"), ActivityType.ConvertingFile);
+                    }
+                }
+
+                // Verify old data
+                else
+                {
+                    for (byte a = 0; a < 16; a++)
+                    {
+                        if (RemoteMD[a] != Partitionhashes[i - 1,a])
+                            Identical = false;
+                    }
+
+                    if (Identical)
+                    {
+                        logger.Debug(("(Legion) Old partition " + i.ToString("X1") + ": Verified"));
+                    }
+
+                    else
+                    {
+                        formatmask |= shift;
+                        logger.Debug(("(Legion) Old partition " + i.ToString("X1") + ": VERIFICATION ERROR!"));
+                        CastInfoEvent(("Old partition " + i.ToString("X1") + ": VERIFICATION ERROR!"), ActivityType.ConvertingFile);
+                    }
+                }
+                CastProgressReadEvent((int)((i * 100) / (float)9));
+            }
+
+            // Check for dangerous situation; Trionic 8 main
+            if (device == EcuByte_T8)
+            {
+                // Not used atm..
+            }
+
+            // Check for dangerous situation; Trionic 8 / Z22SE MCP
+            else if (device == EcuByte_MCP)
+            {
+                if ((formatmask & 0x101) > 0)
+                {
+                    MessageBox.Show("DANGER: Please select 'Format boot' and try again",
+                        "Recovery is broken!!", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1);
+                }
+            }
+
+            CastInfoEvent("Done!", ActivityType.ConvertingFile);
+            logger.Debug(("(Legion) Partition verify bitmask:" + formatmask.ToString("X3")));
+
+            return true;
         }
 
         bool MarryMCP(bool z22se)
@@ -6784,44 +6798,30 @@ namespace TrionicCANLib.API
 
         private void LegionRequestexit()
         {
+            byte i = 10;
             CastInfoEvent("Requesting bootloader exit..", ActivityType.ConvertingFile);
-            bool success = Send0120();
-
-            if (!success)
+            do
             {
-                byte i = 10;
-                do
-                {
-                    CastInfoEvent("Retrying exit-request", ActivityType.ConvertingFile);
-                    success = Send0120();
-                    Thread.Sleep(100);
-                    i--;
-                } while (i > 0 && !success);
+                if (Send0120())
+                    return;
+                Thread.Sleep(100);
+            } while (--i > 0);
 
-                if (i == 0)
-                {
-                    CastInfoEvent("Bootloader did not respond to exit-request", ActivityType.ConvertingFile);
-                    CastInfoEvent("You may have to power-cycle the ECU", ActivityType.ConvertingFile);
-                }
-            }
-
-
+            CastInfoEvent("Bootloader did not respond to exit-request", ActivityType.ConvertingFile);
+            CastInfoEvent("You may have to power-cycle the ECU", ActivityType.ConvertingFile);
         }
+
         private void WriteFlashLegion(byte Device, int EndAddress, bool z22se, object sender, DoWorkEventArgs workEvent)
         {
-
-            BackgroundWorker bw = sender as BackgroundWorker;
-            string filename = (string)workEvent.Argument;
-            bool success;
-
             if (!canUsbDevice.isOpen())
                 return;
 
-            _needRecovery = false;
+            BackgroundWorker bw = sender as BackgroundWorker;
+            string filename = (string)workEvent.Argument;
+            _stallKeepAlive = true;
+            _needRecovery   = false;
             BlockManager bm = new BlockManager();
             bm.SetFilename(filename);
-
-            _stallKeepAlive = true;
 
             // Init session and start loader 
             if (!StartCommon(Device, z22se))
@@ -6831,54 +6831,61 @@ namespace TrionicCANLib.API
                 return;
             }
 
-            // compare md5 and set bitmask accordingly
             CastInfoEvent("Comparing md5 for selective erase..", ActivityType.StartErasingFlash);
-            ComparePartmd5(workEvent, Device, false, z22se);
 
-            // formatmask = 0xFE;
+            // Fetch md5 of all partitions
+            if (!FetchPartitionmd5(workEvent, Device))
+            {
+                CastInfoEvent("Could not fetch md5!", ActivityType.StartErasingFlash);
+                _stallKeepAlive = false;
+                workEvent.Result = false;
+                return;
+            }
+            // Compare against file
+            DeterminePartitionmask(workEvent, Device, z22se);
+
             if (formatmask > 0)
             {
-                // Patch in additional partitions to make sure everything after the last used address contains 0xFF's
+                // Patch in additional partitions to make sure everything after the last used address contain 0xFF's
                 if (Device == EcuByte_T8 && !z22se)
                 {
-                    // ..
-                    uint FormatAbove = bm.GetLasAddress();
-                    if(FormatAbove < 0x100000)
+                    EndAddress = (int)bm.GetLasAddress();
+                    if(EndAddress < 0x100000)
                         formatmask |= 0x100; // Partition 9
-                    if(FormatAbove < 0x0C0000)
+                    if(EndAddress < 0x0C0000)
                         formatmask |= 0x080; // Partition 8
-                    if (FormatAbove < 0x080000)
+                    if (EndAddress < 0x080000)
                         formatmask |= 0x040; // Partition 7
-                    if (FormatAbove < 0x060000)
+                    if (EndAddress < 0x060000)
                         formatmask |= 0x020; // Partition 6
-                    if (FormatAbove < 0x040000)
+                    if (EndAddress < 0x040000)
                         formatmask |= 0x010; // Partition 5
-                    // CastInfoEvent("Mask: " + formatmask.ToString("X3"), ActivityType.UploadingFlash);
                 }
 
                 // Request format of selected partitions.
                 if (SendrequestDownload(Device, false, true))
                 {
-                    // formatmask = 0;
-                    // CastInfoEvent("Verifying erased partitions..", ActivityType.StartErasingFlash);
-                    // ComparePartmd5(workEvent, Device, false, z22se);
-
                     _needRecovery = true;
                     CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
 
-                    if(Device == EcuByte_T8 && !z22se)
-                        success = ProgramFlashLeg((int)bm.GetLasAddress(), bm, Device);
-                    else
-                        success = ProgramFlashLeg(EndAddress, bm, Device);
-
-                    if (success)
+                    if (ProgramFlashLeg(EndAddress, bm, Device))
                     {
-                        CastInfoEvent("Verifying md5..", ActivityType.UploadingFlash);
-
-                        if (Device != EcuByte_T8 || z22se)
-                            ComparePartmd5(workEvent, Device, true, z22se);
+                        // Use method 2 for verification
+                        if (Device == EcuByte_MCP || z22se)
+                        {
+                            CastInfoEvent("Verifying md5..", ActivityType.UploadingFlash);
+                            if (!VerifyFlashIntegrity(workEvent, Device))
+                            {
+                                CastInfoEvent("Could not fetch MD5!", ActivityType.UploadingFlash);
+                                formatmask = 0x1FF;
+                            }
+                        }
+                        // Verify regions.
                         else
+                        {
+                            CastInfoEvent("Verifying md5..", ActivityType.UploadingFlash);
                             CompareRegmd5(workEvent);
+                        }
 
                         if (formatmask == 0)
                         {
@@ -6918,11 +6925,9 @@ namespace TrionicCANLib.API
                     CastInfoEvent("You could try again", ActivityType.FinishedFlashing);
                     workEvent.Result = false;
                     return;
-
                 }
-
-            // Tell loader to exit; Same data on both ends
             }
+            // Tell loader to exit; Same data on both ends
             else
             {
                 CastInfoEvent("Everything is identical", ActivityType.FinishedFlashing);
@@ -6932,7 +6937,6 @@ namespace TrionicCANLib.API
 
                 LegionRequestexit();
             }
-               
 
             _stallKeepAlive = false;
             workEvent.Result = true;
@@ -6945,7 +6949,6 @@ namespace TrionicCANLib.API
             // Note: The format function count partitions as 1 to 9.
             // this on the other hand will count from 0 to 8
             int part = 0;
-
 
             // T8 main
             if (device == EcuByte_T8)
@@ -6973,39 +6976,8 @@ namespace TrionicCANLib.API
                 part = (address >> 15) & 0xF;
             
             // Read one bit from selected part of the format mask to figure out if this partition should be written or not.
-            if (((formatmask >> part) & 1) > 0)
-                return true;
-
-            return false;
+            return ((formatmask >> part) & 1) > 0 ? true : false;
         }
-
-        /// Another sister function to ProgramFlashLeg()
-        // Show usable information during flashing
-        // Note: Will return true if it's worth trying again or false if the fault is of critical nature.
-        private bool ReasonForRetry(byte response)
-        {
-            /// TransferData level 0x10 errors
-            // 0x10: Generic error; Traffic
-            // 0x11: Checksum mismatch
-            // 0x12: Package missing
-            // 0x13: Did not expect transfer
-            // 0x14: Address out of range
-            // 0x15: Address alignment
-            // 0x16: Unknown device ID      
-
-            /// TransferData level 0x30 errors
-            // 0x30: Generic error; Write
-            // 0x31: Tried too many times
-            // 0x32: SPI I/O error (MCP<->Main communication malfunction)
-            // 0x33: Still writing (Waiting for buffer to be released)
-            // 0x34: VPP stuck
-
-
-            CastInfoEvent("Reason: " + response.ToString("X2") , ActivityType.UploadingFlash);
-
-            return true;
-        }
-
 
         private bool ProgramFlashLeg(int End, BlockManager bm, byte device)
         {
@@ -7027,7 +6999,6 @@ namespace TrionicCANLib.API
 
             while (blockNumber <= lastBlockNumber)
             {
-                
                 int percentage = (int)(((float)blockNumber * 100) / (float)lastBlockNumber);
                 if (percentage > saved_progress || percentage==0)
                 {
@@ -7037,7 +7008,6 @@ namespace TrionicCANLib.API
 
                 // Reset status
                 Problem = false;
-
 
                 int currentAddress = startAddress + (blockNumber * 0x80);
                 byte[] data2Send  = bm.GetCurrentBlock_128(blockNumber, byteswapped);
@@ -7050,7 +7020,6 @@ namespace TrionicCANLib.API
                 
                 data2Send[length - 8] = (byte)(Csum16 >> 8 & 0xff);
                 data2Send[length - 7] = (byte)(Csum16 & 0xff);
-                
 
                 sw.Reset();
                 sw.Start();
@@ -7058,10 +7027,8 @@ namespace TrionicCANLib.API
                 // Check for blocks filled with 0xFF / identical partitions and skip those
                 if (!bm.FFblock(currentAddress, length - 8) && Erasedregion(currentAddress, device))
                 {
-                    // CastInfoEvent("Current addr: " + currentAddress.ToString("X6"), ActivityType.UploadingFlash);
                     if (SendTransferData(length, currentAddress, 0x7E8))
                     {
-                        // CastInfoEvent("Current Succ addr: " + currentAddress.ToString("X6"), ActivityType.UploadingFlash);
                         canUsbDevice.RequestDeviceReady();
 
                         byte iFrameNumber = 0x21;
@@ -7070,13 +7037,11 @@ namespace TrionicCANLib.API
                         CANMessage msg = new CANMessage(0x7E0, 0, 8);
                         for (int frame = 0; frame < numberOfFrames; frame++)
                         {
-
-                            var cmd = BitTools.GetFrameBytes(iFrameNumber, data2Send, txpnt);
+                            var cmd = BitTools.GetFrameBytes(iFrameNumber++, data2Send, txpnt);
                             msg.setData(cmd);
-                            txpnt += 7;
 
-                            if (iFrameNumber++ > 0x2E)  // It checks before incrementing so it will end @ 0x2f before rolling over 
-                                iFrameNumber = 0x20;
+                            iFrameNumber &= 0x2F;
+                            txpnt += 7;
 
                             msg.elmExpectedResponses = (frame == numberOfFrames - 1) ? 1 : 0;
 
@@ -7086,46 +7051,27 @@ namespace TrionicCANLib.API
                             if (!canUsbDevice.sendMessage(msg))
                                 logger.Debug("Couldn't send message");
 
-
-                            // This turd is too slow!
-                            if (canUsbDevice is CANELM327Device || fasterdamnit)
-                                ;
-                            else
-                            {
-                                if (m_sleepTime > 0)
-                                    Thread.Sleep(m_sleepTime);
-                            }
-                                
+                            // ELM is slow as it is..
+                            if (!(canUsbDevice is CANELM327Device) && !fasterdamnit && m_sleepTime > 0)
+                                Thread.Sleep(m_sleepTime);
                         }
 
                         Application.DoEvents();
                         ulong data = m_canListener.waitMessage(timeoutP2ct, 0x7E8).getData();
                         if (getCanData(data, 0) != 0x01 || getCanData(data, 1) != 0x76)
                         {
-
-                            // if (!ReasonForRetry(getCanData(data, 3)))
-                            //    return false;
-
-                            // The elm-hacks makes it hard to catch this in time so the next best thing is to start over.
-                            // As it is right now the loader will also force the host to start over from 0 since it's pointless to continue
-                            /*if ((getCanData(data, 0) == 0x01 && getCanData(data, 1) == 0x12) && Retries<20)
+                            if (++Retries < 20)
                             {
-
-                                // Last failed address can be read in byte[] 2-5 though there's no point in implementing it right now
-                                blockNumber = 0;
-                                currentAddress = 0;
-                                bm.ReverseBlock(0);
-                                CastInfoEvent("Bootloader reported a problem or did not respond in time. ", ActivityType.UploadingFlash);
-                                CastInfoEvent("Starting over.. ", ActivityType.UploadingFlash);
-                            }*/
-
-                            if (Retries < 20)
-                            {
-                                blockNumber = 0;
-                                currentAddress = 0;
-                                CastInfoEvent("Bootloader reported a problem or did not respond in time. ", ActivityType.UploadingFlash);
-                                CastInfoEvent("Starting over.. ", ActivityType.UploadingFlash);
-                                CastInfoEvent("Programming FLASH", ActivityType.UploadingFlash);
+                                // Bootloader says something
+                                if (data == 0x12367f01 || data == 0x33367f01)
+                                {
+                                    CastInfoEvent("Flash is very slow to respond at block " + currentAddress.ToString("X8"), ActivityType.UploadingFlash);
+                                    Retries--;
+                                }
+                                else
+                                    CastInfoEvent("Dropped frame. Retrying..", ActivityType.UploadingFlash);
+ 
+                                Problem = true;
                             }
                             else
                             {
@@ -7134,15 +7080,11 @@ namespace TrionicCANLib.API
                                 _stallKeepAlive = false;
                                 return false;
                             }
-
-                            Problem = true;
-                            Retries++;
                         }
                         else
                             Retries = 0;
 
                         canUsbDevice.RequestDeviceReady();
-
                     }
                     else
                         Problem = true;
@@ -7170,8 +7112,6 @@ namespace TrionicCANLib.API
             int blockSize = 0x80; // defined in bootloader... keep it that way!
             int bufpnt = 0;
             byte[] buf = new byte[lastAddress];
-            int Localcsum32 = 0;
-            int Remotecsum32 = 0;
 
             // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
             for (int i = 0; i < lastAddress; i++)
@@ -7271,31 +7211,38 @@ namespace TrionicCANLib.API
             {
                 try
                 {
-                    // Compare checksum-32 
-                    for (int i = 0; i < lastAddress; i++)
-                        Localcsum32 += buf[i];
+                    System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
+                    md5.Initialize();
 
-                    bool succ = RequestChecksum32_Legion(Device, out Remotecsum32);
-                    if (Localcsum32 != Remotecsum32 || !succ)
+                    CastInfoEvent("Verifying md5..", ActivityType.ConvertingFile);
+                    byte[] Locmd5buf = md5.ComputeHash(buf);
+                    byte[] Remd5dbuf = LegionIDemand(Device == EcuByte_MCP ? (uint) 3 : 2, 0, out success);
+
+                    if (success)
                     {
-                        CastInfoEvent("Checksum check failed!", ActivityType.ConvertingFile);
-                        CastInfoEvent("Local Checksum-32: " + Localcsum32.ToString("X8"), ActivityType.ConvertingFile);
+                        for (byte i = 0; i < 16; i++)
+                        {
+                            if (Remd5dbuf[i] != Locmd5buf[i])
+                                success = false;
+                        }
 
-                        if(succ)
-                            CastInfoEvent("Remote Checksum-32: " + Remotecsum32.ToString("X8"), ActivityType.ConvertingFile);
+                        if (success)
+                        {
+                            File.WriteAllBytes(filename, buf);
+                            Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
+
+                            CastInfoEvent("Download done and verified", ActivityType.FinishedDownloadingFlash);
+                        }
                         else
-                            CastInfoEvent("Could not fetch remote Checksum-32", ActivityType.ConvertingFile);
-
-                        workEvent.Result = false;
+                        {
+                            CastInfoEvent("Local data does not match ECU! Discarding data..", ActivityType.FinishedDownloadingFlash);
+                        }
                     }
                     else
                     {
-                        File.WriteAllBytes(filename, buf);
-                        Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
-
-                        CastInfoEvent("Download done and checksum-matched", ActivityType.FinishedDownloadingFlash);
-                        workEvent.Result = true;
+                        CastInfoEvent("Could not fetch md5! Discarding data..", ActivityType.FinishedDownloadingFlash);
                     }
+                    workEvent.Result = success;
                 }
                 catch (Exception e)
                 {
