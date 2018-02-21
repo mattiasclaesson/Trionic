@@ -6515,8 +6515,6 @@ namespace TrionicCANLib.API
             string filename = (string)workEvent.Argument;
             BlockManager bm = new BlockManager();
             bm.SetFilename(filename);
-            byte[] Locmd5dbuf = new byte[16];
-            byte[] Remd5dbuf = new byte[16];
             byte Partition = 12;
             bool success;
 
@@ -6525,8 +6523,8 @@ namespace TrionicCANLib.API
             else if (formatSystemPartitions)
                 Partition = 11;
 
-            Locmd5dbuf = bm.GetPartitionmd5(EcuByte_T8, Partition);
-            Remd5dbuf = LegionIDemand(2, Partition, out success);
+            byte[] Locmd5dbuf = bm.GetPartitionmd5(EcuByte_T8, Partition);
+            byte[] Remd5dbuf  = LegionIDemand(2, Partition, out success);
 
             if (success)
             {
@@ -6553,7 +6551,7 @@ namespace TrionicCANLib.API
         /// <returns>True as long as md5 could be fetched</returns>
         private bool FetchPartitionmd5(DoWorkEventArgs workEvent, byte device)
         {
-            bool success = false;
+            bool success;
 
             CastProgressReadEvent(0);
 
@@ -6584,7 +6582,7 @@ namespace TrionicCANLib.API
         }
 
         /// <summary>
-        /// Compare fetched hashes against file. Tag prtitions acordingly
+        /// Compare fetched hashes against file. Tag partitions accordingly
         /// </summary>
         /// <param name="workEvent"></param>
         /// <param name="device">Device to compare</param>
@@ -6714,7 +6712,7 @@ namespace TrionicCANLib.API
                     if (Identical)
                     {
                         formatmask &= ~shift;
-                        logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Verified"));
+                        logger.Debug(("(Legion) Written partition " + i.ToString("X1") + ": Verified"));
                     }
 
                     else
@@ -6729,7 +6727,7 @@ namespace TrionicCANLib.API
                 {
                     for (byte a = 0; a < 16; a++)
                     {
-                        if (RemoteMD[a] != Partitionhashes[i - 1,a])
+                        if (RemoteMD[a] != Partitionhashes[i - 1, a])
                             Identical = false;
                     }
 
@@ -6759,7 +6757,12 @@ namespace TrionicCANLib.API
             {
                 if ((formatmask & 0x101) > 0)
                 {
-                    MessageBox.Show("DANGER: Please select 'Format boot' and try again",
+                    CastInfoEvent("\n\n", ActivityType.UploadingFlash);
+                    CastInfoEvent("An internal self-test has catched the dreaded MCP bug:", ActivityType.UploadingFlash);
+                    CastInfoEvent("Select 'Format boot' and 'Unlock sys.' partition(s) and try again.", ActivityType.UploadingFlash);
+                    CastInfoEvent("When asked if you want to write boot you MUST click YES!", ActivityType.UploadingFlash);
+
+                    MessageBox.Show("DANGER: Read log window for further information\nFailure to follow instructions WILL brick MCP",
                         "Recovery is broken!!", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1);
                 }
             }
@@ -6770,6 +6773,11 @@ namespace TrionicCANLib.API
             return true;
         }
 
+        /// <summary>
+        /// Perform a marriage of MCP
+        /// </summary>
+        /// <param name="z22se">The hash algorithm of this ECU is unknown</param>
+        /// <returns></returns>
         bool MarryMCP(bool z22se)
         {
             bool success = true;
