@@ -7112,6 +7112,8 @@ namespace TrionicCANLib.API
             int blockSize = 0x80; // defined in bootloader... keep it that way!
             int bufpnt = 0;
             byte[] buf = new byte[lastAddress];
+            uint Dropped = 0;
+            uint Fallback = 3000; // Equals 1.8 ~ms
 
             // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
             for (int i = 0; i < lastAddress; i++)
@@ -7133,11 +7135,6 @@ namespace TrionicCANLib.API
 
             CastInfoEvent("Downloading " + lastAddress.ToString("D") + " Bytes.", ActivityType.DownloadingFlash);
 
-            // now start sending commands:
-            //06 21 80 00 00 00 00 00 
-            // response: 
-            //10 82 61 80 00 10 0C 00 // 4 bytes data already
-
             while (startAddress < lastAddress)
             {
                 if (!canUsbDevice.isOpen())
@@ -7152,7 +7149,7 @@ namespace TrionicCANLib.API
                 if (success)
                 {
                     // figure out why readDataByLocalIdentifier() sometimes return true even though the frame is incomplete
-                    if(Blockstoskip > 0)
+                    if (Blockstoskip > 0)
                     {
                         bufpnt += (Blockstoskip * blockSize);
 
@@ -7168,7 +7165,10 @@ namespace TrionicCANLib.API
                         retryCount = 0;
                     }
                     else
+                    {
                         retryCount++;
+                        Dropped++;
+                    }
 
                     int percentage = (int)((bufpnt * 100) / (float)lastAddress);
                     if (percentage > saved_progress)
@@ -7181,8 +7181,9 @@ namespace TrionicCANLib.API
                 {
                     CastInfoEvent("Frame dropped, retrying " + startAddress.ToString("X8") + " " + retryCount.ToString(), ActivityType.DownloadingFlash);
                     retryCount++;
-                    // read all available message from the bus now
+                    Dropped++;
 
+                    // read all available message from the bus now
                     for (int i = 0; i < 10; i++)
                     {
                         CANMessage response = new CANMessage();
@@ -7203,6 +7204,26 @@ namespace TrionicCANLib.API
                 }
 
                 Application.DoEvents();
+
+                // Throttle back after a set number of dropped frames.
+                if (Dropped == 3)
+                {
+                    CastInfoEvent("Too many dropped frames: Slowing down..", ActivityType.DownloadingFlash);
+                    Thread.Sleep(100);
+                    LegionIDemand(0, Fallback, out success);
+
+                    if (!success)
+                    {
+                        // Make sure to try again
+                        Dropped--;
+                    }
+                    else
+                    {
+                        // Prepare to run even slower
+                        Fallback += 500;
+                        Dropped   =   0;
+                    }
+                }
             }
             sw.Stop();
             _stallKeepAlive = false;
