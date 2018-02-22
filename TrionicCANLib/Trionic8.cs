@@ -7208,7 +7208,6 @@ namespace TrionicCANLib.API
                 // Throttle back after a set number of dropped frames.
                 if (Dropped == 3)
                 {
-                    CastInfoEvent("Too many dropped frames: Slowing down..", ActivityType.DownloadingFlash);
                     Thread.Sleep(100);
                     LegionIDemand(0, Fallback, out success);
 
@@ -7219,6 +7218,8 @@ namespace TrionicCANLib.API
                     }
                     else
                     {
+                        CastInfoEvent("Too many dropped frames: Slowing down..", ActivityType.DownloadingFlash);
+
                         // Prepare to run even slower
                         Fallback += 500;
                         Dropped   =   0;
