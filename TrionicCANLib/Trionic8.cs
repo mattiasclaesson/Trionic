@@ -6641,10 +6641,6 @@ namespace TrionicCANLib.API
                 // MCP requires a few more checks..
                 if (device == EcuByte_MCP)
                 {
-                    // Catch dangerous situation; ALWAYS select shadow and only deselect it if partition 1 is not to be written.
-                    if (i == 9)
-                        identical = (formatmask & 1) == 1 ? false : true;
-
                     // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
                     if (!z22se && i == 7)
                         identical = true;
@@ -6662,6 +6658,13 @@ namespace TrionicCANLib.API
                 {
                     logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Identical / Skipping"));
                 }
+            }
+
+            // Shadow and boot are one and the same but at different addresses
+            // If any of them are to be erased, both must be written.
+            if (device == EcuByte_MCP && ((formatmask&0x101) > 0))
+            {
+                formatmask |= 0x101;
             }
 
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
