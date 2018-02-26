@@ -6127,7 +6127,7 @@ namespace TrionicCANLib.API
                     // LegionIDemand(0, 150, out success);
             }
             else
-                LegionIDemand(0, 2000, out success);
+                LegionIDemand(0, 1750, out success);
 
             if (!success)
                 return false;
