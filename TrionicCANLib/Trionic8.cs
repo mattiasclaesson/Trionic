@@ -5616,8 +5616,8 @@ namespace TrionicCANLib.API
         {
             int startAddress = start;
             int range = end - start;
-            int blockSize = 0xF8;
-            int bufsize = 0xFF;
+            int blockSize = 0xFF8;//4088
+            int bufsize = 0xFFF;//4095
             int bufpnt = startAddress;
             int saved_progress = 0;
             byte[] filebytes = File.ReadAllBytes(filename);
@@ -5635,6 +5635,14 @@ namespace TrionicCANLib.API
                 if (end - bufpnt < blockSize)
                 {
                     blockSize = end - bufpnt;
+                }
+                if (startAddress == 0x1BF400)
+                {
+                    blockSize = 0xC00;
+                }
+                if (startAddress == 0x1DFF10)
+                {
+                    blockSize = 0x0F5;
                 }
                 byte[] data2Send = new byte[bufsize];
                 for (int j = 0; j < blockSize; j++)
@@ -5710,12 +5718,18 @@ namespace TrionicCANLib.API
                 sw.Stop();
 
                 startAddress += blockSize;
-
-                // Handle address gap between main and secondary OS
-                if (writeSecondary && bufpnt == 0x1F0000)
+                
+                // Handle gaps
+                if (bufpnt == 0x1C0000)
                 {
-                    bufpnt = 0x200000;
-                    startAddress = 0x400000;
+                    bufpnt = 0x1C2000;
+                    startAddress = 0x1C2000;
+                }
+                // Handle address gap between main and secondary OS
+                if (writeSecondary && bufpnt == 0x1E0000)
+                {
+                    bufpnt = 0x204000;
+                    startAddress = 0x404000;
                 }
             }
             CastProgressWriteEvent(100);
@@ -5732,14 +5746,19 @@ namespace TrionicCANLib.API
             ulong addressMiddle = (uint)address & 0x000000000000FF00;
             addressMiddle /= 0x100;
             ulong addressLow = (uint)address & 0x00000000000000FF;
-            ulong len = (ulong)length + 5;  // The extra 5 comes from the Service ID plus the sub-function parameter byte plus the 3 byte startingAddress.
+            
+            ulong total = (ulong)length + 5;  // The extra 5 comes from the Service ID plus the sub-function parameter byte plus the 3 byte startingAddress.
+            ulong lenLow = total & 0xFF;
+            ulong lenHigh = (total & 0xF00) >> 8;
+
             ulong payload = (ulong)firstByteToSend;
 
             cmd |= (payload * 0x100000000000000);
             cmd |= (addressLow * 0x1000000000000);
             cmd |= (addressMiddle * 0x10000000000);
             cmd |= (addressHigh * 0x100000000);
-            cmd |= (len * 0x100);
+            cmd |= (lenLow * 0x100);
+            cmd |= lenHigh;
 
             logger.Debug("send: " + cmd.ToString("X16"));
 

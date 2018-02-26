@@ -150,6 +150,10 @@ namespace TrionicCANLib.CAN
                     {
                         Thread.Sleep(1);
                     }
+                    else
+                    {
+                        logger.Debug("error" + status);
+                    }
                 }
                 else
                 {
