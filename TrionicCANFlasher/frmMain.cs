@@ -326,25 +326,37 @@ namespace TrionicCANFlasher
                                 else
                                 {
                                     bool flash = true;
+
+                                    int flashStart = 0x1C2000;
+                                    int flashEnd = 0x1E0000;
+
+                                    if (FileME96.hasFirmwareContent(ofd.FileName))
+                                    {
+                                        if(cbFormatSystemPartitions.Checked)
+                                        {
+                                            FileInfo fi = new FileInfo(ofd.FileName);
+                                            flashStart = 0x40000;
+                                            flashEnd = (int)fi.Length;
+                                        }
+                                    }
+
+                                    AddLogItem("Flash operation start:" + flashStart.ToString("X") + " and end: " + flashEnd.ToString("X"));
+                                    
                                     // Check that the basefile version is matched with beginning of calibrationset
-                                    //string basefileInfo = FileME96.getFileInfo(ofd.FileName);
+                                    string basefileInfo = FileME96.getFileInfo(ofd.FileName);
 
-                                    //if (!basefileInfo.Contains(calibrationset.Substring(0, 4)))
-                                    //{
-                                    //    AddLogItem("Basefile and file to write is not compatible " + basefileInfo + " and " + calibrationset);
+                                    if (!basefileInfo.Contains(calibrationset.Substring(0, 4)))
+                                    {
+                                        AddLogItem("Basefile and file to write is not compatible " + basefileInfo + " and " + calibrationset);
 
-                                    //    result = MessageBox.Show("Check that basefile version is matching calibration\n\nAre you certain this file is the same basefile as the ECU?",
-                                    //    "Basefile check failed!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                                        result = MessageBox.Show("Check that basefile version is matching calibration\n\nAre you certain this file is the same basefile as the ECU?",
+                                            "Basefile check failed!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
 
-                                    //    if (result == DialogResult.No)
-                                    //    {
-                                    //        flash = false;
-                                    //    }
-                                    //}
-
-                                    // calib only
-                                    //int start = 0x1C2000;
-                                    //int end = 0x1E0000;
+                                        if (result == DialogResult.No)
+                                        {
+                                            flash = false;
+                                        }
+                                    }
 
                                     if (flash)
                                     {
@@ -352,7 +364,7 @@ namespace TrionicCANFlasher
                                         dtstart = DateTime.Now;
                                         AddLogItem("Update FLASH content");
                                         Application.DoEvents();
-                                        FlashReadArguments args = new FlashReadArguments() { FileName = ofd.FileName, start = 0x40000, end = 0x280000 };
+                                        FlashReadArguments args = new FlashReadArguments() { FileName = ofd.FileName, start = flashStart, end = flashEnd };
                                         BackgroundWorker bgWorker;
                                         bgWorker = new BackgroundWorker();
                                         bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashME96);
@@ -561,7 +573,6 @@ namespace TrionicCANFlasher
                 btnRecoverECU.Enabled = false;
                 cbUseLegionBootloader.Enabled = false;
                 cbFormatBootPartition.Enabled = false;
-                cbFormatSystemPartitions.Enabled = false;
                 cbAutoChecksum.Enabled = false;
             }
             

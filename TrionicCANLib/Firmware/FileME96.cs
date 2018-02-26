@@ -10,6 +10,8 @@ namespace TrionicCANLib.Firmware
         static public uint Length = 0x200000;
         static public uint LengthComplete = 0x280000;
 
+        static private byte[] expectedBegin = {0x48, 0x01, 0x10, 0xF2, 0x00, 0x00, 0x00, 0x00, 0x48, 0x00, 0x03, 0xC6, 0x00, 0x00, 0x00, 0x00};
+
         static public string getFileInfo(string filename) 
         {
             byte[] filebytes = File.ReadAllBytes(filename);
@@ -28,6 +30,23 @@ namespace TrionicCANLib.Firmware
                 }
             }
             return damosinfo;
+        }
+
+        static public bool hasFirmwareContent(string filename)
+        {
+            using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            {
+                using (BinaryReader br = new BinaryReader(fs))
+                {
+                    byte[] read = br.ReadBytes(16);
+                    if (read.AsEnumerable().SequenceEqual(expectedBegin))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }
