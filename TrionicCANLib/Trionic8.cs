@@ -5642,7 +5642,7 @@ namespace TrionicCANLib.API
                 }
                 if (startAddress == 0x1DFF10)
                 {
-                    blockSize = 0x0F5;
+                    blockSize = 0x0F0;
                 }
                 byte[] data2Send = new byte[bufsize];
                 for (int j = 0; j < blockSize; j++)
