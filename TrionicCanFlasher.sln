@@ -42,7 +42,6 @@ Global
 		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Debug|x86.ActiveCfg = Debug|x86
 		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Release|Any CPU.ActiveCfg = Release|x86
 		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Release|x86.ActiveCfg = Release|x86
-		{3D666E41-0263-4EFC-9B80-743CCE5494D6}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

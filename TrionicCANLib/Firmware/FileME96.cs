@@ -10,9 +10,15 @@ namespace TrionicCANLib.Firmware
         static public uint Length = 0x200000;
         static public uint LengthComplete = 0x280000;
 
-        static private byte[] expectedBegin = {0x48, 0x01, 0x10, 0xF2, 0x00, 0x00, 0x00, 0x00, 0x48, 0x00, 0x03, 0xC6, 0x00, 0x00, 0x00, 0x00};
+        static public uint MainOSAddress = 0x40000;
+        static public uint EngineCalibrationAddress = 0x1C2000;
+        static public uint EngineCalibrationAddressEnd = 0x1E0000;
+        static public uint VersionOffset = 5;
 
-        static public string getFileInfo(string filename) 
+        static private byte[] expectedBegin = {0x48, 0x01, 0x10, 0xF2, 0x00, 0x00, 0x00, 0x00, 0x48, 0x00, 0x03, 0xC6, 0x00, 0x00, 0x00, 0x00};
+        static private byte[] filled = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+        static public string getFileInfo(string filename)
         {
             byte[] filebytes = File.ReadAllBytes(filename);
             string damosinfo = string.Empty;
@@ -32,7 +38,7 @@ namespace TrionicCANLib.Firmware
             return damosinfo;
         }
 
-        static public bool hasFirmwareContent(string filename)
+        static public bool hasBootloader(string filename)
         {
             using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
             {
@@ -47,6 +53,46 @@ namespace TrionicCANLib.Firmware
             }
 
             return false;
+        }
+
+        static public string getMainOSVersion(string filename)
+        {
+            string version = string.Empty;
+            using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            {
+                fs.Seek(MainOSAddress + VersionOffset, SeekOrigin.Begin); //Example 55566563
+                using (BinaryReader br = new BinaryReader(fs))
+                {
+                    byte[] read = br.ReadBytes(8);
+                    if (read.AsEnumerable().SequenceEqual(filled))
+                    {
+                        return string.Empty;
+                    }
+                    version = System.Text.Encoding.Default.GetString(read);
+                }
+            }
+
+            return version;
+        }
+
+        static public string getEngineCalibrationVersion(string filename)
+        {
+            string version = string.Empty;
+            using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            {
+                fs.Seek(EngineCalibrationAddress + VersionOffset, SeekOrigin.Begin); //Example 55569071
+                using (BinaryReader br = new BinaryReader(fs))
+                {
+                    byte[] read = br.ReadBytes(8);
+                    if (read.AsEnumerable().SequenceEqual(filled))
+                    {
+                        return string.Empty;
+                    }
+                    version = System.Text.Encoding.Default.GetString(read);
+                }
+            }
+
+            return version;
         }
     }
 }

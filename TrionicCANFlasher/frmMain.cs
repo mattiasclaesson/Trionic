@@ -318,48 +318,75 @@ namespace TrionicCANFlasher
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             if (trionic8.openDevice(false))
                             {
-                                string calibrationset = trionic8.GetCalibrationSet();
-                                if (calibrationset == "")
+                                string ecuCalibrationset = trionic8.GetCalibrationSet();
+                                ecuCalibrationset = SubString8(ecuCalibrationset);
+                                if (ecuCalibrationset == "")
                                 {
                                     AddLogItem("ECU connection issue, check logs");
                                 }
                                 else
                                 {
+                                    string ecuMainOS = trionic8.RequestECUInfo(0xC1, "");
+                                    ecuMainOS = SubString8(ecuMainOS);
+                                    string ecuEngineCalib = trionic8.RequestECUInfo(0xC2, "");
+                                    ecuEngineCalib = SubString8(ecuEngineCalib);
+                                    string ecuSystemCalib = trionic8.RequestECUInfo(0xC3, "");
+                                    ecuSystemCalib = SubString8(ecuSystemCalib);
+                                    string ecuSpeedoCalib = trionic8.RequestECUInfo(0xC4, "");
+                                    ecuSpeedoCalib = SubString8(ecuSpeedoCalib);
+                                    string ecuSlaveOS = trionic8.RequestECUInfo(0xC5, "");
+                                    ecuSlaveOS = SubString8(ecuSlaveOS);
+
                                     bool flash = true;
+                                    int flashStart = (int)FileME96.EngineCalibrationAddress;
+                                    int flashEnd = (int)FileME96.EngineCalibrationAddressEnd;
 
-                                    int flashStart = 0x1C2000;
-                                    int flashEnd = 0x1E0000;
-
-                                    if (FileME96.hasFirmwareContent(ofd.FileName))
+                                    string fileMainOS = FileME96.getMainOSVersion(ofd.FileName);
+                                    AddLogItem("Main OS version in file: " + fileMainOS);
+                                    if (fileMainOS != string.Empty)
                                     {
-                                        if(cbFormatSystemPartitions.Checked)
+                                        AddLogItem("Main OS version in ECU: " + ecuMainOS);
+                                        if (ecuMainOS != fileMainOS)
                                         {
-                                            FileInfo fi = new FileInfo(ofd.FileName);
-                                            flashStart = 0x40000;
-                                            flashEnd = (int)fi.Length;
+                                            AddLogItem("Main OS version differs between file and ECU");
+                                            if (cbFormatSystemPartitions.Checked)
+                                            {
+                                                AddLogItem("User has selected option format system partitions");
+                                                FileInfo fi = new FileInfo(ofd.FileName);
+                                                flashStart = (int)FileME96.MainOSAddress;
+                                                flashEnd = (int)fi.Length;
+                                            }
+                                            else
+                                            {
+                                                AddLogItem("Aborted flash, format system partitions is unchecked");
+                                                flash = false;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            flash = FlashEngineCalibration(ofd.FileName, ecuEngineCalib);
                                         }
                                     }
-
-                                    AddLogItem("Flash operation start:" + flashStart.ToString("X") + " and end: " + flashEnd.ToString("X"));
-                                    
-                                    // Check that the basefile version is matched with beginning of calibrationset
-                                    string basefileInfo = FileME96.getFileInfo(ofd.FileName);
-
-                                    if (!basefileInfo.Contains(calibrationset.Substring(0, 4)))
+                                    else
                                     {
-                                        AddLogItem("Basefile and file to write is not compatible " + basefileInfo + " and " + calibrationset);
+                                        // Or just force the user to read the complete ecu instead.
 
-                                        result = MessageBox.Show("Check that basefile version is matching calibration\n\nAre you certain this file is the same basefile as the ECU?",
-                                            "Basefile check failed!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
-
-                                        if (result == DialogResult.No)
+                                        // Check that the basefile version is matched with beginning of calibrationset
+                                        string basefileInfo = FileME96.getFileInfo(ofd.FileName);
+                                        if (!basefileInfo.Contains(ecuCalibrationset.Substring(0, 4)))
                                         {
+                                            AddLogItem("Basefile and file to write is not compatible " + basefileInfo + " and " + ecuCalibrationset);
                                             flash = false;
+                                        }
+                                        else
+                                        {
+                                            flash = FlashEngineCalibration(ofd.FileName, ecuEngineCalib);
                                         }
                                     }
 
                                     if (flash)
                                     {
+                                        AddLogItem("Flash addresses start:" + flashStart.ToString("X") + " and end: " + flashEnd.ToString("X"));
                                         Thread.Sleep(1000);
                                         dtstart = DateTime.Now;
                                         AddLogItem("Update FLASH content");
@@ -392,6 +419,41 @@ namespace TrionicCANFlasher
                 }
             }
             LogManager.Flush();
+        }
+
+        private bool FlashEngineCalibration(string fileName, string ecuEngineCalib)
+        {
+            bool flash = true;
+
+            string fileEngineCalib = FileME96.getEngineCalibrationVersion(fileName);
+            AddLogItem("Engine Calibration version in file: " + fileEngineCalib);
+            if (fileEngineCalib != string.Empty)
+            {
+                AddLogItem("Engine Calibration version in ECU: " + ecuEngineCalib);
+                if (ecuEngineCalib != fileEngineCalib)
+                {
+                    AddLogItem("Aborted flash, Engine Calibration version differs between file and ECU");
+                    flash = false;
+                }
+                else
+                {
+                    // Read the ecu here and compare with file. 
+                    // So we know if there is any point in writing?
+
+                    DialogResult ask = MessageBox.Show("Do you want to overwrite calibration?",
+                        "Calibration write", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                    if (ask == DialogResult.No)
+                    {
+                        flash = false;
+                    }
+                }
+            }
+            return flash;
+        }
+
+        private static string SubString8(string value)
+        {
+            return value.Length < 8 ? value : value.Substring(0, 8);
         }
 
         void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -715,7 +777,7 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    FlashReadArguments args = new FlashReadArguments() { FileName = sfd.FileName, start = 0, end = 0x280000 };
+                                    FlashReadArguments args = new FlashReadArguments() { FileName = sfd.FileName, start = (int)FileME96.MainOSAddress, end = (int)FileME96.LengthComplete };
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);
@@ -957,15 +1019,26 @@ namespace TrionicCANFlasher
                     }
                     else
                     {
+                        string ecuMainOS = trionic8.RequestECUInfo(0xC1, "");
+                        ecuMainOS = SubString8(ecuMainOS);
+                        string ecuEngineCalib = trionic8.RequestECUInfo(0xC2, "");
+                        ecuEngineCalib = SubString8(ecuEngineCalib);
+                        string ecuSystemCalib = trionic8.RequestECUInfo(0xC3, "");
+                        ecuSystemCalib = SubString8(ecuSystemCalib);
+                        string ecuSpeedoCalib = trionic8.RequestECUInfo(0xC4, "");
+                        ecuSpeedoCalib = SubString8(ecuSpeedoCalib);
+                        string ecuSlaveOS = trionic8.RequestECUInfo(0xC5, "");
+                        ecuSlaveOS = SubString8(ecuSlaveOS);
+
                         AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());           //0x90
                         AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());       //0x74
                         AddLogItem("Codefile version: " + trionic8.GetCodefileVersion());      //0x73
-                        AddLogItem("Serial number   : " + trionic8.GetSerialNumber());         //0xB4       
-                        AddLogItem("Main OS         : " + trionic8.RequestECUInfo(0xC1, ""));
-                        AddLogItem("Engine Calib    : " + trionic8.RequestECUInfo(0xC2, ""));
-                        AddLogItem("System Calib    : " + trionic8.RequestECUInfo(0xC3, ""));
-                        AddLogItem("Speedo Calib    : " + trionic8.RequestECUInfo(0xC4, ""));
-                        AddLogItem("Slave OS        : " + trionic8.RequestECUInfo(0xC5, ""));
+                        AddLogItem("Serial number   : " + trionic8.GetSerialNumber());         //0xB4
+                        AddLogItem("Main OS         : " + ecuMainOS);
+                        AddLogItem("Engine Calib    : " + ecuEngineCalib);
+                        AddLogItem("System Calib    : " + ecuSystemCalib);
+                        AddLogItem("Speedo Calib    : " + ecuSpeedoCalib);
+                        AddLogItem("Slave OS        : " + ecuSlaveOS);
                         AddLogItem("Hardware type   : " + trionic8.RequestECUInfo(0x97, ""));
                         AddLogItem("Supplier ID     : " + trionic8.RequestECUInfo(0x92, ""));
                         AddLogItem("Speed limiter   : " + trionic8.GetTopSpeed() + " km/h");
@@ -1808,7 +1881,7 @@ namespace TrionicCANFlasher
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
-                                    var args = new FlashReadArguments() { FileName = sfd.FileName, start = 0x1C2000, end = 0x1E0000 };
+                                    var args = new FlashReadArguments() { FileName = sfd.FileName, start = (int)FileME96.EngineCalibrationAddress, end = (int)FileME96.EngineCalibrationAddressEnd };
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashME96);

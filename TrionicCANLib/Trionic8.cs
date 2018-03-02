@@ -595,7 +595,7 @@ namespace TrionicCANLib.API
 
                 if (response.getCanData(1) == 0x5A)
                 {
-                    // only one frame in this repsonse
+                    // only one frame in this response
 
                     for (uint fi = 3; fi < 8; fi++) rx_buffer[rx_pnt++] = response.getCanData(fi);
                     retval = Encoding.ASCII.GetString(rx_buffer, 0, rx_pnt - 1);
