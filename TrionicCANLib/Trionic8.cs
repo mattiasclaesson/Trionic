@@ -5179,7 +5179,6 @@ namespace TrionicCANLib.API
             sw.Reset();
             sw.Start();
             CastInfoEvent("Starting session", ActivityType.UploadingBootloader);
-            StartSession1081();
             StartSession10();
             CastInfoEvent("Telling ECU to clear CANbus", ActivityType.UploadingBootloader);
             SendShutup();
