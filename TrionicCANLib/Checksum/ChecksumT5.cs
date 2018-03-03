@@ -57,7 +57,7 @@ namespace TrionicCANLib.Checksum
         private static bool ChecksumMatch(byte[] Bufr, uint Len)
         {
             uint Loc = Len - 5; // Current location in file.
-            uint End = 0;       // Last used address.  
+            uint End = 0x00000; // Last used address.  
 
             // Last four bytes contains a Checksum. Store those for further processing.
             uint StoredChecksum = (uint)(
