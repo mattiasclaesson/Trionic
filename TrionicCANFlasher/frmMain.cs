@@ -114,7 +114,7 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
                         {
-                            ChecksumResult checksumResult = ChecksumT5.VerifyChecksum(ofd.FileName);
+                            ChecksumResult checksumResult = ChecksumT5.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ShouldUpdateChecksum);
                             if (checksumResult != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
@@ -604,7 +604,6 @@ namespace TrionicCANFlasher
                 btnEditParameters.Enabled     = false;
                 btnRecoverECU.Enabled         = false;
                 btnRestoreT8.Enabled          = false;
-                cbAutoChecksum.Enabled        = false;
             }
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)

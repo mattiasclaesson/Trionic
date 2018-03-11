@@ -4,22 +4,25 @@ using System.Linq;
 using System.IO;
 using NLog;
 using TrionicCANLib.Firmware;
+using System.Text;
 
 namespace TrionicCANLib.Checksum
 {
     public class ChecksumT5
     {
-        private readonly static Logger logger = LogManager.GetCurrentClassLogger();
-        
+        static private Logger logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// Validates a binary before flashing.
         /// </summary>
         /// <param name="filename">filename to flash</param>
         /// <returns>ChecksumResult.Ok if checksum is correct</returns>
-        public static ChecksumResult VerifyChecksum(string filename)
+        public static ChecksumResult VerifyChecksum(string filename, bool autocorrect, ChecksumDelegate.ChecksumUpdate delegateShouldUpdate)
         {
             FileInfo fi = new FileInfo(filename);
             long len = fi.Length;
+            uint End;
+            uint Checksum;
 
             // Verify file length.
             if (len != FileT5.LengthT52 && len != FileT5.LengthT55)
@@ -28,10 +31,73 @@ namespace TrionicCANLib.Checksum
             // Store file in a local buffer.
             byte[] Bufr = FileTools.readdatafromfile(filename, 0, (int)len);
 
-            return ChecksumMatch(Bufr, (uint)len) ? ChecksumResult.Ok : ChecksumResult.Invalid;
+
+            // No need for further checks if result is ok.
+            if (ChecksumMatch(Bufr, (uint)len, out End, out Checksum) == true)
+            {
+                return ChecksumResult.Ok;
+            }
+
+            // Can't do anything if footer is broken.
+            else if (End == 0)
+            {
+                return ChecksumResult.Invalid;
+            }
+
+            uint StoredChecksum = (uint)(
+                Bufr[len - 4] << 24 | Bufr[len - 3] << 16 |
+                Bufr[len - 2] <<  8 | Bufr[len - 1]);
+
+            if (autocorrect == true)
+            {
+                Writefile(filename, Checksum, (uint)len);
+                return ChecksumResult.Ok;
+            }
+            else
+            {
+                string CalculatedSum = Checksum.ToString("X");
+                string ActualSum = StoredChecksum.ToString("X");
+
+                if (delegateShouldUpdate(null, ActualSum, CalculatedSum))
+                {
+                    Writefile(filename, Checksum, (uint)len);
+                    return ChecksumResult.Ok;
+                }
+            }
+
+            return ChecksumResult.Invalid;
         }
-        
-        
+
+        /// <summary>
+        /// Writes an updated checksum to the binary.
+        /// </summary>
+        /// <param name="a_filename">Filename to open for writing.</param>
+        /// <param name="Bufr">Actual buffer to be written.</param>
+        /// <param name="Len">Length of buffer.</param>
+        private static void Writefile(string a_filename, uint newChecksum, uint Len)
+        {
+            if (!File.Exists(a_filename))
+                File.Create(a_filename);
+
+            try
+            {
+                FileStream fs = new FileStream(a_filename, FileMode.Open, FileAccess.ReadWrite);
+                fs.Seek(0, SeekOrigin.Begin);
+                fs.Position = Len - 4;
+
+                for (byte i = 0; i < 4; i++)
+                {
+                    fs.WriteByte((byte) (newChecksum >> ((3 - i) * 8)));
+                }
+                fs.Close();
+            }
+
+            catch (Exception E)
+            {
+                logger.Debug(E.Message);
+            }
+        }
+
         /// <summary>
         /// Converts one ASCII character into one nibble.
         /// </summary>
@@ -49,20 +115,15 @@ namespace TrionicCANLib.Checksum
         }
 
         /// <summary>
-        /// Verifies whether a binary has the correct checksum or not.
+        /// Determine if it's even possible to extract the last used address from the footer area.
         /// </summary>
-        /// <param name="Bufr">A buffered copy of the binary</param>
-        /// <param name="Len">Length of passed buffer</param>
-        /// <returns>Checksum correct: true or false</returns>
-        private static bool ChecksumMatch(byte[] Bufr, uint Len)
+        /// <param name="Bufr"></param>
+        /// <param name="Len"></param>
+        /// <returns>Last used address or 0 if it can't be determined</returns>
+        private static uint retLastAddress(byte[] Bufr, uint Len)
         {
             uint Loc = Len - 5; // Current location in file.
             uint End = 0x00000; // Last used address.  
-
-            // Last four bytes contains a Checksum. Store those for further processing.
-            uint StoredChecksum = (uint)(
-                Bufr[Len - 4] << 24 | Bufr[Len - 3] << 16 |
-                Bufr[Len - 2] <<  8 | Bufr[Len - 1]);
 
             // Attempt to find the 0xFE container.
             while (Bufr[Loc - 1] != 0xFE)
@@ -73,7 +134,7 @@ namespace TrionicCANLib.Checksum
                 if (Loc < (Len / 2))
                 {
                     logger.Debug("Could not find container!");
-                    return false;
+                    return 0;
                 }
             }
 
@@ -84,7 +145,7 @@ namespace TrionicCANLib.Checksum
             if (MrkL > 8)
             {
                 logger.Debug("Marker too long!");
-                return false;
+                return 0;
             }
 
             // Convert ASCII string into usable data.
@@ -96,7 +157,7 @@ namespace TrionicCANLib.Checksum
                 if (Nibble == -1)
                 {
                     logger.Debug("Read invalid data!");
-                    return false;
+                    return 0;
                 }
 
                 // Bitshift result into the correct location.
@@ -110,14 +171,43 @@ namespace TrionicCANLib.Checksum
             if (End > Len - 7)
             {
                 logger.Debug("Pointer outside of binary!");
+                return 0;
+            }
+
+            return End;
+        }
+
+        /// <summary>
+        /// Verifies whether a binary has the correct checksum or not.
+        /// </summary>
+        /// <param name="Bufr">A buffered copy of the binary</param>
+        /// <param name="Len">Length of passed buffer</param>
+        /// <returns>Checksum correct: true or false</returns>
+        private static bool ChecksumMatch(byte[] Bufr, uint Len, out uint End, out uint Checksum)
+        {
+            Checksum = 0;
+
+            // Last four bytes contains a Checksum. Store those for further processing.
+            uint StoredChecksum = (uint)(
+                Bufr[Len - 4] << 24 | Bufr[Len - 3] << 16 |
+                Bufr[Len - 2] <<  8 | Bufr[Len - 1]);
+
+            // Extract last used address from footer
+            End = retLastAddress(Bufr, Len);
+
+            // There is nothing that can be done if the footer is broken.
+            if (End == 0)
+            {
                 return false;
             }
 
-            // Subtract byte from the checksum to, hopefully, end up with 0 as the total sum.
+            // Calculate actual checksum
             for (uint i = 0; i < End; i++)
-                StoredChecksum -= (byte)Bufr[i];
+            {
+                Checksum += (byte)Bufr[i];
+            }
 
-            return StoredChecksum == 0 ? true : false;
+            return StoredChecksum == Checksum ? true : false;
         }
         
         /// <summary>
@@ -128,7 +218,10 @@ namespace TrionicCANLib.Checksum
         /// <returns>Checksum match: true or false</returns>
         public static bool ValidateDump(byte[] Bufr, bool IsT55)
         {
-            return ChecksumMatch(Bufr, IsT55 ? FileT5.LengthT55 : FileT5.LengthT52);
+            uint csum;
+            uint end;
+            
+            return ChecksumMatch(Bufr, IsT55 ? FileT5.LengthT55 : FileT5.LengthT52, out end, out csum);
         }
     }
 }
