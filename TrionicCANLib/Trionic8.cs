@@ -6051,11 +6051,10 @@ namespace TrionicCANLib.API
 
         // Restless coders; Look no further!
         private bool fasterdamnit = false;
-        
         private bool StartCommon(byte Device, bool z22se)
         {
             bool LegionIsAlive = false;
-            
+
             // This command will sometimes fail even though the loader is alive; Ugly workaround.
             for (int i = 0; i < 4; i++)
             {
@@ -6093,7 +6092,7 @@ namespace TrionicCANLib.API
                 }
 
                 Thread.Sleep(50);
-                
+
                 if (z22se)
                 {
                     CastInfoEvent("Uploading preloader", ActivityType.UploadingBootloader);
@@ -6145,30 +6144,70 @@ namespace TrionicCANLib.API
 
             Thread.Sleep(500);
             // ..
+
             bool success;
             if (fasterdamnit)
             {
                 CastInfoEvent("(Fasterdamnit is set; Remember to disable!)", ActivityType.UploadingBootloader);
                 if (canUsbDevice is CANELM327Device)
-                    LegionIDemand(0, 100, out success);
+                    LegionIDemand(0, 1200, out success);
                 else
-                    LegionIDemand(0, 1350, out success);
-                    // LegionIDemand(0, 150, out success);
+                    LegionIDemand(0, 1200, out success);
             }
             else
-                LegionIDemand(0, 1750, out success);
+            {
+                // Default to 1.2 ms as inter-frame delay
+                LegionIDemand(0, 1200, out success);
+            }
 
             if (!success)
                 return false;
 
-            // Start the secondary bootloader
-            if (Device == EcuByte_MCP) {
+            CastInfoEvent("Reading battery voltage..", ActivityType.UploadingBootloader);
 
-                CastInfoEvent("Waiting for bootloader to spawn its minion..", ActivityType.UploadingBootloader);
+            byte[] pin = LegionIDemand(6, 11, out success);
+            float Val1 = 11;
+            float Val2 = 11;
+
+            if (success)
+            {
+                Val1 = ((pin[0] << 8 | pin[1]) & 0x3FF) / (float)72.00;
+                pin = LegionIDemand(6, 13, out success);
+            }
+
+            if (success)
+            {
+                Val2 = ((pin[0] << 8 | pin[1]) & 0x3FF) / (float)72.00;
+                Val1 = Val1 > Val2 ? Val1 : Val2; // Only care about the highest reading
+
+                CastInfoEvent(("Battery: " + Val1.ToString("F") + " V"), ActivityType.UploadingBootloader);
+                if (Val1 < 11.0)
+                {
+                    DialogResult result = DialogResult.No;
+
+                    result = MessageBox.Show("Your battery voltage is rather low.\nAre you sure you want to continue?",
+                        "You have been warned", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+
+                    if (result == DialogResult.No)
+                    {
+                        CastInfoEvent("Aborting", ActivityType.UploadingBootloader);
+                        LegionRequestexit();
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                CastInfoEvent("Coult not read battery voltage", ActivityType.UploadingBootloader);
+            }
+
+            // Start the secondary bootloader
+            if (Device == EcuByte_MCP)
+            {
+                CastInfoEvent("Starting secondary bootloader..", ActivityType.UploadingBootloader);
                 LegionIDemand(4, 0, out success);
                 return success;
             }
-
             return true;
        }
 
@@ -6218,9 +6257,6 @@ namespace TrionicCANLib.API
             formatBootPartition = true;
             WriteFlashLegion(EcuByte_MCP, 0x40100, true, sender, workEvent);
         }
-
-
-
 
         private bool UploadZ22sePreloader()
         {
@@ -6281,14 +6317,12 @@ namespace TrionicCANLib.API
                         canUsbDevice.RequestDeviceReady();
                         SendKeepAlive();
                         startAddress += 0xEA;
-
                     }
                     else
                     {
                         CastInfoEvent("Did not receive correct response from SendTransferData", ActivityType.ConvertingFile);
                     }
                 }
-
                 CastProgressWriteEvent(100);
             }
             else
@@ -6368,7 +6402,10 @@ namespace TrionicCANLib.API
             // wish: None, just wish.
 
             // command 05: Marry secondary processor
-            // wish: None, just wish.           
+            // wish: None, just wish.        
+            
+            // Command 06: Read ADC pin
+            // whish: Which pin to read.
 
             success = false;
             int Retries = 0;
@@ -6485,6 +6522,16 @@ namespace TrionicCANLib.API
                         Thread.Sleep(750);
                     }
 
+                    // ADC-read; complete
+                    if (command == 6 && getCanData(data, 3) == 1)
+                    {
+                        success = true;
+                        for (uint i = 0; i < 2; i++)
+                            buf[i] = getCanData(data, 4 + i);
+
+                        return buf;
+                    }
+
                     // Something is wrong or we sent the wrong command.
                     if (getCanData(data, 3) == 0xFF)
                     {
@@ -6581,7 +6628,6 @@ namespace TrionicCANLib.API
         private bool FetchPartitionmd5(DoWorkEventArgs workEvent, byte device)
         {
             bool success;
-
             CastProgressReadEvent(0);
 
             for (byte i = 0; i < 9; i++)
@@ -6589,7 +6635,9 @@ namespace TrionicCANLib.API
                 byte[] resp = LegionIDemand(device == EcuByte_MCP ? (uint)3 : 2, (uint)(i + 1), out success);
 
                 if (!success)
+                {
                     return false;
+                }
 
                 for (byte m = 0; m < 16; m++)
                 {
@@ -6597,16 +6645,6 @@ namespace TrionicCANLib.API
                 }
                 CastProgressReadEvent((int)((i * 100) / (float)8));
             }
-
- /*         for (byte i = 0; i < 9; i++)
-            {
-                int mdlolo = (Partitionhashes[i,12] << 24 | Partitionhashes[i,13] << 16 | Partitionhashes[i,14] << 8 | Partitionhashes[i,15]);
-                int mdlohi = (Partitionhashes[i, 8] << 24 | Partitionhashes[i, 9] << 16 | Partitionhashes[i,10] << 8 | Partitionhashes[i,11]);
-                int mdhilo = (Partitionhashes[i, 4] << 24 | Partitionhashes[i, 5] << 16 | Partitionhashes[i, 6] << 8 | Partitionhashes[i, 7]);
-                int mdhihi = (Partitionhashes[i, 0] << 24 | Partitionhashes[i, 1] << 16 | Partitionhashes[i, 2] << 8 | Partitionhashes[i, 3]);
-
-                CastInfoEvent(("Part " + i.ToString("X1") + ": " + mdhihi.ToString("X8") + mdhilo.ToString("X8") + mdlohi.ToString("X8") + mdlolo.ToString("X8")), ActivityType.DownloadingFlash);
-            }*/
             return true;
         }
 
@@ -6653,7 +6691,9 @@ namespace TrionicCANLib.API
                 {
                     // Special case. Override automatic selection of boot if the the user so choose.
                     if (i == 1)
+                    {
                         identical = LeaveRecoveryBe();
+                    }
 
                     // Special case. Override automatic selection of NVDM 1 and 2 if the the user so choose.
                     else if (i == 2 && device == EcuByte_T8)
@@ -6664,7 +6704,9 @@ namespace TrionicCANLib.API
                         formatSystemPartitions = !nvdm;
                     }
                     else if (i == 3 && device == EcuByte_T8)
+                    {
                         identical = nvdm;
+                    }
                 }
 
                 // MCP requires a few more checks..
@@ -6689,17 +6731,18 @@ namespace TrionicCANLib.API
                 }
             }
 
-            // Shadow and boot are one and the same but at different addresses
-            // If any of them are to be erased, both must be written.
-            if (device == EcuByte_MCP && ((formatmask&0x101) > 0))
+            // Only touch shadow if boot is to be formatted
+            if (device == EcuByte_MCP && ((formatmask & 0x101) > 0))
             {
-                formatmask |= 0x101;
+                formatmask &= 0xFF;
+                formatmask |= (formatmask & 1) << 8;
             }
 
             CastInfoEvent("Done!", ActivityType.ConvertingFile);
-
             if (toerase > 0)
+            {
                 CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
+            }
 
             logger.Debug(("(Legion) Partition erase bitmask:" + formatmask.ToString("X3")));
         }
@@ -7145,7 +7188,7 @@ namespace TrionicCANLib.API
             int bufpnt = 0;
             byte[] buf = new byte[lastAddress];
             uint Dropped = 0;
-            uint Fallback = 3000; // Equals 1.8 ~ms
+            uint Fallback = 2400;
 
             // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
             for (int i = 0; i < lastAddress; i++)
