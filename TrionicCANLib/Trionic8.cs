@@ -5926,18 +5926,20 @@ namespace TrionicCANLib.API
             int startAddress = 0x102400;
             Bootloader_Leg btloaderdata = new Bootloader_Leg();
 
+            // 238 bytes / unit.
+            int Len = 10234 / 238;
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             int saved_progress = 0;
             if (requestDownload(false))
             {
-                for (int i = 0; i < 0x46; i++)
+                for (int i = 0; i < Len; i++)
                 {
                     iFrameNumber = 0x21;
                     //10 F0 36 00 00 10 24 00
                     //logger.Debug("Sending bootloader: " + startAddress.ToString("X8"));
                     // cast event
-                    int percentage = (int)(((float)i * 100) / 70F);
+                    int percentage = (int)(((float)i * 100) / Len);
                     if (percentage > saved_progress)
                     {
                         CastProgressWriteEvent(percentage);
@@ -7283,7 +7285,7 @@ namespace TrionicCANLib.API
                 Application.DoEvents();
 
                 // Throttle back after a set number of dropped frames.
-                if (Dropped == 3)
+                if (Dropped == 3 && Fallback < 8000)
                 {
                     Thread.Sleep(100);
                     LegionIDemand(0, Fallback, out success);
