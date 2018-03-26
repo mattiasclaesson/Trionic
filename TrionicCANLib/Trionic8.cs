@@ -6152,7 +6152,7 @@ namespace TrionicCANLib.API
                 if (canUsbDevice is CANELM327Device)
                     LegionIDemand(0, 1200, out success);
                 else
-                    LegionIDemand(0, 1200, out success);
+                    LegionIDemand(0, 900, out success);
             }
             else
             {
@@ -6714,6 +6714,9 @@ namespace TrionicCANLib.API
                 {
                     // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
                     if (!z22se && i == 7)
+                        identical = true;
+                    // Be quitet about shadow. It'll be tagged if need be
+                    if (!z22se && i == 9)
                         identical = true;
                 }
 
