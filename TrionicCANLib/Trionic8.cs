@@ -6163,8 +6163,7 @@ namespace TrionicCANLib.API
             if (!success)
                 return false;
 
-            CastInfoEvent("Reading battery voltage..", ActivityType.UploadingBootloader);
-
+ /*         CastInfoEvent("Reading battery voltage..", ActivityType.UploadingBootloader);
             byte[] pin = LegionIDemand(6, 11, out success);
             float Val1 = 11;
             float Val2 = 11;
@@ -6199,7 +6198,7 @@ namespace TrionicCANLib.API
             else
             {
                 CastInfoEvent("Coult not read battery voltage", ActivityType.UploadingBootloader);
-            }
+            }*/
 
             // Start the secondary bootloader
             if (Device == EcuByte_MCP)
