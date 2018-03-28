@@ -6655,76 +6655,72 @@ namespace TrionicCANLib.API
                         identical = false;
                 }
 
-                if (identical == false && z22se == false)
-                {
-                    // Special case. Override automatic selection of boot if the the user so choose.
-                    if (i == 1)
-                    {
-                        identical = LeaveRecoveryBe();
-                    }
-
-                    // Special case. Override automatic selection of NVDM 1 and 2 if the the user so choose.
-                    else if (i == 2 && device == EcuByte_T8)
-                    {
-                        identical = LeaveNVDMBe();
-                    }
-                }
-
-                // MCP requires a few more checks..
-                if (device == EcuByte_MCP)
-                {
-                    // Ugly hack to prevent writing of md5; No need since the loader takes care of it.
-                    if (i == 7 && z22se == false)
-                        identical = true;
-
-                    // Reflect status of boot onto shadow
-                    if (i == 9)
-                        identical = (formatmask & 1) == 1 ? false : true;
-                }
-
                 // Add partition to bitmask
                 if (!identical)
                 {
                     formatmask |= (uint)shift;
                     CastInfoEvent(("Partition " + i.ToString("X1") + ": Tagged for erase and write"), ActivityType.ConvertingFile);
                     logger.Debug(("(Legion) Partition " + i.ToString("X1") + ": Tagged for erase and write"));
+                }
+            }
+
+            if (z22se == false)
+            {
+                // Warn about boot
+                if ((formatmask & 1) > 0)
+                {
+                    if (LeaveRecoveryBe())
+                        formatmask &= 0x1FE;
+                }
+
+                if (device == EcuByte_T8)
+                {
+                    // Warn about NVDM for T8 main
+                    if ((formatmask & 6) > 0)
+                    {
+                        if (LeaveNVDMBe())
+                            formatmask &= 0x1F9;
+                    }
+
+                    // Patch in additional partitions to make sure everything after the last used address contain 0xFF's
+                    if ((formatmask & 0x1F0) > 0)
+                    {
+                        int EndAddress = (int)bm.GetLasAddress();
+                        if (EndAddress < 0x100000)
+                            formatmask |= 0x100; // Partition 9
+                        if (EndAddress < 0x0C0000)
+                            formatmask |= 0x080; // Partition 8
+                        if (EndAddress < 0x080000)
+                            formatmask |= 0x040; // Partition 7
+                        if (EndAddress < 0x060000)
+                            formatmask |= 0x020; // Partition 6
+                        if (EndAddress < 0x040000)
+                            formatmask |= 0x010; // Partition 5
+                    }
+                }
+            }
+
+            // MCP requires a few more checks..
+            if (device == EcuByte_MCP)
+            {
+                // Reflect status of boot onto shadow
+                formatmask &= 0xFF;
+                formatmask |= ((formatmask & 1) << 8);
+
+                // Mask off md5-partition since loader takes care of that in T8 mode
+                if (z22se == false)
+                    formatmask &= 0x1BF;
+            }
+
+            for (int i = 0; i < 9; i++)
+            {
+                if (((formatmask >> i) & 1) > 0)
                     toerase++;
-                }
             }
 
-            // Main requires some extra logic
-            if (device == EcuByte_T8 && z22se == false)
-            {
-                // Only touch NVDM 2 if NVDM 1 is to be written
-                if ((formatmask & 6) > 0)
-                {
-                    formatmask &= 0x1FB;
-                    formatmask |= ((formatmask & 2) << 1);
-                }
-
-                // Patch in additional partitions to make sure everything after the last used address contain 0xFF's
-                if ((formatmask & 0x1F0) > 0)
-                {
-                    int EndAddress = (int)bm.GetLasAddress();
-                    if (EndAddress < 0x100000)
-                        formatmask |= 0x100; // Partition 9
-                    if (EndAddress < 0x0C0000)
-                        formatmask |= 0x080; // Partition 8
-                    if (EndAddress < 0x080000)
-                        formatmask |= 0x040; // Partition 7
-                    if (EndAddress < 0x060000)
-                        formatmask |= 0x020; // Partition 6
-                    if (EndAddress < 0x040000)
-                        formatmask |= 0x010; // Partition 5
-                }
-            }
-
-            CastInfoEvent("Done!", ActivityType.ConvertingFile);
-            if (toerase > 0)
-            {
-                CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
-            }
-
+            // Only to lessen confusion
+            CastInfoEvent("Patching mask according to current settings", ActivityType.UploadingFlash);
+            CastInfoEvent(("Selected " + toerase.ToString("X1") + " out of 9 partitions for erase and flash"), ActivityType.StartErasingFlash);
             logger.Debug(("(Legion) Partition erase bitmask:" + formatmask.ToString("X3")));
         }
 
@@ -6733,7 +6729,7 @@ namespace TrionicCANLib.API
         /// </summary>
         /// <param name="workEvent"></param>
         /// <returns>..</returns>
-        private bool VerifyFlashIntegrity(DoWorkEventArgs workEvent, byte device)
+        private bool VerifyFlashIntegrity(DoWorkEventArgs workEvent, byte device, byte lastPartition)
         {
             string filename = (string)workEvent.Argument;
             BlockManager bm = new BlockManager();
@@ -6743,7 +6739,7 @@ namespace TrionicCANLib.API
 
             CastProgressReadEvent(0);
 
-            for (byte i = 1; i < 10; i++)
+            for (byte i = 1; i <= lastPartition; i++)
             {
                 uint shift = (uint)(1 << (i -1));
                 bool Identical = true;
@@ -6799,7 +6795,7 @@ namespace TrionicCANLib.API
                         CastInfoEvent(("Old partition " + i.ToString("X1") + ": VERIFICATION ERROR!"), ActivityType.ConvertingFile);
                     }
                 }
-                CastProgressReadEvent((int)((i * 100) / (float)9));
+                CastProgressReadEvent((int)((i * 100) / (float)lastPartition));
             }
 
             // Check for dangerous situation; Trionic 8 main
@@ -6850,6 +6846,46 @@ namespace TrionicCANLib.API
             return true;
         }
 
+        // Verify written boot, system and app partitions
+        private bool CompareRegmd5(DoWorkEventArgs workEvent)
+        {
+            string filename = (string)workEvent.Argument;
+            BlockManager bm = new BlockManager();
+            bm.SetFilename(filename);
+            bool success;
+
+            // Verify lower partitions individually
+            // boot, nvdm 1 / 2, hwio
+            CastInfoEvent("Lower partitions..", ActivityType.ConvertingFile);
+            if (!VerifyFlashIntegrity(workEvent, EcuByte_T8, 4))
+                return false;
+
+            // If any of the lower ones failed there's no need to continue
+            if ((formatmask & 0xF) == 0)
+            {
+                CastInfoEvent("App data..", ActivityType.ConvertingFile);
+                // hash from 0x20000 to last used address
+                byte[] Locmd5dbuf = bm.GetPartitionmd5(EcuByte_T8, 12);
+                byte[] Remd5dbuf = LegionIDemand(2, 12, out success);
+
+                if (success)
+                {
+                    for (byte a = 0; a < 16; a++)
+                    {
+                        if (Locmd5dbuf[a] != Remd5dbuf[a])
+                            success = false;
+                    }
+                    if (success)
+                    {
+                        CastInfoEvent("Done!", ActivityType.ConvertingFile);
+                        formatmask = 0;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Perform a marriage of MCP
         /// </summary>
@@ -6866,7 +6902,6 @@ namespace TrionicCANLib.API
 
                 if (success)
                 {
-                    CastInfoEvent("successfuly married the co-processor", ActivityType.UploadingFlash);
                     // Print firmware version just for reference
                     PrintMCPVer();
                 }
@@ -6934,10 +6969,24 @@ namespace TrionicCANLib.API
                     if (ProgramFlashLeg(EndAddress, bm, Device))
                     {
                         CastInfoEvent("Verifying md5..", ActivityType.UploadingFlash);
-                        if (!VerifyFlashIntegrity(workEvent, Device))
+
+                        // Simple method: verify individually
+                        if (Device == EcuByte_MCP || z22se)
                         {
-                            CastInfoEvent("Could not fetch MD5!", ActivityType.UploadingFlash);
-                            formatmask = 0x1FF;
+                            if (!VerifyFlashIntegrity(workEvent, Device, 9))
+                            {
+                                CastInfoEvent("Could not fetch MD5!", ActivityType.UploadingFlash);
+                                formatmask = 0x1FF;
+                            }
+                        }
+                        // Complex: check boot, nvdm 1/2 and hwio individually. App data as one region
+                        else
+                        {
+                            if (!CompareRegmd5(workEvent))
+                            {
+                                CastInfoEvent("Could not fetch MD5!", ActivityType.UploadingFlash);
+                                formatmask = 0x1FF;
+                            }
                         }
 
                         if (formatmask == 0)
@@ -7165,7 +7214,7 @@ namespace TrionicCANLib.API
             int bufpnt = 0;
             byte[] buf = new byte[lastAddress];
             uint Dropped = 0;
-            uint Fallback = 2400;
+            uint Fallback = 1700;
 
             // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
             for (int i = 0; i < lastAddress; i++)
