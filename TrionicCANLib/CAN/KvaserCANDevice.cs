@@ -47,6 +47,19 @@ namespace TrionicCANLib.CAN
             }
         }
 
+        private bool m_filterBypass = false;
+        public override bool bypassCANfilters
+        {
+            get
+            {
+                return m_filterBypass;
+            }
+            set
+            {
+                m_filterBypass = value;
+            }
+        }
+
         public int ChannelNumber { get; set; }
 
         // not supported by kvaser
@@ -179,16 +192,19 @@ namespace TrionicCANLib.CAN
                 close();
             }
 
-            foreach (var id in AcceptOnlyMessageIds)
+            if (m_filterBypass == false)
             {
-                code &= id;
-                mask |= id;
+                foreach (var id in AcceptOnlyMessageIds)
+                {
+                    code &= id;
+                    mask |= id;
+                }
+
+                mask = (~mask & 0x7FF) | code;
+
+                logger.Debug("code: " + code.ToString("X8"));
+                logger.Debug("mask:   " + mask.ToString("X8"));
             }
-
-            mask = (~mask & 0x7FF) | code;
-
-            logger.Debug("code: " + code.ToString("X8"));
-            logger.Debug("mask:   " + mask.ToString("X8"));
 
             VerifyFilterIntegrity(code, mask);
 

@@ -40,6 +40,19 @@ namespace TrionicCANLib.CAN
             }
         }
 
+        private bool m_filterBypass = false;
+        public override bool bypassCANfilters
+        {
+            get
+            {
+                return m_filterBypass;
+            }
+            set
+            {
+                m_filterBypass = value;
+            }
+        }
+
         // not supported by J2534
         public override float GetADCValue(uint channel)
         {

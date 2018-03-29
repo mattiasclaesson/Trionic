@@ -53,6 +53,19 @@ namespace TrionicCANLib.API
             }
         }
 
+        protected bool m_filterBypass = false;
+        public bool bypassCANfilters
+        {
+            get
+            {
+                return m_filterBypass;
+            }
+            set
+            {
+                m_filterBypass = value;
+            }
+        }
+
         protected ECU m_ECU = ECU.TRIONIC8;
 
         public ECU ECU

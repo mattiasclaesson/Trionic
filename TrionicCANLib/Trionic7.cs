@@ -78,6 +78,7 @@ namespace TrionicCANLib.API
             {
                 canUsbDevice.UseOnlyPBus = m_OnlyPBus;
                 canUsbDevice.TrionicECU = ECU.TRIONIC7;
+                canUsbDevice.bypassCANfilters = m_filterBypass;
                 canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);
                 canUsbDevice.onReceivedAdditionalInformationFrame += new ICANDevice.ReceivedAdditionalInformationFrame(canUsbDevice_onReceivedAdditionalInformationFrame);
                 canUsbDevice.AcceptOnlyMessageIds = FilterIdECU;

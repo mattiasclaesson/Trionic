@@ -102,18 +102,24 @@ public class LPCCANDevice : ICANDevice
             m_forcedBaudrate = value;
         }
     }
-
+ 
     public override void SetSelectedAdapter(string adapter)
     {
     }
 
-    //---------------------------------------------------------------------------------------------
-    /**
-        Connects to the adapter and activates CAN bus. 
+    private bool m_filterBypass = false;
+    public override bool bypassCANfilters
+    {
+        get { return m_filterBypass;  }
+        set { m_filterBypass = value; }
+    }
+        //---------------------------------------------------------------------------------------------
+        /**
+            Connects to the adapter and activates CAN bus. 
 
-        @return             result 
-    */
-    public override OpenResult open()
+            @return             result 
+        */
+        public override OpenResult open()
     {
         try
         {

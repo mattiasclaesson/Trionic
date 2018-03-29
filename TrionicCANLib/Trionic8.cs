@@ -129,6 +129,7 @@ namespace TrionicCANLib.API
                 canUsbDevice = new J2534CANDevice();
             }
 
+            canUsbDevice.bypassCANfilters = m_filterBypass;
             canUsbDevice.UseOnlyPBus = m_OnlyPBus;
             canUsbDevice.TrionicECU = ECU.TRIONIC8;
             canUsbDevice.onReceivedAdditionalInformation += new ICANDevice.ReceivedAdditionalInformation(canUsbDevice_onReceivedAdditionalInformation);

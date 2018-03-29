@@ -228,6 +228,12 @@ namespace TrionicCANLib.CAN
             set;
         }
 
+        abstract public bool bypassCANfilters
+        {
+            get;
+            set;
+        }
+
         protected List<ICANListener> m_listeners = new List<ICANListener>();
 
         #region ELM327 specific

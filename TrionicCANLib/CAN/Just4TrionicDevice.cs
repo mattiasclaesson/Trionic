@@ -43,6 +43,19 @@ namespace TrionicCANLib.CAN
             m_forcedComport = adapter;
         }
 
+        private bool m_filterBypass = false;
+        public override bool bypassCANfilters
+        {
+            get
+            {
+                return m_filterBypass;
+            }
+            set
+            {
+                m_filterBypass = value;
+            }
+        }
+
         public Just4TrionicDevice()
         {
           

@@ -1209,8 +1209,9 @@ namespace TrionicCANFlasher
         private void SetGenericOptions(ITrionic trionic)
         {
             trionic.OnlyPBus = cbOnlyPBus.Checked;
+            trionic.bypassCANfilters = false;
 
-            switch(cbxEcuType.SelectedIndex)
+            switch (cbxEcuType.SelectedIndex)
             {
                 case (int)ECU.TRIONIC5:
                     trionic.ECU = ECU.TRIONIC5;

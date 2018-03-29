@@ -52,6 +52,19 @@ namespace TrionicCANLib.CAN
             }
         }
 
+        private bool m_filterBypass = false;
+        public override bool bypassCANfilters
+        {
+            get
+            {
+                return m_filterBypass;
+            }
+            set
+            {
+                m_filterBypass = value;
+            }
+        }
+
         public static new string[] GetAdapterNames()
         {
             return SerialPort.GetPortNames();
@@ -416,7 +429,11 @@ namespace TrionicCANLib.CAN
                 {
                     m_deviceIsOpen = true;
 
-                    InitializeMessageFilters();
+                    if (m_filterBypass == false)
+                    {
+                        logger.Debug("Enabling filters");
+                        InitializeMessageFilters();
+                    }
 
                     answer = WriteToSerialAndWait("ATH1\r");    //ATH1 = Headers ON, so we can see who's talking
 
