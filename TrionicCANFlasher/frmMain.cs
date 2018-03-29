@@ -33,6 +33,7 @@ namespace TrionicCANFlasher
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
         msiupdater m_msiUpdater;
         BackgroundWorker bgworkerLogCanData;
+        private bool m_bypassCANfilters = false; // Christian: Stop-gap solution for now.
 
         public frmMain()
         {
@@ -1209,7 +1210,8 @@ namespace TrionicCANFlasher
         private void SetGenericOptions(ITrionic trionic)
         {
             trionic.OnlyPBus = cbOnlyPBus.Checked;
-            trionic.bypassCANfilters = false;
+            trionic.bypassCANfilters = m_bypassCANfilters;
+            m_bypassCANfilters = false;
 
             switch (cbxEcuType.SelectedIndex)
             {
@@ -1988,6 +1990,7 @@ namespace TrionicCANFlasher
                 dtstart = DateTime.Now;
                 if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
                 {
+                    m_bypassCANfilters = true;
                     SetGenericOptions(trionic5);
 
                     EnableUserInput(false);
@@ -2008,6 +2011,7 @@ namespace TrionicCANFlasher
                 }
                 else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                 {
+                    m_bypassCANfilters = true;
                     SetGenericOptions(trionic7);
                     trionic7.UseFlasherOnDevice = false;
 
@@ -2033,6 +2037,7 @@ namespace TrionicCANFlasher
                     cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG ||
                     cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
                 {
+                    m_bypassCANfilters = true;
                     SetGenericOptions(trionic8);
 
                     EnableUserInput(false);
