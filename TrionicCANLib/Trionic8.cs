@@ -5928,7 +5928,7 @@ namespace TrionicCANLib.API
             Bootloader_Leg btloaderdata = new Bootloader_Leg();
 
             // 238 bytes / unit.
-            int Len = 10234 / 238;
+            int Len = 9996 / 238;
             int txpnt = 0;
             byte iFrameNumber = 0x21;
             int saved_progress = 0;
