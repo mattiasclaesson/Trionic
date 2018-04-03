@@ -2284,20 +2284,16 @@ S9035000AC";
 
                 bool ValidDump = true;
 
-                // I don't trust the checksum-calculation on t5.2 yet those are ignored
-                if (length == 0x40000)
-                {
-                    CastInfoEvent("Validating dump..", ActivityType.CalculatingChecksum);
+                CastInfoEvent("Validating dump..", ActivityType.CalculatingChecksum);
 
-                    if (!VerifyChecksum())
-                    {
-                        CastInfoEvent("Bootloader indicates ECU has a broken bin. Use dump with extreme caution", ActivityType.CalculatingChecksum);
-                    }
-                    else if (!ChecksumT5.ValidateDump(buffer, length == 0x40000 ? true : false))
-                    {
-                        CastInfoEvent("It seems this dump is broken. Not saving file..", ActivityType.CalculatingChecksum);
-                        ValidDump = false;
-                    }
+                if (!VerifyChecksum())
+                {
+                    CastInfoEvent("Bootloader indicates ECU has a broken bin. Use dump with extreme caution", ActivityType.CalculatingChecksum);
+                }
+                else if (!ChecksumT5.ValidateDump(buffer, length == 0x40000 ? true : false))
+                {
+                    CastInfoEvent("It seems this dump is broken. Not saving file..", ActivityType.CalculatingChecksum);
+                    ValidDump = false;
                 }
 
                 ExitBootloader();
