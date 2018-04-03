@@ -2015,6 +2015,7 @@ S9035000AC";
 
                     // read a section of 0x80 bytes from the BIN file and keep it in a buffer to send to the T5 ECU
                     byte[] bytes = new byte[0x80];
+
                     // something has gone wrong if we cannot read another 0x80 bytes!!
                     if (fs.Read(bytes, 0,/*bytesread,*/ 0x80) != 0x80) //<GS-22092010> parameter error!
                     {
@@ -2022,51 +2023,53 @@ S9035000AC";
                         CastInfoEvent("Reading the BIN File Failed after: 0x" + BytesSoFar + " Bytes !!!", ActivityType.UploadingFlash);
                         return false;
                     }
-                    // send a bootloader address message
-                    byte[] result = sendBootloaderAddressCommand((start + bytesread), 0x80);
-                    //DEBUG ONLY
-                    //string extraInfo = string.Empty;
-                    //foreach (byte b in result)
-                    //{
-                    //    extraInfo += b.ToString("X2") + " ";
-                    //}
-                    //CastInfoEvent("send address A5 command: " + extraInfo, ActivityType.UploadingFlash);
-                    //DEBUG ONLY
-                    bytesread += 0x80;
-                    byte[] dataframe = new byte[8];
 
-                    // Construct and send the bootloader frames
-                    // NOTE the last frame sent may have less than 7 real data bytes but 7 bytes are always sent. In this case the unnecessary bytes
-                    // are repeated from the previous frame. This is OK because the T5 ECU knows how many bytes to expect (because the count of bytes
-                    // in the S-Record is sent with the upload address) and ignores any extra bytes in the last frame.
-                    for (int i = 0; i < 0x80; i++)
+                    byte FFblock = 0x80;
+                    for (uint i = 0; i < 0x80; i++)
                     {
-                        // set the index number
-                        if (i % 7 == 0)
-                            dataframe.SetValue((byte)(i), 0);
-                        // put bytes them in the dataframe!
-                        dataframe.SetValue(bytes[i], (i % 7) + 1);
-                        // send a bootloader frame whenever 7 bytes or a block of 0x80 bytes have been read from the BIN file
-                        if ((i % 7 == 6) || (i == 0x80 - 1))
+                        if (bytes[i] == 0xff)
                         {
-                            byte[] result2 = sendBootloaderDataCommand(dataframe, 8);
-                            //DEBUG ONLY
-                            //string extraInfo = string.Empty;
-                            //foreach (byte b in result2)
-                            //{
-                            //    extraInfo += b.ToString("X2") + " ";
-                            //}
-                            //CastInfoEvent("send data command: " + extraInfo, ActivityType.UploadingFlash);
-                            //DEBUG ONLY
-                            if ((byte)result2.GetValue(6) != 0x00)
+                            FFblock--;
+                        }
+                    }
+
+                    if (FFblock > 0)
+                    {
+                        byte[] dataframe = new byte[8];
+
+                        // send a bootloader address message
+                        byte[] result = sendBootloaderAddressCommand((start + bytesread), 0x80);
+
+                        // Construct and send the bootloader frames
+                        // NOTE the last frame sent may have less than 7 real data bytes but 7 bytes are always sent. In this case the unnecessary bytes
+                        // are repeated from the previous frame. This is OK because the T5 ECU knows how many bytes to expect (because the count of bytes
+                        // in the S-Record is sent with the upload address) and ignores any extra bytes in the last frame.
+                        for (int i = 0; i < 0x80; i++)
+                        {
+                            // set the index number
+                            if (i % 7 == 0)
+                                dataframe.SetValue((byte)(i), 0);
+
+                            // put bytes them in the dataframe!
+                            dataframe.SetValue(bytes[i], (i % 7) + 1);
+
+                            // send a bootloader frame whenever 7 bytes or a block of 0x80 bytes have been read from the BIN file
+                            if ((i % 7 == 6) || (i == 0x80 - 1))
                             {
-                                string BytesSoFar = bytesread.ToString("X6");
-                                CastInfoEvent("FLASHing Failed after: 0x" + BytesSoFar + " Bytes !!!", ActivityType.UploadingFlash);
-                                return false;
+                                byte[] result2 = sendBootloaderDataCommand(dataframe, 8);
+                                if ((byte)result2.GetValue(6) != 0x00)
+                                {
+                                    string BytesSoFar = bytesread.ToString("X6");
+                                    CastInfoEvent("FLASHing Failed after: 0x" + BytesSoFar + " Bytes !!!", ActivityType.UploadingFlash);
+                                    return false;
+                                }
                             }
                         }
-                        // show progress information
                     }
+
+                    bytesread += 0x80;
+
+                    // show progress information
                     int prgs = (type == ECUType.T52ECU) ? ((bytesread * 100) / 0x20000) : ((bytesread * 100) / 0x40000);
                     CastProgressWriteEvent(prgs);
                     CastBytesTransmitted(bytesread);
