@@ -6807,7 +6807,8 @@ namespace TrionicCANLib.API
                 if (formatBootPartition == false)
                 {
                     CastInfoEvent("An internal self-test has catched an unknown bug", ActivityType.UploadingFlash);
-                    CastInfoEvent("Select 'Format boot' and 'Unlock sys.' partition(s) and try again.", ActivityType.UploadingFlash);
+                    CastInfoEvent("In settings >", ActivityType.UploadingFlash);
+                    CastInfoEvent("Select 'Unlock boot partition' and 'Unlock system partitions' and try again.", ActivityType.UploadingFlash);
                     CastInfoEvent("When asked if you want to write boot you MUST click YES!", ActivityType.UploadingFlash);
 
                     MessageBox.Show("DANGER: Read log window for further information\nFailure to follow instructions WILL brick the ECU",
@@ -6828,7 +6829,8 @@ namespace TrionicCANLib.API
                 if (formatBootPartition == false)
                 {
                     CastInfoEvent("An internal self-test has catched the dreaded MCP bug:", ActivityType.UploadingFlash);
-                    CastInfoEvent("Select 'Format boot' and 'Unlock sys.' partition(s) and try again.", ActivityType.UploadingFlash);
+                    CastInfoEvent("In settings >", ActivityType.UploadingFlash);
+                    CastInfoEvent("Select 'Unlock boot partition' and try again.", ActivityType.UploadingFlash);
                     CastInfoEvent("When asked if you want to write boot you MUST click YES!", ActivityType.UploadingFlash);
 
                     MessageBox.Show("DANGER: Read log window for further information\nFailure to follow instructions WILL brick MCP",
