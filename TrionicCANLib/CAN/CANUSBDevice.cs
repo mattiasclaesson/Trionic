@@ -183,9 +183,9 @@ namespace TrionicCANLib.CAN
             uint AcceptanceCode = Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL;
             uint AcceptanceMask = Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL;
 
-            if (m_filterBypass == false)
+            if (m_filterBypass == false && TrionicECU != ECU.TRIONIC5)
             {
-                // CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
+                CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
             }
 
             if (!UseOnlyPBus && TrionicECU != ECU.TRIONIC5)
