@@ -179,17 +179,13 @@ namespace TrionicCANLib.CAN
             }
             Thread.Sleep(200);
 
-
-            // Note: setting these parameters in here means that tcanflash becomes unable to monitor all traffic with the logging feature.
-            // Unfortunately canusb requires these parameters to be set AFTER the channel has been initialized but BEFORE it is open so setting them the same way as elm does is probably not possible..?
-
             // Default to "Allow all"
             uint AcceptanceCode = Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL;
             uint AcceptanceMask = Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL;
 
             if (m_filterBypass == false)
             {
-                CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
+                // CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
             }
 
             if (!UseOnlyPBus && TrionicECU != ECU.TRIONIC5)
