@@ -290,7 +290,7 @@ namespace TrionicCANFlasher
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             
                             trionic8.FormatSystemPartitions = true; // This is undefined in mcp.
-                            trionic8.FormatBootPartition    = settings.unlockBoot;
+                            trionic8.FormatBootPartition    = true;
 
                             if (trionic8.openDevice(false))
                             {

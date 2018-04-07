@@ -81,17 +81,17 @@ namespace TrionicCANFlasher
                 cbOnboardFlasher.Enabled = cbOnlyPBus.Checked;
             }
 
-            else if (ecu == (int)ECU.TRIONIC8 ||
-                     ecu == (int)ECU.TRIONIC8_MCP)
+            else if (ecu == (int)ECU.TRIONIC8)
             {
                 cbUseLegion.Enabled = true;
                 cbUnlockSys.Enabled = cbUseLegion.Checked;
                 cbUnlockBoot.Enabled = (cbUnlockSys.Checked && cbUnlockSys.Enabled);
+            }
 
-                if (ecu == (int)ECU.TRIONIC8_MCP)
-                {
-                    cbAutoChecksum.Enabled = false;
-                }
+            else if (ecu == (int)ECU.TRIONIC8_MCP)
+            {
+                cbUnlockBoot.Enabled = true;
+                cbAutoChecksum.Enabled = false;
             }
 
             else if (ecu == (int)ECU.MOTRONIC96)
@@ -100,7 +100,7 @@ namespace TrionicCANFlasher
                 cbAutoChecksum.Enabled = false;
             }
 
-            // Catch lesser ECU's
+            // Catch lesser ECUs
             else
             {
                 cbAutoChecksum.Enabled = false;
