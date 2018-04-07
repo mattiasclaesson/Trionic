@@ -26,6 +26,8 @@ namespace TrionicCANFlasher
         readonly Trionic8 trionic8 = new Trionic8();
         readonly Trionic7 trionic7 = new Trionic7();
         readonly Trionic5 trionic5 = new Trionic5();
+        frmSettings settings = new frmSettings();
+
         DateTime dtstart;
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
@@ -115,7 +117,7 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
                         {
-                            ChecksumResult checksumResult = ChecksumT5.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ShouldUpdateChecksum);
+                            ChecksumResult checksumResult = ChecksumT5.VerifyChecksum(ofd.FileName, settings.autoChecksum, m_ShouldUpdateChecksum);
                             if (checksumResult != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
@@ -145,7 +147,7 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
-                            ChecksumResult checksumResult = ChecksumT7.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, ChecksumT7.DO_NOT_AUTOFIXFOOTER, m_ShouldUpdateChecksum); // TODO: mattias, add AutoFixFooter to settings?
+                            ChecksumResult checksumResult = ChecksumT7.VerifyChecksum(ofd.FileName, settings.autoChecksum, ChecksumT7.DO_NOT_AUTOFIXFOOTER, m_ShouldUpdateChecksum); // TODO: mattias, add AutoFixFooter to settings?
                             if (checksumResult != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
@@ -153,7 +155,7 @@ namespace TrionicCANFlasher
                             }
 
                             SetGenericOptions(trionic7);
-                            trionic7.UseFlasherOnDevice = cbOnlyPBus.Checked ? cbUseFlasherOnDevice.Checked : false;
+                            trionic7.UseFlasherOnDevice = settings.onlyPBus ? settings.onboardFlasher : false;
 
                             AddLogItem("Opening connection");
                             EnableUserInput(false);
@@ -175,7 +177,7 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksumResult = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ShouldUpdateChecksum);
+                            ChecksumResult checksumResult = ChecksumT8.VerifyChecksum(ofd.FileName, settings.autoChecksum, m_ShouldUpdateChecksum);
                             if (checksumResult != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
@@ -187,8 +189,8 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
-                            trionic8.FormatSystemPartitions = cbFormatSystemPartitions.Checked;
+                            trionic8.FormatBootPartition = settings.unlockBoot;
+                            trionic8.FormatSystemPartitions = settings.unlockSys;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -197,7 +199,7 @@ namespace TrionicCANFlasher
                                 Application.DoEvents();
                                 BackgroundWorker bgWorker;
                                 bgWorker = new BackgroundWorker();
-                                if (cbUseLegionBootloader.Checked)
+                                if (settings.useLegion)
                                 {
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashLegT8);
                                 }
@@ -225,7 +227,7 @@ namespace TrionicCANFlasher
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             
                             trionic8.FormatSystemPartitions = true; // This is undefined in mcp.
-                            trionic8.FormatBootPartition    = cbFormatBootPartition.Checked;
+                            trionic8.FormatBootPartition    = settings.unlockBoot;
 
                             if (trionic8.openDevice(false))
                             {
@@ -288,7 +290,7 @@ namespace TrionicCANFlasher
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             
                             trionic8.FormatSystemPartitions = true; // This is undefined in mcp.
-                            trionic8.FormatBootPartition    = cbFormatBootPartition.Checked;
+                            trionic8.FormatBootPartition    = settings.unlockBoot;
 
                             if (trionic8.openDevice(false))
                             {
@@ -350,7 +352,7 @@ namespace TrionicCANFlasher
                                         if (ecuMainOS != fileMainOS)
                                         {
                                             AddLogItem("Main OS version differs between file and ECU");
-                                            if (cbFormatSystemPartitions.Checked)
+                                            if (settings.unlockSys)
                                             {
                                                 AddLogItem("User has selected option format system partitions");
                                                 FileInfo fi = new FileInfo(ofd.FileName);
@@ -550,19 +552,15 @@ namespace TrionicCANFlasher
             btnReadDTC.Enabled = enable;
             cbxAdapterType.Enabled = enable;
             cbxEcuType.Enabled = enable;
-            cbEnableLogging.Enabled = enable;
-            cbOnlyPBus.Enabled = enable;
-            cbUseLegionBootloader.Enabled = enable;
-            cbFormatBootPartition.Enabled = enable;
-            cbFormatSystemPartitions.Enabled = enable;
+
             btnEditParameters.Enabled = enable;
             btnReadECUcalibration.Enabled = enable;
             btnRestoreT8.Enabled = enable;
             btnLogData.Enabled = enable;
-            cbAutoChecksum.Enabled = enable;
+            btnSettings.Enabled = enable;
 
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327 ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER ||
+            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327  ||
+                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER  ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL ||
                 cbxAdapterType.SelectedIndex == (int)CANBusAdapter.J2534)
             {
@@ -582,87 +580,79 @@ namespace TrionicCANFlasher
                 cbxComSpeed.Enabled = false;
             }
 
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.COMBI &&
-                cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                cbUseFlasherOnDevice.Enabled = enable;
-            }
-            else
-            {
-                cbUseFlasherOnDevice.Enabled = false;
-            }
             // Always disable
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
             {
-                // Disable Legion features
-                cbUseLegionBootloader.Enabled = 
-                cbFormatSystemPartitions.Enabled =
-                cbFormatBootPartition.Enabled = false;
-
-                cbOnlyPBus.Enabled            = false;
                 btnReadECUcalibration.Enabled = false;
-                btnReadDTC.Enabled            = false;
-                btnEditParameters.Enabled     = false;
-                btnRecoverECU.Enabled         = false;
-                btnRestoreT8.Enabled          = false;
-            }
-            // Always disable
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                btnRecoverECU.Enabled            = false;
-                btnReadECUcalibration.Enabled    = false;
-                btnRestoreT8.Enabled             = false;
-                cbUseLegionBootloader.Enabled    = false;
-                cbFormatBootPartition.Enabled    = false;
-                cbFormatSystemPartitions.Enabled = false;
+                btnReadDTC.Enabled = false;
+                btnEditParameters.Enabled = false;
+                btnRecoverECU.Enabled = false;
+                btnRestoreT8.Enabled = false;
             }
 
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+            // Always disable
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                btnRecoverECU.Enabled = false;
+                btnReadECUcalibration.Enabled = false;
+                btnRestoreT8.Enabled = false;
+
+                if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.COMBI)
+                {
+                    settings.enableCombiflash = true;
+                }
+                else
+                {
+                    settings.enableCombiflash = false;
+                    settings.onboardFlasher = false;
+                }
+            }
+
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
             {
                 // Always disable
                 btnReadECUcalibration.Enabled = false;
-
-                // These are handled differently than the rest; Only enable if "enable" and their corresponding dependency is set
-                cbFormatSystemPartitions.Enabled = enable ? cbUseLegionBootloader.Checked : false;
-                cbFormatBootPartition.Enabled    = enable ? cbFormatSystemPartitions.Checked : false;
             }
 
             // Always disable
-            if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
             {
                 btnReadSRAM.Enabled = false;
                 btnRestoreT8.Enabled = false;
                 btnRecoverECU.Enabled = false;
-                cbUseLegionBootloader.Enabled = false;
-                cbFormatBootPartition.Enabled = false;
-                cbAutoChecksum.Enabled = false;
             }
-            
+
             // Always disable
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
             {
                 btnReadDTC.Enabled = false;
                 btnReadECUcalibration.Enabled = false;
+
                 // Bootloader handles recovery, if at all possible, on MCP.
                 btnRecoverECU.Enabled = false;
-
-                if (cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG)
-                {
-                    cbFormatBootPartition.Enabled = false;
-                    cbFormatSystemPartitions.Enabled = false;
-                }
-
-                if (cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
-                {
-                    cbUseLegionBootloader.Enabled = false;
-                }
 
                 btnRestoreT8.Enabled = false;
                 btnReadSRAM.Enabled = false;
 
                 btnGetECUInfo.Enabled = false;
                 btnEditParameters.Enabled = false;
-                cbAutoChecksum.Enabled = false;
+            }
+
+            // No ECU selected!
+            else
+            {
+                btnFlashECU.Enabled = false;
+                btnReadECU.Enabled = false;
+                btnGetECUInfo.Enabled = false;
+                btnReadSRAM.Enabled = false;
+                btnRecoverECU.Enabled = false;
+                btnReadDTC.Enabled = false;
+
+                btnEditParameters.Enabled = false;
+                btnReadECUcalibration.Enabled = false;
+                btnRestoreT8.Enabled = false;
+                btnLogData.Enabled = false;
+                btnSettings.Enabled = false;
             }
         }
 
@@ -708,7 +698,7 @@ namespace TrionicCANFlasher
                             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetGenericOptions(trionic7);
-                                trionic7.UseFlasherOnDevice = cbOnlyPBus.Checked ? cbUseFlasherOnDevice.Checked : false;
+                                trionic7.UseFlasherOnDevice = settings.onlyPBus ? settings.onboardFlasher : false;
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);
@@ -745,7 +735,7 @@ namespace TrionicCANFlasher
                                     Application.DoEvents();
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();                                   
-                                    if (cbUseLegionBootloader.Checked)
+                                    if (settings.useLegion)
                                     {
                                         bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashLegT8);
                                     }
@@ -874,9 +864,6 @@ namespace TrionicCANFlasher
                                     AddLogItem("Connection terminated");
                                 }
                             }
-
-
-
                         }
                     }
                 }
@@ -1154,8 +1141,8 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = cbFormatBootPartition.Checked;
-                            trionic8.FormatSystemPartitions = cbFormatSystemPartitions.Checked;
+                            trionic8.FormatBootPartition = settings.unlockBoot;
+                            trionic8.FormatSystemPartitions = settings.unlockSys;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -1164,7 +1151,7 @@ namespace TrionicCANFlasher
                                 Application.DoEvents();
                                 BackgroundWorker bgWorker;
                                 bgWorker = new BackgroundWorker();
-                                if (cbUseLegionBootloader.Checked)
+                                if (settings.useLegion)
                                 {
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU_Leg);
                                 }
@@ -1194,13 +1181,14 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("AdapterType", cbxAdapterType.SelectedItem != null ? cbxAdapterType.SelectedItem.ToString() : String.Empty);
             SaveRegistrySetting("Adapter", cbAdapter.SelectedItem != null ?  cbAdapter.SelectedItem.ToString() :  String.Empty);
             SaveRegistrySetting("ECU", cbxEcuType.SelectedItem != null ? cbxEcuType.SelectedItem.ToString() : String.Empty);
-            SaveRegistrySetting("EnableLogging", cbEnableLogging.Checked);
-            SaveRegistrySetting("OnlyPBus", cbOnlyPBus.Checked);
+            SaveRegistrySetting("EnableLogging", settings.enableLogging);
+            SaveRegistrySetting("OnboardFlasher", settings.onboardFlasher);
+            SaveRegistrySetting("OnlyPBus", settings.onlyPBus);
             SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem != null ? cbxComSpeed.SelectedItem.ToString() : String.Empty);
-            SaveRegistrySetting("UseLegionBootloader", cbUseLegionBootloader.Checked);
-            SaveRegistrySetting("FormatSystemPartitions", cbFormatSystemPartitions.Checked);
-            SaveRegistrySetting("FormatBootPartition", cbFormatBootPartition.Checked);
-            SaveRegistrySetting("AutoChecksum", cbAutoChecksum.Checked);
+            SaveRegistrySetting("UseLegionBootloader", settings.useLegion);
+            SaveRegistrySetting("FormatSystemPartitions", settings.unlockSys);
+            SaveRegistrySetting("FormatBootPartition", settings.unlockBoot);
+            SaveRegistrySetting("AutoChecksum", settings.autoChecksum);
             trionic8.Cleanup();
             trionic7.Cleanup();
             trionic5.Cleanup();
@@ -1209,7 +1197,7 @@ namespace TrionicCANFlasher
 
         private void SetGenericOptions(ITrionic trionic)
         {
-            trionic.OnlyPBus = cbOnlyPBus.Checked;
+            trionic.OnlyPBus = settings.onlyPBus;
             trionic.bypassCANfilters = m_bypassCANfilters;
             m_bypassCANfilters = false;
 
@@ -1381,6 +1369,16 @@ namespace TrionicCANFlasher
         {
             RegistryKey SoftwareKey = Registry.CurrentUser.CreateSubKey("Software");
             RegistryKey ManufacturerKey = SoftwareKey.CreateSubKey("MattiasC");
+
+            settings.onboardFlasher = false; // Christian: is it still skipping those bytes up in 7xxxx?
+            settings.autoChecksum   = false;
+            settings.enableLogging  = true;
+            settings.onlyPBus       = true;
+
+            settings.useLegion  = true;
+            settings.unlockSys  = false;
+            settings.unlockBoot = false;
+
             using (RegistryKey Settings = ManufacturerKey.CreateSubKey("TrionicCANFlasher"))
             {
                 if (Settings != null)
@@ -1404,34 +1402,38 @@ namespace TrionicCANFlasher
                             }
                             else if (a == "EnableLogging")
                             {
-                                cbEnableLogging.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                                settings.enableLogging = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                            }
+                            else if (a == "OnboardFlasher")
+                            {
+                                settings.onboardFlasher = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
                             else if (a == "OnlyPBus")
                             {
-                                cbOnlyPBus.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                                settings.onlyPBus = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
                             else if (a == "ComSpeed")
                             {
                                 cbxComSpeed.SelectedItem = Settings.GetValue(a).ToString();
                             }
-                            else if (a == "UseLegionBootlooder")
+                            else if (a == "UseLegionBootloader")
                             {
-                                cbUseLegionBootloader.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                                settings.useLegion = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
                             else if (a == "FormatSystemPartitions")
                             {
-                                cbFormatSystemPartitions.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                                settings.unlockSys = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
                             else if (a == "FormatBootPartition")
                             {
-                                cbFormatBootPartition.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                                settings.unlockBoot = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
                             else if (a == "AutoChecksum")
                             {
-                                cbAutoChecksum.Checked = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                                settings.autoChecksum = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
-                            
                         }
+
                         catch (Exception e)
                         {
                             AddLogItem(e.Message);
@@ -1622,7 +1624,7 @@ namespace TrionicCANFlasher
             {
                 progressBar1.Value = percentage;
             }
-            if (cbEnableLogging.Checked)
+            if (settings.enableLogging)
             {
                 logger.Trace("progress: " + percentage.ToString("F0") + "%");
             }
@@ -1905,23 +1907,6 @@ namespace TrionicCANFlasher
             LogManager.Flush();
         }
 
-        private void cbEnableLogging_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateLogManager();
-        }
-
-        private void UpdateLogManager()
-        {
-            if (cbEnableLogging.Checked)
-            {
-                LogManager.EnableLogging();
-            }
-            else
-            {
-                LogManager.DisableLogging();
-            }
-        }
-
         private void linkLabelLogging_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/MattiasC/TrionicCANFlasher";
@@ -1942,7 +1927,7 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, cbAutoChecksum.Checked, m_ShouldUpdateChecksum);
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, settings.autoChecksum, m_ShouldUpdateChecksum);
                             if (checksum != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);
@@ -2081,16 +2066,27 @@ namespace TrionicCANFlasher
             bgworkerLogCanData.RunWorkerAsync();
         }
 
-        private void cbUseLegionBootloader_CheckedChanged(object sender, EventArgs e)
+        private void cbEnableLogging_CheckedChanged(object sender, EventArgs e)
         {
-            cbFormatSystemPartitions.Enabled = cbUseLegionBootloader.Checked;
-            cbFormatBootPartition.Enabled = (cbFormatSystemPartitions.Checked && cbFormatSystemPartitions.Enabled);
+            UpdateLogManager();
         }
 
-        private void cbFormatSystemPartitions_CheckedChanged(object sender, EventArgs e)
+        private void UpdateLogManager()
         {
-            cbFormatSystemPartitions.Enabled = cbUseLegionBootloader.Checked;
-            cbFormatBootPartition.Enabled = cbFormatSystemPartitions.Checked;
+            if (settings.enableLogging)
+            {
+                LogManager.EnableLogging();
+            }
+            else
+            {
+                LogManager.DisableLogging();
+            }
+        }
+
+        private void btnSettings_Click(object sender, EventArgs e)
+        {
+            settings.setECU((int)cbxEcuType.SelectedIndex);
+            settings.ShowDialog();
         }
 
         private bool updateChecksum(string layer, string filechecksum, string realchecksum)

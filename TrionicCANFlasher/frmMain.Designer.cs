@@ -30,7 +30,6 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.btnReadECU = new System.Windows.Forms.Button();
-            this.cbEnableLogging = new System.Windows.Forms.CheckBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.btnRestoreT8 = new System.Windows.Forms.Button();
             this.btnFlashECU = new System.Windows.Forms.Button();
@@ -44,20 +43,15 @@
             this.btnReadDTC = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.cbxEcuType = new System.Windows.Forms.ComboBox();
-            this.cbOnlyPBus = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cbxComSpeed = new System.Windows.Forms.ComboBox();
             this.documentation = new System.Windows.Forms.LinkLabel();
             this.btnEditParameters = new System.Windows.Forms.Button();
             this.btnReadECUcalibration = new System.Windows.Forms.Button();
             this.cbAdapter = new System.Windows.Forms.ComboBox();
-            this.cbUseFlasherOnDevice = new System.Windows.Forms.CheckBox();
             this.linkLabelLogging = new System.Windows.Forms.LinkLabel();
             this.btnLogData = new System.Windows.Forms.Button();
-            this.cbFormatBootPartition = new System.Windows.Forms.CheckBox();
-            this.cbUseLegionBootloader = new System.Windows.Forms.CheckBox();
-            this.cbFormatSystemPartitions = new System.Windows.Forms.CheckBox();
-            this.cbAutoChecksum = new System.Windows.Forms.CheckBox();
+            this.btnSettings = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -71,25 +65,11 @@
             this.btnReadECU.UseVisualStyleBackColor = true;
             this.btnReadECU.Click += new System.EventHandler(this.btnReadECU_Click);
             // 
-            // cbEnableLogging
-            // 
-            this.cbEnableLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbEnableLogging.AutoSize = true;
-            this.cbEnableLogging.Checked = true;
-            this.cbEnableLogging.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbEnableLogging.Location = new System.Drawing.Point(863, 301);
-            this.cbEnableLogging.Name = "cbEnableLogging";
-            this.cbEnableLogging.Size = new System.Drawing.Size(96, 17);
-            this.cbEnableLogging.TabIndex = 24;
-            this.cbEnableLogging.Text = "Enable logging";
-            this.cbEnableLogging.UseVisualStyleBackColor = true;
-            this.cbEnableLogging.CheckedChanged += new System.EventHandler(this.cbEnableLogging_CheckedChanged);
-            // 
             // progressBar1
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(12, 426);
+            this.progressBar1.Location = new System.Drawing.Point(12, 349);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(648, 23);
             this.progressBar1.TabIndex = 23;
@@ -126,7 +106,7 @@
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(648, 396);
+            this.listBoxLog.Size = new System.Drawing.Size(648, 298);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
@@ -174,7 +154,7 @@
             "Just4Trionic",
             "Kvaser",
             "J2534"});
-            this.cbxAdapterType.Location = new System.Drawing.Point(863, 220);
+            this.cbxAdapterType.Location = new System.Drawing.Point(863, 300);
             this.cbxAdapterType.Name = "cbxAdapterType";
             this.cbxAdapterType.Size = new System.Drawing.Size(150, 21);
             this.cbxAdapterType.TabIndex = 33;
@@ -184,7 +164,7 @@
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(790, 223);
+            this.label4.Location = new System.Drawing.Point(790, 303);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(67, 13);
             this.label4.TabIndex = 34;
@@ -194,7 +174,7 @@
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(790, 250);
+            this.label5.Location = new System.Drawing.Point(790, 330);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(44, 13);
             this.label5.TabIndex = 36;
@@ -215,7 +195,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(790, 196);
+            this.label2.Location = new System.Drawing.Point(790, 276);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(56, 13);
             this.label2.TabIndex = 55;
@@ -234,30 +214,17 @@
             "Trionic 8: MCP (Experimental)",
             "Z22SE (Experimental)",
             "Z22SE: MCP (Experimental)"});
-            this.cbxEcuType.Location = new System.Drawing.Point(863, 193);
+            this.cbxEcuType.Location = new System.Drawing.Point(863, 273);
             this.cbxEcuType.Name = "cbxEcuType";
             this.cbxEcuType.Size = new System.Drawing.Size(150, 21);
             this.cbxEcuType.TabIndex = 56;
             this.cbxEcuType.SelectedIndexChanged += new System.EventHandler(this.cbxEcuType_SelectedIndexChanged);
             // 
-            // cbOnlyPBus
-            // 
-            this.cbOnlyPBus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbOnlyPBus.AutoSize = true;
-            this.cbOnlyPBus.Checked = true;
-            this.cbOnlyPBus.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbOnlyPBus.Location = new System.Drawing.Point(863, 321);
-            this.cbOnlyPBus.Name = "cbOnlyPBus";
-            this.cbOnlyPBus.Size = new System.Drawing.Size(134, 17);
-            this.cbOnlyPBus.TabIndex = 57;
-            this.cbOnlyPBus.Text = "Only P-Bus connection";
-            this.cbOnlyPBus.UseVisualStyleBackColor = true;
-            // 
             // label6
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(790, 277);
+            this.label6.Location = new System.Drawing.Point(790, 357);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(60, 13);
             this.label6.TabIndex = 60;
@@ -273,7 +240,7 @@
             "230400",
             "1Mbit",
             "2Mbit"});
-            this.cbxComSpeed.Location = new System.Drawing.Point(863, 274);
+            this.cbxComSpeed.Location = new System.Drawing.Point(863, 354);
             this.cbxComSpeed.Name = "cbxComSpeed";
             this.cbxComSpeed.Size = new System.Drawing.Size(150, 21);
             this.cbxComSpeed.TabIndex = 59;
@@ -282,7 +249,7 @@
             // 
             this.documentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.documentation.AutoSize = true;
-            this.documentation.Location = new System.Drawing.Point(718, 325);
+            this.documentation.Location = new System.Drawing.Point(665, 345);
             this.documentation.Name = "documentation";
             this.documentation.Size = new System.Drawing.Size(103, 13);
             this.documentation.TabIndex = 61;
@@ -317,29 +284,16 @@
             this.cbAdapter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbAdapter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbAdapter.FormattingEnabled = true;
-            this.cbAdapter.Location = new System.Drawing.Point(863, 247);
+            this.cbAdapter.Location = new System.Drawing.Point(863, 327);
             this.cbAdapter.Name = "cbAdapter";
             this.cbAdapter.Size = new System.Drawing.Size(150, 21);
             this.cbAdapter.TabIndex = 65;
-            // 
-            // cbUseFlasherOnDevice
-            // 
-            this.cbUseFlasherOnDevice.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbUseFlasherOnDevice.AutoSize = true;
-            this.cbUseFlasherOnDevice.Checked = true;
-            this.cbUseFlasherOnDevice.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbUseFlasherOnDevice.Location = new System.Drawing.Point(863, 343);
-            this.cbUseFlasherOnDevice.Name = "cbUseFlasherOnDevice";
-            this.cbUseFlasherOnDevice.Size = new System.Drawing.Size(129, 17);
-            this.cbUseFlasherOnDevice.TabIndex = 66;
-            this.cbUseFlasherOnDevice.Text = "Use flasher on device";
-            this.cbUseFlasherOnDevice.UseVisualStyleBackColor = true;
             // 
             // linkLabelLogging
             // 
             this.linkLabelLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.linkLabelLogging.AutoSize = true;
-            this.linkLabelLogging.Location = new System.Drawing.Point(718, 347);
+            this.linkLabelLogging.Location = new System.Drawing.Point(666, 362);
             this.linkLabelLogging.Name = "linkLabelLogging";
             this.linkLabelLogging.Size = new System.Drawing.Size(113, 13);
             this.linkLabelLogging.TabIndex = 67;
@@ -358,73 +312,31 @@
             this.btnLogData.UseVisualStyleBackColor = true;
             this.btnLogData.Click += new System.EventHandler(this.btnLogData_Click);
             // 
-            // cbFormatBootPartition
+            // btnSettings
             // 
-            this.cbFormatBootPartition.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbFormatBootPartition.AutoSize = true;
-            this.cbFormatBootPartition.Location = new System.Drawing.Point(863, 412);
-            this.cbFormatBootPartition.Name = "cbFormatBootPartition";
-            this.cbFormatBootPartition.Size = new System.Drawing.Size(122, 17);
-            this.cbFormatBootPartition.TabIndex = 69;
-            this.cbFormatBootPartition.Text = "Format boot partition";
-            this.cbFormatBootPartition.UseVisualStyleBackColor = true;
-            // 
-            // cbUseLegionBootloader
-            // 
-            this.cbUseLegionBootloader.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbUseLegionBootloader.AutoSize = true;
-            this.cbUseLegionBootloader.Checked = true;
-            this.cbUseLegionBootloader.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbUseLegionBootloader.Location = new System.Drawing.Point(863, 366);
-            this.cbUseLegionBootloader.Name = "cbUseLegionBootloader";
-            this.cbUseLegionBootloader.Size = new System.Drawing.Size(134, 17);
-            this.cbUseLegionBootloader.TabIndex = 70;
-            this.cbUseLegionBootloader.Text = "Use Legion Bootloader";
-            this.cbUseLegionBootloader.UseVisualStyleBackColor = true;
-            this.cbUseLegionBootloader.CheckedChanged += new System.EventHandler(this.cbUseLegionBootloader_CheckedChanged);
-            // 
-            // cbFormatSystemPartitions
-            // 
-            this.cbFormatSystemPartitions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbFormatSystemPartitions.AutoSize = true;
-            this.cbFormatSystemPartitions.Location = new System.Drawing.Point(863, 389);
-            this.cbFormatSystemPartitions.Name = "cbFormatSystemPartitions";
-            this.cbFormatSystemPartitions.Size = new System.Drawing.Size(126, 17);
-            this.cbFormatSystemPartitions.TabIndex = 71;
-            this.cbFormatSystemPartitions.Text = "Unlock sys. partitions";
-            this.cbFormatSystemPartitions.UseVisualStyleBackColor = true;
-            this.cbFormatSystemPartitions.CheckedChanged += new System.EventHandler(this.cbFormatSystemPartitions_CheckedChanged);
-            // 
-            // cbAutoChecksum
-            // 
-            this.cbAutoChecksum.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbAutoChecksum.AutoSize = true;
-            this.cbAutoChecksum.Location = new System.Drawing.Point(863, 435);
-            this.cbAutoChecksum.Name = "cbAutoChecksum";
-            this.cbAutoChecksum.Size = new System.Drawing.Size(136, 17);
-            this.cbAutoChecksum.TabIndex = 72;
-            this.cbAutoChecksum.Text = "Auto update checksum";
-            this.cbAutoChecksum.UseVisualStyleBackColor = true;
+            this.btnSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSettings.Location = new System.Drawing.Point(906, 179);
+            this.btnSettings.Name = "btnSettings";
+            this.btnSettings.Size = new System.Drawing.Size(107, 50);
+            this.btnSettings.TabIndex = 73;
+            this.btnSettings.Text = "Settings";
+            this.btnSettings.UseVisualStyleBackColor = true;
+            this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1023, 461);
-            this.Controls.Add(this.cbAutoChecksum);
-            this.Controls.Add(this.cbFormatSystemPartitions);
-            this.Controls.Add(this.cbUseLegionBootloader);
-            this.Controls.Add(this.cbFormatBootPartition);
+            this.ClientSize = new System.Drawing.Size(1023, 384);
+            this.Controls.Add(this.btnSettings);
             this.Controls.Add(this.btnLogData);
             this.Controls.Add(this.linkLabelLogging);
-            this.Controls.Add(this.cbUseFlasherOnDevice);
             this.Controls.Add(this.cbAdapter);
             this.Controls.Add(this.btnReadECUcalibration);
             this.Controls.Add(this.btnEditParameters);
             this.Controls.Add(this.documentation);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.cbxComSpeed);
-            this.Controls.Add(this.cbOnlyPBus);
             this.Controls.Add(this.cbxEcuType);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnReadDTC);
@@ -435,7 +347,6 @@
             this.Controls.Add(this.btnReadSRAM);
             this.Controls.Add(this.btnGetECUInfo);
             this.Controls.Add(this.btnReadECU);
-            this.Controls.Add(this.cbEnableLogging);
             this.Controls.Add(this.btnRestoreT8);
             this.Controls.Add(this.btnFlashECU);
             this.Controls.Add(this.listBoxLog);
@@ -455,7 +366,6 @@
         #endregion
 
         private System.Windows.Forms.Button btnReadECU;
-        private System.Windows.Forms.CheckBox cbEnableLogging;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button btnRestoreT8;
         private System.Windows.Forms.Button btnFlashECU;
@@ -469,20 +379,15 @@
         private System.Windows.Forms.Button btnReadDTC;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cbxEcuType;
-        private System.Windows.Forms.CheckBox cbOnlyPBus;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox cbxComSpeed;
         private System.Windows.Forms.LinkLabel documentation;
         private System.Windows.Forms.Button btnEditParameters;
         private System.Windows.Forms.Button btnReadECUcalibration;
         private System.Windows.Forms.ComboBox cbAdapter;
-        private System.Windows.Forms.CheckBox cbUseFlasherOnDevice;
         private System.Windows.Forms.LinkLabel linkLabelLogging;
         private System.Windows.Forms.Button btnLogData;
-        private System.Windows.Forms.CheckBox cbFormatBootPartition;
-        private System.Windows.Forms.CheckBox cbUseLegionBootloader;
-        private System.Windows.Forms.CheckBox cbFormatSystemPartitions;
-        private System.Windows.Forms.CheckBox cbAutoChecksum;
+        private System.Windows.Forms.Button btnSettings;
     }
 }
 
