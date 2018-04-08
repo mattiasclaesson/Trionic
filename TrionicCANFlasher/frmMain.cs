@@ -599,11 +599,11 @@ namespace TrionicCANFlasher
 
                 if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.COMBI)
                 {
-                    settings.enableCombiflash = true;
+                    settings.enableCombiOpt = true;
                 }
                 else
                 {
-                    settings.enableCombiflash = false;
+                    settings.enableCombiOpt = false;
                     settings.onboardFlasher = false;
                 }
             }

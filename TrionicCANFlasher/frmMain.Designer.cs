@@ -57,7 +57,7 @@
             // btnReadECU
             // 
             this.btnReadECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnReadECU.Location = new System.Drawing.Point(906, 11);
+            this.btnReadECU.Location = new System.Drawing.Point(906, 12);
             this.btnReadECU.Name = "btnReadECU";
             this.btnReadECU.Size = new System.Drawing.Size(107, 50);
             this.btnReadECU.TabIndex = 29;
@@ -69,7 +69,7 @@
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(12, 349);
+            this.progressBar1.Location = new System.Drawing.Point(12, 337);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(648, 23);
             this.progressBar1.TabIndex = 23;
@@ -77,7 +77,7 @@
             // btnRestoreT8
             // 
             this.btnRestoreT8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRestoreT8.Location = new System.Drawing.Point(906, 123);
+            this.btnRestoreT8.Location = new System.Drawing.Point(906, 124);
             this.btnRestoreT8.Name = "btnRestoreT8";
             this.btnRestoreT8.Size = new System.Drawing.Size(107, 50);
             this.btnRestoreT8.TabIndex = 22;
@@ -88,7 +88,7 @@
             // btnFlashECU
             // 
             this.btnFlashECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFlashECU.Location = new System.Drawing.Point(788, 11);
+            this.btnFlashECU.Location = new System.Drawing.Point(788, 12);
             this.btnFlashECU.Name = "btnFlashECU";
             this.btnFlashECU.Size = new System.Drawing.Size(112, 50);
             this.btnFlashECU.TabIndex = 21;
@@ -106,13 +106,13 @@
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(648, 298);
+            this.listBoxLog.Size = new System.Drawing.Size(648, 326);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
             // 
             this.btnGetECUInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnGetECUInfo.Location = new System.Drawing.Point(788, 67);
+            this.btnGetECUInfo.Location = new System.Drawing.Point(788, 68);
             this.btnGetECUInfo.Name = "btnGetECUInfo";
             this.btnGetECUInfo.Size = new System.Drawing.Size(112, 50);
             this.btnGetECUInfo.TabIndex = 30;
@@ -123,7 +123,7 @@
             // btnReadSRAM
             // 
             this.btnReadSRAM.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnReadSRAM.Location = new System.Drawing.Point(906, 67);
+            this.btnReadSRAM.Location = new System.Drawing.Point(906, 68);
             this.btnReadSRAM.Name = "btnReadSRAM";
             this.btnReadSRAM.Size = new System.Drawing.Size(107, 50);
             this.btnReadSRAM.TabIndex = 31;
@@ -134,7 +134,7 @@
             // btnRecoverECU
             // 
             this.btnRecoverECU.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRecoverECU.Location = new System.Drawing.Point(788, 123);
+            this.btnRecoverECU.Location = new System.Drawing.Point(788, 124);
             this.btnRecoverECU.Name = "btnRecoverECU";
             this.btnRecoverECU.Size = new System.Drawing.Size(112, 50);
             this.btnRecoverECU.TabIndex = 32;
@@ -154,7 +154,7 @@
             "Just4Trionic",
             "Kvaser",
             "J2534"});
-            this.cbxAdapterType.Location = new System.Drawing.Point(863, 300);
+            this.cbxAdapterType.Location = new System.Drawing.Point(861, 285);
             this.cbxAdapterType.Name = "cbxAdapterType";
             this.cbxAdapterType.Size = new System.Drawing.Size(150, 21);
             this.cbxAdapterType.TabIndex = 33;
@@ -164,7 +164,7 @@
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(790, 303);
+            this.label4.Location = new System.Drawing.Point(788, 288);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(67, 13);
             this.label4.TabIndex = 34;
@@ -174,7 +174,7 @@
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(790, 330);
+            this.label5.Location = new System.Drawing.Point(788, 315);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(44, 13);
             this.label5.TabIndex = 36;
@@ -195,7 +195,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(790, 276);
+            this.label2.Location = new System.Drawing.Point(788, 261);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(56, 13);
             this.label2.TabIndex = 55;
@@ -214,7 +214,7 @@
             "Trionic 8: MCP (Experimental)",
             "Z22SE (Experimental)",
             "Z22SE: MCP (Experimental)"});
-            this.cbxEcuType.Location = new System.Drawing.Point(863, 273);
+            this.cbxEcuType.Location = new System.Drawing.Point(861, 258);
             this.cbxEcuType.Name = "cbxEcuType";
             this.cbxEcuType.Size = new System.Drawing.Size(150, 21);
             this.cbxEcuType.TabIndex = 56;
@@ -224,7 +224,7 @@
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(790, 357);
+            this.label6.Location = new System.Drawing.Point(788, 342);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(60, 13);
             this.label6.TabIndex = 60;
@@ -240,7 +240,7 @@
             "230400",
             "1Mbit",
             "2Mbit"});
-            this.cbxComSpeed.Location = new System.Drawing.Point(863, 354);
+            this.cbxComSpeed.Location = new System.Drawing.Point(861, 339);
             this.cbxComSpeed.Name = "cbxComSpeed";
             this.cbxComSpeed.Size = new System.Drawing.Size(150, 21);
             this.cbxComSpeed.TabIndex = 59;
@@ -249,7 +249,7 @@
             // 
             this.documentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.documentation.AutoSize = true;
-            this.documentation.Location = new System.Drawing.Point(665, 345);
+            this.documentation.Location = new System.Drawing.Point(663, 330);
             this.documentation.Name = "documentation";
             this.documentation.Size = new System.Drawing.Size(103, 13);
             this.documentation.TabIndex = 61;
@@ -260,7 +260,7 @@
             // btnEditParameters
             // 
             this.btnEditParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEditParameters.Location = new System.Drawing.Point(675, 67);
+            this.btnEditParameters.Location = new System.Drawing.Point(675, 68);
             this.btnEditParameters.Name = "btnEditParameters";
             this.btnEditParameters.Size = new System.Drawing.Size(107, 50);
             this.btnEditParameters.TabIndex = 63;
@@ -284,7 +284,7 @@
             this.cbAdapter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbAdapter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbAdapter.FormattingEnabled = true;
-            this.cbAdapter.Location = new System.Drawing.Point(863, 327);
+            this.cbAdapter.Location = new System.Drawing.Point(861, 312);
             this.cbAdapter.Name = "cbAdapter";
             this.cbAdapter.Size = new System.Drawing.Size(150, 21);
             this.cbAdapter.TabIndex = 65;
@@ -293,7 +293,7 @@
             // 
             this.linkLabelLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.linkLabelLogging.AutoSize = true;
-            this.linkLabelLogging.Location = new System.Drawing.Point(666, 362);
+            this.linkLabelLogging.Location = new System.Drawing.Point(664, 347);
             this.linkLabelLogging.Name = "linkLabelLogging";
             this.linkLabelLogging.Size = new System.Drawing.Size(113, 13);
             this.linkLabelLogging.TabIndex = 67;
@@ -315,7 +315,7 @@
             // btnSettings
             // 
             this.btnSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSettings.Location = new System.Drawing.Point(906, 179);
+            this.btnSettings.Location = new System.Drawing.Point(906, 180);
             this.btnSettings.Name = "btnSettings";
             this.btnSettings.Size = new System.Drawing.Size(107, 50);
             this.btnSettings.TabIndex = 73;
@@ -327,7 +327,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1023, 384);
+            this.ClientSize = new System.Drawing.Size(1023, 372);
             this.Controls.Add(this.btnSettings);
             this.Controls.Add(this.btnLogData);
             this.Controls.Add(this.linkLabelLogging);

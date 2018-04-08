@@ -12,10 +12,10 @@ namespace TrionicCANFlasher
 {
     public partial class frmSettings : Form
     {
-        public bool enableCombiflash
+        public bool enableCombiOpt
         {
-            get { return cbOnboardFlasher.Checked;  }
-            set { cbOnboardFlasher.Checked = value; }
+            get { return cbOnboardFlasher.Enabled;  }
+            set { cbOnboardFlasher.Enabled = value; }
         }
 
         public bool onboardFlasher
