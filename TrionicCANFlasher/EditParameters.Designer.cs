@@ -30,6 +30,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditParameters));
             this.cbCab = new System.Windows.Forms.CheckBox();
             this.cbSAI = new System.Windows.Forms.CheckBox();
             this.cbOutput = new System.Windows.Forms.CheckBox();
@@ -248,6 +249,7 @@
             // 
             // closeButton
             // 
+            this.closeButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.closeButton.Location = new System.Drawing.Point(215, 312);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(75, 23);
@@ -258,13 +260,20 @@
             // 
             // EditParameters
             // 
+            this.AcceptButton = this.btnWriteToECU;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.closeButton;
             this.ClientSize = new System.Drawing.Size(303, 346);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnWriteToECU);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "EditParameters";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Edit Parameters";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();

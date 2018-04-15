@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 using System.IO;
 using System.Threading;
-using System.IO.Ports;
 using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.Win32;
@@ -26,16 +23,18 @@ namespace TrionicCANFlasher
         readonly Trionic8 trionic8 = new Trionic8();
         readonly Trionic7 trionic7 = new Trionic7();
         readonly Trionic5 trionic5 = new Trionic5();
-        frmSettings settings = new frmSettings();
+        frmSettings AppSettings = new frmSettings();
 
         DateTime dtstart;
         public DelegateUpdateStatus m_DelegateUpdateStatus;
         public DelegateProgressStatus m_DelegateProgressStatus;
         public ChecksumDelegate.ChecksumUpdate m_ShouldUpdateChecksum;
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
+
         msiupdater m_msiUpdater;
         BackgroundWorker bgworkerLogCanData;
         private bool m_bypassCANfilters = false; // Christian: Stop-gap solution for now.
+        private FormWindowState LastWindowState = FormWindowState.Normal;
 
         public frmMain()
         {
@@ -48,6 +47,58 @@ namespace TrionicCANFlasher
             m_ShouldUpdateChecksum = updateChecksum;
             SetupListboxWrapping();
             EnableUserInput(true);
+        }
+
+        private void frmMain_Load(object sender, EventArgs e)
+        {
+            Text = "TrionicCANFlasher v" + System.Windows.Forms.Application.ProductVersion;
+            logger.Trace(Text);
+            logger.Trace(".dot net CLR " + System.Environment.Version);
+
+            // get additional info from registry if available
+            AppSettings.LoadRegistrySettings();
+            CheckRegistryFTDI();
+
+            // Fetch last selected ECU from registry and pass its index back to AppSettings
+            if (AppSettings.SelectedECU.Name != null)
+            {
+                try
+                {
+                    cbxEcuType.SelectedItem = AppSettings.SelectedECU.Name;
+                    AppSettings.SelectedECU.Index = cbxEcuType.SelectedIndex;
+                }
+
+                catch (Exception ex)
+                {
+                    AddLogItem(ex.Message);
+                }
+            }
+
+            trionic5.onReadProgress += trionicCan_onReadProgress;
+            trionic5.onWriteProgress += trionicCan_onWriteProgress;
+            trionic5.onCanInfo += trionicCan_onCanInfo;
+
+            trionic7.onReadProgress += trionicCan_onReadProgress;
+            trionic7.onWriteProgress += trionicCan_onWriteProgress;
+            trionic7.onCanInfo += trionicCan_onCanInfo;
+
+            trionic8.onReadProgress += trionicCan_onReadProgress;
+            trionic8.onWriteProgress += trionicCan_onWriteProgress;
+            trionic8.onCanInfo += trionicCan_onCanInfo;
+
+            RestoreView();
+            UpdateLogManager();
+
+            EnableUserInput(true);
+        }
+
+        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            AppSettings.SaveRegistrySettings();
+            trionic8.Cleanup();
+            trionic7.Cleanup();
+            trionic5.Cleanup();
+            System.Windows.Forms.Application.Exit();
         }
 
         private void SetupListboxWrapping()
@@ -66,7 +117,7 @@ namespace TrionicCANFlasher
         {
             e.DrawBackground();
             e.DrawFocusRectangle();
-            if(e.Index>=0)
+            if (e.Index >= 0)
                 e.Graphics.DrawString(listBoxLog.Items[e.Index].ToString(), e.Font, new SolidBrush(e.ForeColor), e.Bounds);
         }
 
@@ -80,14 +131,482 @@ namespace TrionicCANFlasher
             logger.Trace(e.ToString());
         }
 
-        private void AddLogItem(string item)
+        private void frmMain_Shown(object sender, EventArgs e)
         {
-            var uiItem = DateTime.Now.ToString("HH:mm:ss.fff") + " - " + item;
-            listBoxLog.Items.Add(uiItem);
+            try
+            {
+                m_msiUpdater = new msiupdater(new Version(System.Windows.Forms.Application.ProductVersion));
+                m_msiUpdater.Apppath = System.Windows.Forms.Application.UserAppDataPath;
+                m_msiUpdater.onDataPump += new msiupdater.DataPump(m_msiUpdater_onDataPump);
+                m_msiUpdater.onUpdateProgressChanged += new msiupdater.UpdateProgressChanged(m_msiUpdater_onUpdateProgressChanged);
+                m_msiUpdater.CheckForUpdates("http://develop.trionictuning.com/TrionicCANFlasher/", "canflasher", "TrionicCANFlash.msi");
+            }
+            catch (Exception E)
+            {
+                AddLogItem(E.Message);
+            }
+        }
+
+        void m_msiUpdater_onUpdateProgressChanged(msiupdater.MSIUpdateProgressEventArgs e)
+        {
+
+        }
+
+        void m_msiUpdater_onDataPump(msiupdater.MSIUpdaterEventArgs e)
+        {
+            if (e.UpdateAvailable)
+            {
+                frmUpdateAvailable frmUpdate = new frmUpdateAvailable();
+                frmUpdate.SetVersionNumber(e.Version.ToString());
+                if (m_msiUpdater != null)
+                {
+                    m_msiUpdater.Blockauto_updates = false;
+                }
+                if (frmUpdate.ShowDialog() == DialogResult.OK)
+                {
+                    if (m_msiUpdater != null)
+                    {
+                        m_msiUpdater.ExecuteUpdate(e.Version);
+                        System.Windows.Forms.Application.Exit();
+                    }
+                }
+                else
+                {
+                    // user choose "NO", don't bug him again!
+                    if (m_msiUpdater != null)
+                    {
+                        m_msiUpdater.Blockauto_updates = false;
+                    }
+                }
+            }
+        }
+
+        private void CheckRegistryFTDI()
+        {
+            if (AppSettings.AdapterType.Index == (int)CANBusAdapter.ELM327)
+            {
+                using (RegistryKey FTDIBUSKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Enum\\FTDIBUS"))
+                {
+                    if (FTDIBUSKey != null)
+                    {
+                        string[] vals = FTDIBUSKey.GetSubKeyNames();
+                        foreach (string name in vals)
+                        {
+                            if (name.StartsWith("VID_0403+PID_6001"))
+                            {
+                                using (RegistryKey NameKey = FTDIBUSKey.OpenSubKey(name + "\\0000\\Device Parameters"))
+                                {
+                                    if (NameKey != null)
+                                    {
+                                        String PortName = NameKey.GetValue("PortName").ToString();
+                                        if (AppSettings.Adapter.Name != null && AppSettings.Adapter.Name.Equals(PortName))
+                                        {
+                                            String Latency = NameKey.GetValue("LatencyTimer").ToString();
+                                            AddLogItem(String.Format("ELM327 FTDI setting for {0} LatencyTimer {1}ms.", PortName, Latency));
+                                            if (!Latency.Equals("2") && !Latency.Equals("1"))
+                                            {
+                                                MessageBox.Show("Warning LatencyTimer should be set to 2 ms", "ELM327 FTDI setting", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void AddLogItem(string item)
+        {
+            if (AppSettings.MainWidth > 740)
+            {
+                var uiItem = DateTime.Now.ToString("HH:mm:ss.fff") + " - " + item;
+                listBoxLog.Items.Add(uiItem);
+            }
+            else
+            {
+                listBoxLog.Items.Add(item);
+            }
+
+            if (AppSettings.Collapsed)
+            {
+                string Lastmsg = item;
+
+                if (Lastmsg.Length > 57)
+                {
+                    Lastmsg = Lastmsg.Remove(57, Lastmsg.Length - 57);
+                }
+
+                Minilog.Text = Lastmsg;
+                Minilog.Visible = true;
+            }
+
             while (listBoxLog.Items.Count > 100) listBoxLog.Items.RemoveAt(0);
             listBoxLog.SelectedIndex = listBoxLog.Items.Count - 1;
             logger.Trace(item);
             Application.DoEvents();
+        }
+
+        void trionicCan_onWriteProgress(object sender, ITrionic.WriteProgressEventArgs e)
+        {
+            UpdateProgressStatus(e.Percentage);
+        }
+
+        void trionicCan_onCanInfo(object sender, ITrionic.CanInfoEventArgs e)
+        {
+            UpdateFlashStatus(e);
+        }
+
+        void trionicCan_onReadProgress(object sender, ITrionic.ReadProgressEventArgs e)
+        {
+            UpdateProgressStatus(e.Percentage);
+        }
+
+        private void updateStatusInBox(ITrionic.CanInfoEventArgs e)
+        {
+            AddLogItem(e.Info);
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                if (e.Type == ActivityType.FinishedFlashing || e.Type == ActivityType.FinishedDownloadingFlash)
+                {
+                    TimeSpan ts = DateTime.Now - dtstart;
+                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+                    trionic7.Cleanup();
+                    AddLogItem("Connection closed");
+                    EnableUserInput(true);
+                }
+            }
+        }
+
+        private void UpdateFlashStatus(ITrionic.CanInfoEventArgs e)
+        {
+            try
+            {
+                Invoke(m_DelegateUpdateStatus, e);
+            }
+            catch (Exception ex)
+            {
+                AddLogItem(ex.Message);
+            }
+        }
+
+        private void updateProgress(int percentage)
+        {
+            if (progressBar1.Value != percentage)
+            {
+                progressBar1.Value = percentage;
+            }
+            if (AppSettings.EnableLogging)
+            {
+                logger.Trace("progress: " + percentage.ToString("F0") + "%");
+            }
+        }
+
+        private void UpdateProgressStatus(int percentage)
+        {
+            try
+            {
+                Invoke(m_DelegateProgressStatus, percentage);
+            }
+            catch (Exception e)
+            {
+                logger.Trace(e.Message);
+            }
+        }
+
+        private void StartBGWorkerLog(ITrionic trionic)
+        {
+            AddLogItem("Logging in progress");
+            bgworkerLogCanData = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            bgworkerLogCanData.DoWork += trionic.LogCANData;
+            bgworkerLogCanData.RunWorkerCompleted += bgWorker_RunWorkerCompleted;
+            bgworkerLogCanData.RunWorkerAsync();
+        }
+
+        void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+            {
+                AddLogItem("Stopped");
+            }
+            else if (e.Result != null && (bool)e.Result)
+            {
+                AddLogItem("Operation done");
+            }
+            else
+            {
+                AddLogItem("Operation failed");
+                SetViewMode(false);
+            }
+
+            TimeSpan ts = DateTime.Now - dtstart;
+            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+            {
+                trionic5.Cleanup();
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                trionic7.Cleanup();
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 ||
+                     cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96 ||
+                     cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP ||
+                     cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG ||
+                     cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
+            {
+                trionic8.Cleanup();
+            }
+            EnableUserInput(true);
+            AddLogItem("Connection terminated");
+        }
+
+        public void UpdateLogManager()
+        {
+            if (AppSettings.EnableLogging)
+            {
+                LogManager.EnableLogging();
+            }
+            else
+            {
+                LogManager.DisableLogging();
+            }
+        }
+
+        private void SetGenericOptions(ITrionic trionic)
+        {
+            trionic.OnlyPBus = AppSettings.OnlyPBus;
+            trionic.bypassCANfilters = m_bypassCANfilters;
+            m_bypassCANfilters = false;
+
+            switch (cbxEcuType.SelectedIndex)
+            {
+                case (int)ECU.TRIONIC5:
+                    trionic.ECU = ECU.TRIONIC5;
+                    break;
+                case (int)ECU.TRIONIC7:
+                    trionic.ECU = ECU.TRIONIC7;
+                    break;
+                case (int)ECU.TRIONIC8:
+                    trionic.ECU = ECU.TRIONIC8;
+                    break;
+                case (int)ECU.TRIONIC8_MCP:
+                    trionic.ECU = ECU.TRIONIC8_MCP;
+                    break;
+                case (int)ECU.Z22SEMain_LEG:
+                    trionic.ECU = ECU.Z22SEMain_LEG;
+                    break;
+                case (int)ECU.Z22SEMCP_LEG:
+                    trionic.ECU = ECU.Z22SEMCP_LEG;
+                    break;
+                case (int)ECU.MOTRONIC96:
+                    trionic.ECU = ECU.MOTRONIC96;
+                    break;
+                default:
+                    break;
+            }
+
+            switch (AppSettings.AdapterType.Index)
+            {
+                case (int)CANBusAdapter.JUST4TRIONIC:
+                    trionic.ForcedBaudrate = 115200;
+                    break;
+                case (int)CANBusAdapter.ELM327:
+                    //set selected com speed
+                    switch (AppSettings.Baudrate.Index)
+                    {
+                        case (int)ComSpeed.S2Mbit:
+                            trionic.ForcedBaudrate = 2000000;
+                            break;
+                        case (int)ComSpeed.S1Mbit:
+                            trionic.ForcedBaudrate = 1000000;
+                            break;
+                        case (int)ComSpeed.S230400:
+                            trionic.ForcedBaudrate = 230400;
+                            break;
+                        case (int)ComSpeed.S115200:
+                            trionic.ForcedBaudrate = 115200;
+                            break;
+                        default:
+                            trionic.ForcedBaudrate = 0; //default , no speed will be changed
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            trionic.setCANDevice((CANBusAdapter)AppSettings.AdapterType.Index);
+            if (AppSettings.Adapter.Name != null)
+            {
+                trionic.SetSelectedAdapter(AppSettings.Adapter.Name);
+            }
+        }
+
+        bool checkFileSize(string fileName)
+        {
+            FileInfo fi = new FileInfo(fileName);
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+            {
+                if (fi.Length != FileT5.LengthT52 && fi.Length != FileT5.LengthT55)
+                {
+                    AddLogItem("Not a trionic 5 file");
+                    return false;
+                }
+            }
+            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+            {
+                if (fi.Length != FileT7.Length)
+                {
+                    AddLogItem("Not a trionic 7 file");
+                    return false;
+                }
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG)
+            {
+                if (fi.Length != FileT8.Length)
+                {
+                    AddLogItem("Not a trionic 8 file");
+                    return false;
+                }
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+            {
+                if (fi.Length != FileME96.Length && fi.Length != FileME96.LengthComplete)
+                {
+                    AddLogItem("Not a Motronic ME9.6 file");
+                    return false;
+                }
+            }
+            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
+            {
+                if (fi.Length != FileT8mcp.Length)
+                {
+                    AddLogItem("Not a trionic 8 mcp file");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private void EnableUserInput(bool enable)
+        {
+            btnFlashECU.Enabled = enable;
+            btnReadECU.Enabled = enable;
+            btnGetECUInfo.Enabled = enable;
+            btnReadSRAM.Enabled = enable;
+            btnRecoverECU.Enabled = enable;
+            btnReadDTC.Enabled = enable;
+            cbxEcuType.Enabled = enable;
+
+            btnEditParameters.Enabled = enable;
+            btnReadECUcalibration.Enabled = enable;
+            btnRestoreT8.Enabled = enable;
+            btnLogData.Enabled = enable;
+            btnSettings.Enabled = enable;
+
+            bool PreCheck = true;
+            if (AppSettings.AdapterType.Index == (int)CANBusAdapter.ELM327 &&
+                (AppSettings.Baudrate.Index < 0 || AppSettings.Adapter.Index < 0))
+            {
+                PreCheck = false;
+            }
+            else if ((AppSettings.AdapterType.Index == (int)CANBusAdapter.J2534  ||
+                      AppSettings.AdapterType.Index == (int)CANBusAdapter.KVASER ||
+                      AppSettings.AdapterType.Index == (int)CANBusAdapter.LAWICEL) &&
+                      AppSettings.Adapter.Index < 0)
+            {
+                PreCheck = false;
+            }
+
+            if (AppSettings.AdapterType.Index >= 0 && cbxEcuType.SelectedIndex >= 0 && PreCheck)
+            {
+                if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
+                {
+                    btnReadECUcalibration.Enabled = false;
+                    btnReadDTC.Enabled = false;
+                    btnEditParameters.Enabled = false;
+                    btnRecoverECU.Enabled = false;
+                    btnRestoreT8.Enabled = false;
+                }
+
+                else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
+                {
+                    btnRecoverECU.Enabled = false;
+                    btnReadECUcalibration.Enabled = false;
+                    btnRestoreT8.Enabled = false;
+                }
+
+                else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
+                {
+                    btnReadECUcalibration.Enabled = false;
+                }
+
+                else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+                {
+                    btnReadSRAM.Enabled = false;
+                    btnRestoreT8.Enabled = false;
+                    btnRecoverECU.Enabled = false;
+                }
+
+                else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
+                {
+                    btnReadDTC.Enabled = false;
+                    btnReadECUcalibration.Enabled = false;
+
+                    // Bootloader handles recovery, if at all possible, on MCP.
+                    btnRecoverECU.Enabled = false;
+
+                    btnRestoreT8.Enabled = false;
+                    btnReadSRAM.Enabled = false;
+
+                    btnGetECUInfo.Enabled = false;
+                    btnEditParameters.Enabled = false;
+                }
+            }
+
+            // Disable everything except Settings; Still not fully configured
+            else if (cbxEcuType.SelectedIndex >= 0)
+            {
+                btnFlashECU.Enabled = false;
+                btnReadECU.Enabled = false;
+                btnGetECUInfo.Enabled = false;
+                btnReadSRAM.Enabled = false;
+                btnRecoverECU.Enabled = false;
+                btnReadDTC.Enabled = false;
+
+                btnEditParameters.Enabled = false;
+                btnReadECUcalibration.Enabled = false;
+                btnRestoreT8.Enabled = false;
+                btnLogData.Enabled = false;
+            }
+
+            // Disable everything; Select ECU before poking around!
+            else
+            {
+                btnFlashECU.Enabled = false;
+                btnReadECU.Enabled = false;
+                btnGetECUInfo.Enabled = false;
+                btnReadSRAM.Enabled = false;
+                btnRecoverECU.Enabled = false;
+                btnReadDTC.Enabled = false;
+
+                btnEditParameters.Enabled = false;
+                btnReadECUcalibration.Enabled = false;
+                btnRestoreT8.Enabled = false;
+                btnLogData.Enabled = false;
+                btnSettings.Enabled = false;
+            }
+        }
+
+        private static string SubString8(string value)
+        {
+            return value.Length < 8 ? value : value.Substring(0, 8);
         }
 
         private void btnFlashEcu_Click(object sender, EventArgs e)
@@ -117,7 +636,7 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
                         {
-                            ChecksumResult checksumResult = ChecksumT5.VerifyChecksum(ofd.FileName, settings.autoChecksum, m_ShouldUpdateChecksum);
+                            ChecksumResult checksumResult = ChecksumT5.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, m_ShouldUpdateChecksum);
                             if (checksumResult != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
@@ -147,7 +666,7 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
-                            ChecksumResult checksumResult = ChecksumT7.VerifyChecksum(ofd.FileName, settings.autoChecksum, ChecksumT7.DO_NOT_AUTOFIXFOOTER, m_ShouldUpdateChecksum); // TODO: mattias, add AutoFixFooter to settings?
+                            ChecksumResult checksumResult = ChecksumT7.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, ChecksumT7.DO_NOT_AUTOFIXFOOTER, m_ShouldUpdateChecksum); // TODO: mattias, add AutoFixFooter to settings?
                             if (checksumResult != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
@@ -155,7 +674,7 @@ namespace TrionicCANFlasher
                             }
 
                             SetGenericOptions(trionic7);
-                            trionic7.UseFlasherOnDevice = settings.onlyPBus ? settings.onboardFlasher : false;
+                            trionic7.UseFlasherOnDevice = AppSettings.OnlyPBus ? AppSettings.CombiFlasher : false;
 
                             AddLogItem("Opening connection");
                             EnableUserInput(false);
@@ -177,7 +696,7 @@ namespace TrionicCANFlasher
                         }
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksumResult = ChecksumT8.VerifyChecksum(ofd.FileName, settings.autoChecksum, m_ShouldUpdateChecksum);
+                            ChecksumResult checksumResult = ChecksumT8.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, m_ShouldUpdateChecksum);
                             if (checksumResult != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
@@ -189,8 +708,8 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = settings.unlockBoot;
-                            trionic8.FormatSystemPartitions = settings.unlockSys;
+                            trionic8.FormatBootPartition = AppSettings.UnlockBoot;
+                            trionic8.FormatSystemPartitions = AppSettings.UnlockSys;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -199,7 +718,7 @@ namespace TrionicCANFlasher
                                 Application.DoEvents();
                                 BackgroundWorker bgWorker;
                                 bgWorker = new BackgroundWorker();
-                                if (settings.useLegion)
+                                if (AppSettings.UseLegion)
                                 {
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.WriteFlashLegT8);
                                 }
@@ -227,7 +746,7 @@ namespace TrionicCANFlasher
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             
                             trionic8.FormatSystemPartitions = true; // This is undefined in mcp.
-                            trionic8.FormatBootPartition    = settings.unlockBoot;
+                            trionic8.FormatBootPartition    = AppSettings.UnlockBoot;
 
                             if (trionic8.openDevice(false))
                             {
@@ -352,7 +871,7 @@ namespace TrionicCANFlasher
                                         if (ecuMainOS != fileMainOS)
                                         {
                                             AddLogItem("Main OS version differs between file and ECU");
-                                            if (settings.unlockSys)
+                                            if (AppSettings.UnlockSys)
                                             {
                                                 AddLogItem("User has selected option format system partitions");
                                                 FileInfo fi = new FileInfo(ofd.FileName);
@@ -454,208 +973,6 @@ namespace TrionicCANFlasher
             return flash;
         }
 
-        private static string SubString8(string value)
-        {
-            return value.Length < 8 ? value : value.Substring(0, 8);
-        }
-
-        void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled)
-            {
-                AddLogItem("Stopped");
-            }
-            else if (e.Result != null && (bool)e.Result)
-            {
-                AddLogItem("Operation done");
-            }
-            else
-            {
-                AddLogItem("Operation failed");
-            }
-         
-            TimeSpan ts = DateTime.Now - dtstart;
-            AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
-            {
-                trionic5.Cleanup();
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                trionic7.Cleanup();
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8      ||
-                     cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96    ||
-                     cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP  ||
-                     cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG ||
-                     cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
-            {
-                trionic8.Cleanup();
-            }
-            EnableUserInput(true);
-            AddLogItem("Connection terminated");
-        }
-
-        bool checkFileSize(string fileName)
-        {
-            FileInfo fi = new FileInfo(fileName);
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
-            {
-                if (fi.Length != FileT5.LengthT52 && fi.Length != FileT5.LengthT55)
-                {
-                    AddLogItem("Not a trionic 5 file");
-                    return false;
-                }
-            }
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                if (fi.Length != FileT7.Length)
-                {
-                    AddLogItem("Not a trionic 7 file");
-                    return false;
-                }
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG)
-            {
-                if (fi.Length != FileT8.Length)
-                {
-                    AddLogItem("Not a trionic 8 file");
-                    return false;
-                }
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
-            {
-                if (fi.Length != FileME96.Length && fi.Length != FileME96.LengthComplete)
-                {
-                    AddLogItem("Not a Motronic ME9.6 file");
-                    return false;
-                }
-            }
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
-            {
-                if (fi.Length != FileT8mcp.Length)
-                {
-                    AddLogItem("Not a trionic 8 mcp file");
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        private void EnableUserInput(bool enable)
-        {
-            btnFlashECU.Enabled = enable;
-            btnReadECU.Enabled = enable;
-            btnGetECUInfo.Enabled = enable;
-            btnReadSRAM.Enabled = enable;
-            btnRecoverECU.Enabled = enable;
-            btnReadDTC.Enabled = enable;
-            cbxAdapterType.Enabled = enable;
-            cbxEcuType.Enabled = enable;
-
-            btnEditParameters.Enabled = enable;
-            btnReadECUcalibration.Enabled = enable;
-            btnRestoreT8.Enabled = enable;
-            btnLogData.Enabled = enable;
-            btnSettings.Enabled = enable;
-
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327  ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.KVASER  ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.LAWICEL ||
-                cbxAdapterType.SelectedIndex == (int)CANBusAdapter.J2534)
-            {
-                cbAdapter.Enabled = enable;
-            }
-            else
-            {
-                cbAdapter.Enabled = false;
-            }
-
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
-            {
-                cbxComSpeed.Enabled = enable;
-            }
-            else
-            {
-                cbxComSpeed.Enabled = false;
-            }
-
-            // Always disable
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
-            {
-                btnReadECUcalibration.Enabled = false;
-                btnReadDTC.Enabled = false;
-                btnEditParameters.Enabled = false;
-                btnRecoverECU.Enabled = false;
-                btnRestoreT8.Enabled = false;
-            }
-
-            // Always disable
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                btnRecoverECU.Enabled = false;
-                btnReadECUcalibration.Enabled = false;
-                btnRestoreT8.Enabled = false;
-
-                if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.COMBI)
-                {
-                    settings.enableCombiOpt = true;
-                }
-                else
-                {
-                    settings.enableCombiOpt = false;
-                    settings.onboardFlasher = false;
-                }
-            }
-
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
-            {
-                // Always disable
-                btnReadECUcalibration.Enabled = false;
-            }
-
-            // Always disable
-            else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
-            {
-                btnReadSRAM.Enabled = false;
-                btnRestoreT8.Enabled = false;
-                btnRecoverECU.Enabled = false;
-            }
-
-            // Always disable
-            else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
-            {
-                btnReadDTC.Enabled = false;
-                btnReadECUcalibration.Enabled = false;
-
-                // Bootloader handles recovery, if at all possible, on MCP.
-                btnRecoverECU.Enabled = false;
-
-                btnRestoreT8.Enabled = false;
-                btnReadSRAM.Enabled = false;
-
-                btnGetECUInfo.Enabled = false;
-                btnEditParameters.Enabled = false;
-            }
-
-            // No ECU selected!
-            else
-            {
-                btnFlashECU.Enabled = false;
-                btnReadECU.Enabled = false;
-                btnGetECUInfo.Enabled = false;
-                btnReadSRAM.Enabled = false;
-                btnRecoverECU.Enabled = false;
-                btnReadDTC.Enabled = false;
-
-                btnEditParameters.Enabled = false;
-                btnReadECUcalibration.Enabled = false;
-                btnRestoreT8.Enabled = false;
-                btnLogData.Enabled = false;
-                btnSettings.Enabled = false;
-            }
-        }
-
         private void btnReadECU_Click(object sender, EventArgs e)
         {
             using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Bin files|*.bin" })
@@ -698,7 +1015,7 @@ namespace TrionicCANFlasher
                             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                             {
                                 SetGenericOptions(trionic7);
-                                trionic7.UseFlasherOnDevice = settings.onlyPBus ? settings.onboardFlasher : false;
+                                trionic7.UseFlasherOnDevice = AppSettings.OnlyPBus ? AppSettings.CombiFlasher : false;
 
                                 AddLogItem("Opening connection");
                                 EnableUserInput(false);
@@ -735,7 +1052,7 @@ namespace TrionicCANFlasher
                                     Application.DoEvents();
                                     BackgroundWorker bgWorker;
                                     bgWorker = new BackgroundWorker();                                   
-                                    if (settings.useLegion)
+                                    if (AppSettings.UseLegion)
                                     {
                                         bgWorker.DoWork += new DoWorkEventHandler(trionic8.ReadFlashLegT8);
                                     }
@@ -873,6 +1190,7 @@ namespace TrionicCANFlasher
 
         private void btnGetEcuInfo_Click(object sender, EventArgs e)
         {
+            SetViewMode(false);
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
             {
                 SetGenericOptions(trionic5);
@@ -1141,8 +1459,8 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = settings.unlockBoot;
-                            trionic8.FormatSystemPartitions = settings.unlockSys;
+                            trionic8.FormatBootPartition = AppSettings.UnlockBoot;
+                            trionic8.FormatSystemPartitions = AppSettings.UnlockSys;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -1151,7 +1469,7 @@ namespace TrionicCANFlasher
                                 Application.DoEvents();
                                 BackgroundWorker bgWorker;
                                 bgWorker = new BackgroundWorker();
-                                if (settings.useLegion)
+                                if (AppSettings.UseLegion)
                                 {
                                     bgWorker.DoWork += new DoWorkEventHandler(trionic8.RecoverECU_Leg);
                                 }
@@ -1176,357 +1494,9 @@ namespace TrionicCANFlasher
             LogManager.Flush();
         }
 
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            SaveRegistrySetting("AdapterType", cbxAdapterType.SelectedItem != null ? cbxAdapterType.SelectedItem.ToString() : String.Empty);
-            SaveRegistrySetting("Adapter", cbAdapter.SelectedItem != null ?  cbAdapter.SelectedItem.ToString() :  String.Empty);
-            SaveRegistrySetting("ECU", cbxEcuType.SelectedItem != null ? cbxEcuType.SelectedItem.ToString() : String.Empty);
-            SaveRegistrySetting("EnableLogging", settings.enableLogging);
-            SaveRegistrySetting("OnboardFlasher", settings.onboardFlasher);
-            SaveRegistrySetting("OnlyPBus", settings.onlyPBus);
-            SaveRegistrySetting("ComSpeed", cbxComSpeed.SelectedItem != null ? cbxComSpeed.SelectedItem.ToString() : String.Empty);
-            SaveRegistrySetting("UseLegionBootloader", settings.useLegion);
-            SaveRegistrySetting("FormatSystemPartitions", settings.unlockSys);
-            SaveRegistrySetting("FormatBootPartition", settings.unlockBoot);
-            SaveRegistrySetting("AutoChecksum", settings.autoChecksum);
-            trionic8.Cleanup();
-            trionic7.Cleanup();
-            trionic5.Cleanup();
-            System.Windows.Forms.Application.Exit();
-        }
-
-        private void SetGenericOptions(ITrionic trionic)
-        {
-            trionic.OnlyPBus = settings.onlyPBus;
-            trionic.bypassCANfilters = m_bypassCANfilters;
-            m_bypassCANfilters = false;
-
-            switch (cbxEcuType.SelectedIndex)
-            {
-                case (int)ECU.TRIONIC5:
-                    trionic.ECU = ECU.TRIONIC5;
-                    break;
-                case (int)ECU.TRIONIC7:
-                    trionic.ECU = ECU.TRIONIC7;
-                    break;
-                case (int)ECU.TRIONIC8:
-                    trionic.ECU = ECU.TRIONIC8;
-                    break;
-                case (int)ECU.TRIONIC8_MCP:
-                    trionic.ECU = ECU.TRIONIC8_MCP;
-                    break;
-                case (int)ECU.Z22SEMain_LEG:
-                    trionic.ECU = ECU.Z22SEMain_LEG;
-                    break;
-                case (int)ECU.Z22SEMCP_LEG:
-                    trionic.ECU = ECU.Z22SEMCP_LEG;
-                    break;
-                case (int)ECU.MOTRONIC96:
-                    trionic.ECU = ECU.MOTRONIC96;
-                    break;
-                default:
-                    break;
-            }
-
-            switch (cbxAdapterType.SelectedIndex)
-            {
-                case (int)CANBusAdapter.JUST4TRIONIC:
-                    trionic.ForcedBaudrate = 115200;
-                    break;
-                case (int)CANBusAdapter.ELM327:
-                    //set selected com speed
-                    switch (cbxComSpeed.SelectedIndex)
-                    {
-                        case (int)ComSpeed.S2Mbit:
-                            trionic.ForcedBaudrate = 2000000;
-                            break;
-                        case (int)ComSpeed.S1Mbit:
-                            trionic.ForcedBaudrate = 1000000;
-                            break;
-                        case (int)ComSpeed.S230400:
-                            trionic.ForcedBaudrate = 230400;
-                            break;
-                        case (int)ComSpeed.S115200:
-                            trionic.ForcedBaudrate = 115200;
-                            break;
-                        default:
-                            trionic.ForcedBaudrate = 0; //default , no speed will be changed
-                            break;
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            trionic.setCANDevice((CANBusAdapter)cbxAdapterType.SelectedIndex);
-            if (cbAdapter.SelectedItem != null)
-            {
-                trionic.SetSelectedAdapter(cbAdapter.SelectedItem.ToString());
-            }
-        }
-
-        private void frmMain_Load(object sender, EventArgs e)
-        {
-            Text = "TrionicCANFlasher v" + System.Windows.Forms.Application.ProductVersion;
-            logger.Trace(Text);
-            logger.Trace(".dot net CLR " + System.Environment.Version);
-
-            // get additional info from registry if available
-            LoadRegistrySettings();
-            CheckRegistryFTDI();
-
-            trionic5.onReadProgress += trionicCan_onReadProgress;
-            trionic5.onWriteProgress += trionicCan_onWriteProgress;
-            trionic5.onCanInfo += trionicCan_onCanInfo;
-
-            trionic7.onReadProgress += trionicCan_onReadProgress;
-            trionic7.onWriteProgress += trionicCan_onWriteProgress;
-            trionic7.onCanInfo += trionicCan_onCanInfo;
-
-            trionic8.onReadProgress += trionicCan_onReadProgress;
-            trionic8.onWriteProgress += trionicCan_onWriteProgress;
-            trionic8.onCanInfo += trionicCan_onCanInfo;
-
-            EnableUserInput(true);
-        }
-
-        private void frmMain_Shown(object sender, EventArgs e)
-        {
-            try
-            {
-                m_msiUpdater = new msiupdater(new Version(System.Windows.Forms.Application.ProductVersion));
-                m_msiUpdater.Apppath = System.Windows.Forms.Application.UserAppDataPath;
-                m_msiUpdater.onDataPump += new msiupdater.DataPump(m_msiUpdater_onDataPump);
-                m_msiUpdater.onUpdateProgressChanged += new msiupdater.UpdateProgressChanged(m_msiUpdater_onUpdateProgressChanged);
-                m_msiUpdater.CheckForUpdates("http://develop.trionictuning.com/TrionicCANFlasher/", "canflasher", "TrionicCANFlash.msi");
-            }
-            catch (Exception E)
-            {
-                AddLogItem(E.Message);
-            }
-        }
-
-        void m_msiUpdater_onUpdateProgressChanged(msiupdater.MSIUpdateProgressEventArgs e)
-        {
-
-        }
-
-        void m_msiUpdater_onDataPump(msiupdater.MSIUpdaterEventArgs e)
-        {
-            if (e.UpdateAvailable)
-            {
-                frmUpdateAvailable frmUpdate = new frmUpdateAvailable();
-                frmUpdate.SetVersionNumber(e.Version.ToString());
-                if (m_msiUpdater != null)
-                {
-                    m_msiUpdater.Blockauto_updates = false;
-                }
-                if (frmUpdate.ShowDialog() == DialogResult.OK)
-                {
-                    if (m_msiUpdater != null)
-                    {
-                        m_msiUpdater.ExecuteUpdate(e.Version);
-                        System.Windows.Forms.Application.Exit();
-                    }
-                }
-                else
-                {
-                    // user choose "NO", don't bug him again!
-                    if (m_msiUpdater != null)
-                    {
-                        m_msiUpdater.Blockauto_updates = false;
-                    }
-                }
-            }
-        }
-
-        private void GetAdapterInformation()
-        {
-            if (cbxAdapterType.SelectedIndex != -1)
-            {
-                logger.Debug("ITrionic.GetAdapterNames selectedIndex=" + cbxAdapterType.SelectedIndex);
-                string[] adapters = ITrionic.GetAdapterNames((CANBusAdapter)cbxAdapterType.SelectedIndex);
-                cbAdapter.Items.Clear();
-                foreach (string adapter in adapters)
-                {
-                    cbAdapter.Items.Add(adapter);
-                    logger.Debug("Adaptername=" + adapter);
-                }
-                
-                try
-                {
-                    if (adapters.Length > 0)
-                        cbAdapter.SelectedIndex = 0;
-                }
-                catch (Exception e)
-                {
-                    AddLogItem(e.Message);
-                }
-            }
-        }
-
-        private void LoadRegistrySettings()
-        {
-            RegistryKey SoftwareKey = Registry.CurrentUser.CreateSubKey("Software");
-            RegistryKey ManufacturerKey = SoftwareKey.CreateSubKey("MattiasC");
-
-            settings.onboardFlasher = false; // Christian: is it still skipping those bytes up in 7xxxx?
-            settings.autoChecksum   = false;
-            settings.enableLogging  = true;
-            settings.onlyPBus       = true;
-
-            settings.useLegion  = true;
-            settings.unlockSys  = false;
-            settings.unlockBoot = false;
-
-            using (RegistryKey Settings = ManufacturerKey.CreateSubKey("TrionicCANFlasher"))
-            {
-                if (Settings != null)
-                {
-                    string[] vals = Settings.GetValueNames();
-                    foreach (string a in vals)
-                    {
-                        try
-                        {
-                            if (a == "Adapter")
-                            {
-                                cbAdapter.SelectedItem = Settings.GetValue(a).ToString();
-                            }
-                            else if (a == "AdapterType")
-                            {
-                                cbxAdapterType.SelectedItem = Settings.GetValue(a).ToString();
-                            }
-                            else if (a == "ECU")
-                            {
-                                cbxEcuType.SelectedItem = Settings.GetValue(a).ToString();
-                            }
-                            else if (a == "EnableLogging")
-                            {
-                                settings.enableLogging = Convert.ToBoolean(Settings.GetValue(a).ToString());
-                            }
-                            else if (a == "OnboardFlasher")
-                            {
-                                settings.onboardFlasher = Convert.ToBoolean(Settings.GetValue(a).ToString());
-                            }
-                            else if (a == "OnlyPBus")
-                            {
-                                settings.onlyPBus = Convert.ToBoolean(Settings.GetValue(a).ToString());
-                            }
-                            else if (a == "ComSpeed")
-                            {
-                                cbxComSpeed.SelectedItem = Settings.GetValue(a).ToString();
-                            }
-                            else if (a == "UseLegionBootloader")
-                            {
-                                settings.useLegion = Convert.ToBoolean(Settings.GetValue(a).ToString());
-                            }
-                            else if (a == "FormatSystemPartitions")
-                            {
-                                settings.unlockSys = Convert.ToBoolean(Settings.GetValue(a).ToString());
-                            }
-                            else if (a == "FormatBootPartition")
-                            {
-                                settings.unlockBoot = Convert.ToBoolean(Settings.GetValue(a).ToString());
-                            }
-                            else if (a == "AutoChecksum")
-                            {
-                                settings.autoChecksum = Convert.ToBoolean(Settings.GetValue(a).ToString());
-                            }
-                        }
-
-                        catch (Exception e)
-                        {
-                            AddLogItem(e.Message);
-                        }
-                    }
-                }
-            }
-        }
-
-        private void CheckRegistryFTDI()
-        {
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.ELM327)
-            {
-                using (RegistryKey FTDIBUSKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Enum\\FTDIBUS"))
-                {
-                    if (FTDIBUSKey != null)
-                    {
-                        string[] vals = FTDIBUSKey.GetSubKeyNames();
-                        foreach (string name in vals)
-                        {
-                            if (name.StartsWith("VID_0403+PID_6001"))
-                            {
-                                using (RegistryKey NameKey = FTDIBUSKey.OpenSubKey(name + "\\0000\\Device Parameters"))
-                                {
-                                    if (NameKey != null)
-                                    {
-                                        String PortName = NameKey.GetValue("PortName").ToString();
-                                        if (cbAdapter.SelectedItem != null && cbAdapter.SelectedItem.Equals(PortName))
-                                        {
-                                            String Latency = NameKey.GetValue("LatencyTimer").ToString();
-                                            AddLogItem(String.Format("ELM327 FTDI setting for {0} LatencyTimer {1}ms.", PortName, Latency));
-                                            if (!Latency.Equals("2") && !Latency.Equals("1")) 
-                                            {
-                                                MessageBox.Show("Warning LatencyTimer should be set to 2 ms", "ELM327 FTDI setting", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private static void SaveRegistrySetting(string key, string value)
-        {
-            RegistryKey SoftwareKey = Registry.CurrentUser.CreateSubKey("Software");
-            RegistryKey ManufacturerKey = SoftwareKey.CreateSubKey("MattiasC");
-            using (RegistryKey saveSettings = ManufacturerKey.CreateSubKey("TrionicCANFlasher"))
-            {
-                saveSettings.SetValue(key, value);
-            }
-        }
-
-        private static void SaveRegistrySetting(string key, bool value)
-        {
-            RegistryKey SoftwareKey = Registry.CurrentUser.CreateSubKey("Software");
-            RegistryKey ManufacturerKey = SoftwareKey.CreateSubKey("MattiasC");
-            using (RegistryKey saveSettings = ManufacturerKey.CreateSubKey("TrionicCANFlasher"))
-            {
-                saveSettings.SetValue(key, value);
-            }
-        }
-
-        void trionicCan_onWriteProgress(object sender, ITrionic.WriteProgressEventArgs e)
-        {
-            UpdateProgressStatus(e.Percentage);
-        }
-
-        void trionicCan_onCanInfo(object sender, ITrionic.CanInfoEventArgs e)
-        {
-            UpdateFlashStatus(e);
-        }
-
-        void trionicCan_onReadProgress(object sender, ITrionic.ReadProgressEventArgs e)
-        {
-            UpdateProgressStatus(e.Percentage);
-        }
-
-        private void cbxAdapterType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (cbxAdapterType.SelectedIndex == (int)CANBusAdapter.JUST4TRIONIC)
-            {
-                cbxComSpeed.SelectedIndex = (int)ComSpeed.S115200;
-            }
-
-            EnableUserInput(true);
-            GetAdapterInformation();
-        }
-
         private void btnReadDTC_Click(object sender, EventArgs e)
         {
+            SetViewMode(false);
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
                 SetGenericOptions(trionic7);
@@ -1588,68 +1558,6 @@ namespace TrionicCANFlasher
                 EnableUserInput(true);
             }
             LogManager.Flush();
-        }
-
-        private void updateStatusInBox(ITrionic.CanInfoEventArgs e)
-        {
-            AddLogItem(e.Info);
-            if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
-            {
-                if (e.Type == ActivityType.FinishedFlashing || e.Type == ActivityType.FinishedDownloadingFlash)
-                {
-                    TimeSpan ts = DateTime.Now - dtstart;
-                    AddLogItem("Total duration: " + ts.Minutes + " minutes " + ts.Seconds + " seconds");
-                    trionic7.Cleanup();
-                    AddLogItem("Connection closed");
-                    EnableUserInput(true);
-                }
-            }
-        }
-
-        private void UpdateFlashStatus(ITrionic.CanInfoEventArgs e)
-        {
-            try
-            {
-                Invoke(m_DelegateUpdateStatus, e);
-            }
-            catch (Exception ex)
-            {
-                AddLogItem(ex.Message);
-            }
-        }
-
-        private void updateProgress(int percentage)
-        {
-            if (progressBar1.Value != percentage)
-            {
-                progressBar1.Value = percentage;
-            }
-            if (settings.enableLogging)
-            {
-                logger.Trace("progress: " + percentage.ToString("F0") + "%");
-            }
-        }
-
-        private void UpdateProgressStatus(int percentage)
-        {
-            try
-            {
-                Invoke(m_DelegateProgressStatus, percentage);
-            }
-            catch (Exception e)
-            {
-                logger.Trace(e.Message);
-            }
-        }
-
-        private void cbxEcuType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            EnableUserInput(true);
-        }
-
-        private void documentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            Process.Start("TrionicCanFlasher.pdf");
         }
 
         private void btnEditParameters_Click(object sender, EventArgs e)
@@ -1907,12 +1815,6 @@ namespace TrionicCANFlasher
             LogManager.Flush();
         }
 
-        private void linkLabelLogging_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/MattiasC/TrionicCANFlasher";
-            Process.Start(path);
-        }
-
         private void btnRestoreT8_Click(object sender, EventArgs e)
         {
             DialogResult result = DialogResult.Cancel;
@@ -1927,7 +1829,7 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
-                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, settings.autoChecksum, m_ShouldUpdateChecksum);
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, m_ShouldUpdateChecksum);
                             if (checksum != ChecksumResult.Ok)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);
@@ -1968,8 +1870,10 @@ namespace TrionicCANFlasher
 
         private void btnLogData_Click(object sender, EventArgs e)
         {
-            if (btnLogData.Text != "Stop")
+            if (btnLogData.Text != "Stop" && btnLogData.Text != "Busy..")
             {
+                btnLogData.Text = "Busy..";
+
                 // Force logging on
                 LogManager.EnableLogging();
                 dtstart = DateTime.Now;
@@ -1979,12 +1883,12 @@ namespace TrionicCANFlasher
                     SetGenericOptions(trionic5);
 
                     EnableUserInput(false);
-                    btnLogData.Enabled = true;
                     AddLogItem("Opening connection");
                     if (trionic5.openDevice())
                     {
                         StartBGWorkerLog(trionic5);
                         btnLogData.Text = "Stop";
+                        btnLogData.Enabled = true;
                     }
                     else
                     {
@@ -2001,12 +1905,12 @@ namespace TrionicCANFlasher
                     trionic7.UseFlasherOnDevice = false;
 
                     EnableUserInput(false);
-                    btnLogData.Enabled = true;
                     AddLogItem("Opening connection");
                     if (trionic7.openDevice())
                     {
                         StartBGWorkerLog(trionic7);
                         btnLogData.Text = "Stop";
+                        btnLogData.Enabled = true;
                     }
                     else
                     {
@@ -2026,13 +1930,13 @@ namespace TrionicCANFlasher
                     SetGenericOptions(trionic8);
 
                     EnableUserInput(false);
-                    btnLogData.Enabled = true;
                     AddLogItem("Opening connection");
                     trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                     if (trionic8.openDevice(false))
                     {
                         StartBGWorkerLog(trionic8);
                         btnLogData.Text = "Stop";
+                        btnLogData.Enabled = true;
                     }
                     else
                     {
@@ -2043,7 +1947,8 @@ namespace TrionicCANFlasher
                     }
                 }
             }
-            else
+
+            else if (btnLogData.Text != "Busy..")
             {
                 bgworkerLogCanData.CancelAsync();
                 // Reset logging to setting
@@ -2053,40 +1958,25 @@ namespace TrionicCANFlasher
             }
         }
 
-        private void StartBGWorkerLog(ITrionic trionic)
+        private void cbxEcuType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            AddLogItem("Logging in progress");
-            bgworkerLogCanData = new BackgroundWorker
-            {
-                WorkerReportsProgress = true,
-                WorkerSupportsCancellation = true
-            };
-            bgworkerLogCanData.DoWork += trionic.LogCANData;
-            bgworkerLogCanData.RunWorkerCompleted += bgWorker_RunWorkerCompleted;
-            bgworkerLogCanData.RunWorkerAsync();
-        }
-
-        private void cbEnableLogging_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateLogManager();
-        }
-
-        private void UpdateLogManager()
-        {
-            if (settings.enableLogging)
-            {
-                LogManager.EnableLogging();
-            }
-            else
-            {
-                LogManager.DisableLogging();
-            }
+            AppSettings.SelectedECU.Index = cbxEcuType.SelectedIndex;
+            AppSettings.SelectedECU.Name = cbxEcuType.SelectedItem.ToString();
+            EnableUserInput(true);
         }
 
         private void btnSettings_Click(object sender, EventArgs e)
         {
-            settings.setECU((int)cbxEcuType.SelectedIndex);
-            settings.ShowDialog();
+            bool LastLoggingState = AppSettings.EnableLogging;
+
+            AppSettings.ShowDialog();
+
+            if (LastLoggingState != AppSettings.EnableLogging)
+            {
+                UpdateLogManager();
+            }
+
+            EnableUserInput(true);
         }
 
         private bool updateChecksum(string layer, string filechecksum, string realchecksum)
@@ -2098,6 +1988,210 @@ namespace TrionicCANFlasher
             using (frmChecksum frm = new frmChecksum() { Layer = layer, FileChecksum = filechecksum, RealChecksum = realchecksum })
             {
                 return frm.ShowDialog() == DialogResult.OK ? true : false;
+            }
+        }
+
+        private void linkLabelLogging_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/MattiasC/TrionicCANFlasher";
+            Process.Start(path);
+        }
+
+        private void documentation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("TrionicCanFlasher.pdf");
+        }
+
+        private void RestoreView()
+        {
+            int maxX = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+            int maxY = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
+
+            // Check if any of the parameters are out of bounds.
+            // If it is, use default from .Designer
+            if (AppSettings.MainWidth < 374  || AppSettings.MainHeight < 360 ||
+                AppSettings.MainWidth > maxX || AppSettings.MainHeight > maxY)
+            {
+                AppSettings.MainWidth  = this.Width;
+                AppSettings.MainHeight = this.Height;
+            }
+
+            int Xloc = this.Location.X + (this.Width  / 2);
+            int Yloc = this.Location.Y + (this.Height / 2);
+            int X = AppSettings.MainWidth;
+            int Y = AppSettings.MainHeight;
+
+            if (AppSettings.Fullscreen)
+            {
+                this.Width  = X;
+                this.Height = Y;
+                this.Location = new Point(Xloc - (this.Width / 2), Yloc - (this.Height / 2));
+                WindowState = FormWindowState.Maximized;
+            }
+            else
+            {
+                if (AppSettings.Collapsed)
+                {
+                    HandleDynItems(true);
+                    this.MinimumSize = new Size(374, 360);
+                    this.MaximumSize = new Size(374, 360);
+                }
+                else
+                {
+                    this.Width  = X;
+                    this.Height = Y;
+                }
+
+                this.Location = new Point(Xloc - (this.Width / 2), Yloc - (this.Height / 2));
+            }
+        }
+
+        private void HandleDynItems(bool Compact)
+        {
+            if (Compact)
+            {
+                // Move links to make room for minilog
+                int xDoc = documentation.Location.X;
+                int yDoc = documentation.Location.Y - 20;
+                documentation.Location = new Point(xDoc, yDoc);
+                linkLabelLogging.Location = new Point(xDoc, yDoc + 17);
+
+                int xLog = Minilog.Location.X;
+                int yLog = Minilog.Location.Y;
+                Minilog.Location = new Point(xLog - 112, yLog);
+
+                this.MaximizeBox = false;
+                btnCollapse.Visible = false;
+                btnCollapse.Enabled = false;
+                btnExpand.Enabled = true;
+                btnExpand.Visible = true;
+            }
+            else
+            {
+                // Restore location of links
+                int xDoc = documentation.Location.X;
+                int yDoc = documentation.Location.Y + 20;
+                documentation.Location = new Point(xDoc, yDoc);
+                linkLabelLogging.Location = new Point(xDoc, yDoc + 17);
+
+                Minilog.Visible = false;
+                Minilog.Text = "Mini log";
+                int xLog = Minilog.Location.X;
+                int yLog = Minilog.Location.Y;
+                Minilog.Location = new Point(xLog + 112, yLog);
+
+                btnCollapse.Visible = true;
+                btnCollapse.Enabled = true;
+                btnExpand.Enabled = false;
+                btnExpand.Visible = false;
+                this.MaximizeBox = true;
+            }
+        }
+
+        private void SetViewMode(bool Compact)
+        {
+            if (Compact)
+            {
+                HandleDynItems(true);
+                AppSettings.Collapsed = true;
+
+                AppSettings.MainWidth  = this.Width;
+                AppSettings.MainHeight = this.Height;
+
+                int Xloc = this.Location.X + AppSettings.MainWidth;
+                int Yloc = this.Location.Y;
+
+                this.MinimumSize = new Size(374, 360);
+                this.MaximumSize = new Size(374, 360);
+                this.Location = new Point(Xloc - 374, Yloc);
+            }
+
+            else if(AppSettings.Collapsed)
+            {
+                HandleDynItems(false);
+
+                int Xloc = this.Location.X + this.Width;
+                int Yloc = this.Location.Y;
+
+                this.MaximumSize = new Size(0, 0);
+                this.Width  = AppSettings.MainWidth;
+                this.Height = AppSettings.MainHeight;
+
+                this.Location = new Point(Xloc - AppSettings.MainWidth, Yloc);
+                this.MinimumSize = new Size(600, 360);
+
+                AppSettings.Collapsed = false;
+            }
+        }
+
+        private void btnExpand_Click(object sender, EventArgs e)
+        {
+            SetViewMode(false);
+        }
+
+        private void btnCollapse_Click(object sender, EventArgs e)
+        {
+            SetViewMode(true);
+
+            // Show last logged item in minilog. If available
+            if (listBoxLog.Items.Count > 0)
+            {
+
+                if (listBoxLog.Text.Length > 0)
+                {
+                    string Lastmsg = listBoxLog.Text;
+
+                    // Strip time stamp from item
+                    if (listBoxLog.Text.Length > 15)
+                    {
+                        if (listBoxLog.Text[2] == 0x3A &&
+                            listBoxLog.Text[5] == 0x3A &&
+                            listBoxLog.Text[8] == 0x2E)
+                        {
+                            Lastmsg = Lastmsg.Remove(0, 15);
+                        }
+                    }
+
+                    // Truncate text that is longer than the progress bar
+                    if (Lastmsg.Length > 57)
+                    {
+                        Lastmsg = Lastmsg.Remove(57, Lastmsg.Length - 57);
+                    }
+
+                    Minilog.Text = Lastmsg;
+                    Minilog.Visible = true;
+                }
+            }
+        }
+
+        // Hide btnCollapse when maximised (For simplicity's sake. Less parameters to keep track of)
+        private void frmMainResized(object sender, EventArgs e)
+        {
+            AppSettings.Fullscreen = WindowState == FormWindowState.Maximized ? true : false;
+
+            if (!AppSettings.Collapsed && WindowState != FormWindowState.Maximized)
+            {
+                AppSettings.MainWidth = this.Width;
+                AppSettings.MainHeight = this.Height;
+            }
+
+
+            if (WindowState != LastWindowState)
+            {
+
+                if (WindowState == FormWindowState.Maximized)
+                {
+                    btnCollapse.Visible = false;
+                    btnCollapse.Enabled = false;
+                }
+
+                else if (LastWindowState == FormWindowState.Maximized)
+                {
+                    btnCollapse.Visible = true;
+                    btnCollapse.Enabled = true;
+                }
+
+                LastWindowState = WindowState;
             }
         }
     }

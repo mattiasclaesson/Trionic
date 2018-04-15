@@ -37,21 +37,18 @@
             this.btnGetECUInfo = new System.Windows.Forms.Button();
             this.btnReadSRAM = new System.Windows.Forms.Button();
             this.btnRecoverECU = new System.Windows.Forms.Button();
-            this.cbxAdapterType = new System.Windows.Forms.ComboBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
             this.btnReadDTC = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.cbxEcuType = new System.Windows.Forms.ComboBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.cbxComSpeed = new System.Windows.Forms.ComboBox();
             this.documentation = new System.Windows.Forms.LinkLabel();
             this.btnEditParameters = new System.Windows.Forms.Button();
             this.btnReadECUcalibration = new System.Windows.Forms.Button();
-            this.cbAdapter = new System.Windows.Forms.ComboBox();
             this.linkLabelLogging = new System.Windows.Forms.LinkLabel();
             this.btnLogData = new System.Windows.Forms.Button();
             this.btnSettings = new System.Windows.Forms.Button();
+            this.btnCollapse = new System.Windows.Forms.Button();
+            this.btnExpand = new System.Windows.Forms.Button();
+            this.Minilog = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -67,11 +64,12 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(12, 337);
+            this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar1.Location = new System.Drawing.Point(676, 351);
+            this.progressBar1.MaximumSize = new System.Drawing.Size(336, 23);
+            this.progressBar1.MinimumSize = new System.Drawing.Size(336, 23);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(648, 23);
+            this.progressBar1.Size = new System.Drawing.Size(336, 23);
             this.progressBar1.TabIndex = 23;
             // 
             // btnRestoreT8
@@ -106,7 +104,7 @@
             this.listBoxLog.ItemHeight = 14;
             this.listBoxLog.Location = new System.Drawing.Point(12, 6);
             this.listBoxLog.Name = "listBoxLog";
-            this.listBoxLog.Size = new System.Drawing.Size(648, 326);
+            this.listBoxLog.Size = new System.Drawing.Size(657, 368);
             this.listBoxLog.TabIndex = 20;
             // 
             // btnGetECUInfo
@@ -142,44 +140,6 @@
             this.btnRecoverECU.UseVisualStyleBackColor = true;
             this.btnRecoverECU.Click += new System.EventHandler(this.btnRecoverECU_Click);
             // 
-            // cbxAdapterType
-            // 
-            this.cbxAdapterType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbxAdapterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbxAdapterType.FormattingEnabled = true;
-            this.cbxAdapterType.Items.AddRange(new object[] {
-            "Lawicel CANUSB",
-            "CombiAdapter",
-            "ELM327 v1.3 or higher",
-            "Just4Trionic",
-            "Kvaser",
-            "J2534"});
-            this.cbxAdapterType.Location = new System.Drawing.Point(861, 285);
-            this.cbxAdapterType.Name = "cbxAdapterType";
-            this.cbxAdapterType.Size = new System.Drawing.Size(150, 21);
-            this.cbxAdapterType.TabIndex = 33;
-            this.cbxAdapterType.SelectedIndexChanged += new System.EventHandler(this.cbxAdapterType_SelectedIndexChanged);
-            // 
-            // label4
-            // 
-            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(788, 288);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(67, 13);
-            this.label4.TabIndex = 34;
-            this.label4.Text = "Adapter type";
-            // 
-            // label5
-            // 
-            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(788, 315);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(44, 13);
-            this.label5.TabIndex = 36;
-            this.label5.Text = "Adapter";
-            // 
             // btnReadDTC
             // 
             this.btnReadDTC.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -195,7 +155,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(788, 261);
+            this.label2.Location = new System.Drawing.Point(785, 246);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(56, 13);
             this.label2.TabIndex = 55;
@@ -214,42 +174,17 @@
             "Trionic 8: MCP (Experimental)",
             "Z22SE (Experimental)",
             "Z22SE: MCP (Experimental)"});
-            this.cbxEcuType.Location = new System.Drawing.Point(861, 258);
+            this.cbxEcuType.Location = new System.Drawing.Point(862, 243);
             this.cbxEcuType.Name = "cbxEcuType";
             this.cbxEcuType.Size = new System.Drawing.Size(150, 21);
             this.cbxEcuType.TabIndex = 56;
             this.cbxEcuType.SelectedIndexChanged += new System.EventHandler(this.cbxEcuType_SelectedIndexChanged);
             // 
-            // label6
-            // 
-            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(788, 342);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(60, 13);
-            this.label6.TabIndex = 60;
-            this.label6.Text = "Com speed";
-            // 
-            // cbxComSpeed
-            // 
-            this.cbxComSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbxComSpeed.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbxComSpeed.FormattingEnabled = true;
-            this.cbxComSpeed.Items.AddRange(new object[] {
-            "115200",
-            "230400",
-            "1Mbit",
-            "2Mbit"});
-            this.cbxComSpeed.Location = new System.Drawing.Point(861, 339);
-            this.cbxComSpeed.Name = "cbxComSpeed";
-            this.cbxComSpeed.Size = new System.Drawing.Size(150, 21);
-            this.cbxComSpeed.TabIndex = 59;
-            // 
             // documentation
             // 
-            this.documentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.documentation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.documentation.AutoSize = true;
-            this.documentation.Location = new System.Drawing.Point(663, 330);
+            this.documentation.Location = new System.Drawing.Point(674, 317);
             this.documentation.Name = "documentation";
             this.documentation.Size = new System.Drawing.Size(103, 13);
             this.documentation.TabIndex = 61;
@@ -279,21 +214,11 @@
             this.btnReadECUcalibration.UseVisualStyleBackColor = true;
             this.btnReadECUcalibration.Click += new System.EventHandler(this.btnReadECUcalibration_Click);
             // 
-            // cbAdapter
-            // 
-            this.cbAdapter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbAdapter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbAdapter.FormattingEnabled = true;
-            this.cbAdapter.Location = new System.Drawing.Point(861, 312);
-            this.cbAdapter.Name = "cbAdapter";
-            this.cbAdapter.Size = new System.Drawing.Size(150, 21);
-            this.cbAdapter.TabIndex = 65;
-            // 
             // linkLabelLogging
             // 
-            this.linkLabelLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.linkLabelLogging.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.linkLabelLogging.AutoSize = true;
-            this.linkLabelLogging.Location = new System.Drawing.Point(664, 347);
+            this.linkLabelLogging.Location = new System.Drawing.Point(675, 334);
             this.linkLabelLogging.Name = "linkLabelLogging";
             this.linkLabelLogging.Size = new System.Drawing.Size(113, 13);
             this.linkLabelLogging.TabIndex = 67;
@@ -304,9 +229,9 @@
             // btnLogData
             // 
             this.btnLogData.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnLogData.Location = new System.Drawing.Point(675, 180);
+            this.btnLogData.Location = new System.Drawing.Point(788, 180);
             this.btnLogData.Name = "btnLogData";
-            this.btnLogData.Size = new System.Drawing.Size(107, 50);
+            this.btnLogData.Size = new System.Drawing.Size(112, 50);
             this.btnLogData.TabIndex = 68;
             this.btnLogData.Text = "Log data";
             this.btnLogData.UseVisualStyleBackColor = true;
@@ -323,26 +248,61 @@
             this.btnSettings.UseVisualStyleBackColor = true;
             this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
             // 
+            // btnCollapse
+            // 
+            this.btnCollapse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCollapse.Location = new System.Drawing.Point(675, 180);
+            this.btnCollapse.Name = "btnCollapse";
+            this.btnCollapse.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.btnCollapse.Size = new System.Drawing.Size(20, 50);
+            this.btnCollapse.TabIndex = 74;
+            this.btnCollapse.Text = ">";
+            this.btnCollapse.UseVisualStyleBackColor = true;
+            this.btnCollapse.Click += new System.EventHandler(this.btnCollapse_Click);
+            // 
+            // btnExpand
+            // 
+            this.btnExpand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExpand.Enabled = false;
+            this.btnExpand.Location = new System.Drawing.Point(675, 180);
+            this.btnExpand.Name = "btnExpand";
+            this.btnExpand.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.btnExpand.Size = new System.Drawing.Size(20, 50);
+            this.btnExpand.TabIndex = 75;
+            this.btnExpand.Text = "<";
+            this.btnExpand.UseVisualStyleBackColor = true;
+            this.btnExpand.Visible = false;
+            this.btnExpand.Click += new System.EventHandler(this.btnExpand_Click);
+            // 
+            // Minilog
+            // 
+            this.Minilog.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.Minilog.AutoSize = true;
+            this.Minilog.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.25F);
+            this.Minilog.Location = new System.Drawing.Point(785, 331);
+            this.Minilog.Name = "Minilog";
+            this.Minilog.Size = new System.Drawing.Size(56, 17);
+            this.Minilog.TabIndex = 76;
+            this.Minilog.Text = "Mini log";
+            this.Minilog.Visible = false;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1023, 372);
+            this.ClientSize = new System.Drawing.Size(1023, 382);
+            this.Controls.Add(this.Minilog);
+            this.Controls.Add(this.btnExpand);
+            this.Controls.Add(this.btnCollapse);
             this.Controls.Add(this.btnSettings);
             this.Controls.Add(this.btnLogData);
             this.Controls.Add(this.linkLabelLogging);
-            this.Controls.Add(this.cbAdapter);
             this.Controls.Add(this.btnReadECUcalibration);
             this.Controls.Add(this.btnEditParameters);
             this.Controls.Add(this.documentation);
-            this.Controls.Add(this.label6);
-            this.Controls.Add(this.cbxComSpeed);
             this.Controls.Add(this.cbxEcuType);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnReadDTC);
-            this.Controls.Add(this.label5);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.cbxAdapterType);
             this.Controls.Add(this.btnRecoverECU);
             this.Controls.Add(this.btnReadSRAM);
             this.Controls.Add(this.btnGetECUInfo);
@@ -352,12 +312,16 @@
             this.Controls.Add(this.listBoxLog);
             this.Controls.Add(this.progressBar1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(600, 360);
             this.Name = "frmMain";
+            this.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Trionic CAN flasher";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.Shown += new System.EventHandler(this.frmMain_Shown);
+            this.SizeChanged += new System.EventHandler(this.frmMainResized);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -373,21 +337,18 @@
         private System.Windows.Forms.Button btnGetECUInfo;
         private System.Windows.Forms.Button btnReadSRAM;
         private System.Windows.Forms.Button btnRecoverECU;
-        private System.Windows.Forms.ComboBox cbxAdapterType;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btnReadDTC;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cbxEcuType;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.ComboBox cbxComSpeed;
         private System.Windows.Forms.LinkLabel documentation;
         private System.Windows.Forms.Button btnEditParameters;
         private System.Windows.Forms.Button btnReadECUcalibration;
-        private System.Windows.Forms.ComboBox cbAdapter;
         private System.Windows.Forms.LinkLabel linkLabelLogging;
         private System.Windows.Forms.Button btnLogData;
         private System.Windows.Forms.Button btnSettings;
+        private System.Windows.Forms.Button btnCollapse;
+        private System.Windows.Forms.Button btnExpand;
+        private System.Windows.Forms.Label Minilog;
     }
 }
 
