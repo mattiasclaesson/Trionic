@@ -225,9 +225,9 @@
             this.cbPowerUser.AutoSize = true;
             this.cbPowerUser.Location = new System.Drawing.Point(12, 166);
             this.cbPowerUser.Name = "cbPowerUser";
-            this.cbPowerUser.Size = new System.Drawing.Size(110, 17);
+            this.cbPowerUser.Size = new System.Drawing.Size(136, 17);
             this.cbPowerUser.TabIndex = 84;
-            this.cbPowerUser.Text = "I am a power user";
+            this.cbPowerUser.Text = "I know what I am doing";
             this.cbPowerUser.UseVisualStyleBackColor = true;
             this.cbPowerUser.CheckedChanged += new System.EventHandler(this.cbPowerUser_CheckedChanged);
             // 

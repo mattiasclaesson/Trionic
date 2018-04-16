@@ -663,11 +663,11 @@ namespace TrionicCANFlasher
 
                 if (cbEnableSUFeatures && cbPowerUser.Checked)
                 {
-                    cbPowerUser.Text = "I am a super user";
+                    cbPowerUser.Text = "I definitely know what I am doing";
                 }
                 else
                 {
-                    cbPowerUser.Text = "I am a power user";
+                    cbPowerUser.Text = "I know what I am doing";
                 }
 
                 cbxAdapterItem.Enabled = false;

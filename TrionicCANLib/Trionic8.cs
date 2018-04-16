@@ -6806,7 +6806,8 @@ namespace TrionicCANLib.API
                 if (formatBootPartition == false)
                 {
                     CastInfoEvent("An internal self-test has catched an unknown bug", ActivityType.UploadingFlash);
-                    CastInfoEvent("In settings >", ActivityType.UploadingFlash);
+                    CastInfoEvent("Go to settings", ActivityType.UploadingFlash);
+                    CastInfoEvent("Select 'I know what I am doing'", ActivityType.UploadingFlash);
                     CastInfoEvent("Select 'Unlock boot partition' and 'Unlock system partitions' and try again.", ActivityType.UploadingFlash);
                     CastInfoEvent("When asked if you want to write boot you MUST click YES!", ActivityType.UploadingFlash);
 
@@ -6828,7 +6829,8 @@ namespace TrionicCANLib.API
                 if (formatBootPartition == false)
                 {
                     CastInfoEvent("An internal self-test has catched the dreaded MCP bug:", ActivityType.UploadingFlash);
-                    CastInfoEvent("In settings >", ActivityType.UploadingFlash);
+                    CastInfoEvent("Go to settings", ActivityType.UploadingFlash);
+                    CastInfoEvent("Select 'I know what I am doing'", ActivityType.UploadingFlash);
                     CastInfoEvent("Select 'Unlock boot partition' and try again.", ActivityType.UploadingFlash);
                     CastInfoEvent("When asked if you want to write boot you MUST click YES!", ActivityType.UploadingFlash);
 
