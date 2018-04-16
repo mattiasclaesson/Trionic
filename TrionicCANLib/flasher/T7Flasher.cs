@@ -190,7 +190,11 @@ namespace TrionicCANLib.Flasher
                 //Here it would make sense to stop if we didn't ge security access but
                 //let's try anyway. It could be that we don't get a possitive reply from the 
                 //ECU if we alredy have security access (from a previous, interrupted, session).
-                if (m_command == FlashCommand.ReadCommand)
+
+                // Christian: This causes hard crashes with ECUs that have modified key algorithms
+                // Modified code to abort. TODO: Read actual cause and determine if it actually is a failure
+
+                else if (m_command == FlashCommand.ReadCommand)
                 {
                     ReadCommand();
                 }
