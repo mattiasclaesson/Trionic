@@ -720,7 +720,7 @@ namespace TrionicCANFlasher
                     // Other ECUs do not have power user features
                     else
                     {
-                        cbPowerUser.Enabled = false;
+                        cbPowerUser.Enabled = cbEnableSUFeatures;
                     }
 
                     if (!cbPowerUser.Enabled)
@@ -844,6 +844,7 @@ namespace TrionicCANFlasher
             {
                 if (cbEnableSUFeatures && !cbPowerUser.Checked)
                 {
+                    label2.Text = "Advanced features";
                     cbPowerUser.Checked = true;
                     cbEnableSUFeatures = false;
                     m_hiddenclicks = 5;
@@ -871,7 +872,7 @@ namespace TrionicCANFlasher
         /// <param name="e"></param>
         private void label2_Click(object sender, EventArgs e)
         {
-            if (!m_enablesufeatures && cbPowerUser.Checked)
+            if (!cbEnableSUFeatures && cbPowerUser.Checked)
             {
                 if (m_hiddenclicks > 0)
                 {
