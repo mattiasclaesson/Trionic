@@ -2015,45 +2015,53 @@ namespace TrionicCANFlasher
 
         private void RestoreView()
         {
-            int maxX = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
-            int maxY = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
-
-            // Check if any of the parameters are out of bounds.
-            // If it is, use default from .Designer
-            if (AppSettings.MainWidth < 374  || AppSettings.MainHeight < 360 ||
-                AppSettings.MainWidth > maxX || AppSettings.MainHeight > maxY)
+            if (AppSettings.RememberDimensions)
             {
-                AppSettings.MainWidth  = this.Width;
-                AppSettings.MainHeight = this.Height;
-            }
+                int maxX = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+                int maxY = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
 
-            int Xloc = this.Location.X + (this.Width  / 2);
-            int Yloc = this.Location.Y + (this.Height / 2);
-            int X = AppSettings.MainWidth;
-            int Y = AppSettings.MainHeight;
-
-            if (AppSettings.Fullscreen)
-            {
-                this.Width  = X;
-                this.Height = Y;
-                this.Location = new Point(Xloc - (this.Width / 2), Yloc - (this.Height / 2));
-                WindowState = FormWindowState.Maximized;
-            }
-            else
-            {
-                if (AppSettings.Collapsed)
+                // Check if any of the parameters are out of bounds.
+                // If it is, use default from .Designer
+                if (AppSettings.MainWidth < 374 || AppSettings.MainHeight < 360 ||
+                    AppSettings.MainWidth > maxX || AppSettings.MainHeight > maxY)
                 {
-                    HandleDynItems(true);
-                    this.MinimumSize = new Size(374, 360);
-                    this.MaximumSize = new Size(374, 360);
+                    AppSettings.MainWidth = this.Width;
+                    AppSettings.MainHeight = this.Height;
+                }
+
+                int Xloc = this.Location.X + (this.Width / 2);
+                int Yloc = this.Location.Y + (this.Height / 2);
+                int X = AppSettings.MainWidth;
+                int Y = AppSettings.MainHeight;
+
+                if (AppSettings.Fullscreen)
+                {
+                    this.Width = X;
+                    this.Height = Y;
+                    this.Location = new Point(Xloc - (this.Width / 2), Yloc - (this.Height / 2));
+                    WindowState = FormWindowState.Maximized;
                 }
                 else
                 {
-                    this.Width  = X;
-                    this.Height = Y;
-                }
+                    if (AppSettings.Collapsed)
+                    {
+                        HandleDynItems(true);
+                        this.MinimumSize = new Size(374, 360);
+                        this.MaximumSize = new Size(374, 360);
+                    }
+                    else
+                    {
+                        this.Width = X;
+                        this.Height = Y;
+                    }
 
-                this.Location = new Point(Xloc - (this.Width / 2), Yloc - (this.Height / 2));
+                    this.Location = new Point(Xloc - (this.Width / 2), Yloc - (this.Height / 2));
+                }
+            }
+            else
+            {
+                AppSettings.MainWidth  = this.Width;
+                AppSettings.MainHeight = this.Height;
             }
         }
 

@@ -30,6 +30,7 @@ namespace TrionicCANFlasher
         private bool m_unlocksys = false; // "Unlock system partitions"
         private bool m_unlckboot = false; // "Unlock boot partition"
         private bool m_autocsum  = false; // "Auto update checksum"
+        private bool m_remember  = false; // "Remember dimensions"
 
         // Hidden features
         private bool cbEnableSUFeatures = false; // This mode does not have a checkbox
@@ -41,21 +42,6 @@ namespace TrionicCANFlasher
 
         // Used to lock out SettingsLogic while populating items
         private bool m_lockout = true;
-
-        public bool VerifyChecksum
-        {
-            get { return m_verifychecksum;  }
-        }
-
-        public bool Faster
-        {
-            get { return m_faster;  }
-        }
-
-        public bool UseLastMarker
-        {
-            get { return m_uselastpointer; }
-        }
 
         public class m_interframe
         {
@@ -83,8 +69,8 @@ namespace TrionicCANFlasher
 
             public uint Value
             {
-                get {
-
+                get
+                {
                     if (m_index >= 0 && m_index < 18)
                     {
                         return m_dels[m_index];
@@ -195,6 +181,26 @@ namespace TrionicCANFlasher
             set { _m_interframe = value; }
         }
 
+
+        public bool RememberDimensions
+        {
+            get { return m_remember; }
+        }
+
+        public bool VerifyChecksum
+        {
+            get { return m_verifychecksum; }
+        }
+
+        public bool Faster
+        {
+            get { return m_faster; }
+        }
+
+        public bool UseLastMarker
+        {
+            get { return m_uselastpointer; }
+        }
 
         public int MainWidth
         {
@@ -315,8 +321,10 @@ namespace TrionicCANFlasher
             cbEnableSUFeatures = m_enablesufeatures;
 
             cbUseLastPointer.Checked = m_uselastpointer;
-            cbCheckChecksum.Checked = m_verifychecksum;
-            cbFasterDamnit.Checked = m_faster;
+            cbVerifyChecksum.Checked = m_verifychecksum;
+            cbFaster.Checked = m_faster;
+
+            cbRemember.Checked = m_remember;
 
             m_lockout = false;
         }
@@ -369,8 +377,10 @@ namespace TrionicCANFlasher
             m_enablesufeatures = cbEnableSUFeatures;
 
             m_uselastpointer = cbUseLastPointer.Checked;
-            m_verifychecksum = cbCheckChecksum.Checked;
-            m_faster = cbFasterDamnit.Checked;
+            m_verifychecksum = cbVerifyChecksum.Checked;
+            m_faster = cbFaster.Checked;
+
+            m_remember = cbRemember.Checked;
         }
 
         public void LoadRegistrySettings()
@@ -463,6 +473,10 @@ namespace TrionicCANFlasher
                                 m_uselastpointer = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
 
+                            else if (a == "ViewRemember")
+                            {
+                                m_remember = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                            }
                             else if (a == "ViewWidth")
                             {
                                 m_width = Convert.ToInt32(Settings.GetValue(a).ToString());
@@ -533,7 +547,7 @@ namespace TrionicCANFlasher
             {
                 m_verifychecksum = true;
                 m_uselastpointer = true;
-                m_faster = false;
+                m_faster  = false;
                 InterframeDelay.Index = 9;
             }
 
@@ -543,8 +557,7 @@ namespace TrionicCANFlasher
                 m_unlckboot = false;
             }
 
-            // This should never happen but here it is. Just in case
-            if (m_fullscreen && m_collapsed)
+            if ((m_fullscreen && m_collapsed) || !m_remember)
             {
                 m_collapsed = false;
                 m_fullscreen = false;
@@ -591,10 +604,15 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("SuperUser", m_enablesufeatures);
             SaveRegistrySetting("UseLastAddressPointer", m_uselastpointer);
 
-            SaveRegistrySetting("ViewWidth", m_width.ToString());
-            SaveRegistrySetting("ViewHeight", m_height.ToString());
-            SaveRegistrySetting("ViewFullscreen", m_fullscreen);
-            SaveRegistrySetting("ViewCollapsed", m_collapsed);
+            SaveRegistrySetting("ViewRemember", m_remember);
+
+            if (m_remember)
+            {
+                SaveRegistrySetting("ViewWidth", m_width.ToString());
+                SaveRegistrySetting("ViewHeight", m_height.ToString());
+                SaveRegistrySetting("ViewFullscreen", m_fullscreen);
+                SaveRegistrySetting("ViewCollapsed", m_collapsed);
+            }
         }
 
         private void GetAdapterInformation()
@@ -664,19 +682,14 @@ namespace TrionicCANFlasher
                 if (typeindex == (int)CANBusAdapter.ELM327)
                 {
                     cbxAdapterItem.Enabled = true;
-                    cbOnboardFlasher.Visible = false;
 
-                    ComBaudLabel.Visible = true;
+                    ComBaudLabel.Enabled = true;
                     cbxComSpeed.Enabled = true;
-                    cbxComSpeed.Visible = true;
                 }
                 else
                 {
-                    ComBaudLabel.Visible = false;
+                    ComBaudLabel.Enabled = false;
                     cbxComSpeed.Enabled = false;
-                    cbxComSpeed.Visible = false;
-
-                    cbOnboardFlasher.Visible = true;
                 }
 
                 if (typeindex >= 0)
@@ -756,21 +769,21 @@ namespace TrionicCANFlasher
                         InterframeLabel.Enabled = precheck;
                         cbxInterFrame.Enabled = precheck;
                         cbUseLastPointer.Enabled = (ecuindex == (int)ECU.TRIONIC8 && cbUseLegion.Checked && cbUseLegion.Enabled);
-                        cbFasterDamnit.Enabled = precheck;
-                        cbCheckChecksum.Enabled = (ecuindex == (int)ECU.TRIONIC8 || ecuindex == (int)ECU.TRIONIC7 || ecuindex == (int)ECU.TRIONIC5);
+                        cbFaster.Enabled = precheck;
+                        cbVerifyChecksum.Enabled = (ecuindex == (int)ECU.TRIONIC8 || ecuindex == (int)ECU.TRIONIC7 || ecuindex == (int)ECU.TRIONIC5);
                     }
                     else
                     {
                         InterframeLabel.Enabled = false;
                         cbUseLastPointer.Enabled = false;
-                        cbFasterDamnit.Enabled = false;
+                        cbFaster.Enabled = false;
                         cbxInterFrame.Enabled = false;
-                        cbCheckChecksum.Enabled = false;
+                        cbVerifyChecksum.Enabled = false;
 
                         // Restore safe settings
-                        cbFasterDamnit.Checked = false;
+                        cbFaster.Checked = false;
                         cbUseLastPointer.Checked = true;
-                        cbCheckChecksum.Checked = true;
+                        cbVerifyChecksum.Checked = true;
                         cbxInterFrame.SelectedIndex = 9;
                     }
                 }
