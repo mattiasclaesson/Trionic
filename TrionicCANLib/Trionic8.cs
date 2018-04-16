@@ -45,19 +45,19 @@ namespace TrionicCANLib.API
 
         public AccessLevel SecurityLevel
         {
-            get { return _securityLevel; }
+            get { return _securityLevel;  }
             set { _securityLevel = value; }
         }
 
         public bool FormatBootPartition
         {
-            get { return formatBootPartition; }
+            get { return formatBootPartition;  }
             set { formatBootPartition = value; }
         }
 
         public bool FormatSystemPartitions
         {
-            get { return formatSystemPartitions; }
+            get { return formatSystemPartitions;  }
             set { formatSystemPartitions = value; }
         }
 
@@ -6051,9 +6051,7 @@ namespace TrionicCANLib.API
 
             return false;
         }
-
-        // Restless coders; Look no further!
-        private bool fasterdamnit = false;
+        
         private bool StartCommon(byte Device, bool z22se)
         {
             bool LegionIsAlive = false;
@@ -6146,25 +6144,26 @@ namespace TrionicCANLib.API
                 CastInfoEvent("Loader was left running. Starting over", ActivityType.UploadingBootloader);
 
             Thread.Sleep(500);
-            // ..
+
 
             bool success;
-            if (fasterdamnit)
+
+            if (LegionOptions.Faster)
             {
-                CastInfoEvent("(Fasterdamnit is set; Remember to disable!)", ActivityType.UploadingBootloader);
-                if (canUsbDevice is CANELM327Device)
-                    LegionIDemand(0, 1200, out success);
-                else
-                    LegionIDemand(0, 1000, out success);
-            }
-            else
-            {
-                // Default to 1.2 ms as inter-frame delay
-                LegionIDemand(0, 1200, out success);
+                CastInfoEvent("The \"Faster\" option might crash other devices", ActivityType.UploadingBootloader);
             }
 
+            if (LegionOptions.InterframeDelay != 1200)
+            {
+                CastInfoEvent(("Setting inter-frame delays to: " + LegionOptions.InterframeDelay.ToString("D") + " micrsoec"), ActivityType.UploadingBootloader);
+            }
+
+            LegionIDemand(0, LegionOptions.InterframeDelay, out success);
+
             if (!success)
+            {
                 return false;
+            }
 
  /*         CastInfoEvent("Reading battery voltage..", ActivityType.UploadingBootloader);
             byte[] pin = LegionIDemand(6, 11, out success);
@@ -6684,7 +6683,7 @@ namespace TrionicCANLib.API
                     }
 
                     // Patch in additional partitions to make sure everything after the last used address contain 0xFF's
-                    if ((formatmask & 0x1F0) > 0)
+                    if (((formatmask & 0x1F0) > 0) && LegionOptions.UseLastMarker)
                     {
                         int EndAddress = (int)bm.GetLasAddress();
                         if (EndAddress < 0x100000)
@@ -6974,7 +6973,7 @@ namespace TrionicCANLib.API
                         CastInfoEvent("Verifying md5..", ActivityType.UploadingFlash);
 
                         // Simple method: verify individually
-                        if (Device == EcuByte_MCP || z22se)
+                        if (Device == EcuByte_MCP || z22se || !LegionOptions.UseLastMarker)
                         {
                             if (!VerifyFlashIntegrity(workEvent, Device, 9))
                             {
@@ -7156,8 +7155,10 @@ namespace TrionicCANLib.API
                                 logger.Debug("Couldn't send message");
 
                             // ELM is slow as it is..
-                            if (!(canUsbDevice is CANELM327Device) && !fasterdamnit && m_sleepTime > 0)
+                            if (!(canUsbDevice is CANELM327Device) && !LegionOptions.Faster && m_sleepTime > 0)
+                            {
                                 Thread.Sleep(m_sleepTime);
+                            }
                         }
 
                         Application.DoEvents();

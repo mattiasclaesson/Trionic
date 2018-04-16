@@ -11,6 +11,7 @@ namespace TrionicCANFlasher
     {
         private Logger logger = LogManager.GetCurrentClassLogger();
         private m_adaptertype _m_adaptertype = new m_adaptertype();
+        private m_interframe _m_interframe = new m_interframe();
         private m_adapter _m_adapter = new m_adapter();
         private m_selecu _m_selecu = new m_selecu();
         private m_baud _m_baud = new m_baud();
@@ -31,17 +32,65 @@ namespace TrionicCANFlasher
         private bool m_autocsum  = false; // "Auto update checksum"
 
         // Hidden features
-        // No features are implemented yet!
         private int  m_hiddenclicks        = 5;     // Click this many times + 1 to enable su features
         private bool cbEnableSUFeatures    = false; // This mode does not have a checkbox
         private bool m_enablesufeatures    = false; // enable / disable su features
         private bool super_checkchecksum   = true;  // Check checksum of file before flashing
         private bool super_uselastpointer  = true;  // Legion. Use the "last address of bin" feature or just regular partition md5
         private bool super_faster          = false; // Legion. Speed up certain tasks
-        private int  super_interframedelay = 1200;  // Legion. Delay between CAN packets
 
         // Used to lock out SettingsLogic while populating items
         private bool m_lockout = true;
+
+        public bool Faster
+        {
+            get { return super_faster;  }
+        }
+
+        public bool UseLastMarker
+        {
+            get { return super_uselastpointer; }
+        }
+
+        public class m_interframe
+        {
+            private string m_name = "1200 (Default)";
+            private int m_index = 9;
+            private static uint[] m_dels = 
+            {
+                300, 400, 500, 600, 700,
+                800, 900,1000,1100,1200, // (Default)
+               1300,1400,1500,1600,1700,
+               1800,1900,2000
+            };
+
+            public int Index
+            {
+                get { return m_index; }
+                set { m_index = value; }
+            }
+
+            public string Name
+            {
+                get { return m_name; }
+                set { m_name = value; }
+            }
+
+            public uint Value
+            {
+                get {
+
+                    if (m_index >= 0 && m_index < 18)
+                    {
+                        return m_dels[m_index];
+                    }
+                    else
+                    {
+                        return 1200;
+                    }
+                }
+            }
+        }
 
         public class m_selecu
         {
@@ -134,6 +183,13 @@ namespace TrionicCANFlasher
             get { return _m_baud;  }
             set { _m_baud = value; }
         }
+
+        public m_interframe InterframeDelay
+        {
+            get { return _m_interframe;  }
+            set { _m_interframe = value; }
+        }
+
 
         public int MainWidth
         {
@@ -228,6 +284,11 @@ namespace TrionicCANFlasher
                 {
                     cbxComSpeed.SelectedItem = Baudrate.Name;
                 }
+
+                if (InterframeDelay.Name != null)
+                {
+                    cbxInterFrame.SelectedItem = InterframeDelay.Name;
+                }
             }
 
             catch (Exception ex)
@@ -275,6 +336,12 @@ namespace TrionicCANFlasher
                 {
                     Baudrate.Index = cbxComSpeed.SelectedIndex;
                     Baudrate.Name = cbxComSpeed.SelectedItem.ToString();
+                }
+
+                if (cbxInterFrame.SelectedIndex >= 0)
+                {
+                    InterframeDelay.Index = cbxInterFrame.SelectedIndex;
+                    InterframeDelay.Name = cbxInterFrame.SelectedItem.ToString();
                 }
             }
 
@@ -381,9 +448,14 @@ namespace TrionicCANFlasher
                             {
                                 m_autocsum = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
+
                             else if (a == "SuperUser")
                             {
                                 m_enablesufeatures = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                            }
+                            else if (a == "UseLastAddressPointer")
+                            {
+                                super_uselastpointer = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
 
                             else if (a == "ViewWidth")
@@ -456,8 +528,8 @@ namespace TrionicCANFlasher
             {
                 super_checkchecksum = true;
                 super_uselastpointer = true;
-                super_interframedelay = 1200;
                 super_faster = false;
+                InterframeDelay.Index = 9;
             }
 
             // Maybe we should have different unlock sys for ME9 and T8?
@@ -512,12 +584,12 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("AutoChecksum", m_autocsum);
 
             SaveRegistrySetting("SuperUser", m_enablesufeatures);
+            SaveRegistrySetting("UseLastAddressPointer", super_uselastpointer);
 
             SaveRegistrySetting("ViewWidth", m_width.ToString());
             SaveRegistrySetting("ViewHeight", m_height.ToString());
             SaveRegistrySetting("ViewFullscreen", m_fullscreen);
             SaveRegistrySetting("ViewCollapsed", m_collapsed);
-
         }
 
         private void GetAdapterInformation()
@@ -673,12 +745,13 @@ namespace TrionicCANFlasher
 
                     if (cbEnableSUFeatures)
                     {
-                        // None of these are implemented yet. 
-                        bool precheck = cbUseLegion.Checked && cbUseLegion.Enabled;
+                        bool precheck = ((ecuindex == (int)ECU.TRIONIC8 && cbUseLegion.Checked && cbUseLegion.Enabled) ||
+                            ecuindex == (int)ECU.TRIONIC8_MCP || ecuindex == (int)ECU.Z22SEMain_LEG || ecuindex == (int)ECU.Z22SEMCP_LEG);
+
                         InterframeLabel.Enabled = precheck;
-                        cbxInterFrame.Enabled = false;
-                        cbUseLastPointer.Enabled = false;
-                        cbFasterDamnit.Enabled = false; 
+                        cbxInterFrame.Enabled = precheck;
+                        cbUseLastPointer.Enabled = (ecuindex == (int)ECU.TRIONIC8);
+                        cbFasterDamnit.Enabled = precheck; 
                     }
                     else
                     {
@@ -691,6 +764,7 @@ namespace TrionicCANFlasher
                         cbFasterDamnit.Checked = false;
                         cbUseLastPointer.Checked = true;
                         cbCheckChecksum.Checked = true;
+                        cbxInterFrame.SelectedIndex = 9;
                     }
                 }
 

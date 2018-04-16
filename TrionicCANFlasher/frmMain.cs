@@ -88,7 +88,6 @@ namespace TrionicCANFlasher
 
             RestoreView();
             UpdateLogManager();
-
             EnableUserInput(true);
         }
 
@@ -382,15 +381,23 @@ namespace TrionicCANFlasher
         {
             trionic.OnlyPBus = AppSettings.OnlyPBus;
             trionic.bypassCANfilters = m_bypassCANfilters;
+
+            trionic.LegionOptions.Faster = AppSettings.Faster;
+            trionic.LegionOptions.InterframeDelay = AppSettings.InterframeDelay.Value;
+            trionic.LegionOptions.UseLastMarker = AppSettings.UseLastMarker;
+
             m_bypassCANfilters = false;
+            bool IsT8Class = true;
 
             switch (cbxEcuType.SelectedIndex)
             {
                 case (int)ECU.TRIONIC5:
                     trionic.ECU = ECU.TRIONIC5;
+                    IsT8Class = false;
                     break;
                 case (int)ECU.TRIONIC7:
                     trionic.ECU = ECU.TRIONIC7;
+                    IsT8Class = false;
                     break;
                 case (int)ECU.TRIONIC8:
                     trionic.ECU = ECU.TRIONIC8;
@@ -408,9 +415,10 @@ namespace TrionicCANFlasher
                     trionic.ECU = ECU.MOTRONIC96;
                     break;
                 default:
+                    IsT8Class = false;
                     break;
             }
-
+ 
             switch (AppSettings.AdapterType.Index)
             {
                 case (int)CANBusAdapter.JUST4TRIONIC:
@@ -445,6 +453,13 @@ namespace TrionicCANFlasher
             if (AppSettings.Adapter.Name != null)
             {
                 trionic.SetSelectedAdapter(AppSettings.Adapter.Name);
+            }
+
+            // Christian: Ideally these would be better in ITrionic?
+            if (IsT8Class)
+            {
+                trionic8.FormatBootPartition = AppSettings.UnlockBoot;
+                trionic8.FormatSystemPartitions = AppSettings.UnlockSys;
             }
         }
 
@@ -708,8 +723,7 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = AppSettings.UnlockBoot;
-                            trionic8.FormatSystemPartitions = AppSettings.UnlockSys;
+
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);
@@ -746,7 +760,6 @@ namespace TrionicCANFlasher
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                             
                             trionic8.FormatSystemPartitions = true; // This is undefined in mcp.
-                            trionic8.FormatBootPartition    = AppSettings.UnlockBoot;
 
                             if (trionic8.openDevice(false))
                             {
@@ -775,8 +788,7 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            
-                            // Do _NOT_ make these an option. It works in a completely different way than trionic 8..
+
                             trionic8.FormatSystemPartitions = true;
                             trionic8.FormatBootPartition    = true;
 
@@ -1044,6 +1056,7 @@ namespace TrionicCANFlasher
                                 EnableUserInput(false);
                                 AddLogItem("Opening connection");
                                 trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+
                                 if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);
@@ -1459,8 +1472,6 @@ namespace TrionicCANFlasher
                             EnableUserInput(false);
                             AddLogItem("Opening connection");
                             trionic8.SecurityLevel = AccessLevel.AccessLevel01;
-                            trionic8.FormatBootPartition = AppSettings.UnlockBoot;
-                            trionic8.FormatSystemPartitions = AppSettings.UnlockSys;
                             if (trionic8.openDevice(false))
                             {
                                 Thread.Sleep(1000);

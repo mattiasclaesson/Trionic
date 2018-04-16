@@ -308,5 +308,40 @@ namespace TrionicCANLib.API
                 }
             }
         }
+
+        // I don't want it this way but it will be necessary with future ECUs.
+        // Everything becomes a mess if you have to remember to set these for every individual one
+        public LegionParameters _legopt = new LegionParameters();
+
+        public LegionParameters LegionOptions
+        {
+            get { return _legopt; }
+            set { _legopt = value; }
+        }
+
+        public class LegionParameters
+        {
+            private uint m_interframe = 1200;
+            private bool m_faster     = false;
+            private bool m_lastmarker = true;
+
+            public bool Faster
+            {
+                get { return m_faster;  }
+                set { m_faster = value; }
+            }
+
+            public bool UseLastMarker
+            {
+                get { return m_lastmarker;  }
+                set { m_lastmarker = value; }
+            }
+
+            public uint InterframeDelay
+            {
+                get { return m_interframe;  }
+                set { m_interframe = value; }
+            }
+        }
     }
 }
