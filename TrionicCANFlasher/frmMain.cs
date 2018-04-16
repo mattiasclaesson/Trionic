@@ -652,7 +652,7 @@ namespace TrionicCANFlasher
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
                         {
                             ChecksumResult checksumResult = ChecksumT5.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, m_ShouldUpdateChecksum);
-                            if (checksumResult != ChecksumResult.Ok)
+                            if (checksumResult != ChecksumResult.Ok && AppSettings.VerifyChecksum)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
                                 return;
@@ -682,7 +682,7 @@ namespace TrionicCANFlasher
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
                         {
                             ChecksumResult checksumResult = ChecksumT7.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, ChecksumT7.DO_NOT_AUTOFIXFOOTER, m_ShouldUpdateChecksum); // TODO: mattias, add AutoFixFooter to settings?
-                            if (checksumResult != ChecksumResult.Ok)
+                            if (checksumResult != ChecksumResult.Ok && AppSettings.VerifyChecksum)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
                                 return;
@@ -712,7 +712,7 @@ namespace TrionicCANFlasher
                         else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
                             ChecksumResult checksumResult = ChecksumT8.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, m_ShouldUpdateChecksum);
-                            if (checksumResult != ChecksumResult.Ok)
+                            if (checksumResult != ChecksumResult.Ok && AppSettings.VerifyChecksum)
                             {
                                 AddLogItem("Checksum check failed: " + checksumResult);
                                 return;

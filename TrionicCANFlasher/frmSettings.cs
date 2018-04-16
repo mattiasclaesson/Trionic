@@ -32,24 +32,29 @@ namespace TrionicCANFlasher
         private bool m_autocsum  = false; // "Auto update checksum"
 
         // Hidden features
-        private int  m_hiddenclicks        = 5;     // Click this many times + 1 to enable su features
-        private bool cbEnableSUFeatures    = false; // This mode does not have a checkbox
-        private bool m_enablesufeatures    = false; // enable / disable su features
-        private bool super_checkchecksum   = true;  // Check checksum of file before flashing
-        private bool super_uselastpointer  = true;  // Legion. Use the "last address of bin" feature or just regular partition md5
-        private bool super_faster          = false; // Legion. Speed up certain tasks
+        private bool cbEnableSUFeatures = false; // This mode does not have a checkbox
+        private int  m_hiddenclicks     = 5;     // Click this many times + 1 to enable su features
+        private bool m_enablesufeatures = false; // enable / disable su features
+        private bool m_verifychecksum   = true;  // Check checksum of file before flashing
+        private bool m_uselastpointer   = true;  // Legion. Use the "last address of bin" feature or just regular partition md5
+        private bool m_faster           = false; // Legion. Speed up certain tasks
 
         // Used to lock out SettingsLogic while populating items
         private bool m_lockout = true;
 
+        public bool VerifyChecksum
+        {
+            get { return m_verifychecksum;  }
+        }
+
         public bool Faster
         {
-            get { return super_faster;  }
+            get { return m_faster;  }
         }
 
         public bool UseLastMarker
         {
-            get { return super_uselastpointer; }
+            get { return m_uselastpointer; }
         }
 
         public class m_interframe
@@ -309,9 +314,9 @@ namespace TrionicCANFlasher
             // This is not a real checkbox.
             cbEnableSUFeatures = m_enablesufeatures;
 
-            cbUseLastPointer.Checked = super_uselastpointer;
-            cbCheckChecksum.Checked = super_checkchecksum;
-            cbFasterDamnit.Checked = super_faster;
+            cbUseLastPointer.Checked = m_uselastpointer;
+            cbCheckChecksum.Checked = m_verifychecksum;
+            cbFasterDamnit.Checked = m_faster;
 
             m_lockout = false;
         }
@@ -363,9 +368,9 @@ namespace TrionicCANFlasher
             // This is not a real checkbox.
             m_enablesufeatures = cbEnableSUFeatures;
 
-            super_uselastpointer = cbUseLastPointer.Checked;
-            super_checkchecksum = cbCheckChecksum.Checked;
-            super_faster = cbFasterDamnit.Checked;
+            m_uselastpointer = cbUseLastPointer.Checked;
+            m_verifychecksum = cbCheckChecksum.Checked;
+            m_faster = cbFasterDamnit.Checked;
         }
 
         public void LoadRegistrySettings()
@@ -455,7 +460,7 @@ namespace TrionicCANFlasher
                             }
                             else if (a == "UseLastAddressPointer")
                             {
-                                super_uselastpointer = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                                m_uselastpointer = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
 
                             else if (a == "ViewWidth")
@@ -526,9 +531,9 @@ namespace TrionicCANFlasher
             // We have to plan this section.. 
             if (!m_enablesufeatures)
             {
-                super_checkchecksum = true;
-                super_uselastpointer = true;
-                super_faster = false;
+                m_verifychecksum = true;
+                m_uselastpointer = true;
+                m_faster = false;
                 InterframeDelay.Index = 9;
             }
 
@@ -584,7 +589,7 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("AutoChecksum", m_autocsum);
 
             SaveRegistrySetting("SuperUser", m_enablesufeatures);
-            SaveRegistrySetting("UseLastAddressPointer", super_uselastpointer);
+            SaveRegistrySetting("UseLastAddressPointer", m_uselastpointer);
 
             SaveRegistrySetting("ViewWidth", m_width.ToString());
             SaveRegistrySetting("ViewHeight", m_height.ToString());
@@ -750,8 +755,9 @@ namespace TrionicCANFlasher
 
                         InterframeLabel.Enabled = precheck;
                         cbxInterFrame.Enabled = precheck;
-                        cbUseLastPointer.Enabled = (ecuindex == (int)ECU.TRIONIC8);
-                        cbFasterDamnit.Enabled = precheck; 
+                        cbUseLastPointer.Enabled = (ecuindex == (int)ECU.TRIONIC8 && cbUseLegion.Checked && cbUseLegion.Enabled);
+                        cbFasterDamnit.Enabled = precheck;
+                        cbCheckChecksum.Enabled = (ecuindex == (int)ECU.TRIONIC8 || ecuindex == (int)ECU.TRIONIC7 || ecuindex == (int)ECU.TRIONIC5);
                     }
                     else
                     {
@@ -759,6 +765,7 @@ namespace TrionicCANFlasher
                         cbUseLastPointer.Enabled = false;
                         cbFasterDamnit.Enabled = false;
                         cbxInterFrame.Enabled = false;
+                        cbCheckChecksum.Enabled = false;
 
                         // Restore safe settings
                         cbFasterDamnit.Checked = false;
