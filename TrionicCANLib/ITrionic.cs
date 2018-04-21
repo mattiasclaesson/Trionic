@@ -309,13 +309,11 @@ namespace TrionicCANLib.API
             }
         }
 
-        // I don't want it this way but it will be necessary with future ECUs.
-        // Everything becomes a mess if you have to remember to set these for every individual one
-        public LegionParameters _legopt = new LegionParameters();
+        private LegionParameters _legopt = new LegionParameters();
 
         public LegionParameters LegionOptions
         {
-            get { return _legopt; }
+            get { return _legopt;  }
             set { _legopt = value; }
         }
 
