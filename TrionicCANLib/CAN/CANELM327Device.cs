@@ -429,6 +429,12 @@ namespace TrionicCANLib.CAN
                 {
                     m_deviceIsOpen = true;
 
+                    // ID 0x000 will thrash the filter calculation so bypass the whole filter if it's found
+                    foreach (var id in AcceptOnlyMessageIds)
+                    {
+                        if (id == 0) { m_filterBypass = true; }
+                    }
+
                     if (m_filterBypass == false)
                     {
                         logger.Debug("Enabling filters");

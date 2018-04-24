@@ -26,9 +26,6 @@ namespace TrionicCANLib.CAN
         public const byte CAN_BAUD_BTR_615K_btr0 = 0x40; // 615 kbit/s SAAB T5
         public const byte CAN_BAUD_BTR_615K_btr1 = 0x37;
 
-        uint code = 0xFFF;
-        uint mask = 0x000;
-
         Thread m_readThread;
         readonly Object m_synchObject = new Object();
         bool m_endThread;
@@ -190,6 +187,16 @@ namespace TrionicCANLib.CAN
             if (isOpen())
             {
                 close();
+            }
+
+            // Default to "Allow all"
+            uint code = 0xFFF;
+            uint mask = 0x000;
+
+            // ID 0x000 will thrash the filter calculation so bypass the whole filter if it's found
+            foreach (var id in AcceptOnlyMessageIds)
+            {
+                if (id == 0) { m_filterBypass = true; }
             }
 
             if (m_filterBypass == false)

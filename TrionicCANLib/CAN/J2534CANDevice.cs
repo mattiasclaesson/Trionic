@@ -181,13 +181,23 @@ namespace TrionicCANLib.CAN
                 return OpenResult.OpenError;
             }
 
+            // Default to "Allow all"
             uint acpFilt = 0xFFFF;
             uint acpMask = 0x0000;
 
+            // ID 0x000 will thrash the filter calculation so bypass the whole filter if it's found
             foreach (var id in AcceptOnlyMessageIds)
             {
-                acpFilt &= id;
-                acpMask |= id;
+                if (id == 0) { m_filterBypass = true; }
+            }
+
+            if (m_filterBypass == false)
+            {
+                foreach (var id in AcceptOnlyMessageIds)
+                {
+                    acpFilt &= id;
+                    acpMask |= id;
+                }
             }
             acpMask = (~acpMask & 0x7FF) | acpFilt;
 

@@ -23,7 +23,7 @@ namespace TrionicCANLib.CAN
         public const string CAN_BAUD_BTR_33K  = "0x8B:0x2F"; //  33,333 kbit/s SAAB GMLAN
         public const string CAN_BAUD_BTR_47K  = "0xcb:0x9a"; //  47,619 kbit/s SAAB T7 I-bus
         public const string CAN_BAUD_BTR_615K = "0x40:0x37"; // 615,384 kbit/s SAAB Trionic 5 P-bus (69% Sampling)
-        
+
         static uint m_deviceHandle = 0;
         Thread m_readThread;
         Object m_synchObject = new Object();
@@ -59,7 +59,7 @@ namespace TrionicCANLib.CAN
 
         public static new string[] GetAdapterNames()
         {
-            
+
             System.Text.StringBuilder adapter = new System.Text.StringBuilder(10);
             List<string> names = new List<string>();
             int number;
@@ -74,12 +74,12 @@ namespace TrionicCANLib.CAN
             }
             logger.Debug("Lawicel.CANUSB.canusb_getFirstAdapter() name=" + adapter + " number=" + number);
             //string[] names = new string[number];
-            if(number > 0)
+            if (number > 0)
             {
                 names.Add(adapter.ToString());
             }
 
-            for (int i = 1; i < number; i++ )
+            for (int i = 1; i < number; i++)
             {
                 System.Text.StringBuilder next = new System.Text.StringBuilder(10);
                 int num2 = Lawicel.CANUSB.canusb_getNextAdapter(next, 10);
@@ -183,7 +183,13 @@ namespace TrionicCANLib.CAN
             uint AcceptanceCode = Lawicel.CANUSB.CANUSB_ACCEPTANCE_CODE_ALL;
             uint AcceptanceMask = Lawicel.CANUSB.CANUSB_ACCEPTANCE_MASK_ALL;
 
-            if (m_filterBypass == false && TrionicECU != ECU.TRIONIC5)
+            // ID 0x000 will thrash the filter calculation so bypass the whole filter if it's found
+            foreach (var id in AcceptOnlyMessageIds)
+            {
+                if (id == 0) { m_filterBypass = true; }
+            }
+
+            if (m_filterBypass == false)
             {
                 CalcAcceptanceFilters(out AcceptanceCode, out AcceptanceMask);
             }
@@ -276,7 +282,7 @@ namespace TrionicCANLib.CAN
                     res = Lawicel.CANUSB.canusb_Close(m_deviceHandle);
                 }
             }
-            catch(DllNotFoundException e)
+            catch (DllNotFoundException e)
             {
                 logger.Debug("Dll exception" + e);
                 return CloseResult.CloseError;
@@ -402,7 +408,7 @@ namespace TrionicCANLib.CAN
                     nrOfWait++;
                 }
             }
-            r_canMsg = new Lawicel.CANUSB.CANMsg(); 
+            r_canMsg = new Lawicel.CANUSB.CANMsg();
             return 0;
         }
 
@@ -488,11 +494,11 @@ namespace TrionicCANLib.CAN
 
             byte filtDigit1 = (byte)((acpFilt >> 8) & 0x7);
             byte filtDigit2 = (byte)((acpFilt >> 4) & 0xF);
-            byte filtDigit3 = (byte)(acpFilt        & 0xF);
+            byte filtDigit3 = (byte)( acpFilt       & 0xF);
 
             byte maskDigit1 = (byte)((acpMask >> 8) & 0x7);
             byte maskDigit2 = (byte)((acpMask >> 4) & 0xF);
-            byte maskDigit3 = (byte)(acpMask        & 0xF);
+            byte maskDigit3 = (byte)( acpMask       & 0xF);
 
             byte[] ACR = new byte[2];
             byte[] AMR = new byte[2];
