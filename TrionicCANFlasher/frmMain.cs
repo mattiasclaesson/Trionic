@@ -880,9 +880,31 @@ namespace TrionicCANFlasher
                                     if (fileMainOS != string.Empty)
                                     {
                                         AddLogItem("Main OS version in ECU: " + ecuMainOS);
-                                        if (ecuMainOS != fileMainOS)
+
+                                        // Certain vendors are known to poke around in OS and leave version number the same
+                                        if (ecuMainOS == fileMainOS && AppSettings.PowerUser)
+                                        {
+                                            DialogResult ask = MessageBox.Show("Overwrite Main OS?",
+                                                "Version numbers match. Do you still want to overwrite Main OS?\n" +
+                                                "Click No to only write calibration", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+
+                                            if (ask == DialogResult.Yes)
+                                            {
+                                                AddLogItem("User has opted to overwrite Main OS");
+                                                FileInfo fi = new FileInfo(ofd.FileName);
+                                                flashStart = (int)FileME96.MainOSAddress;
+                                                flashEnd = (int)fi.Length;
+                                            }
+                                            else
+                                            {
+                                                flash = FlashEngineCalibration(ofd.FileName, ecuEngineCalib);
+                                            }
+                                        }
+
+                                        else if (ecuMainOS != fileMainOS)
                                         {
                                             AddLogItem("Main OS version differs between file and ECU");
+
                                             if (AppSettings.UnlockSys)
                                             {
                                                 AddLogItem("User has selected option format system partitions");
