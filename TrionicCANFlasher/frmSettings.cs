@@ -671,18 +671,20 @@ namespace TrionicCANFlasher
                 }
 
                 cbxAdapterItem.Enabled = false;
+                AdapterLabel.Enabled = false;
 
                 if (typeindex == (int)CANBusAdapter.LAWICEL ||
-                    typeindex == (int)CANBusAdapter.KVASER ||
+                    typeindex == (int)CANBusAdapter.KVASER  ||
                     typeindex == (int)CANBusAdapter.J2534)
                 {
                     cbxAdapterItem.Enabled = true;
+                    AdapterLabel.Enabled = true;
                 }
 
                 if (typeindex == (int)CANBusAdapter.ELM327)
                 {
                     cbxAdapterItem.Enabled = true;
-
+                    AdapterLabel.Enabled = true;
                     ComBaudLabel.Enabled = true;
                     cbxComSpeed.Enabled = true;
                 }
