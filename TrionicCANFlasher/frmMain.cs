@@ -12,6 +12,7 @@ using TrionicCANLib.Checksum;
 using System.Drawing;
 using NLog;
 using CommonSuite;
+using System.Text;
 
 namespace TrionicCANFlasher
 {
@@ -1386,6 +1387,15 @@ namespace TrionicCANFlasher
                         AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
                         AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromID(0xCC));
                         AddLogItem("Unknown         : " + trionic8.RequestECUInfo(0x98, ""));
+
+                        for (uint i = 0; i < 0xFF; i++)
+                        {
+                            byte[] did = trionic8.RequestECUInfo(i);
+                            if (did[0] != 0 && did[1] != 0)
+                            {
+                                AddLogItem("ID:" + i.ToString("X") + " LENGTH:" + did.Length + " HEX:" + BitConverter.ToString(did) + " ASCII:" + Encoding.ASCII.GetString(did));
+                            }
+                        }
                     }
                 }
 
