@@ -45,7 +45,7 @@ namespace TrionicCANFlasher
             InitializeComponent();
             m_DelegateUpdateStatus = updateStatusInBox;
             m_DelegateProgressStatus = updateProgress;
-            m_ShouldUpdateChecksum = updateChecksum;
+            m_ShouldUpdateChecksum = ShouldUpdateChecksum;
             SetupListboxWrapping();
             EnableUserInput(true);
         }
@@ -2022,7 +2022,7 @@ namespace TrionicCANFlasher
             EnableUserInput(true);
         }
 
-        private bool updateChecksum(string layer, string filechecksum, string realchecksum)
+        private bool ShouldUpdateChecksum(string layer, string filechecksum, string realchecksum)
         {
             AddLogItem(layer);
             AddLogItem("File Checksum: " + filechecksum);

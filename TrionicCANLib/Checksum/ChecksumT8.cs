@@ -58,7 +58,7 @@ namespace TrionicCANLib.Checksum
             return CalculateLayer2Checksum(filename, checksumAreaOffset, autocorrect, delegateShouldUpdate);
         }
 
-        static private int GetChecksumAreaOffset(string filename)
+        public static int GetChecksumAreaOffset(string filename)
         {
             int retval = 0;
             if (filename == "") return retval;
