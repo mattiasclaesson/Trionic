@@ -166,8 +166,11 @@ namespace TrionicCANFlasher
                 {
                     if (m_msiUpdater != null)
                     {
-                        m_msiUpdater.ExecuteUpdate(e.Version);
-                        System.Windows.Forms.Application.Exit();
+                        if (!trionic5.isOpen() && !trionic7.isOpen() && !trionic8.isOpen())
+                        {
+                            m_msiUpdater.ExecuteUpdate(e.Version);
+                            System.Windows.Forms.Application.Exit();
+                        }
                     }
                 }
                 else
