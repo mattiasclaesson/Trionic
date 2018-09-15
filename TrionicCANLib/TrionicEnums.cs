@@ -34,7 +34,7 @@ namespace TrionicCANLib.API
         LAWICEL,
         [Description("CombiAdapter")]
         COMBI,
-        [Description("ELM327 v1.3 or higher")]
+        [Description("OBDLink SX")]
         ELM327,
         [Description("Just4Trionic")]
         JUST4TRIONIC,
