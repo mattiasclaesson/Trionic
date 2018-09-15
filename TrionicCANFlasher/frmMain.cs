@@ -1318,8 +1318,8 @@ namespace TrionicCANFlasher
                         AddLogItem("Oil quality               : " + trionic8.GetOilQuality().ToString("F2") + " %");
                         AddLogItem("SAAB partnumber           : " + trionic8.GetSaabPartnumber());
                         AddLogItem("Diagnostic ID             : " + trionic8.GetDiagnosticDataIdentifier());
-                        AddLogItem("End model partnr          : " + trionic8.GetInt64FromID(0xCB));
-                        AddLogItem("Basemodel partnr          : " + trionic8.GetInt64FromID(0xCC));
+                        AddLogItem("End model partnr          : " + trionic8.GetInt64FromIdAsString(0xCB));
+                        AddLogItem("Basemodel partnr          : " + trionic8.GetInt64FromIdAsString(0xCC));
                         AddLogItem("ManufacturersEnableCounter: " + trionic8.GetManufacturersEnableCounter());
                         bool convertible, sai, highoutput, biopower, clutchStart;
                         TankType tankType;
@@ -1378,6 +1378,7 @@ namespace TrionicCANFlasher
                         AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());       //0x74
                         AddLogItem("Codefile version: " + trionic8.GetCodefileVersion());      //0x73
                         AddLogItem("Serial number   : " + trionic8.GetSerialNumber());         //0xB4
+                        AddLogItem("Programming date: " + trionic8.GetProgrammingDateME96());  //0x99
                         AddLogItem("Main OS         : " + ecuMainOS);
                         AddLogItem("Engine Calib    : " + ecuEngineCalib);
                         AddLogItem("System Calib    : " + ecuSystemCalib);
@@ -1387,8 +1388,8 @@ namespace TrionicCANFlasher
                         AddLogItem("Supplier ID     : " + trionic8.RequestECUInfo(0x92, ""));
                         AddLogItem("Speed limiter   : " + trionic8.GetTopSpeed() + " km/h");
                         AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
-                        AddLogItem("End model partnr: " + trionic8.GetInt64FromID(0xCB));
-                        AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromID(0xCC));
+                        AddLogItem("End model partnr: " + trionic8.GetInt64FromIdAsString(0xCB));
+                        AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromIdAsString(0xCC));
                         AddLogItem("Unknown         : " + trionic8.RequestECUInfo(0x98, ""));
 
                         for (uint i = 0; i < 0xFF; i++)

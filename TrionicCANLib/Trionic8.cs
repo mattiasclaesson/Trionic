@@ -1023,19 +1023,15 @@ namespace TrionicCANLib.API
 
         public string GetSaabPartnumber()
         {
-            ulong retval = 0;
-            byte[] data = RequestECUInfo(0x7C);
-            if (data.Length >= 4)
-            {
-                retval = Convert.ToUInt64(data[0]) * 256 * 256 * 256;
-                retval += Convert.ToUInt64(data[1]) * 256 * 256;
-                retval += Convert.ToUInt64(data[2]) * 256;
-                retval += Convert.ToUInt64(data[3]);
-            }
-            return retval.ToString();
+            return GetInt64FromIdAsString(0x7C);
         }
 
-        public string GetInt64FromID(uint id)
+        public string GetInt64FromIdAsString(uint id)
+        {
+            return GetInt64FromId(id).ToString();
+        }
+
+        private ulong GetInt64FromId(uint id)
         {
             ulong retval = 0;
             byte[] data = RequestECUInfo(id);
@@ -1046,7 +1042,7 @@ namespace TrionicCANLib.API
                 retval += Convert.ToUInt64(data[2]) * 256;
                 retval += Convert.ToUInt64(data[3]);
             }
-            return retval.ToString();
+            return retval;
         }
 
         public string GetVehicleVIN()
@@ -1071,6 +1067,11 @@ namespace TrionicCANLib.API
         {
             // read and wait for sequence of acks
             return RequestECUInfo(0x99, "Programming date");
+        }
+
+        public string GetProgrammingDateME96()
+        {
+            return GetInt64FromId(0x99).ToString("x");
         }
 
         public string GetSerialNumber()
