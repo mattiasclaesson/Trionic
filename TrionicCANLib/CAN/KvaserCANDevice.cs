@@ -101,6 +101,8 @@ namespace TrionicCANLib.CAN
 
         public override void SetSelectedAdapter(string adapter)
         {
+            Canlib.canInitializeLibrary();
+
             int nrOfChannels;
             Canlib.canGetNumberOfChannels(out nrOfChannels);
             object o = new object();
