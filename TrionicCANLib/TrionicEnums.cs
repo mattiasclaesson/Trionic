@@ -38,7 +38,7 @@ namespace TrionicCANLib.API
         ELM327,
         [Description("Just4Trionic")]
         JUST4TRIONIC,
-        [Description("Kvaser")]
+        [Description("Kvaser HS")]
         KVASER,
         [Description("J2534")]
         J2534
