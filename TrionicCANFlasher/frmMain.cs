@@ -1502,6 +1502,13 @@ namespace TrionicCANFlasher
                     {
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
+                            ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, m_ShouldUpdateChecksum);
+                            if (checksum != ChecksumResult.Ok && AppSettings.VerifyChecksum)
+                            {
+                                AddLogItem("Checksum check failed: " + checksum);
+                                return;
+                            }
+
                             SetGenericOptions(trionic8);
                             trionic8.SetCANFilterIds(Trionic8.FilterIdRecovery);
 
@@ -1877,7 +1884,7 @@ namespace TrionicCANFlasher
                         if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                         {
                             ChecksumResult checksum = ChecksumT8.VerifyChecksum(ofd.FileName, AppSettings.AutoChecksum, m_ShouldUpdateChecksum);
-                            if (checksum != ChecksumResult.Ok)
+                            if (checksum != ChecksumResult.Ok && AppSettings.VerifyChecksum)
                             {
                                 AddLogItem("Checksum check failed: " + checksum);
                                 return;
