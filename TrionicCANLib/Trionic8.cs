@@ -754,7 +754,7 @@ namespace TrionicCANLib.API
         public byte[] RequestECUInfo(uint _pid)
         {
             byte[] retval = new byte[2];
-            byte[] rx_buffer = new byte[128];
+            byte[] rx_buffer = new byte[1024];
             int rx_pnt = 0;
 
             if (canUsbDevice.isOpen())
@@ -790,16 +790,19 @@ namespace TrionicCANLib.API
                     msgcnt++;
                 }
 
-                //CANMessage response = new CANMessage();
-                //response = m_canListener.waitMessage(timeoutPTct);
-                //ulong data = response.getData();
                 if (response.getCanData(1) == 0x5A)
                 {
-                    // only one frame in this repsonse
-
-                    for (uint fi = 3; fi < 8; fi++) rx_buffer[rx_pnt++] = response.getCanData(fi);
+                    // only one frame in this response
+                    byte canLength = response.getCanData(0);
+                    for (uint fi = 3; fi <= canLength; fi++)
+                    {
+                        rx_buffer[rx_pnt++] = response.getCanData(fi);
+                    }
                     retval = new byte[rx_pnt];
-                    for (int i = 0; i < rx_pnt; i++) retval[i] = rx_buffer[i];
+                    for (int i = 0; i < rx_pnt; i++)
+                    {
+                        retval[i] = rx_buffer[i];
+                    }
                 }
                 else if (response.getCanData(2) == 0x5A)
                 {
@@ -809,6 +812,7 @@ namespace TrionicCANLib.API
                     if ((len - 4) % 8 > 0) m_nrFrameToReceive++;
                     int lenthisFrame = len;
                     if (lenthisFrame > 4) lenthisFrame = 4;
+
                     for (uint fi = 4; fi < 4 + lenthisFrame; fi++) rx_buffer[rx_pnt++] = response.getCanData(fi);
                     // wait for more records now
 
@@ -836,9 +840,13 @@ namespace TrionicCANLib.API
                             }
                         }
                     }
-                    retval = new byte[rx_pnt];
-                    for (int i = 0; i < rx_pnt; i++) retval[i] = rx_buffer[i];
 
+                    int length = rx_pnt - 1;
+                    retval = new byte[length];
+                    for (int i = 0; i < length; i++)
+                    {
+                        retval[i] = rx_buffer[i];
+                    }
                 }
                 else if (response.getCanData(1) == 0x7F && response.getCanData(1) == 0x27)
                 {
@@ -854,14 +862,20 @@ namespace TrionicCANLib.API
         // writeDataByIdentifier service 0x3B
         public bool WriteECUInfo(uint _pid, byte[] write)
         {
+            if (write.Length > 6)
+            {
+                return WriteECUInfoMultipleFrames(_pid, write);
+            }
+
             if (canUsbDevice.isOpen())
             {
-                ulong cmd = 0x0000000000003B00 | _pid << 16;
+                ulong cmd = 0x00000000003B00 | _pid << 16;
                 cmd |= (2 + (ulong)write.Length);
-                CANMessage msg = new CANMessage(0x7E0, 0, 7);
+                CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                
                 for (int i = 0; i < write.Length; i++)
                 {
-                    cmd = AddByteToCommand(cmd, write[i], i+3);
+                    cmd = AddByteToCommand(cmd, write[i], i + 3);
                 }
                 msg.setData(cmd);
                 m_canListener.setupWaitMessage(0x7E8);
@@ -877,12 +891,16 @@ namespace TrionicCANLib.API
                     CANMessage ECMresponse = new CANMessage();
                     ECMresponse = m_canListener.waitMessage(timeoutP2ct);
                     ulong rxdata = ECMresponse.getData();
+
                     // response should be 0000000000<pid>7B02
                     if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == _pid)
                     {
-                        RequestSecurityAccess(0);
-                        SendDeviceControlMessage(0x16);
                         return true;
+                    }
+                    //RequestCorrectlyReceived-ResponsePending
+                    else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B && getCanData(rxdata, 3) == 0x78)
+                    {
+                        //CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
                     }
                     else if (getCanData(rxdata, 1) == 0x7E)
                     {
@@ -890,7 +908,93 @@ namespace TrionicCANLib.API
                         tries++;
                     }
                     // Negative Response 0x7F Service <nrsi> <service> <returncode>
-                    // Bug: this is never handled because its sent with id=0x7E8
+                    else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
+                    {
+                        string info = TranslateErrorCode(getCanData(rxdata, 3));
+                        CastInfoEvent("Error: " + info, ActivityType.ConvertingFile);
+                        return false;
+                    }
+                    else
+                    {
+                        CastInfoEvent("Error unexpected response: " + rxdata.ToString("X16"), ActivityType.ConvertingFile);
+                        return false;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool WriteECUInfoMultipleFrames(uint _pid, byte[] write)
+        {
+            if (canUsbDevice.isOpen())
+            {
+                ulong cmd = 0x00000000003B0010 | _pid << 24;
+                cmd |= (2 + (ulong)write.Length) << 8;
+                CANMessage msg = new CANMessage(0x7E0, 0, 7);
+                int currentPosition = 0;
+                int leftToWrite = Math.Min(write.Length, 4);
+                for (int i = 0; i < leftToWrite; i++)
+                {
+                    cmd = AddByteToCommand(cmd, write[currentPosition], i + 4);
+                    currentPosition++;
+                }
+                msg.setData(cmd);
+                m_canListener.setupWaitMessage(0x7E8);
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    CastInfoEvent("Couldn't send message", ActivityType.ConvertingFile);
+                    return false;
+                }
+
+                int tries = 0;
+                while (tries < 5)
+                {
+                    CANMessage ECMresponse = new CANMessage();
+                    ECMresponse = m_canListener.waitMessage(timeoutP2ct);
+                    ulong rxdata = ECMresponse.getData();
+
+                    if (getCanData(rxdata, 0) == 0x30)
+                    {
+                        ulong command = 0x0000000000000021;
+
+                        leftToWrite = Math.Min(write.Length - currentPosition, 7);
+                        while (leftToWrite > 0)
+                        {
+                            cmd = command;
+                            for (int i = 0; i < leftToWrite; i++)
+                            {
+                                cmd = AddByteToCommand(cmd, write[currentPosition], i + 1);
+                                currentPosition++;
+                            }
+                            msg.setData(cmd);
+                            m_canListener.setupWaitMessage(0x7E8);
+                            canUsbDevice.sendMessage(msg);
+
+                            command++;
+                            leftToWrite = Math.Min(write.Length - currentPosition, 7);
+
+                            if (command > 0x2F) command = 0x20;
+                            msg.elmExpectedResponses = command == 0x21 ? 1 : 0;//on last command (iFrameNumber 22 expect 1 message)
+                            if (command == 0x21)
+                                m_canListener.ClearQueue();
+                        }
+                    }
+                    // response should be 0000000000<pid>7B02
+                    else if (getCanData(rxdata, 1) == 0x7B && getCanData(rxdata, 2) == _pid)
+                    {
+                        return true;
+                    }
+                    else if (getCanData(rxdata, 1) == 0x7E)
+                    {
+                        //CastInfoEvent("0x3E Service TesterPresent response 0x7E received", ActivityType.ConvertingFile);
+                        tries++;
+                    }
+                    //RequestCorrectlyReceived-ResponsePending
+                    else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B && getCanData(rxdata, 3) == 0x78)
+                    {
+                        //CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                    }
+                    // Negative Response 0x7F Service <nrsi> <service> <returncode>
                     else if (getCanData(rxdata, 1) == 0x7F && getCanData(rxdata, 2) == 0x3B)
                     {
                         string info = TranslateErrorCode(getCanData(rxdata, 3));
@@ -938,7 +1042,7 @@ namespace TrionicCANLib.API
         {
             float retval = 0;
             byte[] data = RequestECUInfo(0x25);
-            if (data.Length >= 4)
+            if (data.Length == 4)
             {
                 ulong lper = Convert.ToUInt64(data[0]) * 256 * 256 * 256;
                 lper += Convert.ToUInt64(data[1]) * 256 * 256;
@@ -970,14 +1074,18 @@ namespace TrionicCANLib.API
 
             //ulong cmd = 0x0000000000253B06;
             //000D340000253B06 example  0000340D = 52,05078125 percent
-            return retval = WriteECUInfo(0x25, write);
+            retval = WriteECUInfo(0x25, write);
+            // Persist 
+            RequestSecurityAccess(0);
+            SendDeviceControlMessage(0x16);
+            return retval;
         }
 
         public int GetTopSpeed()
         {
             int retval = 0;
             byte[] data = RequestECUInfo(0x02);
-            if (data.Length >= 2)
+            if (data.Length == 2)
             {
                 retval = Convert.ToInt32(data[0]) * 256;
                 retval += Convert.ToInt32(data[1]);
@@ -1004,7 +1112,11 @@ namespace TrionicCANLib.API
             //ulong cmd = 0x0000000000023B04;
             //0000008C0A023B04 example  0A8C = 2700
             
-            return retval = WriteECUInfo(0x02, write);
+            retval = WriteECUInfo(0x02, write);
+            // Persist 
+            RequestSecurityAccess(0);
+            SendDeviceControlMessage(0x16);
+            return retval;
         }
 
         public string GetDiagnosticDataIdentifier()
@@ -1013,9 +1125,11 @@ namespace TrionicCANLib.API
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x9A);
             logger.Debug("data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 2)
+            if (data.Length == 2)
             {
+                if (data[0] == 0x00 && data[1] == 0x00)
+                    return string.Empty;
+
                 retval = "0x" + data[0].ToString("X2") + " " + "0x" + data[1].ToString("X2");
             }
             return retval;
@@ -1035,7 +1149,7 @@ namespace TrionicCANLib.API
         {
             ulong retval = 0;
             byte[] data = RequestECUInfo(id);
-            if (data.Length >= 4)
+            if (data.Length == 4)
             {
                 retval = Convert.ToUInt64(data[0]) * 256 * 256 * 256;
                 retval += Convert.ToUInt64(data[1]) * 256 * 256;
@@ -1205,14 +1319,18 @@ namespace TrionicCANLib.API
 
             //ulong cmd = 0x0000000000293B04;
             //0000000618293B04 example  1806 = 6150
-            return retval = WriteECUInfo(0x29, write);
+            retval = WriteECUInfo(0x29, write);
+            // Persist 
+            RequestSecurityAccess(0);
+            SendDeviceControlMessage(0x16);
+            return retval;
         }
 
         public int GetRPMLimiter()
         {
             int retval = 0;
             byte[] data = RequestECUInfo(0x29);
-            if (data.Length >= 2)
+            if (data.Length == 2)
             {
                 retval = Convert.ToInt32(data[0]) * 256;
                 retval += Convert.ToInt32(data[1]);
@@ -3886,6 +4004,7 @@ namespace TrionicCANLib.API
                 msg.setData(cmd);
                 m_canListener.setupWaitMessage(0x7E8);
                 canUsbDevice.sendMessage(msg);
+
                 cmd = 0x0000000000000022;
                 cmd = AddByteToCommand(cmd, Convert.ToByte(VINNumber[11]), 1);
                 cmd = AddByteToCommand(cmd, Convert.ToByte(VINNumber[12]), 2);
@@ -5256,6 +5375,10 @@ namespace TrionicCANLib.API
                 {
                     File.WriteAllBytes(filename, buf);
                     Md5Tools.WriteMd5HashFromByteBuffer(filename, buf);
+
+                    Dictionary<uint, byte[]> dids = ReadDid();
+                    WriteDidFile(filename, dids);
+
                     CastInfoEvent("Download done", ActivityType.FinishedDownloadingFlash);
                     workEvent.Result = true;
                 }
@@ -5270,6 +5393,23 @@ namespace TrionicCANLib.API
                 workEvent.Result = false;
             }
             return;
+        }
+
+        public Dictionary<uint, byte[]> ReadDid()
+        {
+            CastInfoEvent("Start DID read", ActivityType.ConvertingFile);
+            Dictionary<uint, byte[]> dids = new Dictionary<uint, byte[]>();
+            for (uint i = 0; i < 0xFF; i++)
+            {
+                byte[] did = RequestECUInfo(i);
+                if (did[0] != 0)
+                {
+                    CastInfoEvent("Read ID 0x" + i.ToString("X"), ActivityType.ConvertingFile);
+                    dids.Add(i, did);
+                }
+            }
+
+            return dids;
         }
 
         //KWP2000 can read more than 6 bytes at a time.. but for now we are happy with this
@@ -7387,6 +7527,72 @@ namespace TrionicCANLib.API
             LegionRequestexit();
 
             return;
+        }
+
+        private void WriteDidFile(string filename, Dictionary<uint, byte[]> dids)
+        {
+            string didFilename = Path.GetDirectoryName(filename);
+            didFilename = Path.Combine(didFilename, Path.GetFileNameWithoutExtension(filename) + GetVehicleVIN() + ".did");
+
+            using (StreamWriter writer = new StreamWriter(didFilename, false))
+            {
+                foreach (var kvp in dids)
+                {
+                    writer.WriteLine(string.Format("{0},{1}", kvp.Key, Convert.ToBase64String(kvp.Value)));
+                }
+            }
+        }
+
+        private Dictionary<uint, byte[]> ReadDidFile(string filename)
+        {
+            Dictionary<uint, byte[]> readBack = new Dictionary<uint, byte[]>();
+            using (StreamReader reader = new StreamReader(filename, false))
+            {
+                string line = reader.ReadLine();
+                while (line != null)
+                {
+                    string[] did = line.Split(',');
+                    uint id = UInt16.Parse(did[0]);
+                    byte[] data = Convert.FromBase64String(did[1]);
+                    readBack.Add(id, data);
+                    line = reader.ReadLine();
+                }
+            }
+
+            return readBack;
+        }
+
+        public bool LoadAllDID(string filename)
+        {
+            Dictionary<uint, byte[]> read = ReadDidFile(filename);
+            foreach (var kvp in read)
+            {
+                if (kvp.Key != 0x5D
+                    && kvp.Key != 0x73 && kvp.Key != 0x74 && kvp.Key != 0x76 && kvp.Key != 0x7A
+                    && kvp.Key != 0x92 && kvp.Key != 0x96 && kvp.Key != 0x98 && kvp.Key != 0x9A
+                    && kvp.Key != 0xB0
+                    && kvp.Key != 0xB4 // serial number! Error, case 0x12: "subFunction not supported - invalid format";
+                    && kvp.Key != 0xC1 && kvp.Key != 0xC2 && kvp.Key != 0xC3
+                    && kvp.Key != 0xD1 && kvp.Key != 0xD2 && kvp.Key != 0xD3 && kvp.Key != 0xDC)
+                {
+                    CastInfoEvent("Write ID 0x" + kvp.Key.ToString("X"), ActivityType.ConvertingFile);
+                    WriteECUInfo(kvp.Key, kvp.Value);
+                }
+            }
+
+            // Persist 
+            RequestSecurityAccess(0);
+            SendDeviceControlMessage(0x16);
+
+            return true;
+        }
+
+        public bool SaveAllDID(string filename)
+        {
+            Dictionary<uint, byte[]> dids = ReadDid();
+            WriteDidFile(filename, dids);
+
+            return true;
         }
     }
 }

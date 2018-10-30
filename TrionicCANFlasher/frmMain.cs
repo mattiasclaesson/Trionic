@@ -528,6 +528,7 @@ namespace TrionicCANFlasher
             btnRestoreT8.Enabled = enable;
             btnLogData.Enabled = enable;
             btnSettings.Enabled = enable;
+            btnWriteDID.Enabled = enable;
 
             bool PreCheck = true;
             if (AppSettings.AdapterType.Index == (int)CANBusAdapter.ELM327 &&
@@ -552,6 +553,7 @@ namespace TrionicCANFlasher
                     btnEditParameters.Enabled = false;
                     btnRecoverECU.Enabled = false;
                     btnRestoreT8.Enabled = false;
+                    btnWriteDID.Enabled = false;
                 }
 
                 else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
@@ -559,11 +561,13 @@ namespace TrionicCANFlasher
                     btnRecoverECU.Enabled = false;
                     btnReadECUcalibration.Enabled = false;
                     btnRestoreT8.Enabled = false;
+                    btnWriteDID.Enabled = false;
                 }
 
                 else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8)
                 {
                     btnReadECUcalibration.Enabled = false;
+                    btnWriteDID.Enabled = false;
                 }
 
                 else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
@@ -586,6 +590,7 @@ namespace TrionicCANFlasher
 
                     btnGetECUInfo.Enabled = false;
                     btnEditParameters.Enabled = false;
+                    btnWriteDID.Enabled = false;
                 }
             }
 
@@ -603,6 +608,7 @@ namespace TrionicCANFlasher
                 btnReadECUcalibration.Enabled = false;
                 btnRestoreT8.Enabled = false;
                 btnLogData.Enabled = false;
+                btnWriteDID.Enabled = false;
             }
 
             // Disable everything; Select ECU before poking around!
@@ -620,6 +626,7 @@ namespace TrionicCANFlasher
                 btnRestoreT8.Enabled = false;
                 btnLogData.Enabled = false;
                 btnSettings.Enabled = false;
+                btnWriteDID.Enabled = false;
             }
         }
 
@@ -1119,6 +1126,8 @@ namespace TrionicCANFlasher
                                 trionic8.SecurityLevel = AccessLevel.AccessLevel01;
                                 if (trionic8.openDevice(false))
                                 {
+                                    trionic8.SaveAllDID(sfd.FileName);
+
                                     Thread.Sleep(1000);
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
@@ -1392,14 +1401,8 @@ namespace TrionicCANFlasher
                         AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromIdAsString(0xCC));
                         AddLogItem("Unknown         : " + trionic8.RequestECUInfo(0x98, ""));
 
-                        for (uint i = 0; i < 0xFF; i++)
-                        {
-                            byte[] did = trionic8.RequestECUInfo(i);
-                            if (did[0] != 0 && did[1] != 0)
-                            {
-                                AddLogItem("ID:" + i.ToString("X") + " LENGTH:" + did.Length + " HEX:" + BitConverter.ToString(did) + " ASCII:" + Encoding.ASCII.GetString(did));
-                            }
-                        }
+                        string name = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ecuinfo");
+                        trionic8.SaveAllDID(name);
                     }
                 }
 
@@ -1844,6 +1847,9 @@ namespace TrionicCANFlasher
                                 if (trionic8.openDevice(false))
                                 {
                                     Thread.Sleep(1000);
+
+                                    trionic8.SaveAllDID(sfd.FileName);
+
                                     dtstart = DateTime.Now;
                                     AddLogItem("Acquiring FLASH content");
                                     Application.DoEvents();
@@ -2255,6 +2261,37 @@ namespace TrionicCANFlasher
 
                 LastWindowState = WindowState;
             }
+        }
+
+        private void btnWriteDID_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Did files|*.did", Multiselect = false })
+            {
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
+                    {
+                        SetGenericOptions(trionic8);
+
+                        EnableUserInput(false);
+                        AddLogItem("Opening connection");
+                        trionic8.SecurityLevel = AccessLevel.AccessLevel01;
+                        if (trionic8.openDevice(true))
+                        {
+                            trionic8.LoadAllDID(ofd.FileName);
+                        }
+                        else
+                        {
+                            AddLogItem("Unable to connect to ME9.6 ECU");
+                        }
+
+                        trionic8.Cleanup();
+                        EnableUserInput(true);
+                        AddLogItem("Connection terminated");
+                    }
+                }
+            }
+            LogManager.Flush();
         }
     }
 }

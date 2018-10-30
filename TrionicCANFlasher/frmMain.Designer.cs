@@ -49,6 +49,7 @@
             this.btnCollapse = new System.Windows.Forms.Button();
             this.btnExpand = new System.Windows.Forms.Button();
             this.Minilog = new System.Windows.Forms.Label();
+            this.btnWriteDID = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnReadECU
@@ -251,7 +252,7 @@
             // btnCollapse
             // 
             this.btnCollapse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCollapse.Location = new System.Drawing.Point(675, 180);
+            this.btnCollapse.Location = new System.Drawing.Point(675, 236);
             this.btnCollapse.Name = "btnCollapse";
             this.btnCollapse.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btnCollapse.Size = new System.Drawing.Size(20, 50);
@@ -264,7 +265,7 @@
             // 
             this.btnExpand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnExpand.Enabled = false;
-            this.btnExpand.Location = new System.Drawing.Point(675, 180);
+            this.btnExpand.Location = new System.Drawing.Point(675, 236);
             this.btnExpand.Name = "btnExpand";
             this.btnExpand.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.btnExpand.Size = new System.Drawing.Size(20, 50);
@@ -286,11 +287,23 @@
             this.Minilog.Text = "Mini log";
             this.Minilog.Visible = false;
             // 
+            // btnWriteDID
+            // 
+            this.btnWriteDID.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnWriteDID.Location = new System.Drawing.Point(675, 180);
+            this.btnWriteDID.Name = "btnWriteDID";
+            this.btnWriteDID.Size = new System.Drawing.Size(107, 50);
+            this.btnWriteDID.TabIndex = 77;
+            this.btnWriteDID.Text = "Write ECU DID";
+            this.btnWriteDID.UseVisualStyleBackColor = true;
+            this.btnWriteDID.Click += new System.EventHandler(this.btnWriteDID_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1023, 382);
+            this.Controls.Add(this.btnWriteDID);
             this.Controls.Add(this.Minilog);
             this.Controls.Add(this.btnExpand);
             this.Controls.Add(this.btnCollapse);
@@ -349,6 +362,7 @@
         private System.Windows.Forms.Button btnCollapse;
         private System.Windows.Forms.Button btnExpand;
         private System.Windows.Forms.Label Minilog;
+        private System.Windows.Forms.Button btnWriteDID;
     }
 }
 
