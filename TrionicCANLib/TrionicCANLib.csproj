@@ -130,6 +130,10 @@
     <Compile Include="CAN\ICANListener.cs" />
     <Compile Include="CAN\Just4TrionicDevice.cs" />
     <Compile Include="CAN\LPCCANDevice.cs" />
+    <Compile Include="SeedKey\Algorithm.cs" />
+    <Compile Include="SeedKey\AlgorithmDictionary.cs" />
+    <Compile Include="SeedKey\SeedKeyGM.cs" />
+    <Compile Include="SeedKey\Step.cs" />
     <Compile Include="Trionic5.cs" />
     <Compile Include="Trionic7.cs" />
     <Compile Include="flasher\IFlasher.cs" />
@@ -170,6 +174,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
