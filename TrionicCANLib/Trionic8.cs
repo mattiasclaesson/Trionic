@@ -1596,14 +1596,13 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x03);
-            logger.Debug("03data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
+            if (data.Length == 1)
             {
                 for (int i = 0; i < data.Length; i++)
                 {
                     retval += "0x" + data[i].ToString("X2") + " ";
                 }
+                logger.Debug("03data: " + retval);
             }
             return retval;
         }
@@ -1613,14 +1612,13 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x04);
-            logger.Debug("04data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
+            if (data.Length == 1)
             {
                 for (int i = 0; i < data.Length; i++)
                 {
                     retval += "0x" + data[i].ToString("X2") + " ";
                 }
+                logger.Debug("04data: " + retval);
             }
             return retval;
         }
@@ -1630,14 +1628,13 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x07);
-            logger.Debug("07data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
+            if (data.Length == 1)
             {
                 for (int i = 0; i < data.Length; i++)
                 {
                     retval += "0x" + data[i].ToString("X2") + " ";
                 }
+                logger.Debug("07data: " + retval);
             }
             return retval;
         }
@@ -1647,13 +1644,13 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x2E);
-            logger.Debug("2Edata: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data.Length >= 5)
+            if (data.Length == 2)
             {
                 for (int i = 0; i < data.Length; i++)
                 {
                     retval += "0x" + data[i].ToString("X2") + " ";
                 }
+                logger.Debug("2Edata: " + retval);
             }
             return retval;
         }
@@ -1663,14 +1660,13 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0xB9);
-            logger.Debug("B9data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
+            if (data.Length == 2)
             {
                 for (int i = 0; i < data.Length; i++)
                 {
                     retval += "0x" + data[i].ToString("X2") + " ";
                 }
+                logger.Debug("B9data: " + retval);
             }
             return retval;
         }
@@ -1680,14 +1676,13 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x24);
-            logger.Debug("24data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data[0] == 0x00 && data[1] == 0x00) return string.Empty;
-            if (data.Length >= 5)
+            if (data.Length == 1)
             {
                 for (int i = 0; i < data.Length; i++)
                 {
                     retval += "0x" + data[i].ToString("X2") + " ";
                 }
+                logger.Debug("24data: " + retval);
             }
             return retval;
         }
@@ -1698,13 +1693,13 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0xA0);
-            logger.Debug("A0data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data.Length >= 5)
+            if (data.Length == 1)
             {
                 for (int i = 0; i < data.Length; i++)
                 {
                     retval += "0x" + data[i].ToString("X2") + " ";
                 }
+                logger.Debug("A0data: " + retval);
             }
             return retval;
         }
@@ -1714,13 +1709,13 @@ namespace TrionicCANLib.API
         {
             string retval = string.Empty;
             byte[] data = RequestECUInfo(0x96);
-            logger.Debug("96data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-            if (data.Length >= 11)
+            if (data.Length == 10)
             {
                 for (int i = 0; i < data.Length; i++)
                 {
                     retval += "0x" + data[i].ToString("X2") + " ";
                 }
+                logger.Debug("96data: " + retval);
             }
             return retval;
         }
