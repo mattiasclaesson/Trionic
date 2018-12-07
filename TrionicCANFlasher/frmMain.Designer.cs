@@ -168,13 +168,7 @@
             this.cbxEcuType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbxEcuType.FormattingEnabled = true;
             this.cbxEcuType.Items.AddRange(new object[] {
-            "Trionic 5",
-            "Trionic 7",
-            "Trionic 8",
-            "Bosch ME9.6",
-            "Trionic 8: MCP (Experimental)",
-            "Z22SE (Experimental)",
-            "Z22SE: MCP (Experimental)"});
+            "Internal bug"});
             this.cbxEcuType.Location = new System.Drawing.Point(862, 243);
             this.cbxEcuType.Name = "cbxEcuType";
             this.cbxEcuType.Size = new System.Drawing.Size(150, 21);

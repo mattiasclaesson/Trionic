@@ -60,6 +60,23 @@ namespace TrionicCANFlasher
             AppSettings.LoadRegistrySettings();
             CheckRegistryFTDI();
 
+            // Fetch ECUs from TrionicCANLib.API
+            cbxEcuType.Items.Clear();
+
+            foreach (var Target in Enum.GetValues(typeof(ECU)))
+            {
+                try
+                {
+                    cbxEcuType.Items.Add(((DescriptionAttribute)Target.GetType().GetField(Target.ToString()).GetCustomAttributes(typeof(DescriptionAttribute), false)[0]).Description.ToString());
+                }
+
+                catch (Exception ex)
+                {
+                    logger.Debug(ex.Message);
+                }
+            }
+
+
             // Fetch last selected ECU from registry and pass its index back to AppSettings
             if (AppSettings.SelectedECU.Name != null)
             {

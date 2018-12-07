@@ -46,15 +46,33 @@ namespace TrionicCANLib.API
 
     public enum ECU : int
     {
+        [Description("Trionic 5")]
         TRIONIC5,
+        [Description("Trionic 7")]
         TRIONIC7,
+        [Description("Trionic 8; Main")]
         TRIONIC8,
-        MOTRONIC96,
-        MOTRONIC961,
+        [Description("Trionic 8; MCP (Experimental)")]
         TRIONIC8_MCP,
+
+        [Description("Bosch ME9.6")]
+        MOTRONIC96,
+
+        [Description("Z22SE; Main (Experimental)")]
         Z22SEMain_LEG,
+        [Description("Z22SE; MCP (Experimental)")]
         Z22SEMCP_LEG,
+
+
+        // Sorry for moving these but the enumration gets borked when items are "disabled"
+
+        // [Description("Bosch ME9.6.1")]
+        MOTRONIC961,
+
+        // [Description("EDC16C39 car XX")]
         EDC16C39,
+
+        // [Description("EDC17C19")]
         EDC17C19
     };
 
