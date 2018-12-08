@@ -479,38 +479,23 @@ namespace TrionicCANLib.CAN
         /// <returns></returns>
         private void CalcAcceptanceFilters(out uint code, out uint mask)
         {
-            uint acpFilt = 0xFFFF;
-            uint acpMask = 0x0000;
+            code = 0xFFE0;
+            mask = 0x0000;
 
             foreach (var id in AcceptOnlyMessageIds)
             {
-                acpFilt &= id;
-                acpMask |= id;
+                code &= (id & 0x7FF) << 5;
+                mask |= (id & 0x7FF) << 5;
             }
-            acpMask = acpMask ^ acpFilt;
 
-            logger.Debug("Filter: " + acpFilt.ToString("X8"));
-            logger.Debug("Mask:   " + acpMask.ToString("X8"));
+            code = (code & 0xFF) << 8 | code >> 8;
+            mask = (mask & 0xFF) << 8 | mask >> 8;
 
-            byte filtDigit1 = (byte)((acpFilt >> 8) & 0x7);
-            byte filtDigit2 = (byte)((acpFilt >> 4) & 0xF);
-            byte filtDigit3 = (byte)( acpFilt       & 0xF);
+            code |= code << 16;
+            mask |= mask << 16;
 
-            byte maskDigit1 = (byte)((acpMask >> 8) & 0x7);
-            byte maskDigit2 = (byte)((acpMask >> 4) & 0xF);
-            byte maskDigit3 = (byte)( acpMask       & 0xF);
-
-            byte[] ACR = new byte[2];
-            byte[] AMR = new byte[2];
-            ACR[0] = (byte)(filtDigit1 << 5 | filtDigit2 << 1 | filtDigit3 >> 3);
-            AMR[0] = (byte)(maskDigit1 << 5 | maskDigit2 << 1 | maskDigit3 >> 3);
-            ACR[1] = (byte)(filtDigit3 << 5);
-            AMR[1] = (byte)(filtDigit3 << 5);
-            ACR[1] |= 0x1F; // RTR X + Data code XXXX
-            AMR[1] |= 0x1F; // RTR + Data mask
-
-            code = (uint)(ACR[1] << 24 | ACR[0] << 16 | ACR[1] << 8 | ACR[0]);
-            mask = (uint)(AMR[1] << 24 | AMR[0] << 16 | AMR[1] << 8 | AMR[0]);
+            logger.Debug("code: " + code.ToString("x08"));
+            logger.Debug("mask: " + mask.ToString("x08"));
         }
     }
 }
