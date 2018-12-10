@@ -124,37 +124,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_34541AC83ED996D7927225A87872534C"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1CD663634790325E7A026BEAFF7B9EB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_67C8A3B4B33DC993F775EB8B685F49F7"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_A437E1A2EF91AB37C80E69415C904FF6"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_A783ECB6E78272932FA103FA11F74616"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_23B5D70299C2332EB74C0DD6053D7BDB"
+        "OwnerKey" = "8:_BAFCC793B41C6A448DEA42B07F4E19EE"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -166,7 +136,37 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_BAFCC793B41C6A448DEA42B07F4E19EE"
+        "OwnerKey" = "8:_23B5D70299C2332EB74C0DD6053D7BDB"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_A783ECB6E78272932FA103FA11F74616"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_A437E1A2EF91AB37C80E69415C904FF6"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_67C8A3B4B33DC993F775EB8B685F49F7"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_1CD663634790325E7A026BEAFF7B9EB4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_34541AC83ED996D7927225A87872534C"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -558,15 +558,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{33A125B4-2B21-4B75-8DA9-D7346448C08E}"
-        "PackageCode" = "8:{DDE95735-7819-4130-B8B1-9EE88A219ED2}"
+        "ProductCode" = "8:{7ED4E04D-CE31-4BF8-B87B-7F7CC24BD164}"
+        "PackageCode" = "8:{B7FAA58B-1CB3-4F49-A4F3-10451F1D9332}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.1.62"
+        "ProductVersion" = "8:0.1.63"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://www.txsuite.org"
