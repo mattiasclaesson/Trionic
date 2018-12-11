@@ -76,7 +76,6 @@ namespace TrionicCANFlasher
                 }
             }
 
-
             // Fetch last selected ECU from registry and pass its index back to AppSettings
             if (AppSettings.SelectedECU.Name != null)
             {
@@ -115,7 +114,6 @@ namespace TrionicCANFlasher
             trionic8.Cleanup();
             trionic7.Cleanup();
             trionic5.Cleanup();
-            System.Windows.Forms.Application.Exit();
         }
 
         private void SetupListboxWrapping()
@@ -138,14 +136,14 @@ namespace TrionicCANFlasher
                 e.Graphics.DrawString(listBoxLog.Items[e.Index].ToString(), e.Font, new SolidBrush(e.ForeColor), e.Bounds);
         }
 
-        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs u)
         {
-            logger.Trace(e.ToString());
+            logger.Trace(u.ExceptionObject);
         }
 
-        void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
+        void Application_ThreadException(object sender, ThreadExceptionEventArgs t)
         {
-            logger.Trace(e.ToString());
+            logger.Trace(t.Exception);
         }
 
         private void frmMain_Shown(object sender, EventArgs e)
