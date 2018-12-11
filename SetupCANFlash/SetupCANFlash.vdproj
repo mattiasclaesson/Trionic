@@ -281,6 +281,11 @@
             "AssemblyAsmDisplayName" = "8:canlibCLSNET, Version=8.20.814.1, Culture=neutral, PublicKeyToken=bb7f2cd46200de24, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
+                    "_1CD663634790325E7A026BEAFF7B9EB4"
+                    {
+                    "Name" = "8:canlibCLSNET.dll"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:canlibCLSNET.dll"
             "TargetName" = "8:"
@@ -307,6 +312,11 @@
             "AssemblyAsmDisplayName" = "8:combilib-net, Version=1.0.5571.38176, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
+                    "_23B5D70299C2332EB74C0DD6053D7BDB"
+                    {
+                    "Name" = "8:combilib-net.dll"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:combilib-net.dll"
             "TargetName" = "8:"
@@ -333,6 +343,11 @@
             "AssemblyAsmDisplayName" = "8:NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
+                    "_34541AC83ED996D7927225A87872534C"
+                    {
+                    "Name" = "8:NLog.dll"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:NLog.dll"
             "TargetName" = "8:"
@@ -359,6 +374,11 @@
             "AssemblyAsmDisplayName" = "8:canusbdrv_net, Version=2.0.0.1, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
+                    "_67C8A3B4B33DC993F775EB8B685F49F7"
+                    {
+                    "Name" = "8:canusbdrv_net.dll"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:canusbdrv_net.dll"
             "TargetName" = "8:"
@@ -385,6 +405,11 @@
             "AssemblyAsmDisplayName" = "8:FTD2XX_NET, Version=1.0.10.0, Culture=neutral, PublicKeyToken=61a8105588f51b1f, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
+                    "_A437E1A2EF91AB37C80E69415C904FF6"
+                    {
+                    "Name" = "8:FTD2XX_NET.dll"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:FTD2XX_NET.dll"
             "TargetName" = "8:"
@@ -411,6 +436,11 @@
             "AssemblyAsmDisplayName" = "8:LibUsbDotNet, Version=2.2.8.104, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
+                    "_A783ECB6E78272932FA103FA11F74616"
+                    {
+                    "Name" = "8:LibUsbDotNet.dll"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:LibUsbDotNet.dll"
             "TargetName" = "8:"
@@ -457,6 +487,11 @@
             "AssemblyAsmDisplayName" = "8:J2534DotNet, Version=1.0.1.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
+                    "_BA210A07C73A05DF8281BC0C89523B2A"
+                    {
+                    "Name" = "8:J2534DotNet.dll"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:J2534DotNet.dll"
             "TargetName" = "8:"
@@ -480,9 +515,14 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.49.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TrionicCANLib, Version=0.1.52.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
+                    "_BAFCC793B41C6A448DEA42B07F4E19EE"
+                    {
+                    "Name" = "8:TrionicCANLib.dll"
+                    "Attributes" = "3:512"
+                    }
                 }
             "SourcePath" = "8:TrionicCANLib.dll"
             "TargetName" = "8:"
@@ -558,15 +598,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:TrionicCANFlash"
-        "ProductCode" = "8:{7ED4E04D-CE31-4BF8-B87B-7F7CC24BD164}"
-        "PackageCode" = "8:{B7FAA58B-1CB3-4F49-A4F3-10451F1D9332}"
+        "ProductCode" = "8:{7A3E15D2-C342-464A-9720-DEA1CF3DA6CF}"
+        "PackageCode" = "8:{49979F30-6DDA-4F91-A7E0-15DADB4D06E2}"
         "UpgradeCode" = "8:{9B523E43-7324-4DF0-A1DE-8493B57D1915}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:0.1.63"
+        "ProductVersion" = "8:0.1.64"
         "Manufacturer" = "8:MattiasC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://www.txsuite.org"
@@ -1108,7 +1148,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_3C87B40D8D4F4B188624286CF0A35439"
             {
-            "SourcePath" = "8:..\\TrionicCANFlasher\\obj\\x86\\Release\\TrionicCANFlasher.exe"
+            "SourcePath" = "8:..\\TrionicCANFlasher\\obj\\x86\\Debug\\TrionicCANFlasher.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_8A7D23B3CF51495AA0821C00BEC94ACD"
