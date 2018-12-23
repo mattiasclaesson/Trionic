@@ -886,15 +886,15 @@ namespace TrionicCANFlasher
                                 }
                                 else
                                 {
-                                    string ecuMainOS = trionic8.RequestECUInfo(0xC1, "");
+                                    string ecuMainOS = trionic8.RequestECUInfoAsString(0xC1);
                                     ecuMainOS = SubString8(ecuMainOS);
-                                    string ecuEngineCalib = trionic8.RequestECUInfo(0xC2, "");
+                                    string ecuEngineCalib = trionic8.RequestECUInfoAsString(0xC2);
                                     ecuEngineCalib = SubString8(ecuEngineCalib);
-                                    string ecuSystemCalib = trionic8.RequestECUInfo(0xC3, "");
+                                    string ecuSystemCalib = trionic8.RequestECUInfoAsString(0xC3);
                                     ecuSystemCalib = SubString8(ecuSystemCalib);
-                                    string ecuSpeedoCalib = trionic8.RequestECUInfo(0xC4, "");
+                                    string ecuSpeedoCalib = trionic8.RequestECUInfoAsString(0xC4);
                                     ecuSpeedoCalib = SubString8(ecuSpeedoCalib);
-                                    string ecuSlaveOS = trionic8.RequestECUInfo(0xC5, "");
+                                    string ecuSlaveOS = trionic8.RequestECUInfoAsString(0xC5);
                                     ecuSlaveOS = SubString8(ecuSlaveOS);
 
                                     bool flash = true;
@@ -1327,17 +1327,17 @@ namespace TrionicCANFlasher
                         AddLogItem("Build date                : " + trionic8.GetBuildDate());             //0x0A
                         AddLogItem("Serial number             : " + trionic8.GetSerialNumber());          //0xB4       
                         AddLogItem("Software version          : " + trionic8.GetSoftwareVersion());       //0x08
-                        AddLogItem("0F identifier             : " + trionic8.RequestECUInfo(0x0F, ""));
-                        AddLogItem("SW identifier 1           : " + trionic8.RequestECUInfo(0xC1, ""));
-                        AddLogItem("SW identifier 2           : " + trionic8.RequestECUInfo(0xC2, ""));
-                        AddLogItem("SW identifier 3           : " + trionic8.RequestECUInfo(0xC3, ""));
-                        AddLogItem("SW identifier 4           : " + trionic8.RequestECUInfo(0xC4, ""));
-                        AddLogItem("SW identifier 5           : " + trionic8.RequestECUInfo(0xC5, ""));
-                        AddLogItem("SW identifier 6           : " + trionic8.RequestECUInfo(0xC6, ""));
-                        AddLogItem("Hardware type             : " + trionic8.RequestECUInfo(0x97, ""));
-                        AddLogItem("75 identifier             : " + trionic8.RequestECUInfo(0x75, ""));
-                        AddLogItem("Engine type               : " + trionic8.RequestECUInfo(0x0C, ""));
-                        AddLogItem("Supplier ID               : " + trionic8.RequestECUInfo(0x92, ""));
+                        AddLogItem("0F identifier             : " + trionic8.RequestECUInfoAsString(0x0F));
+                        AddLogItem("SW identifier 1           : " + trionic8.RequestECUInfoAsString(0xC1));
+                        AddLogItem("SW identifier 2           : " + trionic8.RequestECUInfoAsString(0xC2));
+                        AddLogItem("SW identifier 3           : " + trionic8.RequestECUInfoAsString(0xC3));
+                        AddLogItem("SW identifier 4           : " + trionic8.RequestECUInfoAsString(0xC4));
+                        AddLogItem("SW identifier 5           : " + trionic8.RequestECUInfoAsString(0xC5));
+                        AddLogItem("SW identifier 6           : " + trionic8.RequestECUInfoAsString(0xC6));
+                        AddLogItem("Hardware type             : " + trionic8.RequestECUInfoAsString(0x97));
+                        AddLogItem("75 identifier             : " + trionic8.RequestECUInfoAsString(0x75));
+                        AddLogItem("Engine type               : " + trionic8.RequestECUInfoAsString(0x0C));
+                        AddLogItem("Supplier ID               : " + trionic8.RequestECUInfoAsString(0x92));
                         AddLogItem("Speed limiter             : " + trionic8.GetTopSpeed() + " km/h");
                         AddLogItem("Oil quality               : " + trionic8.GetOilQuality().ToString("F2") + " %");
                         AddLogItem("SAAB partnumber           : " + trionic8.GetSaabPartnumber());
@@ -1387,15 +1387,15 @@ namespace TrionicCANFlasher
                     }
                     else
                     {
-                        string ecuMainOS = trionic8.RequestECUInfo(0xC1, "");
+                        string ecuMainOS = trionic8.RequestECUInfoAsString(0xC1);
                         ecuMainOS = SubString8(ecuMainOS);
-                        string ecuEngineCalib = trionic8.RequestECUInfo(0xC2, "");
+                        string ecuEngineCalib = trionic8.RequestECUInfoAsString(0xC2);
                         ecuEngineCalib = SubString8(ecuEngineCalib);
-                        string ecuSystemCalib = trionic8.RequestECUInfo(0xC3, "");
+                        string ecuSystemCalib = trionic8.RequestECUInfoAsString(0xC3);
                         ecuSystemCalib = SubString8(ecuSystemCalib);
-                        string ecuSpeedoCalib = trionic8.RequestECUInfo(0xC4, "");
+                        string ecuSpeedoCalib = trionic8.RequestECUInfoAsString(0xC4);
                         ecuSpeedoCalib = SubString8(ecuSpeedoCalib);
-                        string ecuSlaveOS = trionic8.RequestECUInfo(0xC5, "");
+                        string ecuSlaveOS = trionic8.RequestECUInfoAsString(0xC5);
                         ecuSlaveOS = SubString8(ecuSlaveOS);
 
                         AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());           //0x90
@@ -1408,13 +1408,13 @@ namespace TrionicCANFlasher
                         AddLogItem("System Calib    : " + ecuSystemCalib);
                         AddLogItem("Speedo Calib    : " + ecuSpeedoCalib);
                         AddLogItem("Slave OS        : " + ecuSlaveOS);
-                        AddLogItem("Hardware type   : " + trionic8.RequestECUInfo(0x97, ""));
-                        AddLogItem("Supplier ID     : " + trionic8.RequestECUInfo(0x92, ""));
+                        AddLogItem("Hardware type   : " + trionic8.RequestECUInfoAsString(0x97));
+                        AddLogItem("Supplier ID     : " + trionic8.RequestECUInfoAsString(0x92));
                         AddLogItem("Speed limiter   : " + trionic8.GetTopSpeed() + " km/h");
                         AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
                         AddLogItem("End model partnr: " + trionic8.GetInt64FromIdAsString(0xCB));
                         AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromIdAsString(0xCC));
-                        AddLogItem("Unknown         : " + trionic8.RequestECUInfo(0x98, ""));
+                        AddLogItem("Unknown         : " + trionic8.RequestECUInfoAsString(0x98));
 
                         string name = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ecuinfo");
                         trionic8.SaveAllDID(name);

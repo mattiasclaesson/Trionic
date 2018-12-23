@@ -13,6 +13,7 @@ using System.Windows.Forms;
 using System.Collections;
 using NLog;
 using TrionicCANLib.Checksum;
+using TrionicCANLib.SeedKey;
 
 namespace TrionicCANLib.API
 {
@@ -548,15 +549,15 @@ namespace TrionicCANLib.API
             LogManager.Flush();
         }
 
-        public string RequestECUInfo(uint _pid, string description)
+        public string RequestECUInfoAsString(uint _pid)
         {
-            return RequestECUInfo(_pid, description, -1);
+            return RequestECUInfoAsString(_pid, -1);
         }
 
-        public string RequestECUInfo(uint _pid, string description, int expectedResponses)
+        public string RequestECUInfoAsString(uint _pid, int expectedResponses)
         {
             string retval = string.Empty;
-            byte[] rx_buffer = new byte[128];
+            byte[] rx_buffer = new byte[1024];
             int rx_pnt = 0;
 
             if (canUsbDevice.isOpen())
@@ -577,28 +578,37 @@ namespace TrionicCANLib.API
                 bool _success = false;
                 CANMessage response = new CANMessage();
                 ulong data = 0;
+                int timeout = timeoutP2ct;
                 while (!_success && msgcnt < 2)
                 {
                     response = new CANMessage();
-                    response = m_canListener.waitMessage(timeoutP2ct);
+                    response = m_canListener.waitMessage(timeout);
                     data = response.getData();
                     //RequestCorrectlyReceived-ResponsePending
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                     {
-                        //CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                        logger.Debug("RequestCorrectlyReceived-ResponsePending");
+                        timeout *= 3;
+                    }
+                    else if (data == 0)
+                    {
+                        logger.Debug("Received blank message while waiting for data");
                     }
                     else if (response.getCanData(1) != 0x7E)
                     {
                         _success = true;
+                        msgcnt++;
                     }
-                    msgcnt++;
                 }
 
                 if (response.getCanData(1) == 0x5A)
                 {
                     // only one frame in this response
-
-                    for (uint fi = 3; fi < 8; fi++) rx_buffer[rx_pnt++] = response.getCanData(fi);
+                    byte canLength = response.getCanData(0);
+                    for (uint fi = 3; fi <= canLength; fi++)
+                    {
+                        rx_buffer[rx_pnt++] = response.getCanData(fi);
+                    }
                     retval = Encoding.ASCII.GetString(rx_buffer, 0, rx_pnt - 1);
                 }
                 else if (response.getCanData(2) == 0x5A)
@@ -609,7 +619,8 @@ namespace TrionicCANLib.API
                     if ((len - 4) % 8 > 0) m_nrFrameToReceive++;
                     int lenthisFrame = len;
                     if (lenthisFrame > 4) lenthisFrame = 4;
-                    for (uint fi = 4; fi < 4 + lenthisFrame; fi++) rx_buffer[rx_pnt++] = response.getCanData(fi);
+                    for (uint fi = 4; fi < 4 + lenthisFrame; fi++)
+                        rx_buffer[rx_pnt++] = response.getCanData(fi);
                     // wait for more records now
 
                     while (m_nrFrameToReceive > 0)
@@ -620,7 +631,11 @@ namespace TrionicCANLib.API
                         //RequestCorrectlyReceived-ResponsePending
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                         {
-                            //CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                            CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                        }
+                        else if (data == 0)
+                        {
+                            logger.Debug("Received blank message while waiting for data");
                         }
                         else if (response.getCanData(1) != 0x7E)
                         {
@@ -773,21 +788,27 @@ namespace TrionicCANLib.API
                 bool _success = false;
                 CANMessage response = new CANMessage();
                 ulong data = 0;
+                int timeout = timeoutP2ct;
                 while (!_success && msgcnt < 2)
                 {
                     response = new CANMessage();
-                    response = m_canListener.waitMessage(timeoutP2ct);
+                    response = m_canListener.waitMessage(timeout);
                     data = response.getData();
                     //RequestCorrectlyReceived-ResponsePending
                     if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                     {
-                        //CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                        logger.Debug("RequestCorrectlyReceived-ResponsePending");
+                        timeout *= 3;
+                    }
+                    else if (data == 0)
+                    {
+                        logger.Debug("Received blank message while waiting for data");
                     }
                     else if (response.getCanData(1) != 0x7E)
                     {
                         _success = true;
+                        msgcnt++;
                     }
-                    msgcnt++;
                 }
 
                 if (response.getCanData(1) == 0x5A)
@@ -824,7 +845,11 @@ namespace TrionicCANLib.API
                         //RequestCorrectlyReceived-ResponsePending
                         if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x1A && response.getCanData(3) == 0x78)
                         {
-                            //CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                            logger.Debug("RequestCorrectlyReceived-ResponsePending");
+                        }
+                        else if (data == 0)
+                        {
+                            logger.Debug("Received blank message while waiting for data");
                         }
                         else if (response.getCanData(1) != 0x7E)
                         {
@@ -1162,25 +1187,25 @@ namespace TrionicCANLib.API
         public string GetVehicleVIN()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x90, "VINNumber", 3);
+            return RequestECUInfoAsString(0x90, 3);
         }
 
         public string GetBuildDate()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x0A, "Build date");
+            return RequestECUInfoAsString(0x0A);
         }
 
         public string GetECUSWVersionNumber()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x95, "ECUSWNumber");
+            return RequestECUInfoAsString(0x95);
         }
 
         public string GetProgrammingDate()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x99, "Programming date");
+            return RequestECUInfoAsString(0x99);
         }
 
         public string GetProgrammingDateME96()
@@ -1191,36 +1216,36 @@ namespace TrionicCANLib.API
         public string GetSerialNumber()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0xB4, "Serial number");
+            return RequestECUInfoAsString(0xB4);
         }
 
         public string GetCalibrationSet()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x74, "Calibration set");
+            return RequestECUInfoAsString(0x74);
         }
 
         public string GetCodefileVersion()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x73, "Codefile version");
+            return RequestECUInfoAsString(0x73);
         }
 
         public string GetECUDescription()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x72, "ECU description");
+            return RequestECUInfoAsString(0x72);
         }
         public string GetECUHardware()
         {
             // read and wait for sequence of acks
-            return RequestECUInfo(0x71, "ECU hardware");
+            return RequestECUInfoAsString(0x71);
         }
 
         public string GetSoftwareVersion()
         {
             // read and wait for sequence of acks
-            string retval = RequestECUInfo(0x08, "Software version");
+            string retval = RequestECUInfoAsString(0x08);
             retval = retval.Replace("\x00", "");
             return retval.Trim();
         }
@@ -1421,11 +1446,11 @@ namespace TrionicCANLib.API
             tankType = TankType.EU;
             clutchStart = false;
             byte[] data = RequestECUInfo(0x01);
-            logger.Debug("01data: " + data[0].ToString("X2") + " " + data[1].ToString("X2"));
-
-            if (data[0] == 0x00 && data[1] == 0x00) return false;
+            
             if (data.Length >= 2)
             {
+                if (data[0] == 0x00 && data[1] == 0x00) return false;
+
                 // -------C
                 biopower = BitTools.GetBit(data[0], 0);
 
@@ -2871,7 +2896,7 @@ namespace TrionicCANLib.API
                             success = false;
                             return retData;
                         }
-                        else if (data == 0x0000000000000000)
+                        else if (data == 0)
                         {
                             logger.Debug("Received blank message while waiting for data");
                             success = false;
@@ -3056,7 +3081,7 @@ namespace TrionicCANLib.API
                         success = false;
                         return retData;
                     }
-                    else if (data == 0x0000000000000000)
+                    else if (data == 0)
                     {
                         logger.Debug("Received blank message while waiting for data");
                         success = false;
@@ -5536,7 +5561,7 @@ namespace TrionicCANLib.API
                         success = false;
                         return retData;
                     }
-                    else if (data == 0x0000000000000000)
+                    else if (data == 0)
                     {
                         logger.Debug("Received blank message while waiting for data");
                         success = false;
