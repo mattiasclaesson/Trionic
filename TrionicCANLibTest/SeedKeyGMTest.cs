@@ -1,11 +1,12 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TrionicCANLib.API;
+using TrionicCANLib.SeedKey;
 
 namespace TrionicCANLibTest
 {
     [TestClass]
-    public class SeedKeyTest
+    public class SeedKeyGMTest
     {
         [TestMethod]
         public void TestT8KeySeedUsingByteArray()
@@ -53,6 +54,23 @@ namespace TrionicCANLibTest
 
             // When
             byte[] actualKey = SeedKeyGM.CalculateKey(ECU.MOTRONIC96, seed);
+
+            // Then
+            CollectionAssert.AreEqual(expectedKey, actualKey);
+        }
+
+        [TestMethod]
+        public void TestEDC16C39KeySeedUsingByteArray()
+        {
+            // Given
+            //EDC16C39
+            // seed 6808 [0 high][1 low]
+            // key 405F [0 high][1 low]
+            byte[] seed = { 0x68, 0x08 };
+            byte[] expectedKey = { 0x40, 0x5F };
+
+            // When
+            byte[] actualKey = SeedKeyGM.CalculateKey(ECU.EDC16C39, seed);
 
             // Then
             CollectionAssert.AreEqual(expectedKey, actualKey);

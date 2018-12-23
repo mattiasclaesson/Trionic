@@ -78,7 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SeedKeyTest.cs" />
+    <Compile Include="SeedKeyGMTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TrionicCANLib\TrionicCANLib.csproj">

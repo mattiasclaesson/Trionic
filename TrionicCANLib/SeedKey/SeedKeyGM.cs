@@ -1,9 +1,8 @@
 ﻿using NLog;
 using System;
 using TrionicCANLib.API;
-using TrionicCANLib.SeedKey;
 
-namespace TrionicCANLibTest
+namespace TrionicCANLib.SeedKey
 {
     public class SeedKeyGM
     {
