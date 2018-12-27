@@ -5775,6 +5775,8 @@ namespace TrionicCANLib.API
 
         private bool ProgramFlashME96(string filename, int start, int end)
         {
+            bool result = false;
+
             int startAddress = start;
             int range = end - start;
             int blockSize = 0xFF8;//4088
@@ -5814,7 +5816,17 @@ namespace TrionicCANLib.API
 
                 sw.Reset();
                 sw.Start();
-                if (SendTransferDataME96(blockSize, startAddress, 0x7E8, data2Send[0]))
+
+                int count = 0;
+                bool status = false;
+                while (count < 5 && !status)
+                {
+                    status = SendTransferDataME96(blockSize, startAddress, 0x7E8, data2Send[0]);
+                    logger.Debug("SendTransferData status:" + status);
+                    count++;
+                }
+
+                if (status)
                 {
                     canUsbDevice.RequestDeviceReady();
                     // calculate number of frames
@@ -5876,6 +5888,11 @@ namespace TrionicCANLib.API
                     canUsbDevice.RequestDeviceReady();
                     SendKeepAlive();
                 }
+                else
+                {
+                    CastInfoEvent("Error SendTransferData, ran out of retries", ActivityType.FinishedFlashing);
+                    break;
+                }
                 sw.Stop();
 
                 startAddress += blockSize;
@@ -5893,12 +5910,18 @@ namespace TrionicCANLib.API
                     startAddress = 0x404000;
                 }
             }
-            CastProgressWriteEvent(100);
+
+            if (bufpnt >= end)
+            {
+                CastProgressWriteEvent(100);
+            }
             return true;
         }
 
         private bool SendTransferDataME96(int length, int address, uint waitforResponseID, byte firstByteToSend )
         {
+            bool result = false;
+
             logger.Debug("SendTransferDataME96 address:" + address.ToString("X"));
             CANMessage msg = new CANMessage(0x7E0, 0, 8); // <GS-24052011> test for ELM327, set length to 16 (0x10)
             ulong cmd = 0x0000000000360010; // 0x36 = transferData
@@ -5931,16 +5954,41 @@ namespace TrionicCANLib.API
                 logger.Debug("Couldn't send message");
             }
 
-            CANMessage response = new CANMessage();
-            response = new CANMessage();
-            response = m_canListener.waitMessage(timeoutP2ct);
+            CANMessage response = m_canListener.waitMessage(timeoutP2ct);
             ulong data = response.getData();
-            logger.Debug("Received in SendTransferData: " + data.ToString("X16"));
-            if (getCanData(data, 0) != 0x30 || getCanData(data, 1) != 0x00)
+            while (true)
             {
-                return false;
+                logger.Debug("Received in SendTransferData: " + data.ToString("X16"));
+                
+                // RequestCorrectlyReceived-ResponsePending ($78, RC_RCR-RP)
+                if (getCanData(data, 0) == 0x03 && getCanData(data, 1) == 0x7F && getCanData(data, 2) == 0x36 && getCanData(data, 3) == 0x78)
+                {
+                    CastInfoEvent("RequestCorrectlyReceived-ResponsePending", ActivityType.UploadingFlash);
+                    if (canUsbDevice is CANELM327Device)
+                    {
+                        CastInfoEvent("Response timedout, ELM327 will wait 5 seconds", ActivityType.ErasingFlash);
+                        for (int i = 0; i < 5; i++)
+                        {
+                            SendKeepAlive();
+                            Thread.Sleep(1000);
+                        }
+                        result = true;
+                        break;
+                    }
+                }
+                else if (response.getCanData(1) == 0x7F && response.getCanData(2) == 0x36)
+                {
+                    CastInfoEvent("Error: " + TranslateErrorCode(response.getCanData(3)), ActivityType.ConvertingFile);
+                    break;
+                }
+                else if (getCanData(data, 0) == 0x30 || getCanData(data, 1) == 0x00)
+                {
+                    result = true;
+                    break;
+                }
+                data = m_canListener.waitMessage(timeoutP2ce).getData();
             }
-            return true;
+            return result;
         }
 
         public void RestoreT8(object sender, DoWorkEventArgs workEvent)
@@ -5956,7 +6004,7 @@ namespace TrionicCANLib.API
             _stallKeepAlive = true;
 
             int waitCount = 0;
-            Boolean restored = false;
+            bool restored = false;
             CastInfoEvent("Reset ECU now. Turn off and on power!", ActivityType.UploadingBootloader);
             while (waitCount < 300 && !restored)
             {
@@ -7552,7 +7600,7 @@ namespace TrionicCANLib.API
         private void WriteDidFile(string filename, Dictionary<uint, byte[]> dids)
         {
             string didFilename = Path.GetDirectoryName(filename);
-            didFilename = Path.Combine(didFilename, Path.GetFileNameWithoutExtension(filename) + GetVehicleVIN() + ".did");
+            didFilename = Path.Combine(didFilename, Path.GetFileNameWithoutExtension(filename) + ".did");
 
             using (StreamWriter writer = new StreamWriter(didFilename, false))
             {
