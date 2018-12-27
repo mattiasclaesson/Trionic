@@ -590,6 +590,23 @@ namespace TrionicCANFlasher
                     btnReadSRAM.Enabled = false;
                     btnRestoreT8.Enabled = false;
                     btnRecoverECU.Enabled = false;
+                    
+                    // OBDLink cannot handle write on me9.6, and truncate some fields in getecuinfo
+                    if (AppSettings.AdapterType.Index == (int)CANBusAdapter.ELM327)
+                    {
+                        btnFlashECU.Enabled = false;
+                        btnReadECU.Enabled = false;
+                        btnGetECUInfo.Enabled = false;
+                        btnReadSRAM.Enabled = false;
+                        btnRecoverECU.Enabled = false;
+                        btnReadDTC.Enabled = false;
+
+                        btnEditParameters.Enabled = false;
+                        btnReadECUcalibration.Enabled = false;
+                        btnRestoreT8.Enabled = false;
+                        btnLogData.Enabled = false;
+                        btnWriteDID.Enabled = false;
+                    }
                 }
 
                 else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
