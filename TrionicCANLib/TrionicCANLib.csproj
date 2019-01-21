@@ -114,7 +114,7 @@
     <Compile Include="Firmware\FileT7.cs" />
     <Compile Include="Firmware\FileT8.cs" />
     <Compile Include="Firmware\FileT8mcp.cs" />
-    <Compile Include="Firmware\IBaseFile.cs" />
+    <Compile Include="Firmware\BaseFile.cs" />
     <Compile Include="ITrionic.cs" />
     <Compile Include="Md5Tools.cs" />
     <Compile Include="FlashReadArguments.cs" />

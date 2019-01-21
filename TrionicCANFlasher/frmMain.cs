@@ -487,7 +487,7 @@ namespace TrionicCANFlasher
             FileInfo fi = new FileInfo(fileName);
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC5)
             {
-                if (fi.Length != FileT5.LengthT52 && fi.Length != FileT5.LengthT55)
+                if (FileT5.VerifyFileSize(fi.Length))
                 {
                     AddLogItem("Not a trionic 5 file");
                     return false;
@@ -495,7 +495,7 @@ namespace TrionicCANFlasher
             }
             if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC7)
             {
-                if (fi.Length != FileT7.Length)
+                if (FileT7.VerifyFileSize(fi.Length))
                 {
                     AddLogItem("Not a trionic 7 file");
                     return false;
@@ -503,7 +503,7 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8 || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMain_LEG)
             {
-                if (fi.Length != FileT8.Length)
+                if (FileT8.VerifyFileSize(fi.Length))
                 {
                     AddLogItem("Not a trionic 8 file");
                     return false;
@@ -511,7 +511,7 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.MOTRONIC96)
             {
-                if (fi.Length != FileME96.Length && fi.Length != FileME96.LengthComplete)
+                if (FileME96.VerifyFileSize(fi.Length))
                 {
                     AddLogItem("Not a Motronic ME9.6 file");
                     return false;
@@ -519,7 +519,7 @@ namespace TrionicCANFlasher
             }
             else if (cbxEcuType.SelectedIndex == (int)ECU.TRIONIC8_MCP || cbxEcuType.SelectedIndex == (int)ECU.Z22SEMCP_LEG)
             {
-                if (fi.Length != FileT8mcp.Length)
+                if (FileT8mcp.VerifyFileSize(fi.Length))
                 {
                     AddLogItem("Not a trionic 8 mcp file");
                     return false;

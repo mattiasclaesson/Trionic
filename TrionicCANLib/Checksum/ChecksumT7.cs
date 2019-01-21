@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using NLog;
 using System.Windows.Forms;
+using TrionicCANLib.Firmware;
 
 namespace TrionicCANLib.Checksum
 {
@@ -128,14 +129,14 @@ namespace TrionicCANLib.Checksum
                 fs.Close();
                 return -1;
             }
-            
-            if (checksumArea > 0x80000)
+
+            if (checksumArea > FileT7.Length)
             {
                 checksumArea = checksumArea - sramOffset;
             }
             int positionInFile = findFWChecksum(fs, checksumArea).checksumAddress;
             logger.Debug("positionInfile: " + positionInFile.ToString("X8"));
-            if (positionInFile > 0x80000)
+            if (positionInFile > FileT7.Length)
             {
                 positionInFile = positionInFile - sramOffset;
             }
@@ -160,13 +161,13 @@ namespace TrionicCANLib.Checksum
                 FileStream fs = new FileStream(a_fileName, FileMode.Open, FileAccess.ReadWrite);
                 int checksumArea = findChecksumArea(fs);
                 int positionInFile = findFWChecksum(fs, checksumArea).checksumAddress;
-                if (positionInFile > 0x80000)
+                if (positionInFile > FileT7.Length)
                 {
                     positionInFile = positionInFile - sramOffset;
                 }
                 fs.Position = positionInFile;
                 byte aByte;
-                if (fs.Position < 0x80000)
+                if (fs.Position < FileT7.Length)
                 {
                     for (int i = 0; i < 4; i++)
                     {

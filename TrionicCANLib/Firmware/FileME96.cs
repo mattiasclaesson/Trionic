@@ -5,7 +5,7 @@ using System.IO;
 
 namespace TrionicCANLib.Firmware
 {
-    public class FileME96 : IBaseFile
+    public class FileME96 : BaseFile
     {
         static public uint Length = 0x200000;
         static public uint LengthComplete = 0x280000;
@@ -93,6 +93,11 @@ namespace TrionicCANLib.Firmware
             }
 
             return version;
+        }
+
+        static public new bool VerifyFileSize(long size)
+        {
+            return size == Length || size == LengthComplete;
         }
     }
 }

@@ -24,9 +24,10 @@ namespace TrionicCANLib.Checksum
             uint End;
             uint Checksum;
 
-            // Verify file length.
-            if (len != FileT5.LengthT52 && len != FileT5.LengthT55)
+            if (!FileT5.VerifyFileSize(len))
+            {
                 return ChecksumResult.InvalidFileLength;
+            }
 
             // Store file in a local buffer.
             byte[] Bufr = FileTools.readdatafromfile(filename, 0, (int)len);
