@@ -7,16 +7,16 @@ namespace TrionicCANLib.Firmware
 {
     public class FileME96 : BaseFile
     {
-        static public uint Length = 0x200000;
-        static public uint LengthComplete = 0x280000;
+        public const uint Length = 0x200000;
+        public const uint LengthComplete = 0x280000;
 
-        static public uint MainOSAddress = 0x40000;
-        static public uint EngineCalibrationAddress = 0x1C2000;
-        static public uint EngineCalibrationAddressEnd = 0x1E0000;
-        static public uint VersionOffset = 5;
+        public const uint MainOSAddress = 0x40000;
+        public const uint EngineCalibrationAddress = 0x1C2000;
+        public const uint EngineCalibrationAddressEnd = 0x1E0000;
+        public const uint VersionOffset = 5;
 
-        static private byte[] expectedBegin = {0x48, 0x01, 0x10, 0xF2, 0x00, 0x00, 0x00, 0x00, 0x48, 0x00, 0x03, 0xC6, 0x00, 0x00, 0x00, 0x00};
-        static private byte[] filled = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+        private const byte[] expectedBegin = {0x48, 0x01, 0x10, 0xF2, 0x00, 0x00, 0x00, 0x00, 0x48, 0x00, 0x03, 0xC6, 0x00, 0x00, 0x00, 0x00};
+        private const byte[] filled = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
         static public string getFileInfo(string filename)
         {
