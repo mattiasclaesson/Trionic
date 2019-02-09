@@ -1431,7 +1431,7 @@ namespace TrionicCANFlasher
                         AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
                         AddLogItem("End model partnr: " + trionic8.GetInt64FromIdAsString(0xCB));
                         AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromIdAsString(0xCC));
-                        AddLogItem("Unknown         : " + trionic8.RequestECUInfoAsString(0x98));
+                        AddLogItem("Tester Serial   : " + trionic8.RequestECUInfoAsString(0x98));
 
                         string name = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ecuinfo");
                         trionic8.SaveAllDID(name);
