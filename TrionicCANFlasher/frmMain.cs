@@ -1358,10 +1358,11 @@ namespace TrionicCANFlasher
                         AddLogItem("Speed limiter             : " + trionic8.GetTopSpeed() + " km/h");
                         AddLogItem("Oil quality               : " + trionic8.GetOilQuality().ToString("F2") + " %");
                         AddLogItem("SAAB partnumber           : " + trionic8.GetSaabPartnumber());
-                        AddLogItem("Diagnostic ID             : " + trionic8.GetDiagnosticDataIdentifier());
-                        AddLogItem("End model partnr          : " + trionic8.GetInt64FromIdAsString(0xCB));
-                        AddLogItem("Basemodel partnr          : " + trionic8.GetInt64FromIdAsString(0xCC));
+                        AddLogItem("Diagnostic Data Identifier: " + trionic8.GetDiagnosticDataIdentifier());
+                        AddLogItem("End model partnumber      : " + trionic8.GetInt64FromIdAsString(0xCB));
+                        AddLogItem("Base model partnumber     : " + trionic8.GetInt64FromIdAsString(0xCC));
                         AddLogItem("ManufacturersEnableCounter: " + trionic8.GetManufacturersEnableCounter());
+                        AddLogItem("Tester Serial             : " + trionic8.RequestECUInfoAsString(0x98));
                         bool convertible, sai, highoutput, biopower, clutchStart;
                         TankType tankType;
                         DiagnosticType diagnosticType;
@@ -1415,26 +1416,31 @@ namespace TrionicCANFlasher
                         string ecuSlaveOS = trionic8.RequestECUInfoAsString(0xC5);
                         ecuSlaveOS = SubString8(ecuSlaveOS);
 
-                        AddLogItem("VINNumber       : " + trionic8.GetVehicleVIN());           //0x90
-                        AddLogItem("Calibration set : " + trionic8.GetCalibrationSet());       //0x74
-                        AddLogItem("Codefile version: " + trionic8.GetCodefileVersion());      //0x73
-                        AddLogItem("Serial number   : " + trionic8.GetSerialNumber());         //0xB4
-                        AddLogItem("Programming date: " + trionic8.GetProgrammingDateME96());  //0x99
-                        AddLogItem("Main OS         : " + ecuMainOS);
-                        AddLogItem("Engine Calib    : " + ecuEngineCalib);
-                        AddLogItem("System Calib    : " + ecuSystemCalib);
-                        AddLogItem("Speedo Calib    : " + ecuSpeedoCalib);
-                        AddLogItem("Slave OS        : " + ecuSlaveOS);
-                        AddLogItem("Hardware type   : " + trionic8.RequestECUInfoAsString(0x97));
-                        AddLogItem("Supplier ID     : " + trionic8.RequestECUInfoAsString(0x92));
-                        AddLogItem("Speed limiter   : " + trionic8.GetTopSpeed() + " km/h");
-                        AddLogItem("Diagnostic ID   : " + trionic8.GetDiagnosticDataIdentifier());
-                        AddLogItem("End model partnr: " + trionic8.GetInt64FromIdAsString(0xCB));
-                        AddLogItem("Basemodel partnr: " + trionic8.GetInt64FromIdAsString(0xCC));
-                        AddLogItem("Tester Serial   : " + trionic8.RequestECUInfoAsString(0x98));
+                        AddLogItem("VINNumber                 : " + trionic8.GetVehicleVIN());           //0x90
+                        AddLogItem("Calibration set           : " + trionic8.GetCalibrationSet());       //0x74
+                        AddLogItem("Codefile version          : " + trionic8.GetCodefileVersion());      //0x73
+                        AddLogItem("Diagnostic address        : " + trionic8.GetDiagnosticAddress());    //0xB0
+                        AddLogItem("Serial number             : " + trionic8.GetSerialNumber());         //0xB4
+                        AddLogItem("Programming date          : " + trionic8.GetProgrammingDateME96());  //0x99
+                        AddLogItem("Main OS                   : " + ecuMainOS);
+                        AddLogItem("Engine Calib              : " + ecuEngineCalib);
+                        AddLogItem("System Calib              : " + ecuSystemCalib);
+                        AddLogItem("Speedo Calib              : " + ecuSpeedoCalib);
+                        AddLogItem("Slave OS                  : " + ecuSlaveOS);
+                        AddLogItem("Hardware type             : " + trionic8.RequestECUInfoAsString(0x97));
+                        AddLogItem("Supplier ID               : " + trionic8.RequestECUInfoAsString(0x92));
+                        AddLogItem("Speed limiter             : " + trionic8.GetTopSpeed() + " km/h"); //0x02
+                        AddLogItem("Radum                     : " + trionic8.GetRadum());              //0x24
+                        AddLogItem("Pmc w                     : " + trionic8.GetPmcW());               //0x2E
+                        AddLogItem("Diagnostic Data Identifier: " + trionic8.GetDiagnosticDataIdentifier());
+                        AddLogItem("End model partnumber      : " + trionic8.GetInt64FromIdAsString(0xCB));
+                        AddLogItem("Base model partnumber     : " + trionic8.GetInt64FromIdAsString(0xCC));
+                        AddLogItem("ManufacturersEnableCounter: " + trionic8.GetManufacturersEnableCounter());
+                        AddLogItem("Tester Serial             : " + trionic8.RequestECUInfoAsString(0x98));
+                        AddLogItem("Bosch Enable Counter      : " + trionic8.GetBoschEnableCounter());
 
-                        string name = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ecuinfo");
-                        trionic8.SaveAllDID(name);
+                        //string name = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ecuinfo");
+                        //trionic8.SaveAllDID(name);
                     }
                 }
 

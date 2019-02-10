@@ -510,6 +510,24 @@ namespace TrionicCANLib.API
                 case 0x80:
                     retval = "Service not supported in current diagnostics session";
                     break;
+                case 0x81:
+                    retval = "Scheduler full";
+                    break;
+                case 0x83:
+                    retval = "Voltage out of range";
+                    break;
+                case 0x85:
+                    retval = "General programming failure";
+                    break;
+                case 0x89:
+                    retval = "Device type error";
+                    break;
+                case 0x99:
+                    retval = "Ready for download";
+                    break;
+                case 0xE3:
+                    retval = "DeviceControl Limits Exceeded";
+                    break;
             }
             return retval;
         }
@@ -1144,6 +1162,30 @@ namespace TrionicCANLib.API
             return retval;
         }
 
+        public int GetRadum()
+        {
+            int retval = 0;
+            byte[] data = RequestECUInfo(0x24);
+            if (data.Length == 1)
+            {
+                retval = Convert.ToInt32(data[0]);
+            }
+            return retval;
+        }
+
+        public int GetPmcW()
+        {
+            int retval = 0;
+            byte[] data = RequestECUInfo(0x2E);
+            if (data.Length == 2)
+            {
+                retval = Convert.ToInt32(data[0]) * 256;
+                retval += Convert.ToInt32(data[1]);
+                retval /= 10;
+            }
+            return retval;
+        }
+
         public string GetDiagnosticDataIdentifier()
         {
             //9A = 01 10 0
@@ -1211,6 +1253,16 @@ namespace TrionicCANLib.API
         public string GetProgrammingDateME96()
         {
             return GetInt64FromId(0x99).ToString("x");
+        }
+
+        public string GetDiagnosticAddress()
+        {
+            return "0x" + Convert.ToUInt32(RequestECUInfo(0xB0)[0]).ToString("x");
+        }
+
+        public string GetBoschEnableCounter()
+        {
+            return "0x" + Convert.ToUInt32(RequestECUInfo(0x70)[0]).ToString("x");
         }
 
         public string GetSerialNumber()
@@ -5424,10 +5476,11 @@ namespace TrionicCANLib.API
                 byte[] did = RequestECUInfo(i);
                 if (did[0] != 0)
                 {
-                    CastInfoEvent("Read ID 0x" + i.ToString("X"), ActivityType.ConvertingFile);
+                    //CastInfoEvent("Read ID 0x" + i.ToString("X"), ActivityType.ConvertingFile);
                     dids.Add(i, did);
                 }
             }
+            CastInfoEvent("Completed DID read", ActivityType.ConvertingFile);
 
             return dids;
         }
@@ -7636,7 +7689,7 @@ namespace TrionicCANLib.API
             foreach (var kvp in read)
             {
                 if (kvp.Key != 0x5D
-                    && kvp.Key != 0x73 && kvp.Key != 0x74 && kvp.Key != 0x76 && kvp.Key != 0x7A
+                    && kvp.Key != 0x73 && kvp.Key != 0x74 && kvp.Key != 0x76 && kvp.Key != 0x7A 
                     && kvp.Key != 0x92 && kvp.Key != 0x96 && kvp.Key != 0x98 && kvp.Key != 0x9A
                     && kvp.Key != 0xB0
                     && kvp.Key != 0xB4 // serial number! Error, case 0x12: "subFunction not supported - invalid format";
