@@ -1822,6 +1822,49 @@ namespace TrionicCANLib.API
             }
         }
 
+        public byte[] readMemoryNew(int address, int length, int blockSize, bool ShowProgress)
+        {
+            if (length == 0 || blockSize == 0)
+            {
+                return null;
+            }
+            return this.sendReadCommand_24bit(address, length, blockSize, ShowProgress);
+        }
+
+        public bool writeMemoryNew(int address, byte[] memdata, int blockSize, bool ShowProgress)
+        {
+            if (memdata == null || memdata.Length == 0 || blockSize == 0)
+            {
+                return false;
+            }
+            return this.atWriteByAddress(address, memdata, blockSize, ShowProgress);
+        }
+
+        public byte[] ReadSymbolByIndex(UInt16 idx)
+        {
+            return this.atReadSymByIdx(idx);
+        }
+
+        public bool ResetDynamicList()
+        {
+            return this.atResetDynList();
+        }
+
+        public bool ConfigureDynamicListByIndex(List<UInt16> dynList)
+        {
+            return this.atConfigureDynSyms_ByIdx(dynList);
+        }
+
+        public bool ConfigureDynamicListByAddress(List<dynAddrHelper> dynList)
+        {
+            return this.atConfigureDynSyms_ByAddr(dynList);
+        }
+
+        public byte[] ReadDynamicSymbols()
+        {
+            return this.atReadDynSyms();
+        }
+
         public void InitializeSession()
         {
             CANMessage response = new CANMessage();
@@ -3175,6 +3218,1348 @@ namespace TrionicCANLib.API
             success = true;
 
             return retData;
+        }
+
+        // This method _WILL_RETURN_NULL_ if it failed!
+        // Todo: Worth implementing that ELM 2.0 expected count thing?
+        private byte[] sendReadCommand_24bit(int address, int length, int blockSize, bool ShowProgress)
+        {
+            byte[] retData = new byte[length];
+            int retryDropped = 3;
+            int toReceive;
+            int originPos = 0;
+            int originAddress = address;
+            int oldPercentage = 0;
+
+            // Whether or not the ECU can handle it is up to you. This cap is only to prevent this code from overflowing the length
+            if (blockSize > 0xff8)
+                blockSize = 0xff8;
+
+            if (ShowProgress == true)
+                CastProgressReadEvent(0);
+
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return null;
+            }
+
+            if (sw.IsRunning == false)
+            {
+                sw.Reset();
+                sw.Start();
+            }
+
+            while (originPos < length)
+            {
+                if (sw.ElapsedMilliseconds > 500)
+                {
+                    SendKeepAlive();
+                    sw.Restart();
+                }
+
+                CANMessage msg = new CANMessage(0x7E0, 0, 7);
+
+                address = originAddress;
+                int pos = originPos;
+                int ExtraFrameCount = 0;
+
+                if (ShowProgress == true)
+                {
+                    int percentage = (int)((double)((double)pos * 100.0) / length);
+
+                    if (percentage > (oldPercentage + 4) || percentage < oldPercentage)
+                    {
+                        oldPercentage = percentage;
+                        CastProgressReadEvent(percentage);
+                    }
+                }
+
+                ulong cmd = 0x2306;
+                cmd |= ((ulong)address & 0xff0000);
+                cmd |= (((ulong)address & 0x00ff00) << 16);
+                cmd |= (((ulong)address & 0x0000ff) << 32);
+
+                // This is only the ASKED size. ECU may or may not throw a curved one in response to this size
+                if (length > blockSize)
+                {
+                    cmd |= (((ulong)blockSize & 0x00ff) << 48);
+                    cmd |= (((ulong)blockSize & 0xff00) << 32);
+                }
+                else
+                {
+                    cmd |= (((ulong)length & 0x00ff) << 48);
+                    cmd |= (((ulong)length & 0xff00) << 32);
+                }
+
+                // Dump queue (Causes crash)
+                // m_canListener.dumpQueue();
+                // m_canListener.FlushQueue();
+
+                msg.setData(cmd);
+                m_canListener.setupWaitMessage(0x7E8);
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    logger.Debug("Couldn't send message");
+                    return null;
+                }
+
+                CANMessage response = m_canListener.waitMessage(timeoutP2ct);
+                ulong data = response.getData();
+
+                // Skip junk
+                while ((data & 0xff) == 0x30 ||
+                       ((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                {
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+                }
+
+                // Multi-frame response
+                if ((data & 0xf0) == 0x10)
+                {
+                    // 1x, xx, 63, [ addr 23:16, 15:8, 7:0 ], .., ..
+                    // < 30, 00 >
+                    // 2x, .., .., .., .., .., .., ..
+                    toReceive = ((int)data & 0x0f) << 8;
+                    toReceive |= (((int)data >> 8) & 0xff);
+                    data >>= 16; // Skip PCI
+
+                    // ECU must be drunk if it tries to send a multi-frame message where the total length is less than 7
+                    // There would be no need to send it as multi in that case!
+                    if (toReceive < 7)
+                    {
+                        logger.Debug("Unexpected length in response");
+                        return null;
+                    }
+
+                    ExtraFrameCount = (toReceive - 6) / 7;
+                    if (((toReceive - 6) % 7) > 0)  ExtraFrameCount++;
+                }
+                // Single-frame
+                else if ((data & 0xff) < 8 && (data & 0xff) > 4)
+                {
+                    // 0x, 63, [ addr 23:16, 15:8, 7:0 ], .., .., ..
+                    toReceive = ((int)data & 0x0f);
+                    data >>= 8; // Skip PCI
+                }
+                // Header is malformed or no response
+                else
+                {
+                    if (retryDropped <= 0)
+                    {
+                        if (data == 0)
+                            logger.Debug("No data received");
+                        else
+                            logger.Debug("Unexpected PCI in frame");
+
+                        return null;
+                    }
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    retryDropped--;
+                    continue;
+                }
+
+                // Response for something else??
+                if ((data & 0xff) != 0x63 &&
+                    (data & 0xffff) != 0x237f)
+                {
+                    if (retryDropped <= 0)
+                    {
+                        logger.Debug("Unexpected response");
+                        return null;
+                    }
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    retryDropped--;
+                    continue;
+                }
+                // Actively refused by ECU
+                else if ((data & 0xff) == 0x7f)
+                {
+                    logger.Debug("readMemoryByAddress failed with " + TranslateErrorCode((byte)((uint)data>>16)));
+                    return null;
+                }
+
+                // Remove service response id from data
+                data >>= 8;
+
+                // Verify received address
+                int receivedAddress = 0;
+                for (int i = 0; i < 3; i++)
+                {
+                    receivedAddress <<= 8;
+                    receivedAddress |= ((int)data & 0xff);
+                    data >>= 8;
+                }
+
+                if (receivedAddress != address)
+                {
+                    logger.Debug("Unexpected address or length of response");
+                    return null;
+                }
+
+                // Negate service response byte and 24-bit address bytes
+                toReceive -= 4;
+
+                // Single message
+                if (ExtraFrameCount == 0)
+                {
+                    for (int i = 0; i < toReceive && pos < length; i++)
+                    {
+                        retData[pos++] = (byte)data;
+                        data >>= 8;
+                    }
+
+                    originAddress += toReceive;
+                    originPos += toReceive;
+                }
+                // Multi-frame
+                else
+                {
+                    for (int i = 0; i < 2 && pos < length; i++)
+                    {
+                        retData[pos++] = (byte)data;
+                        data >>= 8;
+                    }
+
+                    int originToRec = toReceive;
+                    toReceive -= 2;
+                    uint step = 0x21;
+
+                    if ((canUsbDevice is CANELM327Device) == false)
+                        SendMessage(0x7E0, 0x0000000000000030);
+
+                    while (ExtraFrameCount > 0)
+                    {
+                        response = m_canListener.waitMessage(timeoutP2ct);
+                        data = response.getData();
+                        ExtraFrameCount--;
+
+                        // Skip junk
+                        while ((data & 0xff) == 0x30 ||
+                               ((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                        {
+                            response = m_canListener.waitMessage(timeoutP2ct);
+                            data = response.getData();
+                        }
+
+                        if ((data & 0xff) != step)
+                        {
+                            if (retryDropped <= 0)
+                            {
+                                logger.Debug("Unexpected stepper");
+                                return null;
+                            }
+
+                            // Ought to be enough time to make sure no errant packets are received during retry
+                            Thread.Sleep(250);
+                            m_canListener.FlushQueue();
+                            retryDropped--;
+                            originToRec = 0;
+                            break;
+                        }
+
+                        step++;
+                        step &= 0x2f;
+
+                        for (int i = 0; i < 7 && pos < length && i < toReceive; i++)
+                        {
+                            data >>= 8;
+                            retData[pos++] = (byte)data;
+                        }
+
+                        // This value is thrashed any way so there is no harm in underflowing after the last data
+                        toReceive -= 7;
+                    }
+
+                    originAddress += originToRec;
+                    originPos += originToRec;
+                }
+            }
+
+            if (ShowProgress == true)
+                CastProgressReadEvent(100);
+
+            return retData;
+        }
+
+        public bool atWriteByAddress(int address, byte[] memdata, int blockSize, bool ShowProgress)
+        {
+            CANMessage response;
+            ulong data;
+            int retries = 3;
+            int oldPercentage = 0;
+            int origPos = 0;
+            int chunk;
+
+            // The frame supports a 12-bit size but the req itself takes a secondary 8-bit size
+            if (blockSize > 255)
+                blockSize = 255;
+
+            if (ShowProgress == true)
+                CastProgressWriteEvent(0);
+
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return false;
+            }
+
+            if (sw.IsRunning == false)
+            {
+                sw.Reset();
+                sw.Start();
+            }
+
+            while (origPos < memdata.Length)
+            {
+                if (sw.ElapsedMilliseconds > 500)
+                {
+                    SendKeepAlive();
+                    sw.Restart();
+                }
+
+                // m_canListener.FlushQueue();
+
+                int pos = origPos;
+                if ((memdata.Length - pos) >= blockSize)
+                    chunk = blockSize;
+                else
+                    chunk = memdata.Length - pos;
+
+                if (ShowProgress == true)
+                {
+                    int percentage = (int)((double)((double)pos * 100.0) / memdata.Length);
+
+                    if (percentage > (oldPercentage + 4) || percentage < oldPercentage)
+                    {
+                        oldPercentage = percentage;
+                        CastProgressWriteEvent(percentage);
+                    }
+                }
+
+                if (chunk < 2)
+                {
+                    // Single
+                    // 0x, 3b, 15, [ addr 23:16, 15:8, 7:0 ], 01, ..
+                    ulong cmd = 0x01000000153b07;
+                    cmd |= (((ulong)address & 0xff0000) << 8);
+                    cmd |= (((ulong)address & 0x00ff00) << 24);
+                    cmd |= (((ulong)address & 0x0000ff) << 40);
+                    cmd |= ((ulong)memdata[pos++] << 56);
+
+                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                    msg.setData(cmd);
+                    if (!canUsbDevice.sendMessage(msg))
+                    {
+                        logger.Debug("Couldn't send message");
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Multi
+                    // Add REQ, subprm, 24-bit address and embedded size to total length
+                    int framSize = chunk + 6;
+
+                    // 1x, xx, 3b, 15, [ addr 23:16, 15:8, 7:0 ], xx
+                    ulong cmd = 0x153b0010;
+                    cmd |= (((ulong)framSize & 0xff) << 8);
+                    cmd |= (((ulong)framSize >> 8) & 0x0f);
+                    cmd |= (((ulong)address & 0xff0000) << 16);
+                    cmd |= (((ulong)address & 0x00ff00) << 32);
+                    cmd |= (((ulong)address & 0x0000ff) << 48);
+                    cmd |= (((ulong)chunk & 0x0ff) << 56);
+
+                    CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                    msg.setData(cmd);
+                    if (!canUsbDevice.sendMessage(msg))
+                    {
+                        logger.Debug("Couldn't send message");
+                        return false;
+                    }
+
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+
+                    while (((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                    {
+                        response = m_canListener.waitMessage(timeoutP2ct);
+                        data = response.getData();
+                    }
+
+                    if ((data & 0xff) != 0x30)
+                    {
+                        if (retries <= 0)
+                        {
+                            logger.Debug("No goAhead seen");
+                            return false;
+                        }
+                        Thread.Sleep(250);
+                        m_canListener.FlushQueue();
+                        retries--;
+                        continue;
+                    }
+
+                    // Now, finally time to send the rest of it
+                    int frameCnt = chunk / 7;
+                    if ((chunk % 7) > 0) frameCnt++;
+                    uint step = 0x21;
+
+                    while (frameCnt > 0)
+                    {
+                        frameCnt--;
+
+                        cmd = step++;
+                        step &= 0x2f;
+
+                        for (int i = 0; i < 7 && i < chunk; i++)
+                        {
+                            cmd |= ((ulong)memdata[pos++] << ((i + 1) * 8));
+                        }
+
+                        // This one is thrashed so underflow is of no concern
+                        chunk -= 7;
+
+                        msg.setData(cmd);
+                        if (!canUsbDevice.sendMessage(msg))
+                        {
+                            logger.Debug("Couldn't send message");
+                            return false;
+                        }
+                        // What would be a sane value?
+                        // It's already faster than the read procdeure so some extra shouldn't hurt
+                        Thread.Sleep(5);
+                    }
+                }
+
+                response = m_canListener.waitMessage(timeoutP2ct);
+                data = response.getData();
+
+                // The weirdo I played with had really found its calling in life...
+                // There's goAheads for EVERYONE! ..and yet some
+                while ((data & 0xff) == 0x30 ||
+                    ((data & 0xff) < 3 && (data & 0xff00) == 0x7e00))
+                {
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+                }
+
+                if ((data & 0xff00) != 0x7b00)
+                {
+                    if (retries <= 0)
+                    {
+                        logger.Debug("Unexpected stepper");
+                        return false;
+                    }
+                    retries--;
+                    continue;
+                }
+                else
+                {
+                    address += (pos - origPos);
+                    origPos = pos;
+                }
+            }
+
+            if (ShowProgress == true)
+                CastProgressWriteEvent(100);
+
+            SendKeepAlive();
+            return true;
+        }
+
+        private byte[] atReadSymByIdx(UInt16 idx)
+        {
+            int retryDropped = 3;
+
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return null;
+            }
+
+            if (sw.IsRunning == false)
+            {
+                sw.Reset();
+                sw.Start();
+            }
+
+            while (true)
+            {
+            retryByIndex:
+                if (sw.ElapsedMilliseconds > 500)
+                {
+                    SendKeepAlive();
+                    sw.Restart();
+                }
+
+                // 04, 1a, 19, [ idx 15:8, 7:0 ],
+                ulong cmd = 0x191a04;
+                cmd |= (((ulong)idx & 0xff00) << 16);
+                cmd |= (((ulong)idx & 0x00ff) << 32);
+
+                CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                msg.setData(cmd);
+                m_canListener.setupWaitMessage(0x7E8);
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    logger.Debug("Couldn't send message");
+                    return null;
+                }
+
+                CANMessage response = m_canListener.waitMessage(timeoutP2ct);
+                ulong data = response.getData();
+
+                // Skip junk
+                while ((data & 0xff) == 0x30 ||
+                       ((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                {
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+                }
+
+                int toReceive = 0;
+                int ExtraFrameCount = 0;
+
+                // Multi-frame response
+                if ((data & 0xf0) == 0x10)
+                {
+                    // 1x, xx, 5A, 19, [ idx 15:8, 7:0 ], .., ..
+                    // < 30, 00 >
+                    // 2x, .., .., .., .., .., .., ..
+                    toReceive = ((int)data & 0x0f) << 8;
+                    toReceive |= (((int)data >> 8) & 0xff);
+                    data >>= 16; // Skip PCI
+
+                    // ECU must be drunk if it tries to send a multi-frame message where the total length is less than 7
+                    // There would be no need to send it as multi in that case!
+                    if (toReceive < 7)
+                    {
+                        logger.Debug("Unexpected length in response");
+                        return null;
+                    }
+
+                    ExtraFrameCount = (toReceive - 6) / 7;
+                    if (((toReceive - 6) % 7) > 0) ExtraFrameCount++;
+                }
+                // Single-frame
+                else if ((data & 0xff) < 8 && (data & 0xff) > 4)
+                {
+                    // 0x, 5A, 19, [ idx 15:8, 7:0 ], .., .., ..
+                    toReceive = ((int)data & 0x0f);
+                    data >>= 8; // Skip PCI
+                }
+                // Header is malformed or no response
+                else
+                {
+                    if (retryDropped <= 0)
+                    {
+                        if (data == 0)
+                            logger.Debug("No data received");
+                        else
+                            logger.Debug("Unexpected PCI in frame");
+
+                        return null;
+                    }
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    retryDropped--;
+                    continue;
+                }
+
+                // Response for something else??
+                if ((data & 0xff) != 0x5a &&
+                    (data & 0xffff) != 0x1a7f)
+                {
+                    if (retryDropped <= 0)
+                    {
+                        logger.Debug("Unexpected response");
+                        return null;
+                    }
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    retryDropped--;
+                    continue;
+                }
+                // Actively refused by ECU
+                else if ((data & 0xff) == 0x7f)
+                {
+                    logger.Debug("readMemoryByAddress failed with " + TranslateErrorCode((byte)((uint)data >> 16)));
+                    return null;
+                }
+
+                // Remove service response id and subprm from data
+                data >>= 16;
+
+                // None of these should ever happen:
+                // Verify received idx and length
+                int recIdx = 0;
+                for (int i = 0; i < 2; i++)
+                {
+                    recIdx <<= 8;
+                    recIdx |= ((int)data & 0xff);
+                    data >>= 8;
+                }
+
+                if (toReceive < 5 || recIdx != idx)
+                {
+                    logger.Debug("Unexpected address or length of response");
+                    return null;
+                }
+
+                // Negate service response byte, subprm and 16-bit idx
+                toReceive -= 4;
+
+                int pos = 0;
+                byte[] retData = new byte[toReceive];
+
+                // Single message
+                if (ExtraFrameCount == 0)
+                {
+                    for (int i = 0; i < toReceive; i++)
+                    {
+                        retData[pos++] = (byte)data;
+                        data >>= 8;
+                    }
+
+                    return retData;
+                }
+                // Multi-frame
+                else
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        retData[pos++] = (byte)data;
+                        data >>= 8;
+                    }
+
+                    uint step = 0x21;
+
+                    if ((canUsbDevice is CANELM327Device) == false)
+                        SendMessage(0x7E0, 0x0000000000000130);
+
+                    while (ExtraFrameCount > 0)
+                    {
+                        response = m_canListener.waitMessage(timeoutP2ct);
+                        data = response.getData();
+                        ExtraFrameCount--;
+
+                        // Skip junk
+                        while ((data & 0xff) == 0x30 ||
+                               ((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                        {
+                            response = m_canListener.waitMessage(timeoutP2ct);
+                            data = response.getData();
+                        }
+
+                        if ((data & 0xff) != step)
+                        {
+                            if (retryDropped <= 0)
+                            {
+                                logger.Debug("Unexpected stepper");
+                                return null;
+                            }
+
+                            Thread.Sleep(250);
+                            m_canListener.FlushQueue();
+                            retryDropped--;
+                            goto retryByIndex;
+                        }
+
+                        step++;
+                        step &= 0x2f;
+
+                        for (int i = 0; i < 7 && pos < toReceive; i++)
+                        {
+                            data >>= 8;
+                            retData[pos++] = (byte)data;
+                        }
+                    }
+                    return retData;
+                }
+            }
+        }
+
+        //////////////////////////////////////////////////////////
+        // The following methods are all used to retrieve symbol data via dynamic ids. -One of Trionic 8's many tricks
+        // What must be known about this mode is its limitations:
+        // 1: No more than 100 ids can be in that list at the same time.
+        // 2: No matter the count. Total data size can not exceed 255 bytes
+
+        /// <summary>
+        /// 0x17 - Reset the ECU's local list of dynamic ids
+        /// 3b [17] F0 (04)
+        /// </summary>
+        /// <returns></returns>
+        private bool atResetDynList()
+        {
+            CANMessage msg = new CANMessage(0x7E0, 0, 5);
+            int retryDropped = 3;
+
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return false;
+            }
+
+            m_canListener.setupWaitMessage(0x7E8);
+            msg.setData(0x04f0173b04);
+
+            while (retryDropped > 0)
+            {
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    logger.Debug("Couldn't send message");
+                    return false;
+                }
+
+                CANMessage response = m_canListener.waitMessage(timeoutP2ct);
+                ulong data = response.getData();
+
+                if ((data & 0xffffff00) == 0xf0177b00)
+                    return true;
+
+
+                Thread.Sleep(25);
+                retryDropped--;
+                m_canListener.FlushQueue();
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 0x17 - Add ONE dynamic symbol to the ECU's local list. Highly dangerous unless you have 100% control over your local list
+        /// 3b [17] F0 [(80) ?? ?? ?? iH iL]
+        /// 
+        /// Note: There is no way to configure id of each symbol index so it's easy to get out of sync if you don't keep tabs on things
+        /// Note2: It is STRONGLY adviced to reset the local state and send a fresh list to the ECU if this method fails 
+        /// </summary>
+        /// <returns></returns>
+        private bool atAddDynSym_ByIdx(UInt16 idx)
+        {
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return false;
+            }
+
+            CANMessage msg = new CANMessage(0x7E0, 0, 8);
+            ulong cmd = 0x80f0173b0910;
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                logger.Debug("Couldn't send message");
+                return false;
+            }
+
+            CANMessage response = m_canListener.waitMessage(timeoutP2ct);
+            ulong data = response.getData();
+
+            if ((data & 0xff) != 0x30)
+            {
+                logger.Debug("No goAhead received");
+                return false;
+            }
+
+            cmd = 0x21;
+            cmd |= (((ulong)idx & 0xff00) << 8);
+            cmd |= (((ulong)idx & 0x00ff) << 24);
+            msg.setData(cmd);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                logger.Debug("Couldn't send message");
+                return false;
+            }
+
+            response = m_canListener.waitMessage(timeoutP2ct);
+            data = response.getData();
+
+            return ((data & 0xffffff00) == 0xf0177b00);
+        }
+
+        /// <summary>
+        /// 0x17 - Configure dynamic symbols to be retrieved by atReadDynSyms. (By Index)
+        /// 3b [17] F0 [(80) ?? ?? ?? iH iL] .. [(80) ?? ?? ?? iH iL] ..
+        /// </summary>
+        /// <param name="dynList">List of symbol indexes</param>
+        /// <returns></returns>
+        private bool atConfigureDynSyms_ByIdx(List<UInt16> dynList)
+        {
+            if (dynList == null || dynList.Count == 0 || dynList.Count > 99)
+            {
+                logger.Debug("Empty dynamic list or too many items");
+                atResetDynList();
+                return false;
+            }
+
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return false;
+            }
+
+            byte[] buffer = new byte[dynList.Count * 6];
+            const int chunkCount = 9;
+            int retries = 3;
+            int origin = 0;
+            int endPos;
+
+            // [(80) ?? ?? ?? iH iL] ..
+            for (int i = 0; i < buffer.Length; i += 6)
+            {
+                buffer[i] = 0x80;
+                buffer[i+1] = buffer[i+2] = buffer[i+3] = 0;
+                buffer[i+4] = (byte)(dynList[i/6] >> 8);
+                buffer[i+5] = (byte)(dynList[i/6]);
+            }
+
+            atResetDynList();
+            m_canListener.setupWaitMessage(0x7E8);
+
+            if (sw.IsRunning == false)
+            {
+                sw.Reset();
+                sw.Start();
+            }
+
+            while (origin < buffer.Length)
+            {
+                if (sw.ElapsedMilliseconds > 1000)
+                {
+                    SendKeepAlive();
+                    sw.Restart();
+                }
+
+                // 10 xx 3b [17] F0
+                ulong cmd = 0xf0173b0010;
+                int pos = origin;
+
+                // Only send "chunkCount" number of items in one go
+                if (((buffer.Length - pos) / 6) > chunkCount)
+                    endPos = pos + (chunkCount * 6);
+                else
+                    endPos = buffer.Length;
+
+                // Append total size
+                int reqSz = (endPos - pos) + 3;
+                cmd |= (((ulong)reqSz & 0xff) << 8);
+                cmd |= (((ulong)reqSz >> 8) & 0x0f);
+
+                // Append first couple of bytes
+                for (int i = 5; i < 8; i++)
+                {
+                    cmd |= ((ulong)buffer[pos++] << (i * 8));
+                }
+
+                CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                msg.setData(cmd);
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    logger.Debug("Couldn't send message");
+                    return false;
+                }
+
+                CANMessage response = m_canListener.waitMessage(timeoutP2ct);
+                ulong data = response.getData();
+
+                while (((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                {
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+                }
+
+                if ((data & 0xff) != 0x30)
+                {
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    atResetDynList();
+                    if (retries <= 0)
+                    {
+                        logger.Debug("No goAhead received");
+                        return false;
+                    }
+                    origin = 0;
+                    retries--;
+                    continue;
+                }
+
+                uint step = 0x21;
+                while (pos < endPos)
+                {
+                    cmd = step++;
+                    step &= 0x2f;
+                    for (int i = 1; i < 8 && pos < endPos; i++)
+                    {
+                        cmd |= ((ulong)buffer[pos++] << (i * 8));
+                    }
+
+                    // Slow and steady.
+                    Thread.Sleep(5);
+
+                    msg.setData(cmd);
+                    if (!canUsbDevice.sendMessage(msg))
+                    {
+                        logger.Debug("Couldn't send message");
+                        return false;
+                    }
+                }
+
+                response = m_canListener.waitMessage(timeoutP2ct);
+                data = response.getData();
+
+                // Skip junk
+                while ((data & 0xff) == 0x30 ||
+                       ((data & 0xff) < 3 && (data & 0xff00) == 0x7e00))
+                {
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+                }
+
+                // Hard to know if it failed due to dropped packets or outright refusal so treat everything as dropped
+                if ((data & 0xffffff00) != 0xf0177b00)
+                {
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    atResetDynList();
+                    if (retries <= 0)
+                    {
+                        logger.Debug("Unexpected answer");
+                        return false;
+                    }
+                    origin = 0;
+                    retries--;
+                    continue;
+                }
+
+                origin = pos;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 0x17 - Add ONE dynamic symbol to the ECU's local list. Highly dangerous unless you have 100% control over your local list
+        /// 3b [17] F0 [(03) ?? sZ aH aM aL]
+        /// 
+        /// Note: There is no way to configure id of each symbol index so it's easy to get out of sync if you don't keep tabs on things
+        /// Note2: It is STRONGLY adviced to reset the local state and send a fresh list to the ECU if this method fails 
+        /// </summary>
+        /// <returns></returns>
+        private bool atAddDynSym_ByAddr(int address, byte size)
+        {
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return false;
+            }
+
+            CANMessage msg = new CANMessage(0x7E0, 0, 8);
+            // 10 xx 3b f0 03 ?? sZ aH -> 21 aM aL
+            ulong cmd = 0x03f0173b0910;
+            cmd |= (((ulong)address & 0xff0000) << 40);
+            cmd |= (((ulong)size) << 48);
+            msg.setData(cmd);
+            m_canListener.setupWaitMessage(0x7E8);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                logger.Debug("Couldn't send message");
+                return false;
+            }
+
+            
+            CANMessage response = m_canListener.waitMessage(timeoutP2ct);
+            ulong data = response.getData();
+
+            if ((data & 0xff) != 0x30)
+            {
+                logger.Debug("No goAhead received");
+                return false;
+            }
+
+            cmd = (0x0021 | ((ulong)address & 0x00ff00));
+            cmd |= (((ulong)address & 0x0000ff) << 16);
+            msg.setData(cmd);
+            if (!canUsbDevice.sendMessage(msg))
+            {
+                logger.Debug("Couldn't send message");
+                return false;
+            }
+
+            response = m_canListener.waitMessage(timeoutP2ct);
+            data = response.getData();
+
+            return ((data & 0xffffff00) == 0xf0177b00);
+        }
+
+        /// <summary>
+        /// 0x17 - Configure dynamic symbols to be retrieved by atReadDynSyms. (By address)
+        /// 3b [17] F0 [(03) ?? sZ aH aM aL] .. [(03) ?? sZ aH aM aL] ..
+        /// </summary>
+        /// <param name="dynList">List of symbol addresses and sizes</param>
+        /// <returns></returns>
+        private bool atConfigureDynSyms_ByAddr(List<dynAddrHelper> dynList)
+        {
+            if (dynList == null || dynList.Count == 0 || dynList.Count > 99)
+            {
+                logger.Debug("Empty dynamic list or too many items");
+                atResetDynList();
+                return false;
+            }
+
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return false;
+            }
+
+            byte[] buffer = new byte[dynList.Count * 6];
+            const int chunkCount = 9;
+            int retries = 3;
+            int origin = 0;
+            int endPos;
+
+            // [(03) ?? sZ aH aM aL] ..
+            for (int i = 0; i < buffer.Length; i += 6)
+            {
+                buffer[i] = 0x03;
+                buffer[i+1] = 0;
+                buffer[i+2] = dynList[i/6].size;
+                buffer[i+3] = (byte)(dynList[i/6].address >> 16);
+                buffer[i+4] = (byte)(dynList[i/6].address >> 8);
+                buffer[i+5] = (byte)(dynList[i/6].address);
+            }
+
+            atResetDynList();
+            m_canListener.setupWaitMessage(0x7E8);
+
+            if (sw.IsRunning == false)
+            {
+                sw.Reset();
+                sw.Start();
+            }
+
+            while (origin < buffer.Length)
+            {
+                if (sw.ElapsedMilliseconds > 1000)
+                {
+                    SendKeepAlive();
+                    sw.Restart();
+                }
+
+                // 10 xx 3b [17] F0
+                ulong cmd = 0xf0173b0010;
+                int pos = origin;
+
+                // Only send "chunkCount" number of items in one go
+                if (((buffer.Length - pos) / 6) > chunkCount)
+                    endPos = pos + (chunkCount * 6);
+                else
+                    endPos = buffer.Length;
+
+                // Append total size
+                int reqSz = (endPos - pos) + 3;
+                cmd |= (((ulong)reqSz & 0xff) << 8);
+                cmd |= (((ulong)reqSz >> 8) & 0x0f);
+
+                // Append first couple of bytes
+                for (int i = 5; i < 8; i++)
+                {
+                    cmd |= ((ulong)buffer[pos++] << (i * 8));
+                }
+
+                CANMessage msg = new CANMessage(0x7E0, 0, 8);
+                msg.setData(cmd);
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    logger.Debug("Couldn't send message");
+                    return false;
+                }
+
+                CANMessage response = m_canListener.waitMessage(timeoutP2ct);
+                ulong data = response.getData();
+
+                while (((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                {
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+                }
+
+                if ((data & 0xff) != 0x30)
+                {
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    atResetDynList();
+                    if (retries <= 0)
+                    {
+                        logger.Debug("No goAhead received");
+                        return false;
+                    }
+                    origin = 0;
+                    retries--;
+                    continue;
+                }
+
+                uint step = 0x21;
+                while (pos < endPos)
+                {
+                    cmd = step++;
+                    step &= 0x2f;
+                    for (int i = 1; i < 8 && pos < endPos; i++)
+                    {
+                        cmd |= ((ulong)buffer[pos++] << (i * 8));
+                    }
+
+                    // Slow and steady.
+                    Thread.Sleep(5);
+
+                    msg.setData(cmd);
+                    if (!canUsbDevice.sendMessage(msg))
+                    {
+                        logger.Debug("Couldn't send message");
+                        return false;
+                    }
+                }
+
+                response = m_canListener.waitMessage(timeoutP2ct);
+                data = response.getData();
+
+                // Skip junk
+                while ((data & 0xff) == 0x30 ||
+                       ((data & 0xff) < 3 && (data & 0xff00) == 0x7e00))
+                {
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+                }
+
+                // Hard to know if it failed due to dropped packets or outright refusal so treat everything as dropped
+                if ((data & 0xffffff00) != 0xf0177b00)
+                {
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    atResetDynList();
+                    if (retries <= 0)
+                    {
+                        logger.Debug("Unexpected answer");
+                        return false;
+                    }
+                    origin = 0;
+                    retries--;
+                    continue;
+                }
+
+                origin = pos;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 0x18 - Read symbol data that has been configured through the dynamic mode
+        /// 03 1a [18] F0
+        /// </summary>
+        /// <returns>null if it for some reason failed. Raw symbol data of dynamic ids</returns>
+        private byte[] atReadDynSyms()
+        {
+            if (canUsbDevice.isOpen() == false)
+            {
+                logger.Debug("Adapter is not connected");
+                return null;
+            }
+
+            int retries = 3;
+
+            m_canListener.setupWaitMessage(0x7E8);
+
+            if (sw.IsRunning == false)
+            {
+                sw.Reset();
+                sw.Start();
+            }
+
+            while (true)
+            {
+            retryDynamic:
+                if (sw.ElapsedMilliseconds > 1000)
+                {
+                    SendKeepAlive();
+                    sw.Restart();
+                }
+
+                // 03 1a [18] F0
+                ulong cmd = 0xf0181a03;
+
+                CANMessage msg = new CANMessage(0x7E0, 0, 4);
+                msg.setData(cmd);
+                if (!canUsbDevice.sendMessage(msg))
+                {
+                    logger.Debug("Couldn't send message");
+                    return null;
+                }
+
+                CANMessage response = m_canListener.waitMessage(timeoutP2ct);
+                ulong data = response.getData();
+
+                // Skip junk
+                while ((data & 0xff) == 0x30 ||
+                       ((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                {
+                    response = m_canListener.waitMessage(timeoutP2ct);
+                    data = response.getData();
+                }
+
+                int toReceive = 0;
+                int ExtraFrameCount = 0;
+
+                // Multi-frame response
+                if ((data & 0xf0) == 0x10)
+                {
+                    // 1x, xx, 5A, 18 ..
+                    // < 30, 00 >
+                    // 2x, .., .., .., .., .., .., ..
+                    toReceive = ((int)data & 0x0f) << 8;
+                    toReceive |= (((int)data >> 8) & 0xff);
+                    data >>= 16; // Skip PCI
+
+                    if (toReceive < 7)
+                    {
+                        logger.Debug("Unexpected length in response");
+                        return null;
+                    }
+
+                    // Can read 6 bytes from this message
+                    ExtraFrameCount = (toReceive - 6) / 7;
+                    if (((toReceive - 6) % 7) > 0) ExtraFrameCount++;
+                }
+                // Single-frame
+                else if ((data & 0xff) < 8 && (data & 0xff) > 2)
+                {
+                    // 0x, 5A, 18 ..
+                    toReceive = ((int)data & 0x0f);
+                    data >>= 8; // Skip PCI
+                }
+                // Header is malformed or no response
+                else
+                {
+                    if (retries <= 0)
+                    {
+                        if (data == 0)
+                            logger.Debug("No data received");
+                        else
+                            logger.Debug("Unexpected PCI in frame");
+
+                        return null;
+                    }
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    retries--;
+                    continue;
+                }
+
+                // Response for something else??
+                if ((data & 0xffff) != 0x185a &&
+                    (data & 0xffff) != 0x1a7f)
+                {
+                    if (retries <= 0)
+                    {
+                        logger.Debug("Unexpected response");
+                        return null;
+                    }
+                    Thread.Sleep(250);
+                    m_canListener.FlushQueue();
+                    retries--;
+                    continue;
+                }
+                // Actively refused by ECU
+                else if ((data & 0xff) == 0x7f)
+                {
+                    logger.Debug("FetchDynamicList failed with " + TranslateErrorCode((byte)((uint)data >> 16)));
+                    return null;
+                }
+
+                // Skip past service response ID and subprm
+                data >>= 16;
+
+                // Negate service response byte, subprm
+                toReceive -= 2;
+
+                int pos = 0;
+                byte[] retData = new byte[toReceive];
+
+                // Single message
+                if (ExtraFrameCount == 0)
+                {
+                    for (int i = 0; i < toReceive; i++)
+                    {
+                        retData[pos++] = (byte)data;
+                        data >>= 8;
+                    }
+
+                    return retData;
+                }
+                // Multi-frame
+                else
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        retData[pos++] = (byte)data;
+                        data >>= 8;
+                    }
+
+                    uint step = 0x21;
+
+                    // Tell ECU to go full bore instead of demanding acks after EVERY. SINGLE. MESSAGE...
+                    if ((canUsbDevice is CANELM327Device) == false)
+                    {
+                        cmd = 0x0030;
+                        msg = new CANMessage(0x7E0, 0, 3);
+                        msg.setData(cmd);
+                        canUsbDevice.sendMessage(msg);
+                    }
+
+                    while (ExtraFrameCount > 0)
+                    {
+                        response = m_canListener.waitMessage(timeoutP2ct);
+                        data = response.getData();
+                        ExtraFrameCount--;
+
+                        // Skip junk
+                        while ((data & 0xff) == 0x30 ||
+                               ((data & 0xff) < 4 && (data & 0xff00) == 0x7e00))
+                        {
+                            response = m_canListener.waitMessage(timeoutP2ct);
+                            data = response.getData();
+                        }
+
+                        if ((data & 0xff) != step)
+                        {
+                            if (retries <= 0)
+                            {
+                                logger.Debug("Unexpected stepper");
+                                return null;
+                            }
+
+                            Thread.Sleep(250);
+                            m_canListener.FlushQueue();
+                            retries--;
+                            goto retryDynamic;
+                        }
+
+                        step++;
+                        step &= 0x2f;
+
+                        for (int i = 0; i < 7 && pos < toReceive; i++)
+                        {
+                            data >>= 8;
+                            retData[pos++] = (byte)data;
+                        }
+                    }
+
+                    return retData;
+                }
+            }
         }
 
         public float readBatteryVoltageOBDII()

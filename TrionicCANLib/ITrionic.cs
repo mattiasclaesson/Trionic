@@ -341,5 +341,11 @@ namespace TrionicCANLib.API
                 set { m_interframe = value; }
             }
         }
+
+        public struct dynAddrHelper
+        {
+            public byte size;
+            public int address;
+        };
     }
 }
