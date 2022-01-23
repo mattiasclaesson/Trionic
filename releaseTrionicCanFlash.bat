@@ -18,8 +18,6 @@ echo ^<?xml version="1.0" encoding="utf-8"?^>  > z:\TrionicCANFlasher\version.xm
 echo ^<canflasher version="%SetupCANFlash.version%"/^> >> z:\TrionicCANFlasher\version.xml
 
 echo ----------------------------------------------------
-git changes
-echo ----------------------------------------------------
 
 git tag SetupCANFlash_v%SetupCANFlash.version%
 git tag TrionicCanFlasher_v%TrionicCANFlasher.version%
