@@ -2,7 +2,7 @@ call SetupCANFlasher\version.bat
 devenv TrionicCanFlasher.sln /Rebuild Release /project SetupCANFlasher
 
 pushd SetupCANFlasher\bin\Release\
-"C:\Program Files (x86)\hashutils-1.3.0-redist\bin.x86-32\md5sum.exe" TrionicCANFlasher.msi >> TrionicCANFlasher.md5
+"C:\md5sum.exe" TrionicCANFlasher.msi >> TrionicCANFlasher.md5
 popd
 
 mkdir z:\TrionicCANFlasher\%SetupCANFlasher.version%
@@ -12,10 +12,6 @@ xcopy SetupCANFlasher\bin\Release\TrionicCANFlasher.md5 z:\TrionicCANFlasher\%Se
 
 echo ^<?xml version="1.0" encoding="utf-8"?^>  > z:\TrionicCANFlasher\version.xml
 echo ^<canflasher version="%SetupCANFlasher.version%"/^> >> z:\TrionicCANFlasher\version.xml
-
-echo ----------------------------------------------------
-git changes
-echo ----------------------------------------------------
 
 git tag SetupCANFlasher_v%SetupCANFlasher.version%
 git tag TrionicCanFlasher_v%TrionicCANFlasher.version%
