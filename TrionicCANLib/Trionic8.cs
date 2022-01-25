@@ -6747,7 +6747,7 @@ namespace TrionicCANLib.API
             int range = end - start;
             int blockSize = 0x80;
             int bufpnt = startAddress;
-            byte[] buf = new byte[0x280000];
+            byte[] buf = new byte[(end <= 0x200000) ? 0x200000 : 0x280000];
             // Pre-fill buffer with 0xFF (unprogrammed FLASH chip value)
             for (int i = 0; i < buf.Length; i++)
             {
