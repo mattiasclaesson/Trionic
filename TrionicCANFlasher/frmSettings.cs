@@ -446,7 +446,6 @@ namespace TrionicCANFlasher
                             {
                                 m_uselegion = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
-
                             else if (a == "PowerUser")
                             {
                                 m_poweruser = Convert.ToBoolean(Settings.GetValue(a).ToString());
@@ -463,16 +462,22 @@ namespace TrionicCANFlasher
                             {
                                 m_autocsum = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
-
                             else if (a == "SuperUser")
                             {
                                 m_enablesufeatures = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
+                            else if (a == "InterframeDelay")
+                            {
+                                InterframeDelay.Name = Settings.GetValue(a).ToString();
+                            }    
                             else if (a == "UseLastAddressPointer")
                             {
                                 m_uselastpointer = Convert.ToBoolean(Settings.GetValue(a).ToString());
                             }
-
+                            else if (a == "Faster")
+                            {
+                                m_faster = Convert.ToBoolean(Settings.GetValue(a).ToString());
+                            }
                             else if (a == "ViewRemember")
                             {
                                 m_remember = Convert.ToBoolean(Settings.GetValue(a).ToString());
@@ -586,10 +591,10 @@ namespace TrionicCANFlasher
 
         public void SaveRegistrySettings()
         {
-            SaveRegistrySetting("AdapterType", AdapterType.Name != null ? AdapterType.Name : String.Empty);
-            SaveRegistrySetting("Adapter", Adapter.Name != null ? Adapter.Name : String.Empty);
-            SaveRegistrySetting("ComSpeed", Baudrate.Name != null ? Baudrate.Name : String.Empty);
-            SaveRegistrySetting("ECU", SelectedECU.Name != null ? SelectedECU.Name : String.Empty);
+            SaveRegistrySetting("AdapterType", AdapterType.Name ?? String.Empty);
+            SaveRegistrySetting("Adapter", Adapter.Name ?? String.Empty);
+            SaveRegistrySetting("ComSpeed", Baudrate.Name ?? String.Empty);
+            SaveRegistrySetting("ECU", SelectedECU.Name ?? String.Empty);
 
             SaveRegistrySetting("EnableLogging", m_enablelog);
             SaveRegistrySetting("OnboardFlasher", m_onbflash);
@@ -602,9 +607,11 @@ namespace TrionicCANFlasher
             SaveRegistrySetting("AutoChecksum", m_autocsum);
 
             SaveRegistrySetting("SuperUser", m_enablesufeatures);
-            SaveRegistrySetting("UseLastAddressPointer", m_uselastpointer);
-
             SaveRegistrySetting("ViewRemember", m_remember);
+
+            SaveRegistrySetting("InterframeDelay", InterframeDelay.Name ?? String.Empty);
+            SaveRegistrySetting("UseLastAddressPointer", m_uselastpointer);
+            SaveRegistrySetting("Faster", m_faster);
 
             if (m_remember)
             {
