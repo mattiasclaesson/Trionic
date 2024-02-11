@@ -32,10 +32,5 @@ namespace TrionicCANFlasher
             DialogResult = DialogResult.Cancel;
             this.Close();
         }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start("IEXPLORE.EXE", "http://develop.trionictuning.com/TrionicCANFlasher/Notes.xml");
-        }
     }
 }

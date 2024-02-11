@@ -2,30 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Xml;
 using System.IO;
-
+using System.Net;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Linq;
 
 
 namespace CommonSuite
 {
     class msiupdater
     {
-        private Version m_currentversion;
-        private string m_server = "";
+        private readonly Version m_currentversion;
+        private string m_githubURL = "";
         private Version m_NewVersion;
-        private string m_apppath = "";
         private bool m_blockauto_updates;
-        private string m_tagName = "";
-        private string m_msi;
 
         public bool Blockauto_updates
         {
             get { return m_blockauto_updates; }
             set { m_blockauto_updates = value; }
-        }
-        public string Apppath
-        {
-            get { return m_apppath; }
-            set { m_apppath = value; }
         }
 
         public Version NewVersion
@@ -105,11 +100,14 @@ namespace CommonSuite
             private Version _Version;
             private string _xmlFile;
 
-            public string XMLFile
+
+            private string _msiFile;
+
+            public string MSIFile
             {
                 get
                 {
-                    return _xmlFile;
+                    return _msiFile;
                 }
             }
             public string Data
@@ -140,13 +138,13 @@ namespace CommonSuite
                     return _Version;
                 }
             }
-            public MSIUpdaterEventArgs(string Data, bool Update, bool mVersion2High, Version NewVersion, string xmlfile)
+            public MSIUpdaterEventArgs(string Data, bool Update, bool mVersion2High, Version version, string msiFile)
             {
                 _Data = Data;
                 _UpdateAvailable = Update;
                 _Version2High = mVersion2High;
-                _Version = NewVersion;
-                _xmlFile = xmlfile;
+                _Version = version;
+                _msiFile = msiFile;
             }
         }
 
@@ -156,11 +154,9 @@ namespace CommonSuite
             m_NewVersion = new Version("0.0.0.0");
         }
 
-        public void CheckForUpdates(string server, string tagName, string msi)
+        public void CheckForUpdates(string githubUrl)
         {
-            m_server = server;
-            m_tagName = tagName;
-            m_msi = msi;
+            m_githubURL = githubUrl;
             if (!m_blockauto_updates)
             {
                 System.Threading.Thread t = new System.Threading.Thread(updatecheck);
@@ -168,12 +164,11 @@ namespace CommonSuite
             }
         }
 
-        public void ExecuteUpdate(Version ver)
+        public void ExecuteUpdate(string msiFile)
         {
-            string command = m_server + ver.ToString() + "/" + m_msi;
             try
             {
-                System.Diagnostics.Process.Start(command);
+                System.Diagnostics.Process.Start(msiFile);
             }
             catch (Exception E)
             {
@@ -182,24 +177,22 @@ namespace CommonSuite
         }
 
 
-        private void PumpString(string text, bool updateavailable, bool version2high, Version newver, string xmlfile)
+        private void PumpString(string text, bool updateavailable, bool version2high, Version version, string msiFile)
         {
-            onDataPump(new MSIUpdaterEventArgs(text, updateavailable, version2high, newver, xmlfile));
-        }
-
-        private void NotifyProgress(Int32 NoFiles, Int32 NoFilesDone, Int32 PercentageDone, Int32 NoBytes, Int32 NoBytesDone)
-        {
-            onUpdateProgressChanged(new MSIUpdateProgressEventArgs(NoFiles, NoFilesDone, PercentageDone, NoBytes, NoBytesDone));
+            onDataPump(new MSIUpdaterEventArgs(text, updateavailable, version2high, version, msiFile));
         }
 
         public string GetPageHTML(string pageUrl, int timeoutSeconds)
         {
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072; // framework 4.5 replace with SecurityProtocolType.Tls12;
             System.Net.WebResponse response = null;
 
             try
             {
                 // Setup our Web request
-                System.Net.WebRequest request = System.Net.WebRequest.Create(pageUrl);
+                HttpWebRequest request = (HttpWebRequest)System.Net.WebRequest.Create(pageUrl);
+                request.UserAgent = "Mozilla/5.0";
+                request.Timeout = timeoutSeconds * 1000;
 
                 try
                 {
@@ -210,21 +203,6 @@ namespace CommonSuite
                     PumpString("Error setting proxy server: " + proxyE.Message, false, false, new Version(), "");
                 }
 
-/*                if (UseDefaultProxy)
-                {
-                    request.Proxy = System.Net.WebProxy.GetDefaultProxy();
-                    if (UseDefaultCredentials)
-                    {
-                        request.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
-                    }
-                    if (UseDefaultNetworkCredentials)
-                    {
-                        request.Proxy.Credentials = System.Net.CredentialCache.DefaultNetworkCredentials;
-                    }
-                }*/
-
-                request.Timeout = timeoutSeconds * 1000;
-
                 // Retrieve data from request
                 response = request.GetResponse();
 
@@ -232,18 +210,12 @@ namespace CommonSuite
                 System.Text.Encoding encoding = System.Text.Encoding.GetEncoding("utf-8");
                 System.IO.StreamReader streamRead = new System.IO.StreamReader(streamReceive, encoding);
 
-                // return the retrieved HTML
                 return streamRead.ReadToEnd();
             }
             catch (Exception ex)
             {
                 // Error occured grabbing data, return empty string.
                 PumpString("An error occurred while retrieving the HTML content. " + ex.Message, false, false, new Version(), "");
-                /*using (StreamWriter logfile = new StreamWriter("update.log", true, System.Text.Encoding.ASCII, 2048))
-                {
-                    logfile.WriteLine("An error occurred while retrieving the HTML content. " + ex.Message);
-                    logfile.Close();
-                }*/
 
                 return "";
             }
@@ -256,139 +228,61 @@ namespace CommonSuite
                 }
             }
         }
-        private void ExtractNameValue(string input, out string Name, out string Value)
-		{
-			Name = "";
-			Value = "";
-			// input : <Element name="I2l" value="00" />
-			int id1,id2,id3,id4;
-			id1=input.IndexOf("\"",0,input.Length);
-			if(id1>0) // eerste " gevonden
-			{
-				id2=input.IndexOf("\"",id1+1,input.Length - id1 - 1);
-				if(id2 > 0) // tweede " gevonden
-				{
-					id3=input.IndexOf("\"",id2+1,input.Length - id2 - 1);
-					if(id3>0)
-					{
-						id4=input.IndexOf("\"",id3+1,input.Length - id3 - 1);
-						if(id4>0)
-						{
-							Name = input.Substring(id1+1,id2-id1-1);
-							Value = input.Substring(id3+1,id4-id3-1);
-							// alles gevonden
-						}
-					}
-
-				}
-				
-			}
-		}
-
-        private string FileToString(string infile)
-        {
-            StreamReader stream = System.IO.File.OpenText(infile);
-            string returnvalues;
-            returnvalues = stream.ReadToEnd();
-            stream.Close();
-            return returnvalues;
-        }
 
         private void updatecheck()
         {
-            string URLString="";
-            string XMLResult="";
+            string releaseInfo="";
             bool m_updateavailable = false;
             bool m_version_toohigh = false;
             Version maxversion = new Version("0.0.0.0");
-            File.Delete(Apppath + "\\input.xml");
-            File.Delete(Apppath + "\\Notes.xml");
+            string msiFile = "";
 
             try
             {
-                URLString = m_server + "version.xml";
-                XMLResult = GetPageHTML(URLString, 10);
-                using (StreamWriter xmlfile = new StreamWriter(Apppath + "\\input.xml", false, System.Text.Encoding.ASCII, 2048))
-                {
-                    xmlfile.Write(XMLResult);
-                    xmlfile.Close();
-                }
-                URLString = m_server + "Notes.xml";
-                XMLResult = GetPageHTML(URLString, 10);
-                using (StreamWriter xmlfile = new StreamWriter(Apppath + "\\Notes.xml", false, System.Text.Encoding.ASCII, 2048))
-                {
-                    xmlfile.Write(XMLResult);
-                    xmlfile.Close();
-                }
+                releaseInfo = GetPageHTML(m_githubURL, 10);
+                JObject release = JObject.Parse(releaseInfo);
 
-                using (StreamWriter logfile = new StreamWriter(Apppath + "\\update.log", true, System.Text.Encoding.ASCII, 2048))
+                string tag_name = (string)release["tag_name"]; // "TrionicCanFlasher_v0.1.72.0"
+                int index = tag_name.IndexOf("_v", 0, tag_name.Length-1, StringComparison.CurrentCulture);
+                Version v = new Version(tag_name.Substring(index + 2));
+                if (v > m_currentversion)
                 {
-                    logfile.WriteLine("Current version: " + m_currentversion);
-                    logfile.WriteLine("Server: " + m_server);
-                    logfile.WriteLine("URLString: " + URLString);
-                    logfile.WriteLine("XMLResult: " + XMLResult);
-                    logfile.Close();
+                    if (v > maxversion) maxversion = v;
+                    m_updateavailable = true;
+                    PumpString("Available version: " + tag_name, false, false, v, "");
+                }
+                else if (v.Major < m_currentversion.Major || (v.Major == m_currentversion.Major && v.Minor < m_currentversion.Minor) || (v.Major == m_currentversion.Major && v.Minor == m_currentversion.Minor && v.Build < m_currentversion.Build))
+                {
+                    // mmm .. gebruiker draait een versie die hoger is dan dat is vrijgegeven... 
+                    if (v > maxversion) maxversion = v;
+                    m_updateavailable = false;
+                    m_version_toohigh = true;
                 }
 
-                XmlDocument doc;
-                try
+                IList<JToken> results = release["assets"].Children().ToList();
+
+                IList<ReleaseAsset> searchResults = new List<ReleaseAsset>();
+                foreach (JToken result in results)
                 {
-                    doc = new XmlDocument();
-                    doc.LoadXml(FileToString(Apppath + "\\input.xml"));
-
-                    // Add any other properties that would be useful to store
-                    //foreach (
-                    System.Xml.XmlNodeList Nodes;
-                    Nodes = doc.GetElementsByTagName(m_tagName);
-                    foreach (System.Xml.XmlNode Item in Nodes)
-                    {
-                        System.Xml.XmlAttributeCollection XMLColl;
-                        XMLColl = Item.Attributes;
-                        foreach (System.Xml.XmlAttribute myAttr in XMLColl)
-                        {
-                            if (myAttr.Name == "version")
-                            {
-                                Version v = new Version(myAttr.Value);
-                                if (v > m_currentversion)
-                                {
-                                    if (v > maxversion) maxversion = v;
-                                    m_updateavailable = true;
-                                    PumpString("Available version: " + myAttr.Value, false, false, new Version(), Apppath + "\\Notes.xml");
-                                }
-                                else if (v.Major < m_currentversion.Major || (v.Major == m_currentversion.Major && v.Minor < m_currentversion.Minor) || (v.Major == m_currentversion.Major && v.Minor == m_currentversion.Minor && v.Build < m_currentversion.Build))
-                                {
-
-                                    // mmm .. gebruiker draait een versie die hoger is dan dat is vrijgegeven... 
-                                    if (v > maxversion) maxversion = v;
-                                    m_updateavailable = false;
-                                    m_version_toohigh = true;
-                                }
-                            }
-                        }
-
+                    ReleaseAsset searchResult = result.ToObject<ReleaseAsset>();
+                    if (searchResult.browser_download_url.Contains("msi")) {
+                        msiFile = searchResult.browser_download_url;
                     }
-                }
-                catch (Exception E)
-                {
-                    PumpString(E.Message, false, false, new Version(), "");
                 }
                 
                 if (m_updateavailable)
                 {
-
-                    //LogHelper.Log("An update is available: " + maxversion.ToString());
-                    PumpString("A newer version is available: " + maxversion.ToString(), m_updateavailable, m_version_toohigh, maxversion, Apppath + "\\Notes.xml");
+                    PumpString("A newer version is available: " + maxversion.ToString(), m_updateavailable, m_version_toohigh, v, msiFile);
                     m_NewVersion = maxversion;
-
                 }
                 else if (m_version_toohigh)
                 {
-                    PumpString("Versionnumber is too high: " + maxversion.ToString(), m_updateavailable, m_version_toohigh, maxversion, Apppath + "\\Notes.xml");
+                    PumpString("Versionnumber is too high: " + maxversion.ToString(), m_updateavailable, m_version_toohigh, v, msiFile);
                     m_NewVersion = maxversion;
                 }
                 else
                 {
-                    PumpString("No new version(s) found...", false, false, new Version(), Apppath + "\\Notes.xml");
+                    PumpString("No new version(s) found...", false, false, new Version(), "");
                 }
             }
             catch (Exception tuE)
@@ -396,20 +290,6 @@ namespace CommonSuite
                 PumpString(tuE.Message, false, false, new Version(), "");
             }
             
-        }
-
-
-
-        internal string GetReleaseNotes()
-        {
-            string URLString = m_server + "Notes.xml";
-            string XMLResult = GetPageHTML(URLString, 10);
-            using (StreamWriter xmlfile = new StreamWriter(Apppath + "\\Notes.xml", false, System.Text.Encoding.ASCII, 2048))
-            {
-                xmlfile.Write(XMLResult);
-                xmlfile.Close();
-            }
-            return Apppath + "\\Notes.xml";
         }
     }
 }

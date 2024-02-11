@@ -151,10 +151,9 @@ namespace TrionicCANFlasher
             try
             {
                 m_msiUpdater = new msiupdater(new Version(System.Windows.Forms.Application.ProductVersion));
-                m_msiUpdater.Apppath = System.Windows.Forms.Application.UserAppDataPath;
                 m_msiUpdater.onDataPump += new msiupdater.DataPump(m_msiUpdater_onDataPump);
                 m_msiUpdater.onUpdateProgressChanged += new msiupdater.UpdateProgressChanged(m_msiUpdater_onUpdateProgressChanged);
-                m_msiUpdater.CheckForUpdates("http://develop.trionictuning.com/TrionicCANFlasher/", "canflasher", "TrionicCANFlash.msi");
+                m_msiUpdater.CheckForUpdates("https://api.github.com/repos/mattiasclaesson/trionic/releases/latest");
             }
             catch (Exception E)
             {
@@ -183,7 +182,7 @@ namespace TrionicCANFlasher
                     {
                         if (!trionic5.isOpen() && !trionic7.isOpen() && !trionic8.isOpen())
                         {
-                            m_msiUpdater.ExecuteUpdate(e.Version);
+                            m_msiUpdater.ExecuteUpdate(e.MSIFile);
                             System.Windows.Forms.Application.Exit();
                         }
                     }
