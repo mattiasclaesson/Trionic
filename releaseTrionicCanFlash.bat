@@ -24,6 +24,6 @@ git tag TrionicCANLib_v%TrionicCANLib.version%
 git push --tags
 
 gh release create TrionicCanFlasher_v%TrionicCANFlasher.version% --generate-notes --verify-tag
-gh release upload TrionicCanFlasher_v%TrionicCANFlasher.version% SetupT8SuitePro\Release\TrionicCANFlash.zip
-gh release upload TrionicCanFlasher_v%TrionicCANFlasher.version% SetupT8SuitePro\Release\TrionicCANFlash.msi
-gh release upload TrionicCanFlasher_v%TrionicCANFlasher.version% SetupT8SuitePro\Release\TrionicCANFlash.md5
+gh release upload TrionicCanFlasher_v%TrionicCANFlasher.version% SetupCANFlash\Release\TrionicCANFlash.zip
+gh release upload TrionicCanFlasher_v%TrionicCANFlasher.version% SetupCANFlash\Release\TrionicCANFlash.msi
+gh release upload TrionicCanFlasher_v%TrionicCANFlasher.version% SetupCANFlash\Release\TrionicCANFlash.md5
