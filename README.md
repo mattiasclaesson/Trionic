@@ -2,6 +2,8 @@ The Trionic CAN Flasher is an Open Source tool used to read and write software i
 
 The tool can also be used to modify parameters in the ECU, such as SAI, Convertible and High Output.
 
+![alt text](https://github.com/mattiasclaesson/Trionic/blob/master/trioniccanflasher.png "trioniccanflasher image")
+
 The Trionic CAN Flasher currently supports the following interfaces:
 * Lawicel CANUSB
 * CombiAdapter
